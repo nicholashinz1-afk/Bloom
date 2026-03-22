@@ -2036,14 +2036,12 @@ async function callClaude(prompt, systemPrompt) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
         system: systemPrompt || 'You are Bloom, a warm and compassionate mental wellness companion. Keep responses brief, warm, and human. Never clinical. 1-4 sentences maximum.',
-        messages: [{ role: 'user', content: prompt }]
+        message: prompt,
       })
     });
     const data = await res.json();
-    return data.content?.[0]?.text || null;
+    return data.text || null;
   } catch(e) {
     return null;
   }
