@@ -2806,7 +2806,7 @@ function archiveToday() {
 // ============================================================
 async function callClaude(prompt, systemPrompt) {
   try {
-    const res = await fetch('/.netlify/functions/claude', {
+    const res = await fetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
