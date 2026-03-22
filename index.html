@@ -459,6 +459,119 @@ body::before{content:'';position:fixed;inset:0;background:
 
 #pc{position:fixed;inset:0;pointer-events:none;z-index:998}
 
+
+/* ════════════════════════════════════
+   988 CRISIS BUTTON
+════════════════════════════════════ */
+.crisis-bar{position:fixed;bottom:calc(var(--nav-h) + 8px);right:14px;z-index:200}
+.crisis-btn{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#c4766a,#a05550);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 16px rgba(196,118,106,.4);transition:all .2s;-webkit-tap-highlight-color:transparent}
+.crisis-btn:hover{transform:scale(1.1)}
+.crisis-btn:active{transform:scale(.95)}
+.crisis-modal{position:fixed;inset:0;z-index:600;display:none;align-items:flex-end;justify-content:center}
+.crisis-modal.show{display:flex}
+.crisis-backdrop{position:absolute;inset:0;background:rgba(13,15,9,.9)}
+.crisis-sheet{position:relative;background:var(--surface);border-radius:24px 24px 0 0;padding:28px 24px 44px;width:100%;max-width:500px;animation:sheetUp .3s ease both}
+.crisis-handle{width:36px;height:4px;border-radius:2px;background:var(--softer);margin:0 auto 22px}
+.crisis-title{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--cream);margin-bottom:6px}
+.crisis-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:22px}
+.crisis-option{display:flex;align-items:center;gap:14px;background:var(--surface2);border:1px solid var(--border2);border-radius:16px;padding:16px 18px;margin-bottom:10px;text-decoration:none;transition:all .2s;cursor:pointer}
+.crisis-option:hover{border-color:rgba(196,118,106,.3);background:rgba(196,118,106,.05)}
+.crisis-option-icon{font-size:28px;flex-shrink:0}
+.crisis-option-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
+.crisis-option-sub{font-size:12px;color:var(--muted)}
+.crisis-note{font-size:11px;color:var(--softer);text-align:center;margin-top:14px;line-height:1.6}
+.crisis-close{margin-top:16px;width:100%;padding:12px;background:transparent;border:1px solid var(--border2);border-radius:12px;color:var(--muted);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
+.crisis-close:hover{color:var(--text)}
+
+/* ════════════════════════════════════
+   LOW MOOD BANNER
+════════════════════════════════════ */
+.low-mood-banner{background:linear-gradient(135deg,#1e1618,#181620);border:1px solid rgba(196,118,106,.2);border-radius:16px;padding:16px 18px;margin-bottom:13px;display:none;position:relative;overflow:hidden}
+.low-mood-banner.show{display:block;animation:rise .5s ease both}
+.low-mood-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(196,118,106,.06),transparent 60%)}
+.lmb-inner{position:relative}
+.lmb-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.lmb-icon{font-size:22px}
+.lmb-title{font-family:'Fraunces',serif;font-size:16px;color:var(--cream)}
+.lmb-msg{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+.lmb-actions{display:flex;gap:8px;flex-wrap:wrap}
+.lmb-action{padding:7px 14px;border-radius:100px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s}
+.lmb-action:hover{background:var(--surface2)}
+.lmb-action.primary{background:var(--rose-g);border-color:rgba(196,118,106,.3);color:var(--rose)}
+
+/* ════════════════════════════════════
+   SMALL WINS
+════════════════════════════════════ */
+.wins-card{background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:17px 19px;margin-bottom:13px}
+.wins-input-row{display:flex;gap:8px;margin-bottom:12px}
+.wins-input{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .2s}
+.wins-input:focus{border-color:rgba(212,168,85,.4)}
+.wins-input::placeholder{color:var(--softer)}
+.wins-add-btn{padding:10px 16px;border-radius:12px;background:var(--gold-g);border:1px solid rgba(212,168,85,.3);color:var(--gold);font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.wins-add-btn:hover{background:rgba(212,168,85,.25)}
+.wins-list{display:flex;flex-direction:column;gap:7px}
+.win-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;animation:rise .3s ease both}
+.win-item-star{font-size:14px;flex-shrink:0;margin-top:1px}
+.win-item-text{flex:1;font-size:13px;color:var(--text2);line-height:1.4}
+.win-item-time{font-size:10px;color:var(--softer);flex-shrink:0;margin-top:2px}
+.wins-empty{font-size:12px;color:var(--softer);font-style:italic;text-align:center;padding:8px 0}
+
+/* ════════════════════════════════════
+   WEEKLY SUMMARY
+════════════════════════════════════ */
+.weekly-summary-card{background:linear-gradient(135deg,#16201a,#1a1e10);border:1px solid rgba(143,173,122,.2);border-radius:18px;padding:18px 20px;margin-bottom:13px;position:relative;overflow:hidden}
+.weekly-summary-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(143,173,122,.07),transparent 55%)}
+.wsc-inner{position:relative}
+.wsc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.wsc-title{font-family:'Fraunces',serif;font-size:16px;color:var(--sage)}
+.wsc-date{font-size:10px;color:var(--muted)}
+.wsc-text{font-family:'Fraunces',serif;font-style:italic;font-size:15px;color:var(--cream);line-height:1.6}
+.wsc-text.loading{color:var(--muted)}
+.wsc-refresh{padding:6px 14px;border-radius:100px;border:1px solid rgba(143,173,122,.25);background:transparent;color:var(--sage);font-family:'Instrument Sans',sans-serif;font-size:11px;cursor:pointer;transition:all .2s;margin-top:12px}
+.wsc-refresh:hover{background:var(--sage-d)}
+
+/* ════════════════════════════════════
+   CUSTOM AFFIRMATIONS
+════════════════════════════════════ */
+.aff-saved{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.aff-saved-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface2);border-radius:10px}
+.aff-saved-text{flex:1;font-size:13px;color:var(--text2);font-style:italic}
+.aff-saved-del{font-size:16px;color:var(--softer);cursor:pointer;transition:color .2s;flex-shrink:0;background:none;border:none;padding:0}
+.aff-saved-del:hover{color:var(--rose)}
+.aff-add-row{display:flex;gap:8px;margin-top:10px}
+.aff-add-input{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .2s}
+.aff-add-input:focus{border-color:rgba(143,173,122,.4)}
+.aff-add-input::placeholder{color:var(--softer)}
+.aff-add-btn{padding:10px 14px;border-radius:12px;background:var(--sage-g);border:1px solid rgba(143,173,122,.3);color:var(--sage);font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;flex-shrink:0}
+.aff-add-btn:hover{background:rgba(143,173,122,.25)}
+
+/* ════════════════════════════════════
+   SLEEP CHECK-IN
+════════════════════════════════════ */
+.sleep-row{display:flex;gap:6px;justify-content:space-between}
+.sleep-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:12px;border:1.5px solid var(--border2);background:transparent;cursor:pointer;transition:all .2s;font-family:'Instrument Sans',sans-serif}
+.sleep-btn:hover{background:var(--surface2)}
+.sleep-btn.selected{border-color:var(--sky);background:var(--sky-d)}
+.sleep-emoji{font-size:20px;line-height:1}
+.sleep-label{font-size:9px;color:var(--muted);font-weight:500}
+.sleep-btn.selected .sleep-label{color:var(--sky)}
+
+/* ════════════════════════════════════
+   SETTINGS SECTIONS (collapsible)
+════════════════════════════════════ */
+.settings-group{background:var(--surface);border:1px solid var(--border2);border-radius:18px;margin-bottom:12px;overflow:hidden}
+.settings-group-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;cursor:pointer;transition:background .2s;user-select:none;-webkit-tap-highlight-color:transparent}
+.settings-group-header:hover{background:var(--surface2)}
+.sgh-left{display:flex;align-items:center;gap:10px}
+.sgh-icon{font-size:18px}
+.sgh-title{font-size:14px;font-weight:600;color:var(--text)}
+.sgh-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.sgh-chevron{font-size:12px;color:var(--muted);transition:transform .25s}
+.settings-group.open .sgh-chevron{transform:rotate(180deg)}
+.settings-group-body{display:none;padding:0 16px 16px}
+.settings-group.open .settings-group-body{display:block}
+.sg-divider{height:1px;background:var(--border);margin:0 -16px 14px}
+
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes popUp{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
@@ -747,8 +860,31 @@ body::before{content:'';position:fixed;inset:0;background:
         </div>
       </div>
 
+      <!-- Sleep check-in -->
+      <div class="card" style="margin-bottom:13px">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;font-weight:600">How did you sleep?</div>
+        <div class="sleep-row" id="sleep-row">
+          <button class="sleep-btn" data-sleep="1" onclick="setSleep(1,this)"><span class="sleep-emoji">😫</span><span class="sleep-label">Awful</span></button>
+          <button class="sleep-btn" data-sleep="2" onclick="setSleep(2,this)"><span class="sleep-emoji">😴</span><span class="sleep-label">Poor</span></button>
+          <button class="sleep-btn" data-sleep="3" onclick="setSleep(3,this)"><span class="sleep-emoji">😐</span><span class="sleep-label">Okay</span></button>
+          <button class="sleep-btn" data-sleep="4" onclick="setSleep(4,this)"><span class="sleep-emoji">😊</span><span class="sleep-label">Good</span></button>
+          <button class="sleep-btn" data-sleep="5" onclick="setSleep(5,this)"><span class="sleep-emoji">🌟</span><span class="sleep-label">Great</span></button>
+        </div>
+      </div>
+
       <div class="affirm" id="affirm"><div class="aff-in"><span class="a-em" id="a-em">✨</span><div><p class="a-msg" id="a-msg"></p><p class="a-sub" id="a-sub"></p></div></div></div>
-      <div class="streak-grace" id="streak-grace"></div>
+      <div class="low-mood-banner" id="low-mood-banner">
+  <div class="lmb-inner">
+    <div class="lmb-head"><span class="lmb-icon">💙</span><span class="lmb-title">bloom noticed you're having a hard time</span></div>
+    <div class="lmb-msg" id="lmb-msg">It's okay to not be okay. You still showed up today — that matters.</div>
+    <div class="lmb-actions">
+      <button class="lmb-action primary" onclick="switchTab('wellness');setTimeout(()=>startBreathe(),400)">🌬 Breathe</button>
+      <button class="lmb-action" onclick="switchTab('wellness')">📓 Journal</button>
+      <button class="lmb-action" onclick="openCrisis()">🫂 Talk to someone</button>
+    </div>
+  </div>
+</div>
+<div class="streak-grace" id="streak-grace"></div>
       <div class="all-done" id="all-done"><div class="ad-in"><span class="ad-g">🌿</span><div class="ad-t">Daily habits done!</div><p class="ad-m" id="ad-m"></p></div></div>
 
       <!-- Morning -->
@@ -898,6 +1034,40 @@ body::before{content:'';position:fixed;inset:0;background:
         </div>
       </div>
       <div class="card" id="reflect-card" style="border-color:rgba(168,143,196,.2)"><div id="reflect-inner"></div></div>
+      <!-- Small Wins -->
+      <div class="wins-card">
+        <div class="card-title-row"><span class="card-icon">⭐</span><span class="card-title">Small wins</span></div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px">What's something good that happened today, however small?</div>
+        <div class="wins-input-row">
+          <input class="wins-input" id="wins-input" placeholder="Write a win…" onkeydown="if(event.key==='Enter')addWin()" maxlength="120">
+          <button class="wins-add-btn" onclick="addWin()">+ Log it</button>
+        </div>
+        <div class="wins-list" id="wins-list"></div>
+      </div>
+
+      <!-- Weekly Summary -->
+      <div class="weekly-summary-card" id="weekly-summary-card">
+        <div class="wsc-inner">
+          <div class="wsc-head">
+            <span class="wsc-title">How are you doing? ✨</span>
+            <span class="wsc-date" id="wsc-date"></span>
+          </div>
+          <div class="wsc-text" id="wsc-text">Your weekly summary will appear here. It refreshes each week based on your mood, habits and journal entries.</div>
+          <button class="wsc-refresh" onclick="generateWeeklySummary()">Generate summary</button>
+        </div>
+      </div>
+
+      <!-- Custom Affirmations -->
+      <div class="card">
+        <div class="card-title-row"><span class="card-icon">💛</span><span class="card-title">Your affirmations</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Save the ones that resonate. bloom will show them to you.</div>
+        <div class="aff-saved" id="aff-saved-list"></div>
+        <div class="aff-add-row">
+          <input class="aff-add-input" id="aff-add-input" placeholder="Add an affirmation…" maxlength="120" onkeydown="if(event.key==='Enter')addAffirmation()">
+          <button class="aff-add-btn" onclick="addAffirmation()">Save</button>
+        </div>
+      </div>
+
       <div class="breath-card">
         <div class="breath-inner">
           <p class="breath-headline">Take a <em>breath</em></p>
@@ -926,105 +1096,136 @@ body::before{content:'';position:fixed;inset:0;background:
       <div style="height:14px"></div>
       <p class="page-title">Your <em>settings</em></p>
       <p class="page-sub" id="settings-sub">Make bloom work for you.</p>
+
+      <!-- Install banner -->
       <div class="install-banner" id="install-banner">
-        <div class="install-banner-text">Add bloom to your home screen for water reminders and a better experience.</div>
+        <div class="install-banner-text">Add bloom to your home screen for the best experience.</div>
         <button class="install-banner-btn" id="install-btn" onclick="installPWA()">Add to Home</button>
       </div>
-      <div style="margin-bottom:20px">
-        <div class="s-sec-title">🚿 Shower goal</div>
-        <div class="s-row"><div><div class="s-lbl">Times per week</div><div class="s-sub">What feels realistic right now?</div></div><div class="stepper"><div class="step-btn" onclick="step('shower_goal',-1)">−</div><div class="step-val" id="sv-shower_goal">3</div><div class="step-btn" onclick="step('shower_goal',1)">+</div></div></div>
-      </div>
-      <div style="margin-bottom:20px">
-        <div class="s-sec-title">🏃 Exercise goal</div>
-        <div class="s-row"><div><div class="s-lbl">Times per week</div><div class="s-sub">Any movement counts — even a walk</div></div><div class="stepper"><div class="step-btn" onclick="step('exercise_goal',-1)">−</div><div class="step-val" id="sv-exercise_goal">3</div><div class="step-btn" onclick="step('exercise_goal',1)">+</div></div></div>
-      </div>
-      <div style="margin-bottom:20px">
-        <div class="s-sec-title">❄️ Streak freeze tokens</div>
-        <div class="freeze-info">
-          <div class="fi-title">How freeze tokens work</div>
-          <div class="fi-body">Miss a full day? A token auto-activates to protect your streak. Partial days (all but one habit done) don't need a token. Tokens earned as streak grows, max 5.</div>
-          <div class="tier"><div class="tier-d">7-day streak</div><div class="tier-t">❄️ +1 token</div></div>
-          <div class="tier"><div class="tier-d">14-day streak</div><div class="tier-t">❄️ +1 token</div></div>
-          <div class="tier"><div class="tier-d">30-day streak</div><div class="tier-t">❄️ +1 token</div></div>
-          <div class="tier"><div class="tier-d">Every 30 days after</div><div class="tier-t">❄️ +1 token</div></div>
+
+      <!-- 👤 Profile -->
+      <div class="settings-group open" id="sg-profile">
+        <div class="settings-group-header" onclick="toggleSG('profile')">
+          <div class="sgh-left"><span class="sgh-icon">👤</span><div><div class="sgh-title">Profile</div><div class="sgh-sub" id="sgh-profile-sub">Your name and level</div></div></div>
+          <span class="sgh-chevron">▼</span>
         </div>
-      </div>
-      <div style="margin-bottom:20px">
-        <div class="s-sec-title">🌿 Updates</div>
-        <div class="s-row" style="flex-direction:column;align-items:flex-start;gap:10px">
-          <div>
-            <div class="s-lbl">What's new</div>
-            <div class="s-sub" id="settings-version-sub">See what changed in the latest version.</div>
+        <div class="settings-group-body">
+          <div class="sg-divider"></div>
+          <div class="s-row" style="margin-bottom:8px">
+            <div><div class="s-lbl">Your name</div><div class="s-sub">Used in your daily greeting</div></div>
+            <input id="settings-name" placeholder="Enter name" style="background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:7px 12px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--text);outline:none;width:120px;text-align:right" onchange="saveName(this.value)">
           </div>
-          <button style="width:100%;padding:11px;background:var(--sage-g);border:1px solid rgba(143,173,122,.3);border-radius:12px;color:var(--sage);font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onclick="showWhatsNew(CHANGELOG[0], false)">View release notes</button>
-        </div>
-      </div>
-      <div style="margin-bottom:20px">
-        <div class="s-sec-title">🌳 Go outside goal</div>
-        <div class="s-row"><div><div class="s-lbl">Times per week</div><div class="s-sub">Fresh air is good for everything</div></div><div class="stepper"><div class="step-btn" onclick="step('outside_goal',-1)">−</div><div class="step-val" id="sv-outside_goal">3</div><div class="step-btn" onclick="step('outside_goal',1)">+</div></div></div>
-      </div>
-
-      <div style="margin-bottom:20px">
-        <div class="s-sec-title">🏠 Weekly household tasks</div>
-        <div id="settings-tasks-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
-        <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:12px 16px;display:flex;gap:10px">
-          <input id="new-task-input" placeholder="Add a custom task…" style="flex:1;background:transparent;border:none;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCustomTask()">
-          <button onclick="addCustomTask()" style="padding:5px 12px;background:var(--sage-g);border:1px solid rgba(143,173,122,.3);border-radius:8px;color:var(--sage);font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">Add</button>
+          <div id="settings-level-summary" style="background:var(--surface2);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--muted);line-height:1.6"></div>
         </div>
       </div>
 
-      <div style="margin-bottom:20px">
-        <div class="s-sec-title">🔔 Notifications</div>
-        <!-- Water reminders -->
-        <div class="s-row" style="flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:8px">
-          <div><div class="s-lbl">💧 Water reminders</div></div>
-          <div style="display:flex;flex-direction:column;gap:6px;width:100%">
-            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
-              <input type="radio" name="water-mode" value="smart" style="accent-color:var(--sage);margin-top:2px" onchange="saveNotifPref('water_mode','smart')">
-              <div><div style="font-size:13px;color:var(--text)">Smart (every 4hrs if not logged)</div><div style="font-size:11px;color:var(--muted)">Starts at 10am if no water logged yet</div></div>
-            </label>
-            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
-              <input type="radio" name="water-mode" value="hourly" style="accent-color:var(--sage);margin-top:2px" onchange="saveNotifPref('water_mode','hourly')">
-              <div><div style="font-size:13px;color:var(--text)">Every hour</div><div style="font-size:11px;color:var(--muted)">Regardless of whether you've logged</div></div>
-            </label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-              <input type="radio" name="water-mode" value="off" style="accent-color:var(--sage)" onchange="saveNotifPref('water_mode','off')">
-              <span style="font-size:13px;color:var(--text)">Off</span>
-            </label>
+      <!-- 🎯 Weekly goals -->
+      <div class="settings-group" id="sg-goals">
+        <div class="settings-group-header" onclick="toggleSG('goals')">
+          <div class="sgh-left"><span class="sgh-icon">🎯</span><div><div class="sgh-title">Weekly goals</div><div class="sgh-sub">Shower, exercise, go outside</div></div></div>
+          <span class="sgh-chevron">▼</span>
+        </div>
+        <div class="settings-group-body">
+          <div class="sg-divider"></div>
+          <div class="s-row" style="margin-bottom:8px"><div><div class="s-lbl">🚿 Shower</div><div class="s-sub">Times per week</div></div><div class="stepper"><div class="step-btn" onclick="step('shower_goal',-1)">−</div><div class="step-val" id="sv-shower_goal">3</div><div class="step-btn" onclick="step('shower_goal',1)">+</div></div></div>
+          <div class="s-row" style="margin-bottom:8px"><div><div class="s-lbl">🏃 Exercise</div><div class="s-sub">Times per week</div></div><div class="stepper"><div class="step-btn" onclick="step('exercise_goal',-1)">−</div><div class="step-val" id="sv-exercise_goal">3</div><div class="step-btn" onclick="step('exercise_goal',1)">+</div></div></div>
+          <div class="s-row"><div><div class="s-lbl">🌳 Go outside</div><div class="s-sub">Times per week</div></div><div class="stepper"><div class="step-btn" onclick="step('outside_goal',-1)">−</div><div class="step-val" id="sv-outside_goal">3</div><div class="step-btn" onclick="step('outside_goal',1)">+</div></div></div>
+        </div>
+      </div>
+
+      <!-- 🏠 Household tasks -->
+      <div class="settings-group" id="sg-tasks">
+        <div class="settings-group-header" onclick="toggleSG('tasks')">
+          <div class="sgh-left"><span class="sgh-icon">🏠</span><div><div class="sgh-title">Household tasks</div><div class="sgh-sub" id="sgh-tasks-sub">Weekly to-dos</div></div></div>
+          <span class="sgh-chevron">▼</span>
+        </div>
+        <div class="settings-group-body">
+          <div class="sg-divider"></div>
+          <div id="settings-tasks-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+          <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;display:flex;gap:10px">
+            <input id="new-task-input" placeholder="Add a custom task…" style="flex:1;background:transparent;border:none;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCustomTask()">
+            <button onclick="addCustomTask()" style="padding:5px 12px;background:var(--sage-g);border:1px solid rgba(143,173,122,.3);border-radius:8px;color:var(--sage);font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">Add</button>
           </div>
         </div>
-        <!-- Habit reminder times -->
-        <div class="s-row" style="flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:8px">
-          <div><div class="s-lbl">⏰ Habit reminder times</div><div class="s-sub">Only fires if habit not logged yet</div></div>
-          <div style="display:flex;flex-direction:column;gap:8px;width:100%" id="settings-habit-times"></div>
+      </div>
+
+      <!-- 🔔 Notifications -->
+      <div class="settings-group" id="sg-notif">
+        <div class="settings-group-header" onclick="toggleSG('notif')">
+          <div class="sgh-left"><span class="sgh-icon">🔔</span><div><div class="sgh-title">Notifications</div><div class="sgh-sub">Reminders and nudges</div></div></div>
+          <span class="sgh-chevron">▼</span>
         </div>
-        <!-- Sunday reminder toggle -->
-        <div class="s-row">
-          <div><div class="s-lbl">🗓️ Sunday goal reminder</div><div class="s-sub">Nudge to set weekly household tasks</div></div>
-          <label style="position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0">
-            <input type="checkbox" id="settings-sunday-toggle" onchange="saveNotifPref('sunday_reminder',this.checked)" style="opacity:0;width:0;height:0">
-            <span id="settings-sunday-slider" style="position:absolute;cursor:pointer;inset:0;background:var(--softer);border-radius:22px;transition:background .3s"></span>
-            <span id="settings-sunday-knob" style="position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:transform .3s"></span>
-          </label>
+        <div class="settings-group-body">
+          <div class="sg-divider"></div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px">💧 Water reminders</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input type="radio" name="water-mode" value="smart" style="accent-color:var(--sage);margin-top:3px" onchange="saveNotifPref('water_mode','smart')"><div><div style="font-size:13px;color:var(--text)">Smart (every 4hrs if not logged)</div><div style="font-size:11px;color:var(--muted)">Starts at 10am if no water logged</div></div></label>
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input type="radio" name="water-mode" value="hourly" style="accent-color:var(--sage);margin-top:3px" onchange="saveNotifPref('water_mode','hourly')"><div><div style="font-size:13px;color:var(--text)">Every hour</div><div style="font-size:11px;color:var(--muted)">Regardless of whether you've logged</div></div></label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="radio" name="water-mode" value="off" style="accent-color:var(--sage)" onchange="saveNotifPref('water_mode','off')"><span style="font-size:13px;color:var(--text)">Off</span></label>
+          </div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px">⏰ Habit reminder times</div>
+          <div style="font-size:11px;color:var(--softer);margin-bottom:10px">Only fires if the habit isn't logged yet</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px" id="settings-habit-times"></div>
+          <div class="s-row" style="margin-bottom:0">
+            <div><div class="s-lbl">🗓️ Sunday goal reminder</div><div class="s-sub">Nudge to set weekly household tasks</div></div>
+            <label style="position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0">
+              <input type="checkbox" id="settings-sunday-toggle" onchange="saveNotifPref('sunday_reminder',this.checked)" style="opacity:0;width:0;height:0">
+              <span id="settings-sunday-slider" style="position:absolute;cursor:pointer;inset:0;background:var(--softer);border-radius:22px;transition:background .3s"></span>
+              <span id="settings-sunday-knob" style="position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:transform .3s"></span>
+            </label>
+          </div>
         </div>
       </div>
 
-      <div style="margin-bottom:20px">
-        <div class="s-sec-title">🔗 Share bloom</div>
-        <div class="s-row" style="flex-direction:column;align-items:flex-start;gap:10px">
-          <div><div class="s-lbl">Share with friends</div><div class="s-sub">Everyone gets their own private copy — no accounts, no shared data.</div></div>
-          <button style="width:100%;padding:11px;background:var(--sage-g);border:1px solid rgba(143,173,122,.3);border-radius:12px;color:var(--sage);font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onclick="shareApp()">🌿 Share bloom</button>
+      <!-- ❄️ Streak & protection -->
+      <div class="settings-group" id="sg-streak">
+        <div class="settings-group-header" onclick="toggleSG('streak')">
+          <div class="sgh-left"><span class="sgh-icon">🔥</span><div><div class="sgh-title">Streak & protection</div><div class="sgh-sub">Freeze tokens explained</div></div></div>
+          <span class="sgh-chevron">▼</span>
+        </div>
+        <div class="settings-group-body">
+          <div class="sg-divider"></div>
+          <div class="freeze-info" style="background:transparent;border:none;padding:0">
+            <div class="fi-body" style="margin-bottom:10px">Miss a full day? A token auto-activates to protect your streak. Logging a Rough or Low mood also protects your streak that day. Tokens earned as streak grows, max 5.</div>
+            <div class="tier"><div class="tier-d">7-day streak</div><div class="tier-t">❄️ +1 token</div></div>
+            <div class="tier"><div class="tier-d">14-day streak</div><div class="tier-t">❄️ +1 token</div></div>
+            <div class="tier"><div class="tier-d">30-day streak</div><div class="tier-t">❄️ +1 token</div></div>
+            <div class="tier"><div class="tier-d">Every 30 days after</div><div class="tier-t">❄️ +1 token</div></div>
+          </div>
         </div>
       </div>
-      <div style="margin-bottom:20px">
-        <div class="s-sec-title">📦 Data</div>
-        <button class="export-btn" onclick="exportData()">Export my data as JSON</button>
-        <button class="danger-btn" onclick="confirmReset()">Reset today's habits</button>
+
+      <!-- 🔗 Share & data -->
+      <div class="settings-group" id="sg-share">
+        <div class="settings-group-header" onclick="toggleSG('share')">
+          <div class="sgh-left"><span class="sgh-icon">🔗</span><div><div class="sgh-title">Share & data</div><div class="sgh-sub">Share bloom, export or reset</div></div></div>
+          <span class="sgh-chevron">▼</span>
+        </div>
+        <div class="settings-group-body">
+          <div class="sg-divider"></div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Everyone gets their own private copy — no accounts, no shared data.</div>
+          <button style="width:100%;padding:11px;background:var(--sage-g);border:1px solid rgba(143,173,122,.3);border-radius:12px;color:var(--sage);font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:8px" onclick="shareApp()">🌿 Share bloom</button>
+          <button class="export-btn" onclick="exportData()" style="margin-bottom:8px">Export my data as JSON</button>
+          <button class="danger-btn" onclick="confirmReset()">Reset today's habits</button>
+        </div>
       </div>
-      <div style="text-align:center;padding:16px 0 4px">
-        <div style="font-size:11px;color:var(--softer);letter-spacing:.5px">bloom <span id="version-display"></span></div>
-        <div style="font-size:10px;color:var(--softer);margin-top:3px" id="build-display"></div>
+
+      <!-- 📋 About -->
+      <div class="settings-group" id="sg-about">
+        <div class="settings-group-header" onclick="toggleSG('about')">
+          <div class="sgh-left"><span class="sgh-icon">📋</span><div><div class="sgh-title">About bloom</div><div class="sgh-sub" id="sgh-about-sub">Version info</div></div></div>
+          <span class="sgh-chevron">▼</span>
+        </div>
+        <div class="settings-group-body">
+          <div class="sg-divider"></div>
+          <button style="width:100%;padding:11px;background:var(--sage-g);border:1px solid rgba(143,173,122,.3);border-radius:12px;color:var(--sage);font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:12px" onclick="showWhatsNew(CHANGELOG[0],false)">View release notes</button>
+          <div style="text-align:center">
+            <div style="font-size:12px;color:var(--softer)">bloom <span id="version-display"></span></div>
+            <div style="font-size:10px;color:var(--softer);margin-top:3px" id="build-display"></div>
+          </div>
+        </div>
       </div>
+
     </div>
 
   </div>
@@ -1056,6 +1257,35 @@ body::before{content:'';position:fixed;inset:0;background:
   </div>
 </div>
 
+<!-- 988 Crisis button -->
+<div class="crisis-bar">
+  <button class="crisis-btn" onclick="openCrisis()" title="Need support?">🫂</button>
+</div>
+
+<!-- Crisis modal -->
+<div class="crisis-modal" id="crisis-modal">
+  <div class="crisis-backdrop" onclick="closeCrisis()"></div>
+  <div class="crisis-sheet">
+    <div class="crisis-handle"></div>
+    <div class="crisis-title">You don't have to face this alone</div>
+    <div class="crisis-sub">If you're in crisis or just need to talk to someone, these resources are free, confidential, and available right now.</div>
+    <a class="crisis-option" href="tel:988">
+      <div class="crisis-option-icon">📞</div>
+      <div><div class="crisis-option-title">Call or Text 988</div><div class="crisis-option-sub">Suicide & Crisis Lifeline — 24/7, free, confidential</div></div>
+    </a>
+    <a class="crisis-option" href="sms:741741&body=HOME">
+      <div class="crisis-option-icon">💬</div>
+      <div><div class="crisis-option-title">Crisis Text Line</div><div class="crisis-option-sub">Text HOME to 741741 — available 24/7</div></div>
+    </a>
+    <a class="crisis-option" href="https://988lifeline.org/chat" target="_blank">
+      <div class="crisis-option-icon">🌐</div>
+      <div><div class="crisis-option-title">Chat online</div><div class="crisis-option-sub">988lifeline.org — live chat support</div></div>
+    </a>
+    <div class="crisis-note">Reaching out is an act of courage.<br>bloom is proud of you for being here.</div>
+    <button class="crisis-close" onclick="closeCrisis()">Close</button>
+  </div>
+</div>
+
 <!-- What's New modal -->
 <div class="whats-new-modal" id="whats-new-modal" style="position:fixed;inset:0;z-index:600;display:none;align-items:flex-end;justify-content:center;padding:0">
   <div style="position:absolute;inset:0;background:rgba(13,15,9,.88)" onclick="closeWhatsNew()"></div>
@@ -1083,10 +1313,26 @@ body::before{content:'';position:fixed;inset:0;background:
 // ════════════════════════════════════
 //  VERSION + CHANGELOG
 // ════════════════════════════════════
-const BLOOM_VERSION = "1.1.0";
+const BLOOM_VERSION = "1.2.0";
 const BLOOM_BUILD = "2026-03-22";
 
 const CHANGELOG = [
+  {
+    version: "1.2.0",
+    date: "March 22, 2026",
+    title: "Wellbeing, crisis support & more 💚",
+    changes: [
+      "988 crisis support button — always accessible, never intrusive",
+      "Streak grace on hard mood days — logging Rough or Low protects your streak",
+      "Low mood detection — bloom responds gently when you're struggling",
+      "Weekly 'How am I doing?' summary powered by Claude",
+      "Small wins log — capture good moments as they happen",
+      "Customizable affirmations — save the ones that resonate with you",
+      "Sleep quality check-in — track how you slept each day",
+      "Settings completely reorganized — collapsible sections, much easier to navigate",
+      "Netlify Function API proxy — Claude features now work securely for all users",
+    ]
+  },
   {
     version: "1.1.0",
     date: "March 22, 2026",
@@ -1433,7 +1679,7 @@ function switchTab(name){
   document.getElementById('tab-scroll').scrollTop=0;
   if(name==='today'){renderToday();renderHouseholdTasks();}
   if(name==='progress')renderProgress();
-  if(name==='wellness'){renderWellness();renderJournalState();renderBreathUsed();}
+  if(name==='wellness'){renderWellness();renderJournalState();renderBreathUsed();renderWins();renderCustomAffirmations();loadCachedSummary();}
   if(name==='history')renderHistory();
   if(name==='settings')renderSettings();
 }
@@ -1755,12 +2001,12 @@ Never use bullet points. Never say "I" as if you're a chatbot. Speak like a quie
 Do not repeat their words back verbatim. No sign-offs. No "Remember:" or "It's important to".`;
     const msg=type==='journal'?`The user wrote in their journal: "${text}"`:
       `Reflection question: "${question}"\nUser's answer: "${text}"`;
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    const resp=await fetch('/.netlify/functions/claude',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:msg}]})
+      body:JSON.stringify({system:sys,message:msg})
     });
     const data=await resp.json();
-    return(data.content&&data.content[0]&&data.content[0].text)||fallbackResponse(type);
+    return data.text||fallbackResponse(type);
   }catch{return fallbackResponse(type);}
 }
 function fallbackResponse(type){
@@ -1794,6 +2040,8 @@ function setMood(val,btn){
   document.querySelectorAll('.mood-btn').forEach(b=>{b.style.borderColor='';b.style.background='';});
   btn.style.borderColor='var(--sage)';btn.style.background='var(--sage-d)';
   showAffirm({e:'💚',m:'Noted — thanks for checking in.',s:'Tracking your mood helps you spot patterns over time.'});
+  applyMoodStreakGrace(val);
+  checkLowMood(val);
 }
 
 // ════════════════════════════════════
@@ -1802,6 +2050,12 @@ function setMood(val,btn){
 let affT;
 function showAffirm(a){
   clearTimeout(affT);
+  // Occasionally use a custom affirmation if user has some saved
+  const custom=loadCustomAffirmations();
+  if(!a&&custom.length&&Math.random()<0.4){
+    a={e:'💛',m:custom[Math.floor(Math.random()*custom.length)],s:'Your own words, back to you.'};
+  }
+  if(!a)a=AFFIRMS[Math.floor(Math.random()*AFFIRMS.length)];
   document.getElementById('a-em').textContent=a.e;document.getElementById('a-msg').textContent=a.m;document.getElementById('a-sub').textContent=a.s;
   const el=document.getElementById('affirm');el.classList.add('show');
   affT=setTimeout(()=>el.classList.remove('show'),5500);
@@ -2179,13 +2433,277 @@ function renderNotifSettings(){
 }
 
 
+
+// ════════════════════════════════════
+//  988 CRISIS
+// ════════════════════════════════════
+function openCrisis(){ document.getElementById('crisis-modal').classList.add('show'); }
+function closeCrisis(){ document.getElementById('crisis-modal').classList.remove('show'); }
+
+// ════════════════════════════════════
+//  SLEEP CHECK-IN
+// ════════════════════════════════════
+const SLEEP_EMOJIS=['','😫','😴','😐','😊','🌟'];
+const SLEEP_LABELS=['','Awful','Poor','Okay','Good','Great'];
+
+function setSleep(val,btn){
+  setField('sleep',val);
+  document.querySelectorAll('.sleep-btn').forEach(b=>{
+    b.classList.toggle('selected',parseInt(b.dataset.sleep)===val);
+  });
+}
+
+function renderSleep(){
+  const rec=getTodayRec();
+  document.querySelectorAll('.sleep-btn').forEach(b=>{
+    b.classList.toggle('selected',parseInt(b.dataset.sleep)===rec.sleep);
+  });
+}
+
+// ════════════════════════════════════
+//  LOW MOOD DETECTION
+// ════════════════════════════════════
+async function checkLowMood(moodVal){
+  const banner=document.getElementById('low-mood-banner');
+  if(moodVal>2){ banner.classList.remove('show'); return; }
+  // Check if low mood for 2+ consecutive days
+  const db=loadDB(),today=new Date(),yesterday=new Date(today);
+  yesterday.setDate(today.getDate()-1);
+  const yk=yesterday.toISOString().slice(0,10);
+  const yesterdayMood=(db[yk]||{}).mood||0;
+  banner.classList.add('show');
+  // Get a personalized Claude response
+  const msg=document.getElementById('lmb-msg');
+  if(yesterdayMood<=2){
+    // Two days in a row — get Claude response
+    try{
+      const resp=await fetch('/.netlify/functions/claude',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          system:'You are the gentle, warm voice inside Bloom, a self-care app. The user has logged a low or rough mood for two days in a row. Respond with 1-2 sentences that are genuinely warm, validating, and not dismissive. No toxic positivity. No advice. Just human acknowledgment. Under 30 words.',
+          message:'User has felt low or rough for two days in a row.'
+        })
+      });
+      const data=await resp.json();
+      if(data.text) msg.textContent=data.text;
+    }catch{ msg.textContent="Two harder days in a row. That's real, and it's okay. You still showed up."; }
+  }
+}
+
+// ════════════════════════════════════
+//  STREAK GRACE ON LOW MOOD
+// ════════════════════════════════════
+function applyMoodStreakGrace(moodVal){
+  if(moodVal>2) return;
+  // Mark today as grace-protected
+  setField('streak_grace',true);
+}
+
+// Update getDayStatus to count grace days as partial
+const _origGetDayStatus = getDayStatus;
+// Override — grace days count the same as partial
+function getDayStatus(rec){
+  if(rec && rec.streak_grace) return 'partial'; // protected by mood
+  return _origGetDayStatus(rec);
+}
+
+// ════════════════════════════════════
+//  SMALL WINS
+// ════════════════════════════════════
+function loadWins(){
+  try{ return JSON.parse(localStorage.getItem('bloom_wins_log')||'[]'); }catch{ return []; }
+}
+function saveWins(w){ localStorage.setItem('bloom_wins_log',JSON.stringify(w)); }
+
+function addWin(){
+  const input=document.getElementById('wins-input');
+  const val=input.value.trim();
+  if(!val) return;
+  const wins=loadWins();
+  wins.unshift({text:val,ts:Date.now(),date:todayKey()});
+  saveWins(wins);
+  input.value='';
+  renderWins();
+  spawnParts(document.getElementById('wins-input'),'#d4a855');
+  showAffirm({e:'⭐',m:'That counts.',s:'Small wins are the building blocks of big change.'});
+}
+
+function renderWins(){
+  const list=document.getElementById('wins-list');
+  if(!list) return;
+  const wins=loadWins().filter(w=>w.date===todayKey());
+  list.innerHTML='';
+  if(wins.length===0){
+    const e=document.createElement('div');e.className='wins-empty';e.textContent='No wins logged yet today — they don't have to be big!';
+    list.appendChild(e);return;
+  }
+  wins.forEach(w=>{
+    const item=document.createElement('div');item.className='win-item';
+    const t=new Date(w.ts).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    item.innerHTML=`<span class="win-item-star">⭐</span><span class="win-item-text">${w.text}</span><span class="win-item-time">${t}</span>`;
+    list.appendChild(item);
+  });
+}
+
+// ════════════════════════════════════
+//  WEEKLY SUMMARY
+// ════════════════════════════════════
+async function generateWeeklySummary(){
+  const btn=document.querySelector('.wsc-refresh');
+  const textEl=document.getElementById('wsc-text');
+  const dateEl=document.getElementById('wsc-date');
+  if(btn){btn.textContent='Generating…';btn.disabled=true;}
+  textEl.classList.add('loading');
+  textEl.innerHTML='<span class="ai-typing"><span></span><span></span><span></span></span>';
+
+  // Gather this week's data
+  const db=loadDB(),keys=getWeekKeys();
+  const moodData=keys.map(k=>{ const r=db[k]||{}; return {date:k,mood:r.mood||0,habits:['m_teeth','e_teeth','w_shower','w_exercise'].filter(id=>r[id]).length}; });
+  const journals=keys.map(k=>(db[k]||{}).journal).filter(Boolean);
+  const avgMood=moodData.filter(d=>d.mood).reduce((s,d)=>s+d.mood,0)/Math.max(1,moodData.filter(d=>d.mood).length);
+  const streak=computeStreak();
+  const u=loadUser();
+
+  const prompt=`This is a weekly check-in summary for ${u.name||'a user'} of Bloom, a self-care app.
+Data this week:
+- Average mood: ${avgMood.toFixed(1)}/5
+- Daily habit completion average: ${(moodData.reduce((s,d)=>s+d.habits,0)/7).toFixed(1)}/4 habits per day
+- Current streak: ${streak} days
+- Journal entries this week: ${journals.length}
+${journals.length?'- Sample journal entry: "'+journals[0]+'"':''}
+
+Write a warm, personal 2-3 sentence reflection on how their week went. Be honest but kind. Notice patterns. If it was a hard week, acknowledge it without dismissing it. If it was a good week, celebrate genuinely. Speak directly to them in second person. No bullet points. No sign-offs.`;
+
+  try{
+    const resp=await fetch('/.netlify/functions/claude',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({system:'You are the warm, reflective voice inside Bloom, a mental health self-care app. Write genuinely personal weekly summaries.',message:prompt})
+    });
+    const data=await resp.json();
+    const text=data.text||'Your week had its moments. Keep showing up.';
+    textEl.textContent=text;
+    textEl.classList.remove('loading');
+    // Cache it
+    const cacheKey='bloom_wsum_'+getWeekKeys()[0];
+    localStorage.setItem(cacheKey,JSON.stringify({text,date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})}));
+    if(dateEl)dateEl.textContent='Generated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  }catch{
+    textEl.textContent='Your week had its moments. Every day you showed up is worth something.';
+    textEl.classList.remove('loading');
+  }
+  if(btn){btn.textContent='Regenerate';btn.disabled=false;}
+}
+
+function loadCachedSummary(){
+  const cacheKey='bloom_wsum_'+getWeekKeys()[0];
+  try{
+    const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');
+    if(cached){
+      const textEl=document.getElementById('wsc-text');
+      const dateEl=document.getElementById('wsc-date');
+      if(textEl)textEl.textContent=cached.text;
+      if(dateEl)dateEl.textContent='Generated '+cached.date;
+      const btn=document.querySelector('.wsc-refresh');
+      if(btn)btn.textContent='Regenerate';
+    }
+  }catch{}
+}
+
+// ════════════════════════════════════
+//  CUSTOM AFFIRMATIONS
+// ════════════════════════════════════
+function loadCustomAffirmations(){
+  try{ return JSON.parse(localStorage.getItem('bloom_affirmations')||'[]'); }catch{ return []; }
+}
+function saveCustomAffirmations(a){ localStorage.setItem('bloom_affirmations',JSON.stringify(a)); }
+
+function addAffirmation(){
+  const input=document.getElementById('aff-add-input');
+  const val=input.value.trim();
+  if(!val) return;
+  const affs=loadCustomAffirmations();
+  affs.push(val);
+  saveCustomAffirmations(affs);
+  input.value='';
+  renderCustomAffirmations();
+  showAffirm({e:'💛',m:'Saved.',s:'bloom will remind you of this when you need it.'});
+}
+
+function removeAffirmation(idx){
+  const affs=loadCustomAffirmations();
+  affs.splice(idx,1);
+  saveCustomAffirmations(affs);
+  renderCustomAffirmations();
+}
+
+function renderCustomAffirmations(){
+  const list=document.getElementById('aff-saved-list');
+  if(!list) return;
+  const affs=loadCustomAffirmations();
+  list.innerHTML='';
+  if(affs.length===0){
+    const e=document.createElement('div');
+    e.style.cssText='font-size:12px;color:var(--softer);font-style:italic;margin-bottom:4px';
+    e.textContent='None saved yet — add one below.';
+    list.appendChild(e);return;
+  }
+  affs.forEach((txt,i)=>{
+    const item=document.createElement('div');item.className='aff-saved-item';
+    item.innerHTML=`<span class="aff-saved-text">"${txt}"</span><button class="aff-saved-del" onclick="removeAffirmation(${i})">×</button>`;
+    list.appendChild(item);
+  });
+}
+
+// Mix custom affirmations into the rotation
+function getAffirmation(){
+  const custom=loadCustomAffirmations();
+  const all=[...AFFIRMS, ...custom.map(t=>({e:'💛',m:t,s:'Your own words, back to you.'}))];
+  return all[Math.floor(Math.random()*all.length)];
+}
+
+// ════════════════════════════════════
+//  SETTINGS COLLAPSIBLE SECTIONS
+// ════════════════════════════════════
+function toggleSG(name){
+  const sg=document.getElementById('sg-'+name);
+  if(!sg) return;
+  sg.classList.toggle('open');
+}
+
+function saveName(val){
+  const u=loadUser();u.name=val.trim();saveUser(u);
+  renderSettings();
+}
+
+// ════════════════════════════════════
+//  UPDATED renderSettings
+// ════════════════════════════════════
+
 function renderSettings(){
   const S=loadSettings(),u=loadUser();
   document.getElementById('sv-shower_goal').textContent=S.shower_goal;
   document.getElementById('sv-exercise_goal').textContent=S.exercise_goal;
   const outsideEl=document.getElementById('sv-outside_goal');
   if(outsideEl)outsideEl.textContent=S.outside_goal||3;
-  if(u.name)document.getElementById('settings-sub').textContent=`Hey ${u.name} — make bloom work for you.`;
+  // Profile section
+  const nameInput=document.getElementById('settings-name');
+  if(nameInput&&!nameInput.value)nameInput.value=u.name||'';
+  const subEl=document.getElementById('settings-sub');
+  if(subEl)subEl.textContent=u.name?`Hey ${u.name} — make bloom work for you.`:'Make bloom work for you.';
+  const profileSub=document.getElementById('sgh-profile-sub');
+  if(profileSub)profileSub.textContent=u.name?u.name+' · '+getLvInfo(getTotalXP()).lv.n:'Your name and level';
+  // Level summary
+  const lvSum=document.getElementById('settings-level-summary');
+  if(lvSum){
+    const{lv,idx,xpIn,xpTo,nx}=getLvInfo(getTotalXP());
+    lvSum.textContent=`Level ${idx} ${lv.n} ${lv.i} · ${xpIn}${nx?' / '+xpTo+' XP to next level':' XP (max level!)'}`;
+  }
+  // Tasks sub
+  const tasksSub=document.getElementById('sgh-tasks-sub');
+  if(tasksSub){const t=getActiveTasks();tasksSub.textContent=t.length+' task'+(t.length!==1?'s':'')+' this week';}
+  // About sub
+  const aboutSub=document.getElementById('sgh-about-sub');
+  if(aboutSub)aboutSub.textContent='v'+BLOOM_VERSION+' · '+BLOOM_BUILD;
   const vEl=document.getElementById('version-display');
   const bEl=document.getElementById('build-display');
   if(vEl)vEl.textContent='v'+BLOOM_VERSION;
@@ -2316,7 +2834,7 @@ function shareApp(){
 // ════════════════════════════════════
 function initApp(){
   renderToday();renderWellness();renderJournalState();renderBreathUsed();
-  renderHouseholdTasks();
+  renderHouseholdTasks();renderSleep();renderWins();renderCustomAffirmations();loadCachedSummary();
   // Legacy water reminders (in-app)
   if(loadUser().waterNotify) scheduleWaterReminders();
   // OneSignal-based schedulers
@@ -2330,6 +2848,9 @@ function initApp(){
   checkWins();
   checkInstallReminder();
   checkForUpdate();
+  // Restore low mood banner if today's mood is low
+  const rec=getTodayRec();
+  if(rec.mood&&rec.mood<=2) checkLowMood(rec.mood);
 }
 
 // ════════════════════════════════════
