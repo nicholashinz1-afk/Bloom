@@ -419,11 +419,9 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
    HABIT CELEBRATION TOAST
    ============================================================ */
 .celebrate-toast {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 32px);
-  max-width: 398px;
+  position: absolute;
+  left: 16px;
+  right: 16px;
   background: linear-gradient(135deg, var(--bg-elevated), rgba(122,158,126,0.12));
   border: 1px solid rgba(122,158,126,0.4);
   border-radius: var(--r-xl);
@@ -726,18 +724,23 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
    ============================================================ */
 .food-chips {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.food-chips::-webkit-scrollbar { display: none; }
 .food-chip {
-  padding: 6px 12px;
+  padding: 6px 10px;
   border-radius: var(--r-full);
   border: 1px solid rgba(255,255,255,0.1);
   background: var(--bg-elevated);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .food-chip.selected {
   background: rgba(122,158,126,0.15);
@@ -2637,10 +2640,15 @@ function celebrate(type, sourceEl) {
   toast.id = 'celebrate-toast';
   toast.className = 'celebrate-toast';
 
-  // Position solidly above nav bar
+  // Position above nav bar, relative to #app container
+  const appEl = document.getElementById('app');
   const navEl = document.getElementById('bottom-nav');
-  const navTop = navEl ? navEl.getBoundingClientRect().top : window.innerHeight - 64;
-  toast.style.bottom = (window.innerHeight - navTop + 16) + 'px';
+  const appRect = appEl ? appEl.getBoundingClientRect() : { bottom: window.innerHeight };
+  const navRect = navEl ? navEl.getBoundingClientRect() : null;
+  const bottomOffset = navRect
+    ? (appRect.bottom - navRect.top) + 12
+    : 80;
+  toast.style.bottom = bottomOffset + 'px';
 
   toast.innerHTML = `
     <div class="celebrate-toast-emoji">${data.emoji}</div>
@@ -2650,7 +2658,7 @@ function celebrate(type, sourceEl) {
     </div>
     ${data.xp ? `<div class="celebrate-toast-xp">+${data.xp} XP</div>` : ''}
   `;
-  document.body.appendChild(toast);
+  (appEl || document.body).appendChild(toast);
 
   // Also show XP float if applicable
   if (data.xp && sourceEl) showXPFloat(data.xp, sourceEl);
