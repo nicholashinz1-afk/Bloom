@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Bloom">
-<meta name="theme-color" content="#13150f">
+<meta name="theme-color" content="#0d1610">
 <title>Bloom</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,25 +14,72 @@
 
 <!-- PWA Manifest (inline via JS) -->
 <script>
-const manifestData = {
-  name: "Bloom",
-  short_name: "Bloom",
-  description: "A gentle self-care habit tracker",
-  start_url: "/",
-  display: "standalone",
-  background_color: "#13150f",
-  theme_color: "#13150f",
-  orientation: "portrait",
-  icons: [
-    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%2313150f'/%3E%3Ctext x='256' y='320' font-size='280' text-anchor='middle'%3E🌿%3C/text%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml" }
-  ]
-};
-const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
-const manifestURL = URL.createObjectURL(blob);
-const link = document.createElement('link');
-link.rel = 'manifest';
-link.href = manifestURL;
-document.head.appendChild(link);
+(function() {
+  // Icon SVG — built as string parts to avoid template literal escaping issues
+  var iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">'
+    + '<defs>'
+    + '<radialGradient id="ibg" cx="50%" cy="60%" r="70%"><stop offset="0%" stop-color="#1a2e1d"/><stop offset="100%" stop-color="#0a1208"/></radialGradient>'
+    + '<radialGradient id="iglow" cx="50%" cy="72%" r="40%"><stop offset="0%" stop-color="#c9954a" stop-opacity="0.35"/><stop offset="100%" stop-color="#c9954a" stop-opacity="0"/></radialGradient>'
+    + '<radialGradient id="ipetal" cx="50%" cy="30%" r="70%"><stop offset="0%" stop-color="#f0e8d8"/><stop offset="100%" stop-color="#d4c8b0"/></radialGradient>'
+    + '</defs>'
+    + '<rect width="512" height="512" rx="112" ry="112" fill="url(#ibg)"/>'
+    + '<ellipse cx="256" cy="370" rx="160" ry="80" fill="url(#iglow)"/>'
+    + '<path d="M256 380 C256 340 248 300 250 255 C252 210 256 185 256 185" stroke="#5a8a5e" stroke-width="7" stroke-linecap="round" fill="none"/>'
+    + '<path d="M252 290 C230 270 190 265 175 240 C195 235 230 245 252 268 Z" fill="#4a7a4e" opacity="0.9"/>'
+    + '<path d="M252 290 C240 275 215 262 175 240" stroke="#3d6640" stroke-width="2" fill="none" stroke-linecap="round"/>'
+    + '<path d="M256 255 C278 235 315 232 330 210 C312 208 278 220 256 244 Z" fill="#5a8a5e" opacity="0.85"/>'
+    + '<path d="M256 255 C270 240 298 226 330 210" stroke="#4a7a4e" stroke-width="2" fill="none" stroke-linecap="round"/>'
+    + '<path d="M253 230 C237 218 215 218 205 202 C220 198 242 208 253 224 Z" fill="#6a9a6e" opacity="0.7"/>'
+    + '<ellipse cx="256" cy="158" rx="18" ry="30" fill="url(#ipetal)" opacity="0.95" transform="rotate(0 256 185)"/>'
+    + '<ellipse cx="256" cy="158" rx="18" ry="30" fill="url(#ipetal)" opacity="0.9" transform="rotate(72 256 185)"/>'
+    + '<ellipse cx="256" cy="158" rx="18" ry="30" fill="url(#ipetal)" opacity="0.9" transform="rotate(144 256 185)"/>'
+    + '<ellipse cx="256" cy="158" rx="18" ry="30" fill="url(#ipetal)" opacity="0.9" transform="rotate(216 256 185)"/>'
+    + '<ellipse cx="256" cy="158" rx="18" ry="30" fill="url(#ipetal)" opacity="0.9" transform="rotate(288 256 185)"/>'
+    + '<circle cx="256" cy="185" r="22" fill="#e0b87a"/>'
+    + '<circle cx="256" cy="185" r="14" fill="#c9954a"/>'
+    + '<circle cx="256" cy="185" r="7" fill="#a87030"/>'
+    + '<circle cx="256" cy="172" r="2.5" fill="#e8d0a0"/>'
+    + '<circle cx="265" cy="178" r="2" fill="#e8d0a0"/>'
+    + '<circle cx="262" cy="190" r="2" fill="#e8d0a0"/>'
+    + '<circle cx="250" cy="192" r="2" fill="#e8d0a0"/>'
+    + '<circle cx="247" cy="180" r="2.5" fill="#e8d0a0"/>'
+    + '<ellipse cx="256" cy="385" rx="48" ry="10" fill="#2a3d2a" opacity="0.6"/>'
+    + '</svg>';
+
+  var ICON_URL = 'data:image/svg+xml,' + encodeURIComponent(iconSVG);
+
+  var manifestData = {
+    name: "Bloom",
+    short_name: "Bloom",
+    description: "A gentle self-care habit tracker",
+    start_url: "/",
+    display: "standalone",
+    background_color: "#0d1610",
+    theme_color: "#0d1610",
+    orientation: "portrait",
+    icons: [
+      { src: ICON_URL, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+    ]
+  };
+
+  var blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+  var manifestURL = URL.createObjectURL(blob);
+  var mlink = document.createElement('link');
+  mlink.rel = 'manifest';
+  mlink.href = manifestURL;
+  document.head.appendChild(mlink);
+
+  var favicon = document.createElement('link');
+  favicon.rel = 'icon';
+  favicon.type = 'image/svg+xml';
+  favicon.href = ICON_URL;
+  document.head.appendChild(favicon);
+
+  var appleIcon = document.createElement('link');
+  appleIcon.rel = 'apple-touch-icon';
+  appleIcon.href = ICON_URL;
+  document.head.appendChild(appleIcon);
+})();
 </script>
 
 <style>
@@ -40,23 +87,23 @@ document.head.appendChild(link);
    BLOOM v1.3.0 — DESIGN TOKENS
    ============================================================ */
 :root {
-  /* Base palette */
-  --bg:          #13150f;
-  --bg-mid:      #1a1d14;
-  --bg-card:     #1f221a;
-  --bg-elevated: #252820;
-  --bg-overlay:  rgba(19,21,15,0.92);
+  /* Base palette — deep forest green */
+  --bg:          #0d1610;
+  --bg-mid:      #111a13;
+  --bg-card:     #162019;
+  --bg-elevated: #1c2a1f;
+  --bg-overlay:  rgba(13,22,16,0.93);
 
   /* Nature accents */
   --sage:        #7a9e7e;
   --sage-light:  #a8c5ab;
-  --sage-dim:    #3d5c40;
+  --sage-dim:    #2e4d32;
   --amber:       #c9954a;
   --amber-light: #e0b87a;
-  --amber-dim:   #6b4e25;
+  --amber-dim:   #5c3f1a;
   --rose:        #b07878;
   --rose-light:  #d4a8a8;
-  --rose-dim:    #5c3535;
+  --rose-dim:    #4a2828;
   --sky:         #6a9ab0;
   --sky-light:   #9ec4d8;
   --cream:       #e8e0d0;
@@ -64,9 +111,9 @@ document.head.appendChild(link);
 
   /* Text */
   --text-primary:   #e8e0d0;
-  --text-secondary: #9a9080;
-  --text-muted:     #5a5548;
-  --text-on-sage:   #0f1c10;
+  --text-secondary: #8a9e8c;
+  --text-muted:     #4a5e4c;
+  --text-on-sage:   #0a1a0b;
 
   /* Semantic */
   --success: var(--sage);
@@ -162,6 +209,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   justify-content: center;
   gap: 8px;
   margin-bottom: 6px;
+  position: relative;
 }
 .header-bloom-name {
   font-family: 'Fraunces', serif;
@@ -170,6 +218,19 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   color: var(--cream);
   letter-spacing: 0.05em;
 }
+#crisis-heart {
+  position: absolute;
+  right: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 17px;
+  padding: 4px;
+  opacity: 0.35;
+  transition: opacity 0.2s;
+  line-height: 1;
+}
+#crisis-heart:active { opacity: 0.8; transform: scale(0.92); }
 
 /* Tab content area */
 #tab-content {
@@ -177,13 +238,269 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   overflow: hidden;
   position: relative;
 }
+
+/* ============================================================
+   TAB TRANSITIONS
+   ============================================================ */
 .tab-panel {
   display: none;
   height: 100%;
   flex-direction: column;
+  animation: tabFadeIn 0.22s ease;
 }
-.tab-panel.active {
+.tab-panel.active { display: flex; }
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   STAGGERED CARD ENTRANCE
+   ============================================================ */
+.card-enter {
+  animation: cardEnter 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ============================================================
+   SKELETON LOADER
+   ============================================================ */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-elevated) 25%, rgba(255,255,255,0.04) 50%, var(--bg-elevated) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease infinite;
+  border-radius: 6px;
+}
+@keyframes skeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============================================================
+   CONFETTI
+   ============================================================ */
+.confetti-piece {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  pointer-events: none;
+  z-index: 997;
+  animation: confettiFall var(--dur, 1.2s) var(--delay, 0s) cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+  border-radius: var(--shape, 2px);
+}
+@keyframes confettiFall {
+  0%   { opacity: 1; transform: translate(0,0) rotate(0deg) scale(1); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.4); }
+}
+
+/* ============================================================
+   LEVEL UP OVERLAY
+   ============================================================ */
+#levelup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.7);
+  animation: fadeIn 0.3s ease;
+  pointer-events: all;
+}
+.levelup-card {
+  background: linear-gradient(135deg, var(--bg-card), rgba(122,158,126,0.08));
+  border: 1px solid rgba(122,158,126,0.4);
+  border-radius: var(--r-xl);
+  padding: 32px 28px;
+  text-align: center;
+  max-width: 300px;
+  margin: 0 24px;
+  animation: scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 0 60px rgba(122,158,126,0.2);
+}
+.levelup-emoji { font-size: 64px; margin-bottom: 12px; animation: levelupBounce 0.6s 0.3s cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes levelupBounce {
+  from { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* ============================================================
+   MOOD BUTTON BOUNCE
+   ============================================================ */
+.mood-btn.bounce {
+  animation: moodBounce 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes moodBounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+/* ============================================================
+   WATER BOTTLE FILL ANIMATION
+   ============================================================ */
+.water-bottle.filling .water-fill-rect {
+  animation: waterFill 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes waterFill {
+  from { transform: scaleY(0); opacity: 0; }
+  to   { transform: scaleY(1); opacity: 1; }
+}
+
+/* ============================================================
+   RIPPLE ON TAP
+   ============================================================ */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  transform: scale(0);
+  animation: rippleOut 0.5s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes rippleOut {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ============================================================
+   EMPTY STATES
+   ============================================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 12px;
+}
+.empty-state-emoji { font-size: 48px; opacity: 0.6; }
+.empty-state-title {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--text-secondary);
+}
+.empty-state-sub { font-size: 13px; color: var(--text-muted); line-height: 1.6; max-width: 240px; }
+
+/* ============================================================
+   JOURNAL SAVE BUTTON SPINNER
+   ============================================================ */
+.btn-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: btnSpin 0.7s linear infinite;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+}
+@keyframes btnSpin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+/* ============================================================
+   HABIT CELEBRATION TOAST
+   ============================================================ */
+.celebrate-toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 398px;
+  background: linear-gradient(135deg, var(--bg-elevated), rgba(122,158,126,0.12));
+  border: 1px solid rgba(122,158,126,0.4);
+  border-radius: var(--r-xl);
+  padding: 16px 18px;
+  z-index: 490;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(122,158,126,0.1);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  pointer-events: none;
+  animation: celebrateIn 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+.celebrate-toast.hide {
+  animation: celebrateOut 0.3s ease forwards;
+}
+.celebrate-toast-emoji {
+  font-size: 32px;
+  flex-shrink: 0;
+  animation: celebrateEmoji 0.5s 0.1s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes celebrateEmoji {
+  from { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.celebrate-toast-body { flex: 1; min-width: 0; }
+.celebrate-toast-title {
+  font-family: 'Fraunces', serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--cream);
+  line-height: 1.3;
+  margin-bottom: 3px;
+}
+.celebrate-toast-sub {
+  font-size: 12px;
+  color: var(--sage-light);
+  font-style: italic;
+  font-family: 'Fraunces', serif;
+}
+.celebrate-toast-xp {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--amber-light);
+  background: rgba(201,149,74,0.12);
+  border: 1px solid rgba(201,149,74,0.2);
+  border-radius: var(--r-full);
+  padding: 3px 10px;
+  flex-shrink: 0;
+}
+@keyframes celebrateIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes celebrateOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-10px) scale(0.96); }
+}
+.streak-toast {
+  position: fixed;
+  top: calc(var(--safe-top) + 70px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--bg-elevated), rgba(201,149,74,0.1));
+  border: 1px solid rgba(201,149,74,0.4);
+  border-radius: var(--r-xl);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 500;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.streak-toast.hide { animation: toastOut 0.3s ease forwards; }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-16px) scale(0.92); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.96); }
 }
 .tab-scroll {
   flex: 1;
@@ -191,39 +508,23 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding: 16px 16px calc(var(--crisis-height) + 16px);
+  padding: 16px 16px 24px;
 }
 .tab-scroll::-webkit-scrollbar { display: none; }
 
 /* Crisis bar */
-#crisis-bar {
-  flex-shrink: 0;
-  height: var(--crisis-height);
-  background: var(--bg-mid);
-  border-top: 1px solid rgba(255,255,255,0.04);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 16px;
-}
-#crisis-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  background: transparent;
+#crisis-heart {
+  background: none;
   border: none;
-  border-radius: var(--r-full);
-  color: var(--text-muted);
-  font-family: 'Instrument Sans', sans-serif;
-  font-size: 12px;
-  font-weight: 400;
   cursor: pointer;
-  transition: all 0.2s;
-  letter-spacing: 0.01em;
+  font-size: 18px;
+  padding: 4px 6px;
+  opacity: 0.45;
+  transition: opacity 0.2s;
+  line-height: 1;
+  flex-shrink: 0;
 }
-#crisis-btn:active { opacity: 0.6; }
-#crisis-btn:hover { color: var(--rose-light); }
+#crisis-heart:active { opacity: 0.9; transform: scale(0.92); }
 
 /* Bottom navigation */
 #bottom-nav {
@@ -1093,8 +1394,108 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 
 /* ============================================================
-   STREAK TOAST
+   TUTORIAL OVERLAY
    ============================================================ */
+#tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  pointer-events: none;
+}
+#tutorial-overlay.active { pointer-events: all; }
+.tutorial-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+}
+.tutorial-card {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  background: var(--bg-card);
+  border: 1px solid rgba(122,158,126,0.3);
+  border-radius: var(--r-xl);
+  padding: 20px;
+  box-shadow: var(--shadow-lg);
+  animation: scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  max-width: 398px;
+  margin: 0 auto;
+}
+.tutorial-card.pos-top { top: calc(var(--safe-top) + 80px); }
+.tutorial-card.pos-mid { top: 50%; transform: translateY(-50%); }
+.tutorial-card.pos-bottom { bottom: calc(var(--nav-height) + var(--crisis-height) + var(--safe-bottom) + 16px); }
+.tutorial-step-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--sage);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+.tutorial-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--cream);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.tutorial-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+.tutorial-highlight {
+  display: inline-block;
+  background: rgba(122,158,126,0.15);
+  border: 1px solid rgba(122,158,126,0.25);
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: var(--sage-light);
+  font-size: 13px;
+}
+.tutorial-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tutorial-dots {
+  display: flex;
+  gap: 5px;
+}
+.tutorial-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  transition: background 0.2s;
+}
+.tutorial-dot.active { background: var(--sage); width: 16px; border-radius: 3px; }
+.tutorial-arrow {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: var(--bg-card);
+  border: 1px solid rgba(122,158,126,0.3);
+  transform: rotate(45deg);
+}
+.tutorial-arrow.down { bottom: -7px; left: 50%; margin-left: -7px; border-top: none; border-left: none; }
+.tutorial-arrow.up { top: -7px; left: 50%; margin-left: -7px; border-bottom: none; border-right: none; }
+.tutorial-nav-highlight {
+  position: absolute;
+  bottom: var(--safe-bottom);
+  height: var(--nav-height);
+  background: rgba(122,158,126,0.08);
+  border-top: 2px solid rgba(122,158,126,0.4);
+  border-radius: 2px 2px 0 0;
+  transition: left 0.3s, width 0.3s;
+  pointer-events: none;
+}
+@keyframes tutPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.04); }
+}
 .streak-toast {
   position: fixed;
   top: calc(var(--safe-top) + 70px);
@@ -1404,6 +1805,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
     <div class="header-bloom">
       <span>🌿</span>
       <span class="header-bloom-name">bloom</span>
+      <button id="crisis-heart" onclick="openCrisisSheet()" title="Mental health resources">🤍</button>
     </div>
     <div class="header-quote" id="daily-quote"></div>
   </div>
@@ -1434,13 +1836,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
     <div class="tab-panel" id="tab-settings">
       <div class="tab-scroll" id="settings-scroll"></div>
     </div>
-  </div>
-
-  <!-- Crisis bar -->
-  <div id="crisis-bar">
-    <button id="crisis-btn" onclick="openCrisisSheet()">
-      <span style="font-size:14px">🌸</span> <span>You're not alone · Crisis resources</span>
-    </button>
   </div>
 
   <!-- Bottom nav -->
@@ -1540,6 +1935,9 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
     </div>
   </div>
 </div>
+
+<!-- Tutorial overlay -->
+<div id="tutorial-overlay"></div>
 
 <script>
 // ============================================================
@@ -1828,13 +2226,6 @@ function getNextLevel(xp) {
   return null;
 }
 
-function addXP(amount, sourceEl) {
-  state.xpData.total = (state.xpData.total || 0) + amount;
-  saveState();
-  if (sourceEl) showXPFloat(amount, sourceEl);
-  updateProgressTab();
-}
-
 function showXPFloat(amount, el) {
   const rect = el.getBoundingClientRect();
   const div = document.createElement('div');
@@ -1847,6 +2238,7 @@ function showXPFloat(amount, el) {
 }
 
 function burstParticles(el) {
+  if (!el) return;
   const rect = el.getBoundingClientRect();
   const cx = rect.left + rect.width/2;
   const cy = rect.top + rect.height/2;
@@ -1862,6 +2254,134 @@ function burstParticles(el) {
     document.body.appendChild(p);
     setTimeout(() => p.remove(), 900);
   }
+}
+
+// ── Haptic feedback ──────────────────────────────────────────
+function haptic(style = 'light') {
+  try {
+    if (navigator.vibrate) {
+      const patterns = { light: 8, medium: 15, heavy: 25, success: [10,50,10] };
+      navigator.vibrate(patterns[style] || 8);
+    }
+  } catch(e) {}
+}
+
+// ── Ripple on element ────────────────────────────────────────
+function addRipple(el, e) {
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const x = (e?.clientX ?? rect.left + rect.width/2) - rect.left;
+  const y = (e?.clientY ?? rect.top + rect.height/2) - rect.top;
+  const size = Math.max(rect.width, rect.height);
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  r.style.cssText = `width:${size}px;height:${size}px;left:${x - size/2}px;top:${y - size/2}px`;
+  el.style.position = 'relative';
+  el.style.overflow = 'hidden';
+  el.appendChild(r);
+  setTimeout(() => r.remove(), 600);
+}
+
+// ── Confetti burst ───────────────────────────────────────────
+function launchConfetti(cx, cy, count = 40) {
+  const colors = ['#7a9e7e','#a8c5ab','#c9954a','#e0b87a','#b07878','#d4a8a8','#6a9ab0','#9ec4d8','#e8e0d0'];
+  const shapes = ['2px','50%','0'];
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 80 + Math.random() * 160;
+    const tx = Math.cos(angle) * dist;
+    const ty = Math.sin(angle) * dist - 60;
+    const rot = (Math.random() - 0.5) * 720;
+    const dur = 0.8 + Math.random() * 0.6;
+    const delay = Math.random() * 0.2;
+    p.style.cssText = `
+      left:${cx-4}px;top:${cy-4}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      --tx:${tx}px;--ty:${ty}px;--rot:${rot}deg;
+      --dur:${dur}s;--delay:${delay}s;
+      --shape:${shapes[Math.floor(Math.random()*shapes.length)]};
+      width:${5+Math.random()*6}px;height:${5+Math.random()*6}px;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), (dur + delay) * 1000 + 100);
+  }
+}
+
+// ── Stagger card entrance animations ────────────────────────
+function staggerCards(panel) {
+  if (!panel) return;
+  const cards = panel.querySelectorAll('.card, .insight-card, .history-day');
+  cards.forEach((c, i) => {
+    c.style.animationDelay = `${i * 40}ms`;
+    c.classList.remove('card-enter');
+    void c.offsetWidth; // reflow
+    c.classList.add('card-enter');
+  });
+}
+
+// ── Level-up check + celebration ────────────────────────────
+let lastLevel = null;
+function checkLevelUp(oldXP, newXP) {
+  const oldLv = getLevel(oldXP);
+  const newLv = getLevel(newXP);
+  if (newLv.name !== oldLv.name) {
+    showLevelUp(newLv);
+  }
+}
+
+function showLevelUp(level) {
+  haptic('heavy');
+  launchConfetti(window.innerWidth/2, window.innerHeight/2, 60);
+
+  const div = document.createElement('div');
+  div.id = 'levelup-overlay';
+  div.innerHTML = `
+    <div class="levelup-card">
+      <div class="levelup-emoji">${level.emoji}</div>
+      <div style="font-family:Fraunces,serif;font-size:13px;color:var(--sage);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Level up!</div>
+      <div style="font-family:Fraunces,serif;font-size:26px;font-weight:300;color:var(--cream);margin-bottom:8px">${level.name}</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">You've reached a new level. Keep going — you're building something real.</div>
+      <button class="btn btn-primary btn-block" id="levelup-close">Keep blooming 🌿</button>
+    </div>
+  `;
+  document.body.appendChild(div);
+  document.getElementById('levelup-close').addEventListener('click', () => div.remove());
+  setTimeout(() => { if (div.parentNode) div.remove(); }, 8000);
+}
+
+// ── Enhanced addXP with level-up check ──────────────────────
+function addXP(amount, sourceEl) {
+  const oldXP = state.xpData.total || 0;
+  state.xpData.total = oldXP + amount;
+  saveState();
+  if (sourceEl) showXPFloat(amount, sourceEl);
+  checkLevelUp(oldXP, state.xpData.total);
+  updateProgressTab();
+}
+
+// ── Water fill animation ─────────────────────────────────────
+function animateWaterBottle(index) {
+  const bottles = document.querySelectorAll('.water-bottle');
+  const bottle = bottles[index];
+  if (!bottle) return;
+  bottle.classList.add('filling');
+  haptic('light');
+  setTimeout(() => bottle.classList.remove('filling'), 600);
+}
+
+// ── Mood bounce ──────────────────────────────────────────────
+function bounceMoodBtn(val) {
+  const btns = document.querySelectorAll('.mood-btn');
+  btns.forEach((btn, i) => {
+    if (i === val) {
+      btn.classList.remove('bounce');
+      void btn.offsetWidth;
+      btn.classList.add('bounce');
+      setTimeout(() => btn.classList.remove('bounce'), 400);
+    }
+  });
 }
 
 // ============================================================
@@ -1918,6 +2438,210 @@ function updateStreak() {
 }
 
 // ============================================================
+//  CELEBRATION DATA — every habit, every moment
+// ============================================================
+const CELEBRATIONS = {
+  m_teeth: {
+    emoji: '🦷', xp: 15,
+    messages: [
+      { title: 'Morning routine — done.', sub: 'The day starts with you.' },
+      { title: 'Clean teeth, clear mind.', sub: 'Something small, something real.' },
+      { title: 'You started the day.', sub: 'That counts more than you know.' },
+    ],
+  },
+  e_teeth: {
+    emoji: '🌙', xp: 15,
+    messages: [
+      { title: 'Evening done.', sub: 'Rest easy tonight.' },
+      { title: 'You took care of yourself.', sub: 'Small act, real love.' },
+      { title: 'Day complete.', sub: 'Well done.' },
+    ],
+  },
+  w_shower: {
+    emoji: '🚿', xp: 25,
+    messages: [
+      { title: 'Fresh start.', sub: 'A clean slate changes everything.' },
+      { title: 'That took real courage.', sub: 'Some days this is the hardest thing.' },
+      { title: 'Clean and grounded.', sub: 'You showed up for yourself.' },
+    ],
+  },
+  w_exercise: {
+    emoji: '💪', xp: 30,
+    messages: [
+      { title: 'Movement done!', sub: 'Every rep is a vote for yourself.' },
+      { title: 'Your body says thank you.', sub: 'Stronger than yesterday.' },
+      { title: 'You showed up for your body.', sub: 'This is what growth looks like.' },
+    ],
+  },
+  w_outside: {
+    emoji: '🌿', xp: 20,
+    messages: [
+      { title: 'Fresh air — got it.', sub: 'Even a few minutes matters.' },
+      { title: 'Outside, done.', sub: 'The world needed you in it today.' },
+      { title: 'You stepped out.', sub: 'Nature noticed.' },
+    ],
+  },
+  household: {
+    emoji: '🏠', xp: 15,
+    messages: [
+      { title: 'Task done!', sub: 'One less weight on your mind.' },
+      { title: 'Your space thanks you.', sub: 'Small acts of care add up.' },
+      { title: 'Done and dusted.', sub: 'A tidy space, a clearer mind.' },
+    ],
+  },
+  mood: {
+    emoji: '💚', xp: 0,
+    messages: [
+      { title: 'Mood logged.', sub: 'Awareness is the first step.' },
+      { title: 'Thanks for checking in.', sub: 'Knowing how you feel matters.' },
+      { title: 'Noted with care.', sub: 'You\'re paying attention to yourself.' },
+    ],
+  },
+  sleep: {
+    emoji: '😴', xp: 0,
+    messages: [
+      { title: 'Sleep logged.', sub: 'Rest is part of the work too.' },
+      { title: 'Thanks for tracking.', sub: 'Sleep shapes everything.' },
+    ],
+  },
+  water: {
+    emoji: '💧', xp: 10,
+    messages: [
+      { title: 'Water goal reached! 💧', sub: 'Your body is saying thank you right now.' },
+      { title: 'Three bottles — done!', sub: 'Hydration is self-care. You nailed it.' },
+      { title: 'Fully hydrated today.', sub: 'One of the kindest things you can do.' },
+    ],
+    confetti: true,
+  },
+  food: {
+    emoji: '🍽', xp: 10,
+    messages: [
+      { title: 'Nourishment — checked ✓', sub: 'Feeding yourself is an act of love.' },
+      { title: 'You fed yourself today.', sub: 'That matters more than you know.' },
+      { title: 'Body fuelled.', sub: 'Nourishment is the foundation of everything.' },
+    ],
+  },
+  journal: {
+    emoji: '📓', xp: 10,
+    messages: [
+      { title: 'Journal saved.', sub: 'bloom is reading what you wrote...' },
+      { title: 'Words on the page.', sub: 'That took something. Good.' },
+      { title: 'You made space for yourself.', sub: 'A response is on its way.' },
+    ],
+  },
+  reflection: {
+    emoji: '🪞', xp: 15,
+    messages: [
+      { title: 'Reflection saved.', sub: 'bloom is thinking about what you shared...' },
+      { title: 'You looked inward.', sub: 'That\'s the hardest kind of courage.' },
+      { title: 'Reflection complete.', sub: 'A response is on its way.' },
+    ],
+  },
+  win: {
+    emoji: '⭐', xp: 0,
+    messages: [
+      { title: 'Win logged!', sub: 'That counts. Every single one.' },
+      { title: 'Look at that.', sub: 'You\'re doing better than you think.' },
+      { title: 'A win is a win.', sub: 'No matter how small.' },
+    ],
+  },
+  breath: {
+    emoji: '🌬', xp: 0,
+    messages: [
+      { title: 'Breathing session done.', sub: 'Your nervous system thanks you.' },
+      { title: 'Four cycles complete.', sub: 'That\'s genuine self-care.' },
+      { title: 'Well done.', sub: 'Take a moment to notice how you feel.' },
+    ],
+  },
+  affirmation: {
+    emoji: '💌', xp: 0,
+    messages: [
+      { title: 'Affirmation saved.', sub: 'It\'ll find you when you need it.' },
+      { title: 'Kind words, kept safe.', sub: 'bloom will bring this back to you.' },
+    ],
+  },
+  all_done: {
+    emoji: '🎉', xp: 0,
+    confetti: true,
+    messages: [
+      { title: 'All done for today!', sub: 'Every single thing. You showed up fully.' },
+      { title: 'Perfect day logged 🌟', sub: 'Go be easy on yourself now — you\'ve earned it.' },
+      { title: 'Today was yours.', sub: 'Every habit, every check. Well done.' },
+    ],
+  },
+  weekly_goal: {
+    emoji: '🎯', xp: 0,
+    confetti: true,
+    messages: [
+      { title: 'Weekly goal hit!', sub: 'You set a goal and you kept it.' },
+      { title: 'Goal reached! 🎯', sub: 'That\'s consistency. That\'s you.' },
+    ],
+  },
+  insight: {
+    emoji: '💫', xp: 0,
+    messages: [
+      { title: 'Insight generated.', sub: 'bloom looked at your week and found something.' },
+      { title: 'Your week, reflected back.', sub: 'Scroll up to read it.' },
+    ],
+  },
+};
+
+// ── Core celebration function ────────────────────────────────
+let celebrateTimeout = null;
+function celebrate(type, sourceEl) {
+  const data = CELEBRATIONS[type];
+  if (!data) return;
+
+  haptic(data.confetti ? 'success' : 'medium');
+
+  const msg = data.messages[Math.floor(Math.random() * data.messages.length)];
+
+  // Particle burst from source
+  if (sourceEl) burstParticles(sourceEl);
+
+  // Confetti for big moments
+  if (data.confetti) {
+    const rect = sourceEl?.getBoundingClientRect();
+    const cx = rect ? rect.left + rect.width/2 : window.innerWidth/2;
+    const cy = rect ? rect.top + rect.height/2 : window.innerHeight * 0.4;
+    launchConfetti(cx, cy, 50);
+  }
+
+  // Remove any existing toast
+  const existing = document.getElementById('celebrate-toast');
+  if (existing) existing.remove();
+  if (celebrateTimeout) clearTimeout(celebrateTimeout);
+
+  // Build toast
+  const toast = document.createElement('div');
+  toast.id = 'celebrate-toast';
+  toast.className = 'celebrate-toast';
+
+  // Position solidly above nav bar
+  const navEl = document.getElementById('bottom-nav');
+  const navTop = navEl ? navEl.getBoundingClientRect().top : window.innerHeight - 64;
+  toast.style.bottom = (window.innerHeight - navTop + 16) + 'px';
+
+  toast.innerHTML = `
+    <div class="celebrate-toast-emoji">${data.emoji}</div>
+    <div class="celebrate-toast-body">
+      <div class="celebrate-toast-title">${msg.title}</div>
+      <div class="celebrate-toast-sub">${msg.sub}</div>
+    </div>
+    ${data.xp ? `<div class="celebrate-toast-xp">+${data.xp} XP</div>` : ''}
+  `;
+  document.body.appendChild(toast);
+
+  // Also show XP float if applicable
+  if (data.xp && sourceEl) showXPFloat(data.xp, sourceEl);
+
+  celebrateTimeout = setTimeout(() => {
+    toast.classList.add('hide');
+    setTimeout(() => toast.remove(), 350);
+  }, 2800);
+}
+
+// ============================================================
 //  HABIT LOGIC
 // ============================================================
 const XP_VALUES = {
@@ -1933,8 +2657,7 @@ function toggleHabit(habitId, el) {
   if (!wasDone) {
     const xpVal = XP_VALUES[habitId] || 10;
     addXP(xpVal, el);
-    burstParticles(el);
-    showAffirmation(habitId);
+    celebrate(habitId, el);
   } else {
     state.xpData.total = Math.max(0, (state.xpData.total || 0) - (XP_VALUES[habitId] || 10));
     saveState();
@@ -1947,17 +2670,26 @@ function toggleHabit(habitId, el) {
   checkAllDone();
 }
 
-function toggleWeeklyHabit(habitId, el) {
+function toggleWeeklyHabit(habitId, action, el) {
   const wd = state.weekData;
   if (!wd[habitId]) wd[habitId] = 0;
   const goal = state.prefs?.goals?.[habitId] || 3;
 
-  if (wd[habitId] < goal) {
-    wd[habitId]++;
-    const xpVal = XP_VALUES[habitId] || 15;
-    addXP(xpVal, el);
-    burstParticles(el);
-    showAffirmation(habitId);
+  if (action === 'dec') {
+    if (wd[habitId] > 0) {
+      wd[habitId]--;
+      state.xpData.total = Math.max(0, (state.xpData.total || 0) - (XP_VALUES[habitId] || 15));
+      saveState();
+      updateProgressTab();
+      haptic('light');
+    }
+  } else {
+    if (wd[habitId] < goal) {
+      wd[habitId]++;
+      addXP(XP_VALUES[habitId] || 15, el);
+      const atGoal = wd[habitId] >= goal;
+      celebrate(atGoal ? 'weekly_goal' : habitId, el);
+    }
   }
   saveState();
   renderTodayTab();
@@ -1970,9 +2702,10 @@ function toggleHouseholdTask(taskId, el) {
 
   if (wd.household[taskId]) {
     addXP(15, el);
-    burstParticles(el);
+    celebrate('household', el);
   } else {
     state.xpData.total = Math.max(0, (state.xpData.total || 0) - 15);
+    haptic('light');
     saveState();
     updateProgressTab();
   }
@@ -1981,15 +2714,13 @@ function toggleHouseholdTask(taskId, el) {
 }
 
 // ============================================================
-//  AFFIRMATION SYSTEM
+//  AFFIRMATION SYSTEM (now just drives the banner, celebration handles the toast)
 // ============================================================
 let affirmTimeout = null;
 function showAffirmation(habitId) {
   const pool = [...(HABIT_AFFIRMATIONS[habitId] || ['Well done.'])];
   const custom = state.wellnessData?.affirmations || [];
-  if (custom.length > 0 && Math.random() < 0.3) {
-    pool.push(...custom);
-  }
+  if (custom.length > 0 && Math.random() < 0.3) pool.push(...custom);
   const text = pool[Math.floor(Math.random() * pool.length)];
   state.lastAffirm = text;
   state.showAffirm = true;
@@ -1997,7 +2728,7 @@ function showAffirmation(habitId) {
   affirmTimeout = setTimeout(() => {
     state.showAffirm = false;
     renderTodayTop();
-  }, 4000);
+  }, 3500);
   renderTodayTop();
 }
 
@@ -2006,7 +2737,11 @@ function checkAllDone() {
   const td = state.todayData;
   const morning = prefs?.habits?.m_teeth === false || td.m_teeth;
   const evening = prefs?.habits?.e_teeth === false || td.e_teeth;
+  const wasAllDone = state.allDone;
   state.allDone = morning && evening && td.mood !== undefined;
+  if (state.allDone && !wasAllDone) {
+    setTimeout(() => celebrate('all_done', document.getElementById('today-scroll')), 300);
+  }
   renderTodayTop();
 }
 
@@ -2072,13 +2807,18 @@ function showAIResponse(containerId, text) {
 function switchTab(tab) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
+  const panel = document.getElementById('tab-' + tab);
+  panel.classList.add('active');
   document.getElementById('nav-' + tab).classList.add('active');
+  // Haptic
+  haptic('light');
   if (tab === 'today') renderTodayTab();
   if (tab === 'wellness') renderWellnessTab();
   if (tab === 'progress') renderProgressTab();
   if (tab === 'history') renderHistoryTab();
   if (tab === 'settings') renderSettingsTab();
+  // Stagger cards
+  setTimeout(() => staggerCards(panel), 50);
 }
 
 // ============================================================
@@ -2109,16 +2849,22 @@ function renderTodayTop() {
   const mood = state.todayData.mood;
   if (mood !== undefined && mood <= 2) {
     const yesterdayLow = checkYesterdayLowMood();
-    html += `<div class="banner banner-low-mood">
+    const breatheExpanded = state.inlineBreatheOpen;
+
+    html += `<div class="banner banner-low-mood" id="low-mood-banner">
       <div class="banner-icon">🫂</div>
-      <div class="banner-body">
+      <div class="banner-body" style="width:100%">
         <div class="banner-title" style="color:var(--rose-light)">It's okay not to be okay</div>
         <div class="banner-text">${yesterdayLow ? (state.lowMoodAIResponse || 'Two hard days in a row takes real courage to keep going. You\'re not alone.') : 'Hard days happen. You don\'t have to push through anything right now.'}</div>
         <div class="banner-actions">
-          <div class="banner-action" onclick="switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">🌬 Breathe</div>
+          <div class="banner-action" id="inline-breathe-btn" onclick="toggleInlineBreathe()">${breatheExpanded ? '✕ Close' : '🌬 Breathe'}</div>
           <div class="banner-action" onclick="switchTab('wellness')">📓 Journal</div>
-          <div class="banner-action" onclick="openCrisisSheet()">🫂 Support</div>
+          <div class="banner-action" onclick="openCrisisSheet()">🤍 Support</div>
         </div>
+        ${breatheExpanded ? `
+        <div id="inline-breath-zone" style="margin-top:14px;padding:14px;background:rgba(106,154,176,0.08);border:1px solid rgba(106,154,176,0.2);border-radius:var(--r-md)">
+          <div id="inline-breath-ui" style="text-align:center"></div>
+        </div>` : ''}
       </div>
     </div>`;
   }
@@ -2135,6 +2881,88 @@ function checkYesterdayLowMood() {
   const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
   const yData = state.historyData[yStr];
   return yData && yData.mood !== undefined && yData.mood <= 2;
+}
+
+// Inline breathe (in low mood banner)
+let inlineBreathInterval = null;
+let inlineBreathPhase = 0;
+let inlineBreathCycle = 0;
+
+function toggleInlineBreathe() {
+  state.inlineBreatheOpen = !state.inlineBreatheOpen;
+  if (inlineBreathInterval) { clearInterval(inlineBreathInterval); inlineBreathInterval = null; }
+  inlineBreathPhase = 0;
+  inlineBreathCycle = 0;
+  renderTodayTop();
+  if (state.inlineBreatheOpen) {
+    setTimeout(() => renderInlineBreathPhase(), 100);
+  }
+}
+
+function renderInlineBreathPhase() {
+  const ui = document.getElementById('inline-breath-ui');
+  if (!ui) return;
+
+  if (inlineBreathCycle >= 4) {
+    if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
+    state.wellnessData.breathSessions++;
+    saveState();
+    celebrate('breath', document.getElementById('inline-breath-zone'));
+    ui.innerHTML = `
+      <div style="font-size:32px;margin-bottom:8px">🌿</div>
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sky-light)">Well done</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:6px">Take a moment to notice how you feel</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="toggleInlineBreathe()">Close</button>`;
+    return;
+  }
+
+  const phases = [
+    { name: 'Inhale', dur: 4, color: 'var(--sky-light)' },
+    { name: 'Hold',   dur: 7, color: 'var(--sage-light)' },
+    { name: 'Exhale', dur: 8, color: 'var(--rose-light)' },
+  ];
+  const ph = phases[inlineBreathPhase];
+  let countdown = ph.dur;
+  const scale = inlineBreathPhase === 1 ? 1.3 : 1;
+
+  ui.innerHTML = `
+    <div id="inline-breath-circle" style="
+      width:80px;height:80px;border-radius:50%;margin:0 auto 10px;
+      background:radial-gradient(circle,rgba(106,154,176,0.25),rgba(106,154,176,0.05));
+      border:2px solid rgba(106,154,176,0.4);
+      display:flex;align-items:center;justify-content:center;
+      transition:transform ${ph.dur}s ease-in-out;
+      transform:scale(${inlineBreathPhase === 0 ? 1 : scale})">
+      <span id="inline-breath-count" style="font-family:Fraunces,serif;font-size:20px;color:${ph.color}">${countdown}</span>
+    </div>
+    <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:${ph.color}">${ph.name}</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Cycle ${inlineBreathCycle + 1} of 4</div>`;
+
+  // Trigger CSS scale transition on next frame
+  if (inlineBreathPhase === 0) {
+    requestAnimationFrame(() => {
+      const c = document.getElementById('inline-breath-circle');
+      if (c) c.style.transform = 'scale(1.3)';
+    });
+  } else if (inlineBreathPhase === 2) {
+    requestAnimationFrame(() => {
+      const c = document.getElementById('inline-breath-circle');
+      if (c) c.style.transform = 'scale(1)';
+    });
+  }
+
+  if (inlineBreathInterval) clearInterval(inlineBreathInterval);
+  inlineBreathInterval = setInterval(() => {
+    countdown--;
+    const countEl = document.getElementById('inline-breath-count');
+    if (countEl) countEl.textContent = countdown;
+    if (countdown <= 0) {
+      clearInterval(inlineBreathInterval);
+      inlineBreathPhase++;
+      if (inlineBreathPhase >= 3) { inlineBreathPhase = 0; inlineBreathCycle++; }
+      setTimeout(() => renderInlineBreathPhase(), 300);
+    }
+  }, 1000);
 }
 
 async function triggerLowMoodAI() {
@@ -2222,15 +3050,22 @@ function renderTodayTab() {
     weeklyHabits.forEach(h => {
       const goal = prefs?.goals?.[h.id] || 3;
       const done = wd[h.id] || 0;
+      const atGoal = done >= goal;
       const pips = Array.from({length: goal}, (_,i) =>
         `<div class="week-pip${i < done ? ' done' : ''}"></div>`).join('');
-      html += `<div class="habit-row" onclick="tapWeeklyHabit('${h.id}', this)">
-        <div class="habit-check${done >= goal ? ' done' : ''}">${done >= goal ? '✓' : h.icon}</div>
+      html += `<div class="habit-row" style="cursor:default">
+        <div class="habit-check${atGoal ? ' done' : ''}" style="cursor:default">${atGoal ? '✓' : h.icon}</div>
         <div class="habit-info">
           <div class="habit-name">${h.name}</div>
           <div class="habit-sub">${done}/${goal} this week</div>
         </div>
-        <div class="week-badge">${pips}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="week-badge">${pips}</div>
+          <div style="display:flex;gap:4px">
+            ${done > 0 ? `<div onclick="tapWeeklyHabit('${h.id}','dec',this)" style="width:26px;height:26px;border-radius:50%;background:var(--bg-elevated);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-secondary)">−</div>` : `<div style="width:26px"></div>`}
+            ${!atGoal ? `<div onclick="tapWeeklyHabit('${h.id}','inc',this)" style="width:26px;height:26px;border-radius:50%;background:rgba(122,158,126,0.15);border:1px solid rgba(122,158,126,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--sage-light)">+</div>` : `<div style="width:26px"></div>`}
+          </div>
+        </div>
       </div>`;
     });
     html += `</div>`;
@@ -2340,9 +3175,8 @@ function tapHabit(id, el) {
   toggleHabit(id, el);
 }
 
-function tapWeeklyHabit(id, el) {
-  const check = el.querySelector('.habit-check');
-  toggleWeeklyHabit(id, check || el);
+function tapWeeklyHabit(id, action, el) {
+  toggleWeeklyHabit(id, action, el);
 }
 
 function tapHouseholdTask(id, el) {
@@ -2355,7 +3189,11 @@ function logMood(val) {
   state.todayData.mood = val;
   saveState();
   archiveToday();
+  haptic('light');
   renderTodayTab();
+  bounceMoodBtn(val);
+  const moodEl = document.querySelectorAll('.mood-btn')[val];
+  celebrate('mood', moodEl);
   if (val <= 2 && !wasLow) showAffirmation('mood');
 }
 
@@ -2363,24 +3201,30 @@ function logSleep(val) {
   state.todayData.sleep = val;
   saveState();
   archiveToday();
+  haptic('light');
+  const sleepEl = document.querySelectorAll('.sleep-btn')[val];
+  celebrate('sleep', sleepEl);
   renderTodayTab();
 }
 
 function tapWater(i) {
   const cur = state.todayData.water || 0;
-  // Toggle: if clicking at or beyond current, increment; if below, set to that level
   if (i + 1 === cur) {
     state.todayData.water = cur - 1;
+    haptic('light');
   } else {
     state.todayData.water = Math.max(cur, i + 1);
+    haptic('light');
+    animateWaterBottle(i);
   }
   const newCount = state.todayData.water;
   if (newCount >= 3 && !state.todayData.waterXPGiven) {
     state.todayData.waterXPGiven = true;
-    const el = document.getElementById('water-bottles-row');
-    addXP(10, el);
-    showAffirmation('water');
-    burstParticles(el);
+    addXP(10, null);
+    setTimeout(() => {
+      const wEl = document.getElementById('water-bottles-row');
+      celebrate('water', wEl);
+    }, 100);
   }
   saveState();
   archiveToday();
@@ -2393,9 +3237,13 @@ function tapFood(id) {
   const count = Object.values(state.todayData.food).filter(Boolean).length;
   if (count >= 2 && !state.todayData.foodXPGiven) {
     state.todayData.foodXPGiven = true;
-    const el = document.querySelector('.food-chips');
-    addXP(10, el);
-    showAffirmation('food');
+    addXP(10, null);
+    setTimeout(() => {
+      const el = document.querySelector('.food-chips');
+      celebrate('food', el);
+    }, 100);
+  } else {
+    haptic('light');
   }
   saveState();
   archiveToday();
@@ -2421,45 +3269,91 @@ function renderWellnessTab() {
 
   let html = '';
 
+  // ── DAILY ──────────────────────────────────────────────────
+  html += `<div style="font-family:Fraunces,serif;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.12em;padding:4px 4px 10px;display:flex;align-items:center;gap:8px"><span>Today</span><div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div></div>`;
+
   // --- JOURNAL ---
   const journalEntry = state.wellnessData?.journal?.[t];
   const journalPrompt = JOURNAL_PROMPTS[getDayIndex() % JOURNAL_PROMPTS.length];
 
-  html += `<div class="section-label">📓 Daily journal</div>
-  <div class="card" id="journal-card">
+  html += `<div class="card" id="journal-card">
+    <div class="card-title">📓 Daily journal</div>
     <div class="journal-prompt">${journalPrompt}</div>`;
 
   if (journalEntry && !state.editingJournal) {
     html += `<div style="font-size:14px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap">${journalEntry.text}</div>`;
     if (journalEntry.ai) {
-      html += `<div class="ai-response"><div class="ai-response-text">${journalEntry.ai}</div></div>`;
+      html += `<div class="ai-response" style="margin-top:12px"><div class="ai-response-text">${journalEntry.ai}</div></div>`;
+    } else if (state.loadingJournalAI) {
+      html += `<div class="ai-response" style="margin-top:12px;display:flex;align-items:center;gap:10px">
+        <div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
+        <div style="font-size:12px;color:var(--sky);font-style:italic">bloom is reading what you wrote...</div>
+      </div>`;
     }
     html += `<button class="btn btn-ghost btn-sm mt-4" onclick="editJournal()">Edit entry</button>`;
   } else {
     html += `<textarea id="journal-textarea" placeholder="What's on your mind today..." rows="5" style="margin-bottom:10px">${journalEntry?.text || state.journalDraft || ''}</textarea>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;align-items:center">
       <button class="btn btn-primary" style="flex:1" onclick="saveJournal()">Save & reflect</button>
       ${journalEntry ? `<button class="btn btn-ghost" onclick="cancelEditJournal()">Cancel</button>` : ''}
     </div>
+    <div style="font-size:12px;color:var(--sky);margin-top:10px;display:flex;align-items:center;gap:5px"><span>✦</span> bloom will respond to what you write</div>
     <div id="journal-ai-response" style="display:none;margin-top:12px"></div>`;
   }
   html += `</div>`;
 
+  // --- SMALL WINS ---
+  const wins = state.wellnessData?.wins?.[t] || [];
+  html += `<div class="card">
+    <div class="card-title">🏅 Small wins</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input type="text" id="win-input" placeholder="Something good, however tiny..." style="flex:1">
+      <button class="btn btn-primary btn-sm" onclick="addWin()">Log it</button>
+    </div>
+    <div id="wins-list">
+      ${wins.length === 0 ? '<div class="text-sm text-muted">Nothing yet — small things count too.</div>' : ''}
+      ${wins.map(w => `<span class="win-chip">⭐ ${w}</span>`).join('')}
+    </div>
+  </div>`;
+
+  // --- CUSTOM AFFIRMATIONS ---
+  const affirmations = state.wellnessData?.affirmations || [];
+  html += `<div class="card">
+    <div class="card-title">💌 My affirmations</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input type="text" id="affirm-input" placeholder="Write something kind to yourself...">
+      <button class="btn btn-primary btn-sm" onclick="addAffirmation()">Save</button>
+    </div>
+    ${affirmations.length === 0 ? '<div class="text-sm text-muted">Saved affirmations appear randomly as you log habits.</div>' : ''}
+    ${affirmations.map((a,i) => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+      <div style="flex:1;font-size:13px;color:var(--cream);font-family:Fraunces,serif;font-style:italic">"${a}"</div>
+      <div onclick="removeAffirmation(${i})" style="color:var(--text-muted);cursor:pointer;font-size:12px">✕</div>
+    </div>`).join('')}
+  </div>`;
+
+  // ── WEEKLY ─────────────────────────────────────────────────
+  html += `<div style="font-family:Fraunces,serif;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.12em;padding:16px 4px 10px;display:flex;align-items:center;gap:8px"><span>This week</span><div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div></div>`;
+
   // --- WEEKLY REFLECTION (Sun + Mon only) ---
   if (dow === 0 || dow === 1) {
-    const refKey = ws;
-    const refData = state.wellnessData?.reflections?.[refKey] || {};
-
-    html += `<div class="section-label">🪞 Weekly reflection</div>
-    <div class="card" id="reflection-card">`;
-
+    const refData = state.wellnessData?.reflections?.[ws] || {};
+    html += `<div class="card" id="reflection-card">
+      <div class="card-title">🪞 Weekly reflection</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.5">Available Sunday & Monday — bloom will respond to each answer.</div>`;
     REFLECTION_QUESTIONS.forEach((q, qi) => {
       const answer = refData[qi];
       html += `<div class="reflection-q">
         <div class="reflection-q-text">${q}</div>`;
       if (answer && !state.editingReflection) {
         html += `<div style="font-size:14px;color:var(--text-secondary);line-height:1.6">${answer.text}</div>`;
-        if (answer.ai) html += `<div class="ai-response" style="margin-top:8px"><div class="ai-response-text">${answer.ai}</div></div>`;
+        if (answer.ai) {
+          html += `<div class="ai-response" style="margin-top:8px"><div class="ai-response-text">${answer.ai}</div></div>`;
+        } else if (state.loadingReflectionAI?.[qi]) {
+          html += `<div class="ai-response" style="margin-top:8px;display:flex;align-items:center;gap:10px">
+            <div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
+            <div style="font-size:12px;color:var(--sky);font-style:italic">bloom is reflecting...</div>
+          </div>`;
+        }
       } else {
         html += `<textarea id="reflect-${qi}" placeholder="Your thoughts..." rows="3" style="margin-bottom:6px">${answer?.text || ''}</textarea>
         <button class="btn btn-ghost btn-sm" onclick="saveReflection(${qi})">Save</button>
@@ -2468,22 +3362,23 @@ function renderWellnessTab() {
       html += `</div>`;
       if (qi < REFLECTION_QUESTIONS.length - 1) html += '<div class="divider"></div>';
     });
-
     html += `</div>`;
+  } else {
+    html += `<div class="card" style="opacity:0.5">
+      <div class="card-title">🪞 Weekly reflection</div>
+      <div style="font-size:13px;color:var(--text-secondary)">Opens on Sunday and Monday each week.</div>
+    </div>`;
   }
 
   // --- WEEKLY INSIGHTS ---
   const insights = state.wellnessData?.insights || [];
-  html += `<div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
-    <span>💫 Weekly insights</span>
-    <button class="btn btn-ghost btn-sm" onclick="generateWeeklyInsight()">Generate</button>
-  </div>`;
-
-  if (insights.length === 0) {
-    html += `<div class="card text-center">
-      <div style="font-size:32px;margin-bottom:8px">💫</div>
-      <div class="text-sm text-muted">Insights appear here after you've been using Bloom for a week. You can also generate one now.</div>
+  html += `<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="card-title" style="margin-bottom:0">💫 Weekly insights</div>
+      <button class="btn btn-ghost btn-sm" onclick="generateWeeklyInsight()">Generate</button>
     </div>`;
+  if (insights.length === 0) {
+    html += `<div style="font-size:13px;color:var(--text-muted);line-height:1.6">Insights are generated each Sunday — or tap Generate any time. bloom looks at your week and offers something encouraging.</div>`;
   } else {
     insights.slice(-4).reverse().forEach(ins => {
       html += `<div class="insight-card">
@@ -2492,50 +3387,28 @@ function renderWellnessTab() {
       </div>`;
     });
   }
+  html += `</div>`;
 
   // --- WEEKLY SUMMARY ---
-  html += `<div class="section-label">📊 Weekly summary</div>
-  <div class="card">
-    <div class="text-sm text-muted" style="margin-bottom:10px">Get a personal reflection on your mood, habits, and journal entries from this week.</div>
+  html += `<div class="card">
+    <div class="card-title">📊 Weekly summary</div>
+    <div class="text-sm text-muted" style="margin-bottom:12px;line-height:1.6">Ask bloom how your week is going — it looks at your mood, habits, and journal entries and reflects back.</div>
     <button class="btn btn-secondary btn-sm" onclick="generateWeeklySummary()">How am I doing?</button>
     <div id="summary-ai-response" style="display:none;margin-top:12px"></div>
   </div>`;
 
-  // --- SMALL WINS ---
-  const wins = state.wellnessData?.wins?.[t] || [];
-  html += `<div class="section-label">🏅 Small wins</div>
-  <div class="card">
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <input type="text" id="win-input" placeholder="Something good that happened..." style="flex:1">
-      <button class="btn btn-primary btn-sm" onclick="addWin()">Log it</button>
-    </div>
-    <div id="wins-list">
-      ${wins.length === 0 ? '<div class="text-sm text-muted">No wins logged yet today — they can be tiny.</div>' : ''}
-      ${wins.map(w => `<span class="win-chip">⭐ ${w}</span>`).join('')}
-    </div>
-  </div>`;
-
-  // --- CUSTOM AFFIRMATIONS ---
-  const affirmations = state.wellnessData?.affirmations || [];
-  html += `<div class="section-label">💌 My affirmations</div>
-  <div class="card">
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <input type="text" id="affirm-input" placeholder="Write something kind to yourself...">
-      <button class="btn btn-primary btn-sm" onclick="addAffirmation()">Save</button>
-    </div>
-    ${affirmations.length === 0 ? '<div class="text-sm text-muted">Your personal affirmations will appear as you log habits.</div>' : ''}
-    ${affirmations.map((a,i) => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
-      <div style="flex:1;font-size:13px;color:var(--cream);font-family:Fraunces,serif;font-style:italic">"${a}"</div>
-      <div onclick="removeAffirmation(${i})" style="color:var(--text-muted);cursor:pointer;font-size:12px">✕</div>
-    </div>`).join('')}
-  </div>`;
-
-  // --- BREATHE ---
-  html += `<div class="section-label" id="breath-section">🌬 Take a breath</div>
-  <div class="card text-center" id="breath-card">
-    <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--text-secondary);margin-bottom:16px">Here whenever you need it — no streak, no pressure</div>
-    <div id="breath-ui">
-      <button class="btn btn-secondary" onclick="startBreathing()">Begin 4-7-8 breathing</button>
+  // ── BREATHE ────────────────────────────────────────────────
+  html += `<div id="breath-section" style="margin:8px 0 0">
+    <div style="background:linear-gradient(135deg,rgba(106,154,176,0.12),rgba(106,154,176,0.05));border:1px solid rgba(106,154,176,0.25);border-radius:var(--r-lg);padding:18px 16px" id="breath-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:18px">🌬</span>
+        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sky-light)">Take a breath</div>
+        <div style="margin-left:auto;font-size:11px;color:var(--sky);background:rgba(106,154,176,0.15);padding:2px 8px;border-radius:99px">4-7-8</div>
+      </div>
+      <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
+      <div id="breath-ui">
+        <button class="btn btn-sm" style="background:rgba(106,154,176,0.2);border:1px solid rgba(106,154,176,0.35);color:var(--sky-light);border-radius:var(--r-full)" onclick="startBreathing()">Begin breathing exercise</button>
+      </div>
     </div>
   </div>`;
 
@@ -2555,38 +3428,31 @@ async function saveJournal() {
 
   if (!state.wellnessData.journal) state.wellnessData.journal = {};
   state.wellnessData.journal[t] = { text, ai: null };
-  saveState();
-
-  // Show thinking
   state.editingJournal = false;
   state.journalDraft = '';
-  showThinking('journal-ai-response');
-  const doc = document.getElementById('journal-ai-response');
-  if (doc) doc.style.display = 'block';
-
-  // Re-render to show saved state
+  state.loadingJournalAI = true;
+  saveState();
   renderWellnessTab();
 
-  // Add XP
   if (!state.todayData.journalXPGiven) {
     state.todayData.journalXPGiven = true;
-    addXP(10, document.getElementById('journal-card'));
-    showAffirmation('journal');
+    addXP(10, null);
+    celebrate('journal', document.getElementById('journal-card'));
     archiveToday();
   }
 
-  // Get AI response
   const ai = await callClaude(
     `The user wrote in their journal: "${text}". Write a warm, brief (2-3 sentence) response that acknowledges what they shared without offering unsolicited advice. Be human and compassionate.`,
     'You are Bloom, a gentle wellness companion. Never clinical. Warm, brief, human. 2-3 sentences max.'
   );
 
+  state.loadingJournalAI = false;
   if (ai) {
     state.wellnessData.journal[t].ai = ai;
     saveState();
     archiveToday();
-    renderWellnessTab();
   }
+  renderWellnessTab();
 }
 
 function editJournal() {
@@ -2612,13 +3478,15 @@ async function saveReflection(qi) {
   if (!state.wellnessData.reflections) state.wellnessData.reflections = {};
   if (!state.wellnessData.reflections[ws]) state.wellnessData.reflections[ws] = {};
   state.wellnessData.reflections[ws][qi] = { text, ai: null };
+  if (!state.loadingReflectionAI) state.loadingReflectionAI = {};
+  state.loadingReflectionAI[qi] = true;
   saveState();
-
+  celebrate('reflection', document.getElementById('reflection-card'));
   renderWellnessTab();
 
   if (!state.todayData.reflectionXPGiven) {
     state.todayData.reflectionXPGiven = true;
-    addXP(15, document.getElementById('reflection-card'));
+    addXP(15, null);
   }
 
   const q = REFLECTION_QUESTIONS[qi];
@@ -2627,11 +3495,12 @@ async function saveReflection(qi) {
     'You are Bloom. 1-2 sentences. Warm, not clinical.'
   );
 
+  state.loadingReflectionAI[qi] = false;
   if (ai) {
     state.wellnessData.reflections[ws][qi].ai = ai;
     saveState();
-    renderWellnessTab();
   }
+  renderWellnessTab();
 }
 
 async function generateWeeklyInsight() {
@@ -2657,9 +3526,9 @@ async function generateWeeklyInsight() {
   const wl = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   if (!state.wellnessData.insights) state.wellnessData.insights = [];
   state.wellnessData.insights.push({ weekLabel: wl, text: ai || 'You showed up this week. That matters more than you know.', date: today() });
-  // Keep last 4
   if (state.wellnessData.insights.length > 4) state.wellnessData.insights.shift();
   saveState();
+  celebrate('insight', document.querySelector('.tab-scroll'));
   renderWellnessTab();
 }
 
@@ -2689,7 +3558,7 @@ function addWin() {
   if (!state.wellnessData.wins[t]) state.wellnessData.wins[t] = [];
   state.wellnessData.wins[t].push(input.value.trim());
   saveState();
-  showAffirmation('win');
+  celebrate('win', input);
   renderWellnessTab();
 }
 
@@ -2699,6 +3568,7 @@ function addAffirmation() {
   if (!state.wellnessData.affirmations) state.wellnessData.affirmations = [];
   state.wellnessData.affirmations.push(input.value.trim());
   saveState();
+  celebrate('affirmation', input);
   renderWellnessTab();
 }
 
@@ -2732,6 +3602,7 @@ function renderBreathPhase() {
     if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
     state.wellnessData.breathSessions++;
     saveState();
+    celebrate('breath', document.getElementById('breath-card'));
     ui.innerHTML = `<div class="breath-circle"><span style="font-size:32px">🌿</span></div>
     <div class="breath-label">Well done</div>
     <div class="breath-count" style="margin-top:16px;color:var(--text-secondary)">Take a moment to notice how you feel</div>
@@ -3770,6 +4641,244 @@ function checkBackupReminder() {
 // ============================================================
 //  APP INIT
 // ============================================================
+// ============================================================
+//  TUTORIAL SYSTEM — spotlight edition
+// ============================================================
+
+// Each step defines:
+//   tab        — which tab to switch to
+//   spotlight  — CSS selector of element to highlight (or null for full dim)
+//   cardPos    — 'top'|'mid'|'bottom' — where the card appears
+//   title/text — content
+//   pulse      — if true, add a pulse ring to the spotlight element
+const TUTORIAL_STEPS = [
+  {
+    tab: 'today',
+    spotlight: null,
+    cardPos: 'mid',
+    title: 'Welcome to bloom 🌿',
+    text: 'Let\'s take a quick look around so you feel right at home. Tap Next and we\'ll walk through everything together.',
+    first: true,
+  },
+  {
+    tab: 'today',
+    spotlight: '#tab-today .tab-scroll',
+    cardPos: 'bottom',
+    title: 'Your Today tab',
+    text: 'This is home base. Log your mood and sleep each morning, then check off habits as you go. Everything resets at midnight.',
+    scrollToTop: true,
+  },
+  {
+    tab: 'today',
+    spotlight: '#nav-wellness',
+    cardPos: 'bottom',
+    pulse: true,
+    title: '🫧 Wellness — journal & reflect',
+    text: 'Tap here to write your daily journal or do your weekly reflection. bloom reads what you write and responds with something warm — it\'s a real conversation, not just logging.',
+  },
+  {
+    tab: 'wellness',
+    spotlight: '#journal-card',
+    cardPos: 'bottom',
+    title: 'Daily journal',
+    text: 'A new prompt every day. Write as much or as little as you want, then tap "Save & reflect." bloom will respond to what you shared within a few seconds.',
+    scrollToTop: true,
+  },
+  {
+    tab: 'wellness',
+    spotlight: '#breath-card',
+    cardPos: 'top',
+    title: '🌬 4-7-8 breathing',
+    text: 'This lives at the bottom of Wellness and also appears inline when you\'re having a hard day. No streaks, no XP — just a tool that\'s here whenever you need it.',
+    scrollToBottom: true,
+  },
+  {
+    tab: 'today',
+    spotlight: '#nav-progress',
+    cardPos: 'bottom',
+    pulse: true,
+    title: '✨ Progress',
+    text: 'Track your XP, streak, and mood chart here. Earn freeze tokens at 7, 14, and 30-day milestones — they protect your streak automatically on days you miss.',
+  },
+  {
+    tab: 'progress',
+    spotlight: '#tab-progress .tab-scroll',
+    cardPos: 'top',
+    title: 'Your streak & XP',
+    text: 'Logging a rough or low mood gives your streak automatic grace that day — no token needed. bloom looks out for you.',
+    scrollToTop: true,
+  },
+  {
+    tab: 'today',
+    spotlight: '#nav-history',
+    cardPos: 'bottom',
+    pulse: true,
+    title: '📅 History',
+    text: 'Every day is saved here — mood, habits, and your journal entries. Tap any day to read it back.',
+  },
+  {
+    tab: 'today',
+    spotlight: '#crisis-heart',
+    cardPos: 'top',
+    pulse: true,
+    title: '🤍 You\'re never alone',
+    text: 'This quiet heart in the header is always here. Tap it any time for instant access to 988, Crisis Text Line, and online chat. It also appears as a shortcut when you log a low mood.',
+  },
+  {
+    tab: 'today',
+    spotlight: null,
+    cardPos: 'mid',
+    title: 'You\'re all set 🌱',
+    text: 'Go at your own pace. There\'s no pressure to be perfect — bloom is here for the real, messy days too.',
+    last: true,
+  },
+];
+
+let tutorialStep = 0;
+let tutorialSpotlightEl = null;
+
+function startTutorial() {
+  tutorialStep = 0;
+  renderTutorialStep();
+}
+
+function renderTutorialStep() {
+  const overlay = document.getElementById('tutorial-overlay');
+  const step = TUTORIAL_STEPS[tutorialStep];
+  if (!step) { endTutorial(); return; }
+
+  overlay.className = 'active';
+
+  // Switch tab
+  if (step.tab) switchTab(step.tab);
+
+  // Scroll tab content if needed
+  if (step.scrollToTop) {
+    setTimeout(() => {
+      const s = document.querySelector('#tab-' + step.tab + ' .tab-scroll');
+      if (s) s.scrollTop = 0;
+    }, 120);
+  }
+  if (step.scrollToBottom) {
+    setTimeout(() => {
+      const s = document.querySelector('#tab-' + step.tab + ' .tab-scroll');
+      if (s) s.scrollTop = s.scrollHeight;
+    }, 120);
+  }
+
+  setTimeout(() => buildTutorialOverlay(step), step.scrollToTop || step.scrollToBottom ? 200 : 50);
+}
+
+function buildTutorialOverlay(step) {
+  const overlay = document.getElementById('tutorial-overlay');
+  const total = TUTORIAL_STEPS.length;
+
+  // Find spotlight element and get its rect
+  let spotRect = null;
+  let spotEl = null;
+  if (step.spotlight) {
+    spotEl = document.querySelector(step.spotlight);
+    if (spotEl) spotRect = spotEl.getBoundingClientRect();
+  }
+
+  const dots = TUTORIAL_STEPS.map((_,i) =>
+    `<div class="tutorial-dot${i === tutorialStep ? ' active' : ''}"></div>`
+  ).join('');
+
+  // Build SVG cutout backdrop
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  let backdropHTML = '';
+
+  if (spotRect) {
+    const pad = 8;
+    const r = 16;
+    const x = Math.max(0, spotRect.left - pad);
+    const y = Math.max(0, spotRect.top - pad);
+    const w = Math.min(W, spotRect.width + pad * 2);
+    const h = Math.min(H, spotRect.height + pad * 2);
+
+    backdropHTML = `
+      <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <mask id="tut-mask">
+            <rect width="${W}" height="${H}" fill="white"/>
+            <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="black"/>
+          </mask>
+        </defs>
+        <rect width="${W}" height="${H}" fill="rgba(0,0,0,0.78)" mask="url(#tut-mask)"/>
+      </svg>
+      <div style="position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;border-radius:${r}px;border:2px solid rgba(122,158,126,0.6);pointer-events:none;box-shadow:0 0 0 3px rgba(122,158,126,0.15)${step.pulse ? ',0 0 20px rgba(122,158,126,0.3)' : ''}">
+        ${step.pulse ? `<div style="position:absolute;inset:-6px;border-radius:${r+6}px;border:2px solid rgba(122,158,126,0.3);animation:tutPulse 1.6s ease-in-out infinite"></div>` : ''}
+      </div>`;
+  } else {
+    backdropHTML = `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.78)"></div>`;
+  }
+
+  // Calculate card position — avoid covering the spotlight
+  let cardStyle = '';
+  if (step.cardPos === 'mid' || !spotRect) {
+    cardStyle = 'top:50%;transform:translateY(-50%)';
+  } else if (step.cardPos === 'top') {
+    // Card at top, spotlight below
+    cardStyle = 'top:calc(var(--safe-top) + 72px)';
+  } else {
+    // Card at bottom, above nav
+    const navH = 64 + 44; // nav + some padding
+    cardStyle = `bottom:${navH}px`;
+  }
+
+  overlay.innerHTML = `
+    ${backdropHTML}
+    <div class="tutorial-card" style="position:absolute;left:16px;right:16px;max-width:398px;margin:0 auto;${cardStyle}">
+      <div class="tutorial-step-label">Step ${tutorialStep + 1} of ${total}</div>
+      <div class="tutorial-title">${step.title}</div>
+      <div class="tutorial-text">${step.text}</div>
+      <div class="tutorial-footer">
+        <div class="tutorial-dots">${dots}</div>
+        <div style="display:flex;gap:8px">
+          ${tutorialStep > 0 ? `<button class="btn btn-ghost btn-sm" id="tut-back">← Back</button>` : ''}
+          ${step.last
+            ? `<button class="btn btn-primary btn-sm" id="tut-end">Let's go 🌿</button>`
+            : `<button class="btn btn-primary btn-sm" id="tut-next">Next →</button>`
+          }
+        </div>
+      </div>
+      ${step.first ? `<button id="tut-skip" style="position:absolute;top:14px;right:14px;background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer">Skip</button>` : ''}
+    </div>
+  `;
+
+  // Wire buttons via addEventListener (no inline onclick)
+  document.getElementById('tut-next')?.addEventListener('click', tutorialNext);
+  document.getElementById('tut-back')?.addEventListener('click', tutorialBack);
+  document.getElementById('tut-end')?.addEventListener('click', endTutorial);
+  document.getElementById('tut-skip')?.addEventListener('click', endTutorial);
+}
+
+function tutorialNext() {
+  tutorialStep++;
+  renderTutorialStep();
+}
+
+function tutorialBack() {
+  tutorialStep = Math.max(0, tutorialStep - 1);
+  renderTutorialStep();
+}
+
+function endTutorial() {
+  const overlay = document.getElementById('tutorial-overlay');
+  overlay.innerHTML = '';
+  overlay.className = '';
+  save('bloom_tutorial_done', true);
+  switchTab('today');
+}
+
+function checkShowTutorial() {
+  if (!load('bloom_tutorial_done')) {
+    setTimeout(startTutorial, 700);
+  }
+}
+
 function initApp() {
   loadState();
   renderDailyQuote();
@@ -3778,6 +4887,7 @@ function initApp() {
   initOneSignal();
   showWhatsNew();
   checkBackupReminder();
+  checkShowTutorial();
 }
 
 async function main() {
