@@ -3979,6 +3979,7 @@ function renderSettingsTab() {
   // Share & data
   html += settingsSection('data', '🔗 Share & data', `
     <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn btn-primary btn-block" onclick="shareApp()" style="background:linear-gradient(135deg,var(--sage),var(--sage-dim));color:var(--cream)">🌿 Share bloom with someone</button>
       <button class="btn btn-secondary btn-block" onclick="showBackupSheet()">💾 Save restore link</button>
       <button class="btn btn-secondary btn-block" onclick="exportJSON()">📤 Export data as JSON</button>
       <button class="btn btn-ghost btn-block" onclick="resetToday()">↺ Reset today's data</button>
@@ -4094,6 +4095,25 @@ function toggleNotif(key) {
   state.prefs.notifications[key] = !state.prefs.notifications[key];
   save('bloom_prefs', state.prefs);
   renderSettingsTab();
+}
+
+function shareApp() {
+  const shareData = {
+    title: 'bloom — a gentle self-care app',
+    text: 'I\'ve been using bloom to track my habits and take care of myself. No guilt, no pressure — just small steps every day. Thought you might like it 🌿',
+    url: window.location.origin + window.location.pathname,
+  };
+  if (navigator.share) {
+    navigator.share(shareData).catch(() => {});
+  } else {
+    // Fallback: copy URL
+    navigator.clipboard?.writeText(shareData.url).then(() => {
+      const btn = document.querySelector('[onclick="shareApp()"]');
+      if (btn) { btn.textContent = '✓ Link copied!'; setTimeout(() => renderSettingsTab(), 2000); }
+    }).catch(() => {
+      alert('Share bloom:\n\n' + shareData.url);
+    });
+  }
 }
 
 function resetToday() {
