@@ -7,78 +7,84 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Bloom">
 <meta name="theme-color" content="#0d1610">
+<!-- App icon — inline SVG as data URI for favicon/manifest -->
+<!-- Note: iOS home screen icon requires add-to-homescreen; the SVG below is used as favicon in browser -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' ry='112' fill='%230d1610'/%3E%3Ccircle cx='179' cy='179' r='92' fill='%237a9e7e' opacity='.9'/%3E%3Ccircle cx='179' cy='179' r='52' fill='%23a8c5ab'/%3E%3Ccircle cx='333' cy='179' r='92' fill='%23b07878' opacity='.9'/%3E%3Ccircle cx='333' cy='179' r='52' fill='%23d4a8a8'/%3E%3Ccircle cx='179' cy='333' r='92' fill='%236a9ab0' opacity='.9'/%3E%3Ccircle cx='179' cy='333' r='52' fill='%239ec4d8'/%3E%3Ccircle cx='333' cy='333' r='92' fill='%23c9954a' opacity='.9'/%3E%3Ccircle cx='333' cy='333' r='52' fill='%23e0b87a'/%3E%3C/svg%3E">
 <title>Bloom</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
-<!-- PWA Manifest (inline via JS) -->
+<!-- PWA Manifest + Icons -->
 <script>
 (function() {
-  // Icon SVG — built as string parts to avoid template literal escaping issues
   var iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">'
-    + '<defs>'
-    + '<radialGradient id="ibg" cx="50%" cy="60%" r="70%"><stop offset="0%" stop-color="#1a2e1d"/><stop offset="100%" stop-color="#0a1208"/></radialGradient>'
-    + '<radialGradient id="iglow" cx="50%" cy="72%" r="40%"><stop offset="0%" stop-color="#c9954a" stop-opacity="0.35"/><stop offset="100%" stop-color="#c9954a" stop-opacity="0"/></radialGradient>'
-    + '<radialGradient id="ipetal" cx="50%" cy="30%" r="70%"><stop offset="0%" stop-color="#f0e8d8"/><stop offset="100%" stop-color="#d4c8b0"/></radialGradient>'
-    + '</defs>'
-    + '<rect width="512" height="512" rx="112" ry="112" fill="url(#ibg)"/>'
-    + '<ellipse cx="256" cy="370" rx="160" ry="80" fill="url(#iglow)"/>'
-    + '<path d="M256 380 C256 340 248 300 250 255 C252 210 256 185 256 185" stroke="#5a8a5e" stroke-width="7" stroke-linecap="round" fill="none"/>'
-    + '<path d="M252 290 C230 270 190 265 175 240 C195 235 230 245 252 268 Z" fill="#4a7a4e" opacity="0.9"/>'
-    + '<path d="M252 290 C240 275 215 262 175 240" stroke="#3d6640" stroke-width="2" fill="none" stroke-linecap="round"/>'
-    + '<path d="M256 255 C278 235 315 232 330 210 C312 208 278 220 256 244 Z" fill="#5a8a5e" opacity="0.85"/>'
-    + '<path d="M256 255 C270 240 298 226 330 210" stroke="#4a7a4e" stroke-width="2" fill="none" stroke-linecap="round"/>'
-    + '<path d="M253 230 C237 218 215 218 205 202 C220 198 242 208 253 224 Z" fill="#6a9a6e" opacity="0.7"/>'
-    + '<ellipse cx="256" cy="158" rx="18" ry="30" fill="url(#ipetal)" opacity="0.95" transform="rotate(0 256 185)"/>'
-    + '<ellipse cx="256" cy="158" rx="18" ry="30" fill="url(#ipetal)" opacity="0.9" transform="rotate(72 256 185)"/>'
-    + '<ellipse cx="256" cy="158" rx="18" ry="30" fill="url(#ipetal)" opacity="0.9" transform="rotate(144 256 185)"/>'
-    + '<ellipse cx="256" cy="158" rx="18" ry="30" fill="url(#ipetal)" opacity="0.9" transform="rotate(216 256 185)"/>'
-    + '<ellipse cx="256" cy="158" rx="18" ry="30" fill="url(#ipetal)" opacity="0.9" transform="rotate(288 256 185)"/>'
-    + '<circle cx="256" cy="185" r="22" fill="#e0b87a"/>'
-    + '<circle cx="256" cy="185" r="14" fill="#c9954a"/>'
-    + '<circle cx="256" cy="185" r="7" fill="#a87030"/>'
-    + '<circle cx="256" cy="172" r="2.5" fill="#e8d0a0"/>'
-    + '<circle cx="265" cy="178" r="2" fill="#e8d0a0"/>'
-    + '<circle cx="262" cy="190" r="2" fill="#e8d0a0"/>'
-    + '<circle cx="250" cy="192" r="2" fill="#e8d0a0"/>'
-    + '<circle cx="247" cy="180" r="2.5" fill="#e8d0a0"/>'
-    + '<ellipse cx="256" cy="385" rx="48" ry="10" fill="#2a3d2a" opacity="0.6"/>'
+    + '<rect width="512" height="512" rx="112" ry="112" fill="#0d1610"/>'
+    + '<circle cx="179" cy="179" r="92" fill="#7a9e7e" opacity="0.9"/>'
+    + '<circle cx="179" cy="179" r="52" fill="#a8c5ab"/>'
+    + '<circle cx="333" cy="179" r="92" fill="#b07878" opacity="0.9"/>'
+    + '<circle cx="333" cy="179" r="52" fill="#d4a8a8"/>'
+    + '<circle cx="179" cy="333" r="92" fill="#6a9ab0" opacity="0.9"/>'
+    + '<circle cx="179" cy="333" r="52" fill="#9ec4d8"/>'
+    + '<circle cx="333" cy="333" r="92" fill="#c9954a" opacity="0.9"/>'
+    + '<circle cx="333" cy="333" r="52" fill="#e0b87a"/>'
     + '</svg>';
 
-  var ICON_URL = 'data:image/svg+xml,' + encodeURIComponent(iconSVG);
+  var svgURL = 'data:image/svg+xml,' + encodeURIComponent(iconSVG);
 
-  var manifestData = {
-    name: "Bloom",
-    short_name: "Bloom",
-    description: "A gentle self-care habit tracker",
-    start_url: "/",
-    display: "standalone",
-    background_color: "#0d1610",
-    theme_color: "#0d1610",
-    orientation: "portrait",
-    icons: [
-      { src: ICON_URL, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
-    ]
-  };
+  // Render SVG to PNG via canvas for reliable iOS home screen icon
+  function setIconsFromSVG(svgUrl) {
+    try {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        canvas.width = 512; canvas.height = 512;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, 512, 512);
+        var pngURL = canvas.toDataURL('image/png');
 
-  var blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
-  var manifestURL = URL.createObjectURL(blob);
-  var mlink = document.createElement('link');
-  mlink.rel = 'manifest';
-  mlink.href = manifestURL;
-  document.head.appendChild(mlink);
+        var apple = document.createElement('link');
+        apple.rel = 'apple-touch-icon';
+        apple.href = pngURL;
+        document.head.appendChild(apple);
 
-  var favicon = document.createElement('link');
-  favicon.rel = 'icon';
-  favicon.type = 'image/svg+xml';
-  favicon.href = ICON_URL;
-  document.head.appendChild(favicon);
+        // Manifest with PNG icon
+        var manifestData = {
+          name: "Bloom", short_name: "Bloom",
+          description: "A gentle self-care habit tracker",
+          start_url: "/", display: "standalone",
+          background_color: "#0d1610", theme_color: "#0d1610",
+          orientation: "portrait",
+          icons: [
+            { src: pngURL, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+          ]
+        };
+        var blob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
+        var mlink = document.createElement('link');
+        mlink.rel = 'manifest';
+        mlink.href = URL.createObjectURL(blob);
+        document.head.appendChild(mlink);
+      };
+      img.src = svgUrl;
+    } catch(e) {
+      // Fallback manifest without canvas
+      var manifestData = {
+        name: "Bloom", short_name: "Bloom",
+        description: "A gentle self-care habit tracker",
+        start_url: "/", display: "standalone",
+        background_color: "#0d1610", theme_color: "#0d1610",
+        orientation: "portrait",
+        icons: [{ src: svgUrl, sizes: "512x512", type: "image/svg+xml" }]
+      };
+      var blob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
+      var mlink = document.createElement('link');
+      mlink.rel = 'manifest';
+      mlink.href = URL.createObjectURL(blob);
+      document.head.appendChild(mlink);
+    }
+  }
 
-  var appleIcon = document.createElement('link');
-  appleIcon.rel = 'apple-touch-icon';
-  appleIcon.href = ICON_URL;
-  document.head.appendChild(appleIcon);
+  setIconsFromSVG(svgURL);
 })();
 </script>
 
@@ -1803,7 +1809,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   <!-- Sticky header -->
   <div id="app-header">
     <div class="header-bloom">
-      <span>🌿</span>
+      <span id="header-bloom-icon"></span>
       <span class="header-bloom-name">bloom</span>
       <button id="crisis-heart" onclick="openCrisisSheet()" title="Mental health resources">🤍</button>
     </div>
@@ -1841,7 +1847,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   <!-- Bottom nav -->
   <nav id="bottom-nav">
     <button class="nav-btn active" id="nav-today" onclick="switchTab('today')">
-      <span class="nav-icon">🌿</span>
+      <span class="nav-icon" id="nav-today-icon"></span>
       <span class="nav-label">Today</span>
     </button>
     <button class="nav-btn" id="nav-wellness" onclick="switchTab('wellness')">
@@ -1940,9 +1946,22 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 <div id="tutorial-overlay"></div>
 
 <script>
-// ============================================================
-//  BLOOM v1.3.0 — COMPLETE APPLICATION
-// ============================================================
+// ── Bloom icon SVG (small inline version for UI use) ─────────
+function bloomIcon(size = 24) {
+  // Four teardrop petals in 2x2 grid — sage, rose, sky, amber
+  // Replicates the clean original icon style
+  const s = size;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 100 100" style="display:inline-block;vertical-align:middle;flex-shrink:0" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="35" cy="35" r="18" fill="#7a9e7e" opacity="0.9"/>
+    <circle cx="35" cy="35" r="10" fill="#a8c5ab"/>
+    <circle cx="65" cy="35" r="18" fill="#b07878" opacity="0.9"/>
+    <circle cx="65" cy="35" r="10" fill="#d4a8a8"/>
+    <circle cx="35" cy="65" r="18" fill="#6a9ab0" opacity="0.9"/>
+    <circle cx="35" cy="65" r="10" fill="#9ec4d8"/>
+    <circle cx="65" cy="65" r="18" fill="#c9954a" opacity="0.9"/>
+    <circle cx="65" cy="65" r="10" fill="#e0b87a"/>
+  </svg>`;
+}
 
 const VERSION = '1.3.0';
 
@@ -4173,6 +4192,8 @@ function openCrisisSheet() { openSheet('crisis-sheet'); }
 //  WHAT'S NEW
 // ============================================================
 function showWhatsNew(force = false) {
+  // Never show to first-time users — they don't need a changelog
+  if (!load('bloom_tutorial_done') && !force) return;
   if (!force && load('bloom_version') === VERSION) return;
   save('bloom_version', VERSION);
 
@@ -4248,7 +4269,7 @@ function obBack() {
 function renderOBWelcome(body, footer) {
   body.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:12px">
-      <div style="font-size:80px;line-height:1;margin-bottom:24px;filter:drop-shadow(0 4px 16px rgba(122,158,126,0.3))">🌿</div>
+      <div style="margin-bottom:20px;filter:drop-shadow(0 4px 24px rgba(122,158,126,0.35))">${bloomIcon(96)}</div>
       <div style="font-family:Fraunces,serif;font-size:42px;font-weight:300;color:var(--cream);line-height:1.1;margin-bottom:8px">bloom</div>
       <div style="font-family:Fraunces,serif;font-style:italic;font-size:16px;color:var(--text-secondary);margin-bottom:32px;letter-spacing:0.01em">a gentle self-care companion</div>
       <div style="width:100%;background:rgba(122,158,126,0.07);border:1px solid rgba(122,158,126,0.18);border-radius:20px;padding:20px 24px">
@@ -4870,12 +4891,17 @@ function endTutorial() {
   overlay.innerHTML = '';
   overlay.className = '';
   save('bloom_tutorial_done', true);
+  save('bloom_version', VERSION); // mark version seen — no What's New on first launch
   switchTab('today');
 }
 
 function checkShowTutorial() {
   if (!load('bloom_tutorial_done')) {
+    // First-time user — show tutorial, skip What's New
     setTimeout(startTutorial, 700);
+  } else {
+    // Returning user — show What's New if version is new
+    showWhatsNew();
   }
 }
 
@@ -4888,6 +4914,11 @@ function initApp() {
   showWhatsNew();
   checkBackupReminder();
   checkShowTutorial();
+  // Inject brand icons into header + nav
+  const headerIcon = document.getElementById('header-bloom-icon');
+  if (headerIcon) headerIcon.innerHTML = bloomIcon(26);
+  const navIcon = document.getElementById('nav-today-icon');
+  if (navIcon) navIcon.innerHTML = bloomIcon(20);
 }
 
 async function main() {
