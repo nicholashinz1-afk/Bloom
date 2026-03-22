@@ -203,25 +203,27 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   border-top: 1px solid rgba(255,255,255,0.04);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   padding: 0 16px;
 }
 #crisis-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  background: rgba(176,120,120,0.12);
-  border: 1px solid rgba(176,120,120,0.25);
+  padding: 6px 14px;
+  background: transparent;
+  border: none;
   border-radius: var(--r-full);
-  color: var(--rose-light);
+  color: var(--text-muted);
   font-family: 'Instrument Sans', sans-serif;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s;
+  letter-spacing: 0.01em;
 }
-#crisis-btn:active { transform: scale(0.95); }
+#crisis-btn:active { opacity: 0.6; }
+#crisis-btn:hover { color: var(--rose-light); }
 
 /* Bottom navigation */
 #bottom-nav {
@@ -1091,6 +1093,38 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 
 /* ============================================================
+   STREAK TOAST
+   ============================================================ */
+.streak-toast {
+  position: fixed;
+  top: calc(var(--safe-top) + 70px);
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  background: linear-gradient(135deg, var(--bg-elevated), rgba(201,149,74,0.08));
+  border: 1px solid rgba(201,149,74,0.35);
+  border-radius: var(--r-xl);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,149,74,0.1);
+  animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  pointer-events: none;
+}
+.streak-toast.hide {
+  animation: toastOut 0.3s ease forwards;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-16px) scale(0.92); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.96); }
+}
+
+/* ============================================================
    GENERAL ANIMATIONS
    ============================================================ */
 @keyframes fadeSlideIn {
@@ -1307,8 +1341,35 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 .crisis-option-title { font-size: 15px; font-weight: 500; color: var(--text-primary); }
 .crisis-option-sub { font-size: 12px; color: var(--text-secondary); }
 
-/* Backup prompt */
-.backup-url-box {
+/* Streak toast */
+.streak-toast {
+  position: fixed;
+  top: calc(var(--safe-top) + 70px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--bg-elevated);
+  border: 1px solid rgba(201,149,74,0.35);
+  border-radius: var(--r-xl);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 500;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  white-space: nowrap;
+}
+.streak-toast.hide {
+  animation: toastOut 0.3s ease forwards;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.9); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateX(-50%) translateY(-12px) scale(0.95); }
+}
   background: var(--bg-elevated);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--r-md);
@@ -1378,7 +1439,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   <!-- Crisis bar -->
   <div id="crisis-bar">
     <button id="crisis-btn" onclick="openCrisisSheet()">
-      🫂 <span>Need support?</span>
+      <span style="font-size:14px">🌸</span> <span>You're not alone · Crisis resources</span>
     </button>
   </div>
 
@@ -2064,20 +2125,8 @@ function renderTodayTop() {
     </div>`;
   }
 
-  // Streak grace
-  const prefs = state.prefs;
-  const td = state.todayData;
-  const dailyOptIn = ['m_teeth','e_teeth'].filter(h => prefs?.habits?.[h] !== false);
-  const doneCt = dailyOptIn.filter(h => td[h]).length;
-  if (dailyOptIn.length > 0 && doneCt === dailyOptIn.length - 1 && dailyOptIn.length > 1) {
-    html += `<div class="banner banner-streak-grace">
-      <div class="banner-icon">🔥</div>
-      <div class="banner-body">
-        <div class="banner-title" style="color:var(--amber-light)">Your streak is safe</div>
-        <div class="banner-text">You only missed one habit — that still counts as a good day.</div>
-      </div>
-    </div>`;
-  }
+  // Streak grace — only show at end of day (evening), not on first tap
+  // (removed from here — handled by streak toast on completion)
 
   container.innerHTML = html;
 }
@@ -2208,28 +2257,7 @@ function renderTodayTab() {
   }
 
   // --- NOURISHMENT ---
-  html += `<div class="section-label">💧 Nourishment</div><div class="card">`;
-
-  // Water bottles
   const waterCount = td.water || 0;
-  html += `<div class="card-title" style="margin-bottom:6px">Water — ${waterCount}/3 bottles</div>
-  <div class="water-bottles" id="water-bottles-row">
-    ${[0,1,2].map(i => `
-    <div class="water-bottle" onclick="tapWater(${i})" style="opacity:${i < waterCount ? 1 : 0.35};transition:opacity 0.3s">
-      <svg viewBox="0 0 56 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M18 8 L14 22 Q10 28 10 38 L10 82 Q10 90 18 90 L38 90 Q46 90 46 82 L46 38 Q46 28 42 22 L38 8 Z" fill="${i < waterCount ? '#6a9ab0' : '#252820'}" stroke="${i < waterCount ? '#9ec4d8' : '#3a3d30'}" stroke-width="1.5"/>
-        <path d="M18 8 L38 8 L36 2 L20 2 Z" fill="${i < waterCount ? '#9ec4d8' : '#3a3d30'}"/>
-        ${i < waterCount ? '<path d="M10 60 Q28 55 46 60 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" fill="#4a7a90" opacity="0.5"/>' : ''}
-        <text x="28" y="52" text-anchor="middle" font-size="18" fill="${i < waterCount ? '#e8f4f8' : '#5a5548'}">${i < waterCount ? '💧' : '○'}</text>
-      </svg>
-    </div>`).join('')}
-  </div>`;
-
-  if (waterCount >= 3 && !td.waterXPGiven) {
-    // Give XP if not already given
-  }
-
-  // Food check-in
   const foodItems = [
     { id: 'ate_meal', label: '🍽 Ate a meal' },
     { id: 'had_veggies', label: '🥦 Had veggies' },
@@ -2237,15 +2265,34 @@ function renderTodayTab() {
   ];
   const foodDone = td.food || {};
   const foodCount = Object.values(foodDone).filter(Boolean).length;
-  html += `<div style="margin-top:14px">
-    <div class="card-title" style="margin-bottom:8px">Nourishment check-in${foodCount >= 2 ? ' ✓' : ''}</div>
+
+  html += `<div class="section-label">💧 Hydration & nourishment</div>`;
+
+  // Water card
+  html += `<div class="card">
+    <div class="card-title" style="margin-bottom:10px">💧 Water — ${waterCount}/3 bottles</div>
+    <div class="water-bottles" id="water-bottles-row">
+      ${[0,1,2].map(i => `
+      <div class="water-bottle" onclick="tapWater(${i})" style="opacity:${i < waterCount ? 1 : 0.3};transition:opacity 0.3s">
+        <svg viewBox="0 0 56 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 8 L14 22 Q10 28 10 38 L10 82 Q10 90 18 90 L38 90 Q46 90 46 82 L46 38 Q46 28 42 22 L38 8 Z" fill="${i < waterCount ? '#6a9ab0' : '#252820'}" stroke="${i < waterCount ? '#9ec4d8' : '#3a3d30'}" stroke-width="1.5"/>
+          <path d="M18 8 L38 8 L36 2 L20 2 Z" fill="${i < waterCount ? '#9ec4d8' : '#3a3d30'}"/>
+          ${i < waterCount ? '<path d="M10 60 Q28 55 46 60 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" fill="#4a7a90" opacity="0.5"/>' : ''}
+          <text x="28" y="52" text-anchor="middle" font-size="18" fill="${i < waterCount ? '#e8f4f8' : '#5a5548'}">${i < waterCount ? '💧' : '○'}</text>
+        </svg>
+      </div>`).join('')}
+    </div>
+    ${waterCount >= 3 ? '<div style="font-size:12px;color:var(--sage);margin-top:10px;text-align:center">Goal reached! +10 XP 💧</div>' : `<div style="font-size:12px;color:var(--text-muted);margin-top:10px;text-align:center">Tap each bottle as you drink</div>`}
+  </div>`;
+
+  // Food card
+  html += `<div class="card">
+    <div class="card-title" style="margin-bottom:10px">🍽 Nourishment check-in${foodCount >= 2 ? ' ✓' : ''}</div>
     <div class="food-chips">
       ${foodItems.map(f => `<div class="food-chip${foodDone[f.id] ? ' selected' : ''}" onclick="tapFood('${f.id}')">${f.label}</div>`).join('')}
     </div>
-    ${foodCount >= 2 ? '<div style="font-size:12px;color:var(--sage);margin-top:8px">+10 XP earned 🌿</div>' : ''}
+    ${foodCount >= 2 ? '<div style="font-size:12px;color:var(--sage);margin-top:10px">+10 XP earned 🌿</div>' : '<div style="font-size:12px;color:var(--text-muted);margin-top:10px">Check off 2 of 3 for +10 XP</div>'}
   </div>`;
-
-  html += `</div>`;
 
   // --- WELLNESS / JOURNAL ---
   const journalToday = state.wellnessData?.journal?.[t];
