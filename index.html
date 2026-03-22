@@ -1226,21 +1226,28 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   width: 160px;
   height: 160px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(122,158,126,0.3), rgba(122,158,126,0.05));
-  border: 2px solid rgba(122,158,126,0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 32px auto;
-  transition: transform 0.3s ease;
+  transition: background 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease;
 }
 .breath-circle.inhale {
+  background: radial-gradient(circle, rgba(122,158,126,0.35), rgba(122,158,126,0.05));
+  border: 3px solid rgba(122,158,126,0.7);
+  box-shadow: 0 0 32px rgba(122,158,126,0.2), inset 0 0 20px rgba(122,158,126,0.1);
   animation: breatheIn 4s ease-in-out forwards;
 }
 .breath-circle.hold {
+  background: radial-gradient(circle, rgba(201,149,74,0.35), rgba(201,149,74,0.05));
+  border: 3px solid rgba(201,149,74,0.7);
+  box-shadow: 0 0 32px rgba(201,149,74,0.2), inset 0 0 20px rgba(201,149,74,0.1);
   transform: scale(1.35);
 }
 .breath-circle.exhale {
+  background: radial-gradient(circle, rgba(106,154,176,0.35), rgba(106,154,176,0.05));
+  border: 3px solid rgba(106,154,176,0.7);
+  box-shadow: 0 0 32px rgba(106,154,176,0.2), inset 0 0 20px rgba(106,154,176,0.1);
   animation: breatheOut 8s ease-in-out forwards;
 }
 @keyframes breatheIn {
@@ -1251,12 +1258,16 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   from { transform: scale(1.35); }
   to { transform: scale(1); }
 }
+@keyframes breathCountNum {
+  from { opacity: 0; transform: scale(1.4); }
+  to   { opacity: 1; transform: scale(1); }
+}
 .breath-label {
   font-family: 'Fraunces', serif;
   font-size: 18px;
   font-style: italic;
-  color: var(--sage-light);
   text-align: center;
+  transition: color 0.4s ease;
 }
 .breath-count {
   font-size: 13px;
@@ -3625,7 +3636,22 @@ const BREATH_PHASES = [
 function startBreathing() {
   breathPhase = 0;
   breathCycle = 0;
-  renderBreathPhase();
+  runBreathCountdown(3);
+}
+
+function runBreathCountdown(n) {
+  const ui = document.getElementById('breath-ui');
+  if (!ui) return;
+  ui.innerHTML = `
+    <div style="text-align:center;padding:20px 0">
+      <div style="font-family:Fraunces,serif;font-size:72px;font-weight:300;color:var(--sky-light);line-height:1;animation:breathCountNum 0.4s cubic-bezier(0.34,1.56,0.64,1)">${n}</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:8px;font-style:italic">get ready...</div>
+    </div>`;
+  if (n > 1) {
+    setTimeout(() => runBreathCountdown(n - 1), 900);
+  } else {
+    setTimeout(() => renderBreathPhase(), 900);
+  }
 }
 
 function renderBreathPhase() {
