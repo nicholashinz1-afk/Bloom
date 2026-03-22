@@ -1942,6 +1942,19 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   </div>
 </div>
 
+<!-- New week goals sheet -->
+<div class="bottom-sheet" id="new-week-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:0 20px 20px">
+    <div class="sheet-title">🏠 This week's tasks</div>
+    <div id="new-week-goals-body"></div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveNewWeekGoals()">Let's go</button>
+      <button class="btn btn-ghost" onclick="closeAllSheets()">Keep same</button>
+    </div>
+  </div>
+</div>
+
 <!-- Backup sheet -->
 <div class="bottom-sheet" id="backup-sheet">
   <div class="sheet-handle"></div>
@@ -2423,7 +2436,6 @@ function bounceMoodBtn(val) {
 // ============================================================
 function updateStreak() {
   const xp = state.xpData;
-  const prefs = state.prefs;
   const td = state.todayData;
   const t = today();
 
@@ -2433,42 +2445,114 @@ function updateStreak() {
   yesterday.setDate(yesterday.getDate() - 1);
   const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
 
-  // Count opted-in daily habits
-  const dailyHabits = ['m_teeth', 'e_teeth'].filter(h => {
-    const pref = h === 'm_teeth' ? prefs.habits?.m_teeth : prefs.habits?.e_teeth;
-    return pref !== false;
-  });
+  // ANY single action counts — habit, mood, journal, water, food
+  const anyAction = (
+    td.m_teeth || td.e_teeth ||
+    td.mood !== undefined ||
+    td.sleep !== undefined ||
+    (td.water && td.water > 0) ||
+    (td.food && Object.values(td.food).some(Boolean)) ||
+    td.journalXPGiven ||
+    state.wellnessData?.journal?.[t]
+  );
 
-  if (dailyHabits.length === 0) return;
-
-  const doneCount = dailyHabits.filter(h => td[h]).length;
-  const total = dailyHabits.length;
-  const missed = total - doneCount;
-
-  // Streak grace on rough mood
+  // Mood grace on rough days
   const moodGrace = td.mood !== undefined && td.mood <= 2;
 
-  if (missed === 0 || (missed === 1 && total > 1) || moodGrace) {
-    // Full or partial — streak survives
+  if (anyAction || moodGrace) {
     if (xp.lastStreakDate === yStr || !xp.lastStreakDate) {
       xp.streak = (xp.streak || 0) + 1;
       xp.lastStreakDate = t;
-      // Check for freeze token milestones
       if ([7,14,30].includes(xp.streak) || (xp.streak > 30 && xp.streak % 30 === 0)) {
         if ((xp.freezeTokens || 0) < 5) xp.freezeTokens = (xp.freezeTokens || 0) + 1;
       }
     }
   } else {
-    // Missed — use freeze or reset
     if ((xp.freezeTokens || 0) > 0) {
       xp.freezeTokens--;
       xp.lastStreakDate = t;
     } else {
-      xp.streak = 0;
+      if (xp.lastStreakDate && xp.lastStreakDate !== yStr) {
+        xp.streak = 0;
+      }
       xp.lastStreakDate = t;
     }
   }
   saveState();
+}
+
+// ============================================================
+//  NEW WEEK DETECTION
+// ============================================================
+function checkNewWeek() {
+  const lastWeek = load('bloom_last_week_start');
+  const thisWeek = weekStart();
+  if (lastWeek && lastWeek !== thisWeek) {
+    // It's a new week — show banner and goals prompt
+    state.showNewWeekBanner = true;
+    // Show goals prompt if it's Monday (day 1)
+    if (dayOfWeek() === 1) {
+      setTimeout(() => showNewWeekGoalsSheet(), 1200);
+    }
+  }
+  save('bloom_last_week_start', thisWeek);
+}
+
+function showNewWeekGoalsSheet() {
+  const prefs = state.prefs;
+  const defaultTasks = [
+    { id: 'laundry',    icon: '🧺', name: 'Laundry' },
+    { id: 'trash',      icon: '🗑', name: 'Trash' },
+    { id: 'dishes',     icon: '🍽', name: 'Dishes' },
+    { id: 'clean_room', icon: '🧹', name: 'Clean room' },
+  ];
+  const currentTasks = prefs.householdTasks || [];
+  const customTasks = currentTasks.filter(t => !defaultTasks.some(d => d.id === t.id));
+
+  const body = document.getElementById('new-week-goals-body');
+  if (!body) { openSheet('new-week-sheet'); return; }
+
+  let html = `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6">Which tasks do you want to tackle this week?</div>`;
+
+  [...defaultTasks, ...customTasks].forEach(t => {
+    const active = currentTasks.some(c => c.id === t.id);
+    html += `<div class="ob-checkbox-row" onclick="toggleNewWeekTask('${t.id}','${t.name}','${t.icon||'✏️'}')">
+      <div class="ob-checkbox${active?' checked':''}"><span>${active?'✓':''}</span></div>
+      <span style="font-size:18px">${t.icon||'✏️'}</span>
+      <div class="toggle-label">${t.name}</div>
+    </div>`;
+  });
+
+  html += `<div style="display:flex;gap:8px;margin-top:14px">
+    <input type="text" id="new-week-custom-task" placeholder="Add a custom task...">
+    <button class="btn btn-ghost btn-sm" onclick="addNewWeekCustomTask()">Add</button>
+  </div>`;
+
+  body.innerHTML = html;
+  openSheet('new-week-sheet');
+}
+
+function toggleNewWeekTask(id, name, icon) {
+  if (!state.prefs.householdTasks) state.prefs.householdTasks = [];
+  const idx = state.prefs.householdTasks.findIndex(t => t.id === id);
+  if (idx > -1) state.prefs.householdTasks.splice(idx, 1);
+  else state.prefs.householdTasks.push({ id, name, icon });
+  showNewWeekGoalsSheet();
+}
+
+function addNewWeekCustomTask() {
+  const input = document.getElementById('new-week-custom-task');
+  if (!input || !input.value.trim()) return;
+  if (!state.prefs.householdTasks) state.prefs.householdTasks = [];
+  state.prefs.householdTasks.push({ id: 'custom_' + Date.now(), name: input.value.trim(), icon: '✏️' });
+  showNewWeekGoalsSheet();
+}
+
+function saveNewWeekGoals() {
+  save('bloom_prefs', state.prefs);
+  state.showNewWeekBanner = false;
+  closeAllSheets();
+  renderTodayTab();
 }
 
 // ============================================================
@@ -2867,6 +2951,21 @@ function renderTodayTop() {
   const container = document.getElementById('today-top');
   if (!container) return;
   let html = '';
+
+  // New week banner
+  if (state.showNewWeekBanner) {
+    html += `<div class="banner banner-all-done" style="background:rgba(122,158,126,0.1);border:1px solid rgba(122,158,126,0.25)">
+      <div class="banner-icon">🌱</div>
+      <div class="banner-body">
+        <div class="banner-title" style="color:var(--sage-light)">New week, fresh start</div>
+        <div class="banner-text">Last week's progress is saved in History. This week is a clean page.</div>
+        <div class="banner-actions">
+          <div class="banner-action" onclick="showNewWeekGoalsSheet()">Set this week's goals</div>
+          <div class="banner-action" onclick="state.showNewWeekBanner=false;renderTodayTop()">Dismiss</div>
+        </div>
+      </div>
+    </div>`;
+  }
 
   // Affirmation banner
   if (state.showAffirm && state.lastAffirm) {
@@ -4969,13 +5068,13 @@ function checkShowTutorial() {
 function initApp() {
   loadState();
   renderDailyQuote();
+  checkNewWeek();
   renderTodayTab();
   updateStreak();
   initOneSignal();
   showWhatsNew();
   checkBackupReminder();
   checkShowTutorial();
-  // Inject brand icons into header + nav
   const headerIcon = document.getElementById('header-bloom-icon');
   if (headerIcon) headerIcon.innerHTML = bloomIcon(26);
   const navIcon = document.getElementById('nav-today-icon');
