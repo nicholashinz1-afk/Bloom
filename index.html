@@ -420,14 +420,14 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
    ============================================================ */
 .celebrate-toast {
   position: absolute;
-  left: 16px;
-  right: 16px;
-  background: linear-gradient(135deg, var(--bg-elevated), rgba(122,158,126,0.12));
-  border: 1px solid rgba(122,158,126,0.4);
+  left: 12px;
+  right: 12px;
+  background: #1e3022;
+  border: 2px solid #5a9e60;
   border-radius: var(--r-xl);
   padding: 16px 18px;
   z-index: 490;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(122,158,126,0.1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 0 4px rgba(90,158,96,0.15);
   display: flex;
   align-items: center;
   gap: 14px;
@@ -438,7 +438,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   animation: celebrateOut 0.3s ease forwards;
 }
 .celebrate-toast-emoji {
-  font-size: 32px;
+  font-size: 34px;
   flex-shrink: 0;
   animation: celebrateEmoji 0.5s 0.1s cubic-bezier(0.34,1.56,0.64,1) both;
 }
@@ -449,35 +449,35 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
 .celebrate-toast-body { flex: 1; min-width: 0; }
 .celebrate-toast-title {
   font-family: 'Fraunces', serif;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 400;
-  color: var(--cream);
+  color: #e8f0e8;
   line-height: 1.3;
   margin-bottom: 3px;
 }
 .celebrate-toast-sub {
-  font-size: 12px;
-  color: var(--sage-light);
+  font-size: 13px;
+  color: #a8c5ab;
   font-style: italic;
   font-family: 'Fraunces', serif;
 }
 .celebrate-toast-xp {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--amber-light);
-  background: rgba(201,149,74,0.12);
-  border: 1px solid rgba(201,149,74,0.2);
+  font-weight: 700;
+  color: #e0b87a;
+  background: rgba(201,149,74,0.2);
+  border: 1.5px solid rgba(201,149,74,0.5);
   border-radius: var(--r-full);
-  padding: 3px 10px;
+  padding: 4px 12px;
   flex-shrink: 0;
 }
 @keyframes celebrateIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.94); }
+  from { opacity: 0; transform: translateY(16px) scale(0.93); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes celebrateOut {
   from { opacity: 1; transform: translateY(0) scale(1); }
-  to   { opacity: 0; transform: translateY(-10px) scale(0.96); }
+  to   { opacity: 0; transform: translateY(-8px) scale(0.97); }
 }
 .streak-toast {
   position: fixed;
@@ -3261,21 +3261,27 @@ function tapWater(i) {
 
 function tapFood(id) {
   if (!state.todayData.food) state.todayData.food = {};
-  state.todayData.food[id] = !state.todayData.food[id];
+  const wasSelected = state.todayData.food[id];
+  state.todayData.food[id] = !wasSelected;
   const count = Object.values(state.todayData.food).filter(Boolean).length;
-  if (count >= 2 && !state.todayData.foodXPGiven) {
-    state.todayData.foodXPGiven = true;
-    addXP(10, null);
-    setTimeout(() => {
-      const el = document.querySelector('.food-chips');
-      celebrate('food', el);
-    }, 100);
-  } else {
-    haptic('light');
-  }
+
+  haptic('light');
   saveState();
   archiveToday();
   renderTodayTab();
+
+  if (!wasSelected) {
+    // Celebrate each individual chip tap
+    if (count >= 2 && !state.todayData.foodXPGiven) {
+      state.todayData.foodXPGiven = true;
+      addXP(10, null);
+      saveState();
+    }
+    setTimeout(() => {
+      const el = document.querySelector('.food-chips');
+      celebrate('food', el);
+    }, 50);
+  }
 }
 
 function activateHabit(id) {
