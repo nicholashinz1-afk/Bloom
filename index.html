@@ -42,6 +42,20 @@
 })();
 </script>
 <title>Bloom — Daily Self Care</title>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "90cb3151-0f7d-4848-afb4-1fb4c8c890a8",
+      safari_web_id: "web.onesignal.auto.3cd6b41f-0715-4da8-9007-02ca4af2dc44",
+      notifyButton: { enable: false }, // we handle our own prompt UI
+      welcomeNotification: { disable: true },
+    });
+    window.__osReady = true;
+    window.dispatchEvent(new Event('onesignal-ready'));
+  });
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -492,8 +506,149 @@ body::before{content:'';position:fixed;inset:0;background:
   </div>
 
   <!-- Page 4: Ready -->
-  <!-- Page 4: Install prompt -->
+  <!-- Page 4: Set your goals -->
   <div class="ob-page" id="ob-page-4">
+    <div class="ob-steps"><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot active"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div></div>
+    <div style="font-size:48px;margin-bottom:16px">🚿</div>
+    <h1 class="ob-title">Physical <em>habits</em></h1>
+    <p class="ob-body" style="margin-bottom:20px">How many times a week do you want to aim for these? You can always change these later.</p>
+    <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;margin-bottom:28px">
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font-size:14px;font-weight:600;color:var(--text)">🚿 Shower</div><div style="font-size:11px;color:var(--muted);margin-top:2px">times per week</div></div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button onclick="obStep('shower_goal',-1)" style="width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer">−</button>
+          <span id="ob-shower-val" style="font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--cream);min-width:20px;text-align:center">3</span>
+          <button onclick="obStep('shower_goal',1)" style="width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer">+</button>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font-size:14px;font-weight:600;color:var(--text)">🏃 Exercise</div><div style="font-size:11px;color:var(--muted);margin-top:2px">times per week</div></div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button onclick="obStep('exercise_goal',-1)" style="width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer">−</button>
+          <span id="ob-exercise-val" style="font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--cream);min-width:20px;text-align:center">3</span>
+          <button onclick="obStep('exercise_goal',1)" style="width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer">+</button>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font-size:14px;font-weight:600;color:var(--text)">🌳 Go outside</div><div style="font-size:11px;color:var(--muted);margin-top:2px">times per week</div></div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button onclick="obStep('outside_goal',-1)" style="width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer">−</button>
+          <span id="ob-outside-val" style="font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--cream);min-width:20px;text-align:center">3</span>
+          <button onclick="obStep('outside_goal',1)" style="width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer">+</button>
+        </div>
+      </div>
+    </div>
+    <button class="ob-btn" onclick="obNext(4)">Continue →</button>
+  </div>
+
+  <!-- Page 5: Household tasks -->
+  <div class="ob-page" id="ob-page-5">
+    <div class="ob-steps"><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot active"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div></div>
+    <div style="font-size:48px;margin-bottom:16px">🏠</div>
+    <h1 class="ob-title">Weekly <em>tasks</em></h1>
+    <p class="ob-body" style="margin-bottom:20px">Pick the household tasks you want to track each week. You'll get a Sunday reminder to set your goals.</p>
+    <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px;margin-bottom:20px" id="ob-task-list">
+      <label style="background:var(--surface);border:1.5px solid var(--border2);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s" id="ob-task-laundry">
+        <input type="checkbox" id="ob-chk-laundry" onchange="obTaskToggle('laundry','ob-task-laundry')" style="display:none">
+        <div style="width:22px;height:22px;border-radius:6px;border:2px solid var(--softer);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:all .2s" id="ob-chk-box-laundry">　</div>
+        <span style="font-size:14px;color:var(--text)">🧺 Do laundry</span>
+      </label>
+      <label style="background:var(--surface);border:1.5px solid var(--border2);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s" id="ob-task-trash">
+        <input type="checkbox" id="ob-chk-trash" onchange="obTaskToggle('trash','ob-task-trash')" style="display:none">
+        <div style="width:22px;height:22px;border-radius:6px;border:2px solid var(--softer);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:all .2s" id="ob-chk-box-trash">　</div>
+        <span style="font-size:14px;color:var(--text)">🗑️ Take out trash</span>
+      </label>
+      <label style="background:var(--surface);border:1.5px solid var(--border2);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s" id="ob-task-dishes">
+        <input type="checkbox" id="ob-chk-dishes" onchange="obTaskToggle('dishes','ob-task-dishes')" style="display:none">
+        <div style="width:22px;height:22px;border-radius:6px;border:2px solid var(--softer);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:all .2s" id="ob-chk-box-dishes">　</div>
+        <span style="font-size:14px;color:var(--text)">🍽️ Do dishes</span>
+      </label>
+      <label style="background:var(--surface);border:1.5px solid var(--border2);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s" id="ob-task-clean">
+        <input type="checkbox" id="ob-chk-clean" onchange="obTaskToggle('clean','ob-task-clean')" style="display:none">
+        <div style="width:22px;height:22px;border-radius:6px;border:2px solid var(--softer);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:all .2s" id="ob-chk-box-clean">　</div>
+        <span style="font-size:14px;color:var(--text)">🧹 Clean room</span>
+      </label>
+    </div>
+    <div style="width:100%;max-width:320px;margin-bottom:24px">
+      <input id="ob-custom-task" placeholder="+ Add your own task…" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:12px 14px;font-family:'Instrument Sans',sans-serif;font-size:14px;color:var(--text);outline:none" oninput="obCustomTask(this.value)">
+    </div>
+    <button class="ob-btn" onclick="obSaveTasksAndNext()">Continue →</button>
+    <button class="ob-skip" onclick="obNext(5)">Skip for now</button>
+  </div>
+
+  <!-- Page 6: Notification preferences -->
+  <div class="ob-page" id="ob-page-6">
+    <div class="ob-steps"><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot active"></div><div class="ob-step-dot"></div></div>
+    <div style="font-size:48px;margin-bottom:16px">🔔</div>
+    <h1 class="ob-title">Reminder <em>preferences</em></h1>
+    <p class="ob-body" style="margin-bottom:20px">Set up gentle nudges so you never forget. You can change all of these in Settings.</p>
+    <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+
+      <!-- Water reminders -->
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px 18px">
+        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px">💧 Water reminders</div>
+        <div style="display:flex;flex-direction:column;gap:6px" id="ob-water-opts">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 0">
+            <input type="radio" name="ob-water" value="smart" checked onchange="obWaterMode('smart')" style="accent-color:var(--sage)">
+            <div><div style="font-size:13px;color:var(--text)">Smart — every 4hrs if not logged</div><div style="font-size:11px;color:var(--muted)">Starting 10am if no water yet</div></div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 0">
+            <input type="radio" name="ob-water" value="hourly" onchange="obWaterMode('hourly')" style="accent-color:var(--sage)">
+            <div><div style="font-size:13px;color:var(--text)">Every hour</div><div style="font-size:11px;color:var(--muted)">Regardless of whether you've logged</div></div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 0">
+            <input type="radio" name="ob-water" value="off" onchange="obWaterMode('off')" style="accent-color:var(--sage)">
+            <span style="font-size:13px;color:var(--text)">Off</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Habit reminders -->
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px 18px">
+        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:4px">⏰ Habit reminders</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Set custom times for your daily habits</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:13px;color:var(--text)">🦷 Morning brush</span>
+            <input type="time" value="08:00" id="ob-time-m_teeth" onchange="obHabitTime('m_teeth',this.value)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:4px 8px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:12px;outline:none">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:13px;color:var(--text)">🌙 Evening brush</span>
+            <input type="time" value="21:00" id="ob-time-e_teeth" onchange="obHabitTime('e_teeth',this.value)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:4px 8px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:12px;outline:none">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:13px;color:var(--text)">🏃 Exercise</span>
+            <input type="time" value="07:00" id="ob-time-w_exercise" onchange="obHabitTime('w_exercise',this.value)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:4px 8px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:12px;outline:none">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:13px;color:var(--text)">🌳 Go outside</span>
+            <input type="time" value="12:00" id="ob-time-w_outside" onchange="obHabitTime('w_outside',this.value)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:4px 8px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:12px;outline:none">
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--softer)">Reminders only fire if the habit isn't logged yet that day</div>
+      </div>
+
+      <!-- Weekly goal reminder -->
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text2)">🗓️ Sunday goal reminder</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Nudge to set weekly household goals</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0">
+          <input type="checkbox" id="ob-sunday-toggle" checked onchange="obSundayToggle(this.checked)" style="opacity:0;width:0;height:0">
+          <span id="ob-sunday-slider" style="position:absolute;cursor:pointer;inset:0;background:var(--sage);border-radius:22px;transition:all .3s"></span>
+          <span id="ob-sunday-knob" style="position:absolute;content:'';height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:transform .3s;transform:translateX(18px)"></span>
+        </label>
+      </div>
+
+    </div>
+    <button class="ob-btn" onclick="obSaveNotifPrefs()">Save preferences →</button>
+    <button class="ob-skip" onclick="obNext(6)">Skip for now</button>
+  </div>
+
+  <!-- Page 7: Install prompt (was page 4) -->
+  <div class="ob-page" id="ob-page-7">
+    <div class="ob-steps"><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot active"></div></div>
     <div class="ob-steps"><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot active"></div><div class="ob-step-dot"></div></div>
     <div style="font-size:48px;margin-bottom:20px">📱</div>
     <h1 class="ob-title">Add bloom to your<br><em>home screen</em></h1>
@@ -517,9 +672,9 @@ body::before{content:'';position:fixed;inset:0;background:
     <button class="ob-skip" onclick="obNext(4)">I'll do it later</button>
   </div>
 
-  <!-- Page 5: Ready -->
-  <div class="ob-page" id="ob-page-5">
-    <div class="ob-steps"><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot active"></div></div>
+  <!-- Page 8: Ready -->
+  <div class="ob-page" id="ob-page-8">
+    <div class="ob-steps"><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot"></div><div class="ob-step-dot active" style="width:20px;border-radius:4px"></div></div>
     <div style="font-size:56px;margin-bottom:20px">🌱</div>
     <h1 class="ob-title" id="ob-ready-title">You're all set!</h1>
     <p class="ob-body">Start small. Even one habit done is a win.<br><br>bloom is here every day — no judgment, ever.</p>
@@ -659,6 +814,23 @@ body::before{content:'';position:fixed;inset:0;background:
       </div>
 
       <!-- Wellness -->
+      <!-- This Week section -->
+      <div class="sec-head" style="margin-top:16px">
+        <div class="sec-tag" style="background:rgba(168,143,196,.1);color:#b8a8d8"><span class="dot" style="background:#b8a8d8"></span>This Week</div>
+        <span class="sec-prog" id="week-tasks-prog">0/0</span>
+      </div>
+      <div id="this-week-section">
+        <!-- Go outside habit -->
+        <div class="habit wc" data-id="w_outside" data-xp="20" onclick="toggleHabit(this)">
+          <div class="hck" id="hck-w_outside">✓</div><div class="hicon">🌳</div>
+          <div class="htext"><div class="hname">Go outside</div><div class="htip" id="outside-tip">Loading…</div></div>
+          <div class="wbadge" id="outside-badge">0/3</div>
+        </div>
+        <!-- Dynamic household tasks rendered by JS -->
+        <div id="household-tasks-list"></div>
+        <div id="no-tasks-msg" style="display:none;text-align:center;padding:14px;font-size:12px;color:var(--softer);font-style:italic">No weekly tasks set — add some in Settings</div>
+      </div>
+
       <div class="sec-head" style="margin-top:4px"><div class="sec-tag tag-wl"><span class="dot"></span>Wellness</div><span class="sec-prog" id="wl-prog">0/1</span></div>
       <div class="habit wl" data-id="wl_journal" data-xp="10" onclick="switchTab('wellness')">
         <div class="hck" id="hck-wl_journal">✓</div><div class="hicon">📓</div>
@@ -788,6 +960,56 @@ body::before{content:'';position:fixed;inset:0;background:
         </div>
       </div>
       <div style="margin-bottom:20px">
+        <div class="s-sec-title">🌳 Go outside goal</div>
+        <div class="s-row"><div><div class="s-lbl">Times per week</div><div class="s-sub">Fresh air is good for everything</div></div><div class="stepper"><div class="step-btn" onclick="step('outside_goal',-1)">−</div><div class="step-val" id="sv-outside_goal">3</div><div class="step-btn" onclick="step('outside_goal',1)">+</div></div></div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <div class="s-sec-title">🏠 Weekly household tasks</div>
+        <div id="settings-tasks-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+        <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:12px 16px;display:flex;gap:10px">
+          <input id="new-task-input" placeholder="Add a custom task…" style="flex:1;background:transparent;border:none;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCustomTask()">
+          <button onclick="addCustomTask()" style="padding:5px 12px;background:var(--sage-g);border:1px solid rgba(143,173,122,.3);border-radius:8px;color:var(--sage);font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">Add</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <div class="s-sec-title">🔔 Notifications</div>
+        <!-- Water reminders -->
+        <div class="s-row" style="flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:8px">
+          <div><div class="s-lbl">💧 Water reminders</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px;width:100%">
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+              <input type="radio" name="water-mode" value="smart" style="accent-color:var(--sage);margin-top:2px" onchange="saveNotifPref('water_mode','smart')">
+              <div><div style="font-size:13px;color:var(--text)">Smart (every 4hrs if not logged)</div><div style="font-size:11px;color:var(--muted)">Starts at 10am if no water logged yet</div></div>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+              <input type="radio" name="water-mode" value="hourly" style="accent-color:var(--sage);margin-top:2px" onchange="saveNotifPref('water_mode','hourly')">
+              <div><div style="font-size:13px;color:var(--text)">Every hour</div><div style="font-size:11px;color:var(--muted)">Regardless of whether you've logged</div></div>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <input type="radio" name="water-mode" value="off" style="accent-color:var(--sage)" onchange="saveNotifPref('water_mode','off')">
+              <span style="font-size:13px;color:var(--text)">Off</span>
+            </label>
+          </div>
+        </div>
+        <!-- Habit reminder times -->
+        <div class="s-row" style="flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:8px">
+          <div><div class="s-lbl">⏰ Habit reminder times</div><div class="s-sub">Only fires if habit not logged yet</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;width:100%" id="settings-habit-times"></div>
+        </div>
+        <!-- Sunday reminder toggle -->
+        <div class="s-row">
+          <div><div class="s-lbl">🗓️ Sunday goal reminder</div><div class="s-sub">Nudge to set weekly household tasks</div></div>
+          <label style="position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0">
+            <input type="checkbox" id="settings-sunday-toggle" onchange="saveNotifPref('sunday_reminder',this.checked)" style="opacity:0;width:0;height:0">
+            <span id="settings-sunday-slider" style="position:absolute;cursor:pointer;inset:0;background:var(--softer);border-radius:22px;transition:background .3s"></span>
+            <span id="settings-sunday-knob" style="position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:transform .3s"></span>
+          </label>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px">
         <div class="s-sec-title">🔗 Share bloom</div>
         <div class="s-row" style="flex-direction:column;align-items:flex-start;gap:10px">
           <div><div class="s-lbl">Share with friends</div><div class="s-sub">Everyone gets their own private copy — no accounts, no shared data.</div></div>
@@ -861,10 +1083,25 @@ body::before{content:'';position:fixed;inset:0;background:
 // ════════════════════════════════════
 //  VERSION + CHANGELOG
 // ════════════════════════════════════
-const BLOOM_VERSION = "1.0.0";
+const BLOOM_VERSION = "1.1.0";
 const BLOOM_BUILD = "2026-03-22";
 
 const CHANGELOG = [
+  {
+    version: "1.1.0",
+    date: "March 22, 2026",
+    title: "Goals, reminders & more 🌿",
+    changes: [
+      "Onboarding now lets you set your weekly goals for shower, exercise, go outside and household tasks",
+      "New 'Go Outside' weekly habit — set your own weekly target",
+      "New 'This Week' section in Today tab for household tasks (laundry, trash, custom)",
+      "Sunday notification to set your weekly household goals",
+      "OneSignal push notifications — real reminders even when the app is closed",
+      "Water reminders — choose every hour, smart 4-hour reminders, or off",
+      "Per-habit reminders — set a custom time for any habit",
+      "Notification preferences fully manageable in Settings",
+    ]
+  },
   {
     version: "1.0.0",
     date: "March 22, 2026",
@@ -893,7 +1130,7 @@ const LEVELS=[
   {n:'Blooming',i:'🌸',m:250},{n:'Thriving',i:'🌻',m:500},
   {n:'Radiant',i:'✨',m:900},{n:'Glowing',i:'🌟',m:1500}
 ];
-const XP_MAP={m_teeth:15,e_teeth:15,w_shower:25,w_exercise:30,wl_journal:10,food_check:10,wl_reflect:15};
+const XP_MAP={m_teeth:15,e_teeth:15,w_shower:25,w_exercise:30,w_outside:20,wl_journal:10,food_check:10,wl_reflect:15,week_task:15};
 // All daily habits for streak — softened: miss 1 = partial, miss 2+ = missed
 const ALL_DAILY=['m_teeth','e_teeth','food_check'];
 const MOOD_COLORS=['','#c4766a','#c8883a','#d4a855','#8fad7a','#7aa8b8'];
@@ -961,7 +1198,7 @@ const WIN_MILESTONES=[
 const todayKey=()=>new Date().toISOString().slice(0,10);
 const loadDB=()=>{try{return JSON.parse(localStorage.getItem('bloom_v8')||'{}')}catch{return{}}};
 const saveDB=d=>localStorage.setItem('bloom_v8',JSON.stringify(d));
-const loadSettings=()=>{const D={shower_goal:3,exercise_goal:3};try{return Object.assign({},D,JSON.parse(localStorage.getItem('bloom_s8')||'{}'))}catch{return D}};
+const loadSettings=()=>{const D={shower_goal:3,exercise_goal:3,outside_goal:3};try{return Object.assign({},D,JSON.parse(localStorage.getItem('bloom_s8')||'{}'))}catch{return D}};
 const saveSettingsStore=s=>localStorage.setItem('bloom_s8',JSON.stringify(s));
 const loadUser=()=>{try{return JSON.parse(localStorage.getItem('bloom_user')||'{}')}catch{return{}}};
 const saveUser=u=>localStorage.setItem('bloom_user',JSON.stringify(u));
@@ -980,7 +1217,8 @@ function obNext(from,skip){
   obPage=from+1;
   document.querySelectorAll('.ob-page').forEach(p=>p.classList.remove('active'));
   const next=document.getElementById('ob-page-'+obPage);
-  if(next)next.classList.add('active');
+  if(next){next.classList.add('active');}
+  else{obFinish();} // past last page
 }
 async function obRequestNotify(){
   if('Notification' in window){
@@ -994,6 +1232,12 @@ async function obRequestNotify(){
 }
 function obFinish(){
   const u=loadUser();u.onboarded=true;saveUser(u);
+  // Save goals from onboarding
+  const S=loadSettings();
+  S.shower_goal=obGoals.shower_goal||3;
+  S.exercise_goal=obGoals.exercise_goal||3;
+  S.outside_goal=obGoals.outside_goal||3;
+  saveSettingsStore(S);
   document.getElementById('onboard').classList.add('hidden');
   document.getElementById('main-app').style.display='flex';
   initApp();
@@ -1187,6 +1431,7 @@ function switchTab(name){
   document.getElementById('tab-'+name).classList.add('active');
   document.getElementById('nav-'+name).classList.add('active');
   document.getElementById('tab-scroll').scrollTop=0;
+  if(name==='today'){renderToday();renderHouseholdTasks();}
   if(name==='progress')renderProgress();
   if(name==='wellness'){renderWellness();renderJournalState();renderBreathUsed();}
   if(name==='history')renderHistory();
@@ -1218,13 +1463,15 @@ function renderToday(){
   document.getElementById('m-prog').textContent=(rec['m_teeth']?1:0)+'/1';
   document.getElementById('e-prog').textContent=(rec['e_teeth']?1:0)+'/1';
   ['w_shower','w_exercise'].forEach(id=>{
-    const goal=id==='w_shower'?S.shower_goal:S.exercise_goal,cnt=weeklyCount(id),met=cnt>=goal;
+    const goalMap={'w_shower':S.shower_goal,'w_exercise':S.exercise_goal,'w_outside':S.outside_goal||3};const goal=goalMap[id]||3,cnt=weeklyCount(id),met=cnt>=goal;
     const card=document.querySelector(`[data-id="${id}"]`);if(!card)return;
     card.classList.toggle('done',!!rec[id]||met);
-    const isSh=id==='w_shower';
-    document.getElementById(isSh?'shower-tip':'exercise-tip').textContent=met?`✓ Goal hit! (${cnt}/${goal})`:`${goal}x this week · ${cnt}/${goal} done`;
-    const b=document.getElementById(isSh?'shower-badge':'exercise-badge');
-    b.textContent=cnt+'/'+goal;b.className='wbadge'+(met?' met':'');
+    const tipMap={'w_shower':'shower-tip','w_exercise':'exercise-tip','w_outside':'outside-tip'};
+    const badgeMap={'w_shower':'shower-badge','w_exercise':'exercise-badge','w_outside':'outside-badge'};
+    const tipEl=document.getElementById(tipMap[id]);
+    const badgeEl=document.getElementById(badgeMap[id]);
+    if(tipEl)tipEl.textContent=met?`✓ Goal hit! (${cnt}/${goal})`:`${goal}x this week · ${cnt}/${goal} done`;
+    if(badgeEl){badgeEl.textContent=cnt+'/'+goal;badgeEl.className='wbadge'+(met?' met':'');}
   });
   // Wellness
   const wlCard=document.querySelector('[data-id="wl_journal"]');
@@ -1305,7 +1552,7 @@ function renderProgress(){
 // ════════════════════════════════════
 //  RENDER HISTORY
 // ════════════════════════════════════
-const HABIT_LABELS={m_teeth:'Morning brush',e_teeth:'Evening brush',w_shower:'Shower',w_exercise:'Exercise',food_check:'Nourished',wl_journal:'Journal',water:'Water goal'};
+const HABIT_LABELS={m_teeth:'Morning brush',e_teeth:'Evening brush',w_shower:'Shower',w_exercise:'Exercise',w_outside:'Go outside',food_check:'Nourished',wl_journal:'Journal',water:'Water goal'};
 
 function renderHistory(){
   const db=loadDB(),list=document.getElementById('history-list');
@@ -1591,17 +1838,362 @@ function renderBreathUsed(){const rec=getTodayRec(),el=document.getElementById('
 // ════════════════════════════════════
 //  SETTINGS
 // ════════════════════════════════════
+
+// ════════════════════════════════════
+//  ONESIGNAL + NOTIFICATION ENGINE
+// ════════════════════════════════════
+const OS_APP_ID = "90cb3151-0f7d-4848-afb4-1fb4c8c890a8";
+
+async function osSubscribe(){
+  if(!window.OneSignal) return false;
+  try{
+    await OneSignal.Notifications.requestPermission();
+    return OneSignal.Notifications.permission;
+  }catch(e){return false;}
+}
+
+async function osGetPlayerId(){
+  if(!window.OneSignal) return null;
+  try{ return await OneSignal.User.PushSubscription.id; }catch{ return null; }
+}
+
+// Schedule a local notification via OneSignal API (server-side would be ideal,
+// but for client-side we use the in-page scheduling approach)
+function scheduleHabitReminders(){
+  const prefs = loadNotifPrefs();
+  const now = new Date();
+  // Clear any existing scheduled checks
+  if(window.__habitReminderIntervals) window.__habitReminderIntervals.forEach(clearTimeout);
+  window.__habitReminderIntervals = [];
+  const HABIT_LABELS_NOTIF = {
+    m_teeth: {label:'🦷 Morning brush', msg:"Don't forget to brush your teeth this morning!"},
+    e_teeth: {label:'🌙 Evening brush', msg:"Time to brush your teeth before bed!"},
+    w_exercise: {label:'🏃 Exercise', msg:"Have you moved your body today?"},
+    w_outside: {label:'🌳 Go outside', msg:"Get some fresh air today — even a short walk counts!"},
+    w_shower: {label:'🚿 Shower', msg:"A shower will make you feel so much better."},
+  };
+  Object.entries(HABIT_LABELS_NOTIF).forEach(([id, info])=>{
+    const timeStr = prefs.habit_times && prefs.habit_times[id];
+    if(!timeStr) return;
+    const [h,m] = timeStr.split(':').map(Number);
+    const target = new Date();
+    target.setHours(h,m,0,0);
+    if(target <= now) return; // already passed today
+    const ms = target - now;
+    const t = setTimeout(()=>{
+      const rec = getTodayRec();
+      if(!rec[id]){
+        sendLocalNotif('bloom ⏰', info.msg);
+      }
+    }, ms);
+    window.__habitReminderIntervals.push(t);
+  });
+}
+
+function scheduleWaterRemindersOS(){
+  const prefs = loadNotifPrefs();
+  const mode = prefs.water_mode || 'smart';
+  if(mode === 'off') return;
+  if(window.__waterReminderInterval) clearInterval(window.__waterReminderInterval);
+  const intervalMs = mode === 'hourly' ? 60*60*1000 : 4*60*60*1000;
+  // Smart mode: start at 10am if no water logged
+  if(mode === 'smart'){
+    const now = new Date();
+    const tenAm = new Date(); tenAm.setHours(10,0,0,0);
+    const rec = getTodayRec();
+    if(!rec.water && now < tenAm){
+      const msUntil10 = tenAm - now;
+      setTimeout(()=>{
+        if(!(getTodayRec().water)){
+          sendLocalNotif('bloom 💧','Time to start hydrating! Tap to log your first bottle.');
+        }
+        startWaterInterval(intervalMs);
+      }, msUntil10);
+      return;
+    }
+  }
+  startWaterInterval(intervalMs);
+}
+
+function startWaterInterval(ms){
+  window.__waterReminderInterval = setInterval(()=>{
+    const rec = getTodayRec();
+    if((rec.water||0) < 3){
+      sendLocalNotif('bloom 💧', `You're at ${rec.water||0}/3 bottles today. Stay hydrated! 💧`);
+    }
+  }, ms);
+}
+
+function sendLocalNotif(title, body){
+  if(Notification.permission === 'granted'){
+    new Notification(title, {
+      body,
+      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%2313150f"/><text y=".9em" font-size="80">🌿</text></svg>',
+      badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="80">🌿</text></svg>'
+    });
+  }
+}
+
+function scheduleSundayReminder(){
+  const prefs = loadNotifPrefs();
+  if(prefs.sunday_reminder === false) return;
+  const now = new Date();
+  const dow = now.getDay(); // 0=Sun
+  if(dow !== 0) return; // only schedule on Sunday itself
+  const nineAm = new Date(); nineAm.setHours(9,0,0,0);
+  if(now > nineAm) return; // already past 9am Sunday
+  const ms = nineAm - now;
+  setTimeout(()=>{
+    sendLocalNotif('bloom 🗓️', "It's Sunday — want to set your household goals for the week?");
+  }, ms);
+}
+
+// ════════════════════════════════════
+//  NOTIFICATION PREFERENCES
+// ════════════════════════════════════
+function loadNotifPrefs(){
+  try{ return JSON.parse(localStorage.getItem('bloom_notif')||'{}'); }catch{ return {}; }
+}
+function saveNotifPref(key, val){
+  const p = loadNotifPrefs(); p[key] = val;
+  localStorage.setItem('bloom_notif', JSON.stringify(p));
+  // Re-schedule if relevant
+  if(key === 'water_mode') scheduleWaterRemindersOS();
+  if(key === 'sunday_reminder') scheduleSundayReminder();
+  if(key.startsWith('habit_time_')) scheduleHabitReminders();
+  renderSettings();
+}
+
+// ════════════════════════════════════
+//  HOUSEHOLD TASKS
+// ════════════════════════════════════
+const DEFAULT_TASKS = [
+  {id:'laundry', label:'🧺 Do laundry', icon:'🧺'},
+  {id:'trash',   label:'🗑️ Take out trash', icon:'🗑️'},
+];
+
+function loadTasks(){
+  try{ return JSON.parse(localStorage.getItem('bloom_tasks')||'null'); }catch{ return null; }
+}
+function saveTasks(tasks){ localStorage.setItem('bloom_tasks', JSON.stringify(tasks)); }
+
+function getActiveTasks(){
+  const saved = loadTasks();
+  return saved !== null ? saved : DEFAULT_TASKS;
+}
+
+function renderHouseholdTasks(){
+  const tasks = getActiveTasks();
+  const list = document.getElementById('household-tasks-list');
+  const noMsg = document.getElementById('no-tasks-msg');
+  if(!list) return;
+  list.innerHTML = '';
+  if(tasks.length === 0){ if(noMsg) noMsg.style.display='block'; return; }
+  if(noMsg) noMsg.style.display='none';
+  const rec = getTodayRec();
+  // Get week key for weekly task tracking
+  const wk = getThisWeekTaskKey();
+  const db = loadDB();
+  const weekRec = db[wk] || {};
+  tasks.forEach(task => {
+    const doneThisWeek = !!weekRec[task.id];
+    const card = document.createElement('div');
+    card.className = 'habit wc' + (doneThisWeek ? ' done' : '');
+    card.setAttribute('data-id','task_'+task.id);
+    card.setAttribute('data-xp','15');
+    card.onclick = () => toggleWeekTask(task.id, card);
+    card.innerHTML = `
+      <div class="hck" id="hck-task-${task.id}" style="${doneThisWeek?'background:var(--amber);border-color:var(--amber);color:#13150f;box-shadow:0 0 12px var(--amber-g)':''}">✓</div>
+      <div class="hicon">${task.icon||'✅'}</div>
+      <div class="htext"><div class="hname">${task.label.replace(/^[^\s]+\s/,'')}</div><div class="htip">Weekly task</div></div>
+      <div class="hxp">+15 XP</div>`;
+    list.appendChild(card);
+  });
+  // Update progress
+  const done = tasks.filter(t => weekRec[t.id]).length;
+  const el = document.getElementById('week-tasks-prog');
+  if(el) el.textContent = done + '/' + (tasks.length + 1); // +1 for go outside
+}
+
+function getThisWeekTaskKey(){
+  const t = new Date(), dow = t.getDay(), mon = new Date(t);
+  mon.setDate(t.getDate()-((dow+6)%7)); mon.setHours(0,0,0,0);
+  return 'weektasks_'+mon.toISOString().slice(0,10);
+}
+
+function toggleWeekTask(taskId, card){
+  const wk = getThisWeekTaskKey();
+  const db = loadDB();
+  if(!db[wk]) db[wk] = {};
+  const was = !!db[wk][taskId];
+  db[wk][taskId] = !was;
+  saveDB(db);
+  if(!was){
+    spawnParts(card, '#c8883a');
+    showXpFloat(card, 15);
+    showAffirm({e:'🏠', m:'Home care is self care.', s:'Taking care of your space takes care of your mind.'});
+  }
+  renderHouseholdTasks();
+}
+
+function renderSettingsTasks(){
+  const tasks = getActiveTasks();
+  const list = document.getElementById('settings-tasks-list');
+  if(!list) return;
+  list.innerHTML = '';
+  tasks.forEach((task, idx) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:13px 16px;display:flex;align-items:center;justify-content:space-between';
+    row.innerHTML = `
+      <span style="font-size:14px;color:var(--text)">${task.label}</span>
+      <button onclick="removeTask(${idx})" style="padding:4px 10px;background:transparent;border:1px solid rgba(196,118,106,.3);border-radius:8px;color:rgba(196,118,106,.7);font-family:'Instrument Sans',sans-serif;font-size:11px;cursor:pointer">Remove</button>`;
+    list.appendChild(row);
+  });
+}
+
+function removeTask(idx){
+  const tasks = getActiveTasks();
+  tasks.splice(idx, 1);
+  saveTasks(tasks);
+  renderSettingsTasks();
+  renderHouseholdTasks();
+}
+
+function addCustomTask(){
+  const input = document.getElementById('new-task-input');
+  const val = input.value.trim();
+  if(!val) return;
+  const tasks = getActiveTasks();
+  // Pick a sensible icon
+  const icons = {'clean':'🧹','room':'🧹','dishes':'🍽️','cook':'🍳','vacuum':'🫧','tidy':'📦','laundry':'🧺','trash':'🗑️','bed':'🛏️','bath':'🛁'};
+  let icon = '✅';
+  for(const [kw, ic] of Object.entries(icons)){ if(val.toLowerCase().includes(kw)){icon=ic;break;} }
+  tasks.push({id:'custom_'+Date.now(), label: icon+' '+val, icon});
+  saveTasks(tasks);
+  input.value = '';
+  renderSettingsTasks();
+  renderHouseholdTasks();
+}
+
+// ════════════════════════════════════
+//  ONBOARDING HELPERS (new)
+// ════════════════════════════════════
+const obGoals = {shower_goal:3, exercise_goal:3, outside_goal:3};
+const obTasks = {};
+const obNotifPrefs = {water_mode:'smart', sunday_reminder:true, habit_times:{}};
+
+function obStep(key, delta){
+  obGoals[key] = Math.max(1, Math.min(7, (obGoals[key]||3) + delta));
+  const elMap = {shower_goal:'ob-shower-val', exercise_goal:'ob-exercise-val', outside_goal:'ob-outside-val'};
+  const el = document.getElementById(elMap[key]);
+  if(el) el.textContent = obGoals[key];
+}
+
+function obTaskToggle(taskId, labelId){
+  obTasks[taskId] = !obTasks[taskId];
+  const box = document.getElementById('ob-chk-box-'+taskId);
+  const label = document.getElementById(labelId);
+  if(obTasks[taskId]){
+    if(box){ box.style.background='var(--sage)'; box.style.borderColor='var(--sage)'; box.textContent='✓'; box.style.color='#13150f'; }
+    if(label) label.style.borderColor='rgba(143,173,122,.4)';
+  } else {
+    if(box){ box.style.background=''; box.style.borderColor='var(--softer)'; box.textContent='　'; }
+    if(label) label.style.borderColor='var(--border2)';
+  }
+}
+
+function obCustomTask(val){ obTasks.__custom = val; }
+
+function obSaveTasksAndNext(){
+  const taskList = [];
+  const taskDefs = [
+    {id:'laundry', label:'🧺 Do laundry', icon:'🧺'},
+    {id:'trash',   label:'🗑️ Take out trash', icon:'🗑️'},
+    {id:'dishes',  label:'🍽️ Do dishes', icon:'🍽️'},
+    {id:'clean',   label:'🧹 Clean room', icon:'🧹'},
+  ];
+  taskDefs.forEach(t => { if(obTasks[t.id]) taskList.push(t); });
+  if(obTasks.__custom && obTasks.__custom.trim()){
+    const val = obTasks.__custom.trim();
+    taskList.push({id:'custom_ob_'+Date.now(), label:'✅ '+val, icon:'✅'});
+  }
+  if(taskList.length > 0) saveTasks(taskList);
+  obNext(5);
+}
+
+function obWaterMode(mode){ obNotifPrefs.water_mode = mode; }
+function obHabitTime(id, val){ if(!obNotifPrefs.habit_times) obNotifPrefs.habit_times={}; obNotifPrefs.habit_times[id]=val; }
+function obSundayToggle(val){
+  obNotifPrefs.sunday_reminder = val;
+  const slider = document.getElementById('ob-sunday-slider');
+  const knob = document.getElementById('ob-sunday-knob');
+  if(slider) slider.style.background = val ? 'var(--sage)' : 'var(--softer)';
+  if(knob) knob.style.transform = val ? 'translateX(18px)' : 'translateX(0)';
+}
+
+async function obSaveNotifPrefs(){
+  // Request OS permission
+  const granted = await osSubscribe();
+  // Save prefs regardless
+  localStorage.setItem('bloom_notif', JSON.stringify(obNotifPrefs));
+  obNext(6);
+}
+
+// ════════════════════════════════════
+//  SETTINGS NOTIFICATIONS RENDER
+// ════════════════════════════════════
+function renderNotifSettings(){
+  const prefs = loadNotifPrefs();
+  // Water mode radio
+  const mode = prefs.water_mode || 'smart';
+  document.querySelectorAll('input[name="water-mode"]').forEach(r => { r.checked = r.value === mode; });
+  // Sunday toggle
+  const sundayOn = prefs.sunday_reminder !== false;
+  const slider = document.getElementById('settings-sunday-slider');
+  const knob = document.getElementById('settings-sunday-knob');
+  const tog = document.getElementById('settings-sunday-toggle');
+  if(slider) slider.style.background = sundayOn ? 'var(--sage)' : 'var(--softer)';
+  if(knob) knob.style.transform = sundayOn ? 'translateX(18px)' : 'translateX(0)';
+  if(tog) tog.checked = sundayOn;
+  // Habit times
+  const timesEl = document.getElementById('settings-habit-times');
+  if(timesEl){
+    const HABIT_TIME_DEFS = [
+      {id:'m_teeth',    label:'🦷 Morning brush', default:'08:00'},
+      {id:'e_teeth',    label:'🌙 Evening brush',  default:'21:00'},
+      {id:'w_exercise', label:'🏃 Exercise',       default:'07:00'},
+      {id:'w_outside',  label:'🌳 Go outside',     default:'12:00'},
+      {id:'w_shower',   label:'🚿 Shower',         default:'07:30'},
+    ];
+    timesEl.innerHTML = '';
+    HABIT_TIME_DEFS.forEach(h => {
+      const val = (prefs.habit_times && prefs.habit_times[h.id]) || h.default;
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between';
+      row.innerHTML = `<span style="font-size:13px;color:var(--text)">${h.label}</span>
+        <input type="time" value="${val}" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:4px 8px;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:12px;outline:none"
+          onchange="saveNotifPref('habit_times', Object.assign(loadNotifPrefs().habit_times||{}, {'${h.id}':this.value}))">`;
+      timesEl.appendChild(row);
+    });
+  }
+}
+
+
 function renderSettings(){
   const S=loadSettings(),u=loadUser();
   document.getElementById('sv-shower_goal').textContent=S.shower_goal;
   document.getElementById('sv-exercise_goal').textContent=S.exercise_goal;
+  const outsideEl=document.getElementById('sv-outside_goal');
+  if(outsideEl)outsideEl.textContent=S.outside_goal||3;
   if(u.name)document.getElementById('settings-sub').textContent=`Hey ${u.name} — make bloom work for you.`;
   const vEl=document.getElementById('version-display');
   const bEl=document.getElementById('build-display');
   if(vEl)vEl.textContent='v'+BLOOM_VERSION;
   if(bEl)bEl.textContent='built '+BLOOM_BUILD;
+  renderSettingsTasks();
+  renderNotifSettings();
 }
-function step(key,d){const S=loadSettings();S[key]=Math.max(1,Math.min(7,(S[key]||3)+d));saveSettingsStore(S);renderSettings();renderToday();}
+function step(key,d){const S=loadSettings();S[key]=Math.max(1,Math.min(7,(S[key]||3)+d));saveSettingsStore(S);renderSettings();renderToday();renderHouseholdTasks();}
 function confirmReset(){if(confirm("Reset all of today's habits?")){const db=loadDB(),k=todayKey();const keep={journal:db[k]&&db[k].journal,journal_ai:db[k]&&db[k].journal_ai,mood:db[k]&&db[k].mood};db[k]={};if(keep.journal)db[k].journal=keep.journal;if(keep.journal_ai)db[k].journal_ai=keep.journal_ai;if(keep.mood)db[k].mood=keep.mood;saveDB(db);renderToday();}}
 function exportData(){
   const data={user:loadUser(),settings:loadSettings(),habits:loadDB()};
@@ -1724,7 +2316,17 @@ function shareApp(){
 // ════════════════════════════════════
 function initApp(){
   renderToday();renderWellness();renderJournalState();renderBreathUsed();
-  if(loadUser().waterNotify)scheduleWaterReminders();
+  renderHouseholdTasks();
+  // Legacy water reminders (in-app)
+  if(loadUser().waterNotify) scheduleWaterReminders();
+  // OneSignal-based schedulers
+  const startSchedulers = () => {
+    scheduleWaterRemindersOS();
+    scheduleHabitReminders();
+    scheduleSundayReminder();
+  };
+  if(window.__osReady) startSchedulers();
+  else window.addEventListener('onesignal-ready', startSchedulers, {once:true});
   checkWins();
   checkInstallReminder();
   checkForUpdate();
