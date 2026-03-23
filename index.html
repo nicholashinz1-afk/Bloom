@@ -2187,14 +2187,16 @@ async function checkForUpdate() {
 }
 
 // ── Force refresh on service worker update ──────────────────
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    // New service worker took over — reload to get fresh content
-    if (!window._swReloading) {
-      window._swReloading = true;
-      window.location.reload();
-    }
-  });
+// Deferred to after app init to avoid reload loops during boot
+function listenForSWUpdate() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!window._swReloading) {
+        window._swReloading = true;
+        window.location.reload();
+      }
+    });
+  }
 }
 
 // Each item can have an optional spotlight target selector
@@ -5121,7 +5123,7 @@ function renderTodayTop() {
         <div class="banner-text" style="line-height:1.7">Life happens. You're here now, and that's what counts. <span style="color:var(--amber-light)">+25 XP comeback bonus</span></div>
         <div style="font-size:12px;color:var(--text-muted);margin:8px 0">What happened? (optional, one-tap)</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
-          ${['Life got busy', 'Wasn\\'t feeling it', 'Was doing okay', 'Forgot'].map(r =>
+          ${['Life got busy', 'Not feeling it', 'Was doing okay', 'Forgot'].map(r =>
             `<div onclick="dismissWelcomeBack('${r}')" style="padding:5px 12px;border-radius:99px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:12px;color:var(--text-secondary);cursor:pointer">${r}</div>`
           ).join('')}
         </div>
@@ -9124,6 +9126,7 @@ function initApp() {
   if (headerIcon) headerIcon.innerHTML = bloomIcon(26);
   const navIcon = document.getElementById('nav-today-icon');
   if (navIcon) navIcon.innerHTML = bloomIcon(20);
+  listenForSWUpdate();
 }
 
 async function main() {
