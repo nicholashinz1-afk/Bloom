@@ -3597,6 +3597,13 @@ const THEMES = {
     primary: '#c9954a', primaryLight: '#e0b87a', primaryDim: '#5c3f1a',
     textSecondary: '#b09060', textMuted: '#604830', seasonal: '#e0b87a',
   },
+  pastel: {
+    name: 'Pastel', emoji: '🧸', description: 'Soft, gentle, quiet',
+    bg: '#1a1a22', bgMid: '#1e1e28', bgCard: '#24242e', bgElevated: '#2c2c38',
+    bgOverlay: 'rgba(26,26,34,0.93)',
+    primary: '#b5a8c8', primaryLight: '#d4c8e8', primaryDim: '#3e3650',
+    textSecondary: '#a8a0b8', textMuted: '#585068', seasonal: '#d4c8e8',
+  },
 };
 
 function applyTheme(themeKey) {
@@ -5598,7 +5605,7 @@ function renderTodayTab() {
       <div style="margin-left:auto;font-size:11px;color:var(--sky);background:rgba(106,154,176,0.15);padding:2px 8px;border-radius:99px">4-7-8</div>
     </div>
     <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
-    <button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">Begin breathing exercise</button>
+    <div style="text-align:center"><button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">Begin breathing exercise</button></div>
   </div>`;
 
   // Just write — open journal anytime
@@ -5608,7 +5615,7 @@ function renderTodayTab() {
       <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--amber-light)">Just write</div>
     </div>
     <div style="font-size:13px;color:rgba(186,156,124,0.7);margin-bottom:14px;font-style:italic">No prompt, no structure — just get it out</div>
-    <button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button>
+    <div style="text-align:center"><button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button></div>
   </div>`;
 
   // Subtle share nudge at bottom of Today
@@ -6082,7 +6089,7 @@ function renderWellnessTab() {
         <div style="margin-left:auto;font-size:11px;color:var(--sky);background:rgba(106,154,176,0.15);padding:2px 8px;border-radius:99px">4-7-8</div>
       </div>
       <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
-      <div id="breath-ui">
+      <div id="breath-ui" style="text-align:center">
         <button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="startBreathing()">Begin breathing exercise</button>
       </div>
     </div>
@@ -6096,7 +6103,7 @@ function renderWellnessTab() {
         <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--amber-light)">Just write</div>
       </div>
       <div style="font-size:13px;color:rgba(186,156,124,0.7);margin-bottom:14px;font-style:italic">No prompt, no structure — just get it out</div>
-      <button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button>
+      <div style="text-align:center"><button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button></div>
     </div>
   </div>`;
 
@@ -6827,10 +6834,10 @@ function renderSettingsTab() {
           border-radius:var(--r-lg);padding:14px 12px;cursor:pointer;
           transition:border-color 0.2s;position:relative;overflow:hidden">
           <div style="display:flex;gap:5px;margin-bottom:8px">
-            <div style="width:12px;height:12px;border-radius:50%;background:#7a9e7e"></div>
-            <div style="width:12px;height:12px;border-radius:50%;background:#b07878"></div>
-            <div style="width:12px;height:12px;border-radius:50%;background:#6a9ab0"></div>
-            <div style="width:12px;height:12px;border-radius:50%;background:#c9954a"></div>
+            <div style="width:12px;height:12px;border-radius:50%;background:${t.primary}"></div>
+            <div style="width:12px;height:12px;border-radius:50%;background:${t.primaryLight};opacity:0.7"></div>
+            <div style="width:12px;height:12px;border-radius:50%;background:${t.primary};opacity:0.5"></div>
+            <div style="width:12px;height:12px;border-radius:50%;background:${t.primaryLight};opacity:0.4"></div>
           </div>
           <div style="font-size:13px;font-weight:500;color:${t.primaryLight}">${t.emoji} ${t.name}</div>
           <div style="font-size:11px;color:${t.textSecondary};margin-top:2px">${t.description}</div>
@@ -6920,7 +6927,8 @@ function renderSettingsTab() {
           border:1px solid ${sel ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};
           color:${sel ? 'var(--sky-light)' : 'var(--text-muted)'}">${timeLabels[opt]}</div>`;
       }).join('')}
-    </div>`;
+    </div>
+    <div style="margin-top:8px;margin-left:28px;font-size:11px;color:var(--sky);cursor:pointer" onclick="openSettingsSection('notifications')">🔔 Set up medication reminders in Notifications ›</div>`;
   }
   dailyHtml += `</div></div>`;
 
@@ -7183,6 +7191,19 @@ function toggleSettingsSection(id) {
     header.classList.add('open');
     body.classList.add('open');
   }
+}
+
+function openSettingsSection(id) {
+  // Open the target section
+  document.querySelectorAll('.settings-header').forEach(h => h.classList.remove('open'));
+  document.querySelectorAll('.settings-body').forEach(b => b.classList.remove('open'));
+  const header = document.getElementById('sh-' + id);
+  const body = document.getElementById('sb-' + id);
+  if (header) header.classList.add('open');
+  if (body) body.classList.add('open');
+  // Scroll to it
+  const section = document.getElementById('section-' + id);
+  if (section) setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 }
 
 function goalStepper(name, key, val, compact = false) {
