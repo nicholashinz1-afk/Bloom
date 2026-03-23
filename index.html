@@ -3523,6 +3523,41 @@ function checkEveningNudge() {
   }
 }
 
+async function testPushNotification() {
+  const statusEl = document.getElementById('notif-test-status');
+  if (!statusEl) return;
+
+  // Check permission
+  if (Notification.permission === 'default') {
+    statusEl.textContent = 'Requesting permission...';
+    const result = await Notification.requestPermission();
+    if (result !== 'granted') {
+      statusEl.textContent = '⚠ Permission denied. Enable notifications in your browser/phone settings.';
+      return;
+    }
+  } else if (Notification.permission === 'denied') {
+    statusEl.textContent = '⚠ Notifications blocked. Check your browser or phone settings to allow them.';
+    return;
+  }
+
+  // Check service worker
+  const regs = await navigator.serviceWorker.getRegistrations();
+  const reg = regs.find(r => r.active);
+  if (!reg) {
+    statusEl.textContent = '⚠ No active service worker. Try "Fix notifications" first.';
+    return;
+  }
+
+  statusEl.textContent = 'Sending test notification...';
+  await sendLocalNotification(
+    'It worked! 🌿',
+    'Push notifications are set up and ready. You\'ll get gentle reminders when you need them.',
+    'test-notification'
+  );
+  statusEl.textContent = '✓ Notification sent — check your notification tray!';
+  setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 5000);
+}
+
 // If the evening nudge fired and user opens the app, give them credit
 function checkNudgeCredit() {
   const t = today();
@@ -6218,7 +6253,10 @@ function renderSettingsTab() {
       <div class="toggle${notifs.sundayReminder ? ' on' : ''}" onclick="toggleNotif('sundayReminder')"></div>
     </div>
     <div class="divider"></div>
-    <button class="btn btn-ghost btn-sm" onclick="resetServiceWorker()">↺ Fix notifications</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="resetServiceWorker()">↺ Fix notifications</button>
+      <button class="btn btn-ghost btn-sm" onclick="testPushNotification()">🔔 Test notification</button>
+    </div>
     <div id="notif-test-status" style="font-size:12px;color:var(--text-muted);margin-top:8px;white-space:pre-wrap"></div>
   `);
 
