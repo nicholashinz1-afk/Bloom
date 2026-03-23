@@ -1450,19 +1450,21 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 .tutorial-card {
   position: absolute;
-  left: 16px;
-  right: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 398px;
+  max-height: calc(100dvh - 200px);
+  overflow-y: auto;
   background: var(--bg-card);
   border: 1px solid rgba(122,158,126,0.3);
   border-radius: var(--r-xl);
   padding: 20px;
   box-shadow: var(--shadow-lg);
   animation: scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
-  max-width: 398px;
-  margin: 0 auto;
 }
 .tutorial-card.pos-top { top: calc(var(--safe-top) + 80px); }
-.tutorial-card.pos-mid { top: 50%; transform: translateY(-50%); }
+.tutorial-card.pos-mid { top: 50%; transform: translate(-50%, -50%); }
 .tutorial-card.pos-bottom { bottom: calc(var(--nav-height) + var(--crisis-height) + var(--safe-bottom) + 16px); }
 .tutorial-step-label {
   font-size: 10px;
@@ -2430,7 +2432,7 @@ const WHATS_NEW = [
   { text: 'Quick journal — write a thought right from the Daily tab, no navigation needed', spotlight: '#quick-journal-card', tab: 'today' },
   { text: 'Breathe section — quick breathing exercise right on the Daily tab', spotlight: null },
   { text: 'Progress celebrations — bloom cheers you at 50% and 75% completion, not just 100%', spotlight: null },
-  { text: 'Undo protection — accidentally unchecked a habit? 5-second undo button appears', spotlight: null },
+  { text: 'Undo button — accidentally toggled a habit? A 5-second undo button pops up so you can fix it instantly', spotlight: null },
   { text: 'Habit triggers — set "when/after" cues for each habit in Settings for 2-3x follow-through', spotlight: '#sh-triggers', tab: 'settings' },
   { text: '30-day heatmap — see your consistency pattern on the Progress tab', spotlight: null, tab: 'progress' },
   { text: 'Mood insights — bloom now shows how habits and sleep affect your mood', spotlight: null, tab: 'progress' },
@@ -9366,21 +9368,16 @@ function buildTutorialOverlay(step) {
   }
 
   // Calculate card position — avoid covering the spotlight
-  let cardStyle = '';
-  if (step.cardPos === 'mid' || !spotRect) {
-    cardStyle = 'top:50%;transform:translateY(-50%)';
-  } else if (step.cardPos === 'top') {
-    // Card at top, spotlight below
-    cardStyle = 'top:calc(var(--safe-top) + 72px)';
-  } else {
-    // Card at bottom, above nav
-    const navH = 64 + 44; // nav + some padding
-    cardStyle = `bottom:${navH}px`;
+  let cardClass = 'pos-mid';
+  if (step.cardPos === 'top' && spotRect) {
+    cardClass = 'pos-top';
+  } else if (step.cardPos === 'bottom' && spotRect) {
+    cardClass = 'pos-bottom';
   }
 
   overlay.innerHTML = `
     ${backdropHTML}
-    <div class="tutorial-card" style="position:absolute;left:16px;right:16px;max-width:398px;margin:0 auto;${cardStyle}">
+    <div class="tutorial-card ${cardClass}">
       <div class="tutorial-step-label">Step ${tutorialStep + 1} of ${total}</div>
       <div class="tutorial-title">${step.title}</div>
       <div class="tutorial-text">${step.text}</div>
@@ -9689,7 +9686,9 @@ async function buddyAcceptInvite(code) {
     buddyState = { status: 'paired' };
     save('bloom_buddy_state', buddyState);
     haptic('medium');
+    switchTab('community');
     fetchBuddyData();
+    showBuddyStatus('You\'re paired! Say hi to your new buddy.', 'var(--sage)');
   } else {
     const reasons = {
       'invalid': 'That code doesn\u2019t seem right. Double-check and try again?',
@@ -10644,9 +10643,10 @@ function initApp() {
     save('bloom_pending_buddy_invite', null);
     setTimeout(() => {
       buddyRegisterAndSync().then(() => buddyAcceptInvite(pendingBuddyInvite));
-    }, 1500);
+    }, 1000);
+  } else {
+    showWhatsNew();
   }
-  showWhatsNew();
   checkBackupReminder();
   checkShowTutorial();
   checkScheduledReminders();
