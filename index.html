@@ -9708,30 +9708,55 @@ function openBuddyMatchSheet() {
   openSheet('buddy-match-sheet');
 }
 
+function selectBuddyPref(type, value) {
+  buddyMatchPrefs[type] = value;
+  // Update button states
+  document.querySelectorAll(`[data-pref-type="${type}"]`).forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.prefValue === value);
+  });
+  // Update submit button
+  const submit = document.getElementById('buddy-match-submit');
+  if (submit) submit.disabled = !(buddyMatchPrefs.frequency && buddyMatchPrefs.focus);
+  haptic('light');
+}
+
 function renderBuddyMatchForm() {
-  const f = buddyMatchPrefs.frequency;
-  const fo = buddyMatchPrefs.focus;
   return `
-    <div style="padding:0 20px 8px">
+    <div style="padding:4px 20px 20px">
       <div class="sheet-title">Find a Bloom Buddy</div>
-      <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px">
-        Answer a couple quick questions so we can match you with someone compatible.
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">
+        Quick questions so we can match you with someone compatible.
       </p>
 
-      <div style="font-size:13px;color:var(--cream);margin-bottom:8px;font-weight:500">How often do you check in?</div>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <button class="buddy-pref-option ${f === 'daily' ? 'selected' : ''}" onclick="buddyMatchPrefs.frequency='daily';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Daily</button>
-        <button class="buddy-pref-option ${f === 'few-days' ? 'selected' : ''}" onclick="buddyMatchPrefs.frequency='few-days';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Every few days</button>
+      <div style="font-size:14px;color:var(--cream);margin-bottom:10px;font-weight:500">How often do you check in?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+        <button class="buddy-pref-option" data-pref-type="frequency" data-pref-value="daily" onclick="selectBuddyPref('frequency','daily')">
+          <div style="font-size:20px;margin-bottom:4px">📅</div>
+          <div>Daily</div>
+        </button>
+        <button class="buddy-pref-option" data-pref-type="frequency" data-pref-value="few-days" onclick="selectBuddyPref('frequency','few-days')">
+          <div style="font-size:20px;margin-bottom:4px">🗓</div>
+          <div>Every few days</div>
+        </button>
       </div>
 
-      <div style="font-size:13px;color:var(--cream);margin-bottom:8px;font-weight:500">What are you working on?</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
-        <button class="buddy-pref-option ${fo === 'self-care' ? 'selected' : ''}" onclick="buddyMatchPrefs.focus='self-care';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Self-care</button>
-        <button class="buddy-pref-option ${fo === 'mental-health' ? 'selected' : ''}" onclick="buddyMatchPrefs.focus='mental-health';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Mental health</button>
-        <button class="buddy-pref-option ${fo === 'habits' ? 'selected' : ''}" onclick="buddyMatchPrefs.focus='habits';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Building habits</button>
+      <div style="font-size:14px;color:var(--cream);margin-bottom:10px;font-weight:500">What are you working on?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px">
+        <button class="buddy-pref-option" data-pref-type="focus" data-pref-value="self-care" onclick="selectBuddyPref('focus','self-care')">
+          <div style="font-size:20px;margin-bottom:4px">🧴</div>
+          <div>Self-care</div>
+        </button>
+        <button class="buddy-pref-option" data-pref-type="focus" data-pref-value="mental-health" onclick="selectBuddyPref('focus','mental-health')">
+          <div style="font-size:20px;margin-bottom:4px">🧠</div>
+          <div>Mental health</div>
+        </button>
+        <button class="buddy-pref-option" data-pref-type="focus" data-pref-value="habits" onclick="selectBuddyPref('focus','habits')">
+          <div style="font-size:20px;margin-bottom:4px">🌱</div>
+          <div>Habits</div>
+        </button>
       </div>
 
-      <button class="btn btn-primary" style="width:100%" onclick="buddyFindMatch(buddyMatchPrefs)" ${(!f || !fo) ? 'disabled' : ''}>Find my buddy</button>
+      <button class="btn btn-primary" id="buddy-match-submit" style="width:100%" onclick="buddyFindMatch(buddyMatchPrefs)" disabled>Find my buddy</button>
     </div>
   `;
 }
