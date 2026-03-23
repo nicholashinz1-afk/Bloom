@@ -6982,7 +6982,7 @@ function renderSettingsTab() {
         <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let more than one person pair with you</div>
       </div>
       <label class="toggle">
-        <input type="checkbox" ${multiBuddyOn ? 'checked' : ''} onchange="state.prefs.multiBuddy=this.checked;save('bloom_prefs',state.prefs)">
+        <input type="checkbox" ${multiBuddyOn ? 'checked' : ''} onchange="toggleMultiBuddy(this.checked)">
         <span class="toggle-slider"></span>
       </label>
     </div>
@@ -9290,6 +9290,11 @@ function migrateToNewDailyHabits() {
 //  BLOOM BUDDY
 // ============================================================
 let bloomBuddyId = load('bloom_buddy_id', null);
+// Generate buddy ID immediately so it shows in Settings
+if (!bloomBuddyId) {
+  bloomBuddyId = 'b_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  save('bloom_buddy_id', bloomBuddyId);
+}
 let buddyState = load('bloom_buddy_state', { status: 'none' }); // none | searching | paired
 let buddyCachedBuddies = load('bloom_buddy_list', []); // array of buddy objects
 let buddyCachedMessages = {}; // keyed by pairId
@@ -9548,6 +9553,12 @@ async function buddyUnpair(pairId) {
   save('bloom_buddy_state', buddyState);
   save('bloom_buddy_list', buddyCachedBuddies);
   renderBuddyContent();
+}
+
+function toggleMultiBuddy(val) {
+  if (!state.prefs) state.prefs = {};
+  state.prefs.multiBuddy = val;
+  save('bloom_prefs', state.prefs);
 }
 
 function showBuddyStatus(text, color) {
