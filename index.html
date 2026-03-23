@@ -2090,6 +2090,28 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   <div class="sheet-content" id="buddy-match-content"></div>
 </div>
 
+<!-- Buddy info sheet -->
+<div class="bottom-sheet" id="buddy-info-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:4px 20px 20px">
+    <div class="sheet-title">What is Bloom Buddy?</div>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+      <p style="margin-bottom:12px">Bloom Buddy pairs you with someone for <strong style="color:var(--cream)">mutual encouragement and accountability</strong>. Here's what your buddy can see:</p>
+      <div style="margin-bottom:12px">
+        <div style="margin-bottom:4px"><span style="color:var(--cream)">Your current mood</span> (Low / Rough / Okay / Good / Great)</div>
+        <div style="margin-bottom:4px"><span style="color:var(--cream)">Your streak count</span> (how many days in a row)</div>
+        <div style="margin-bottom:4px"><span style="color:var(--cream)">Your habit completion %</span> (not which specific habits)</div>
+        <div style="margin-bottom:4px"><span style="color:var(--cream)">When you were last active</span></div>
+        <div><span style="color:var(--cream)">Your display name</span> (set in Settings)</div>
+      </div>
+      <p style="margin-bottom:12px"><strong style="color:var(--cream)">Your buddy cannot see:</strong> your journal entries, specific habits, affirmations, or any private data.</p>
+      <p style="margin-bottom:12px">You can send each other short messages and quick nudges. Your buddy gets a notification if you're having a rough day, so they can send encouragement.</p>
+      <p>You can have <strong style="color:var(--cream)">multiple buddies</strong> and unpair at any time.</p>
+    </div>
+    <button class="btn btn-ghost" style="width:100%;margin-top:12px" onclick="closeAllSheets()">Got it</button>
+  </div>
+</div>
+
 <!-- Tutorial overlay -->
 <div id="tutorial-overlay"></div>
 
@@ -2111,7 +2133,7 @@ function bloomIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.3.0';
+const VERSION = '2.4.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -2157,6 +2179,8 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
+  { text: 'Bloom Buddy — pair up with someone for mutual encouragement and accountability. See their mood, streak, and progress. Send nudges and messages. Find yours on the Community tab!', spotlight: '#nav-community', tab: 'community', featured: true },
+  { text: 'Multiple buddies — you can now have more than one Bloom Buddy. Toggle this in Settings under Bloom Buddy.', spotlight: null },
   { text: 'Encouragement wall — a shared, anonymous space to leave kind words for strangers. Tap the 💛 Wall tab to see it.', spotlight: '#nav-community', tab: 'today', featured: true },
   { text: 'Seasonal mood awareness — bloom now notices monthly and seasonal patterns in your mood over time', spotlight: null, tab: 'progress' },
   { text: 'Weekly summary notification — a gentle Sunday evening recap of your mood, streaks, and journal activity', spotlight: null },
@@ -6948,6 +6972,26 @@ function renderSettingsTab() {
     </div>
   `);
 
+  // ── BLOOM BUDDY ────────────────────────────────────────────
+  const multiBuddyOn = prefs.multiBuddy || false;
+  const myBuddyId = load('bloom_buddy_id', 'Not yet generated');
+  html += settingsSection('buddy', '🤝 Bloom Buddy', `
+    <div class="toggle-row" style="padding:12px 0">
+      <div>
+        <div class="toggle-label">Allow multiple buddies</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let more than one person pair with you</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" ${multiBuddyOn ? 'checked' : ''} onchange="state.prefs.multiBuddy=this.checked;save('bloom_prefs',state.prefs)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div style="padding:8px 0;border-top:1px solid rgba(255,255,255,0.05)">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Your Buddy ID</div>
+      <div style="font-size:11px;color:var(--text-secondary);font-family:monospace;word-break:break-all;background:var(--bg-mid);padding:8px 10px;border-radius:var(--r-md)">${escapeHtml(myBuddyId)}</div>
+    </div>
+  `);
+
   // ── DAILY HABITS ─────────────────────────────────────────────
   const dh = prefs.dailyHabits || {};
   const ht = prefs.habitTimes || {};
@@ -8224,9 +8268,10 @@ let obData = {
   audio: true,
   theme: 'forest',
   selfCareTasks: [],
+  multiBuddy: false,
 };
 
-const OB_STEPS = 11;
+const OB_STEPS = 12;
 
 function renderOnboarding() {
   const progress = document.getElementById('ob-progress');
@@ -8248,7 +8293,8 @@ function renderOnboarding() {
     case 7:  renderOBAppearance(body, footer); break;
     case 8:  renderOBSelfCare(body, footer); break;
     case 9:  renderOBInstall(body, footer); break;
-    case 10: renderOBReady(body, footer); break;
+    case 10: renderOBBuddyIntro(body, footer); break;
+    case 11: renderOBReady(body, footer); break;
   }
 }
 
@@ -8707,6 +8753,48 @@ function renderOBInstall(body, footer) {
     <div style="background:rgba(201,149,74,0.07);border:1px solid rgba(201,149,74,0.2);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px">
       <span style="font-size:20px">💡</span>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.5">Once installed, bloom opens fullscreen with no browser bar — just like a native app.</div>
+    </div>
+  `;
+  footer.innerHTML = `
+    <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
+    <button class="btn btn-primary" id="ob-btn-next" style="flex:1">Continue</button>
+  `;
+  document.getElementById('ob-btn-back').addEventListener('click', obBack);
+  document.getElementById('ob-btn-next').addEventListener('click', obNext);
+}
+
+function renderOBBuddyIntro(body, footer) {
+  const multiOn = obData.multiBuddy;
+  body.innerHTML = `
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:64px;line-height:1;margin-bottom:16px">🤝</div>
+      <div class="ob-title" style="text-align:center">Bloom Buddy</div>
+      <div class="ob-sub" style="text-align:center">Partner with someone for mutual encouragement. Your buddy can see your mood, streak, and habit progress — but not your journal or specific habits.</div>
+    </div>
+
+    <div style="background:var(--bg-card);border-radius:16px;padding:16px;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--cream);font-weight:500;margin-bottom:12px">What your buddy sees:</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+        Your mood (Low / Rough / Okay / Good / Great)<br>
+        Your streak count<br>
+        Your habit completion % (not which habits)<br>
+        Your display name & when you were last active
+      </div>
+    </div>
+
+    <div class="toggle-row" style="padding:14px 0;border-bottom:none">
+      <div>
+        <div class="toggle-label">Allow multiple buddies</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let more than one person pair with you</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="ob-multi-buddy" ${multiOn ? 'checked' : ''} onchange="obData.multiBuddy=this.checked">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:8px;line-height:1.6">
+      You can find a buddy from the Community tab anytime.<br>You can change this setting later.
     </div>
   `;
   footer.innerHTML = `
@@ -9203,8 +9291,8 @@ function migrateToNewDailyHabits() {
 // ============================================================
 let bloomBuddyId = load('bloom_buddy_id', null);
 let buddyState = load('bloom_buddy_state', { status: 'none' }); // none | searching | paired
-let buddyCachedPartner = load('bloom_buddy_partner', null);
-let buddyCachedMessages = load('bloom_buddy_messages', []);
+let buddyCachedBuddies = load('bloom_buddy_list', []); // array of buddy objects
+let buddyCachedMessages = {}; // keyed by pairId
 let buddyLoading = false;
 let buddyPollTimer = null;
 let buddySyncDebounce = null;
@@ -9274,31 +9362,28 @@ async function fetchBuddyData() {
   const data = await buddyApi({ action: 'get-buddy', buddyId: ensureBuddyId() });
   buddyLoading = false;
   if (data.ok && data.paired) {
-    buddyState = { status: 'paired', pairId: data.pairId, partnerId: data.partnerId };
-    buddyCachedPartner = data.partner;
+    buddyState = { status: 'paired' };
+    buddyCachedBuddies = data.buddies || [];
     save('bloom_buddy_state', buddyState);
-    save('bloom_buddy_partner', buddyCachedPartner);
+    save('bloom_buddy_list', buddyCachedBuddies);
     renderBuddyContent();
   } else if (data.ok && !data.paired) {
     if (buddyState.status === 'paired') {
-      // Was paired, now unpaired by partner
       buddyState = { status: 'none' };
-      buddyCachedPartner = null;
-      buddyCachedMessages = [];
+      buddyCachedBuddies = [];
+      buddyCachedMessages = {};
       save('bloom_buddy_state', buddyState);
-      save('bloom_buddy_partner', null);
-      save('bloom_buddy_messages', []);
+      save('bloom_buddy_list', []);
       renderBuddyContent();
     }
   }
 }
 
-async function fetchBuddyMessages() {
-  const data = await buddyApi({ action: 'get-messages', buddyId: ensureBuddyId() });
+async function fetchBuddyMessages(pairId) {
+  const data = await buddyApi({ action: 'get-messages', buddyId: ensureBuddyId(), pairId });
   if (data.ok) {
-    buddyCachedMessages = data.messages || [];
-    save('bloom_buddy_messages', buddyCachedMessages);
-    renderBuddyMessages();
+    buddyCachedMessages[pairId] = data.messages || [];
+    renderBuddyMessagesForPair(pairId);
   }
 }
 
@@ -9354,21 +9439,18 @@ async function buddyAcceptInvite(code) {
     code: code.toUpperCase().trim(),
   });
   if (data.ok) {
-    buddyState = { status: 'paired', pairId: data.pairId, partnerId: data.partnerId };
-    buddyCachedPartner = { name: data.partnerName };
+    buddyState = { status: 'paired' };
     save('bloom_buddy_state', buddyState);
-    save('bloom_buddy_partner', buddyCachedPartner);
     haptic('medium');
-    renderBuddyContent();
     fetchBuddyData();
-    fetchBuddyMessages();
   } else {
     const reasons = {
       'invalid': 'That code doesn\u2019t seem right. Double-check and try again?',
       'expired': 'This invite has expired. Ask your buddy for a new one.',
       'self-pair': 'That\u2019s your own invite code!',
-      'already-paired': 'You already have a buddy.',
-      'inviter-paired': 'The person who sent this is already paired.',
+      'max-buddies': 'You\u2019ve reached the buddy limit.',
+      'inviter-max-buddies': 'The person who sent this has reached their buddy limit.',
+      'already-buddies': 'You\u2019re already buddies with this person!',
     };
     showBuddyStatus(reasons[data.reason] || 'Something went wrong.', 'var(--amber)');
   }
@@ -9382,15 +9464,11 @@ async function buddyFindMatch(prefs) {
     prefs,
   });
   if (data.ok && data.matched) {
-    buddyState = { status: 'paired', pairId: data.pairId, partnerId: data.partnerId };
-    buddyCachedPartner = { name: data.partnerName };
+    buddyState = { status: 'paired' };
     save('bloom_buddy_state', buddyState);
-    save('bloom_buddy_partner', buddyCachedPartner);
     haptic('medium');
     closeAllSheets();
-    renderBuddyContent();
     fetchBuddyData();
-    fetchBuddyMessages();
   } else if (data.ok && data.queued) {
     buddyState = { status: 'searching' };
     save('bloom_buddy_state', buddyState);
@@ -9408,25 +9486,24 @@ async function buddyCancelSearch() {
   renderBuddyContent();
 }
 
-async function buddySendMessage() {
-  const input = document.getElementById('buddy-msg-input');
+async function buddySendMessage(pairId) {
+  const input = document.getElementById('buddy-input-' + pairId);
   if (!input || !input.value.trim()) return;
   const text = input.value.trim();
-  const btn = document.getElementById('buddy-send-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '...'; }
 
   const data = await buddyApi({
     action: 'send-message',
     buddyId: ensureBuddyId(),
+    pairId,
     text,
   });
 
   if (data.ok) {
     input.value = '';
-    buddyCachedMessages.push(data.message);
-    if (buddyCachedMessages.length > 50) buddyCachedMessages = buddyCachedMessages.slice(-50);
-    save('bloom_buddy_messages', buddyCachedMessages);
-    renderBuddyMessages();
+    if (!buddyCachedMessages[pairId]) buddyCachedMessages[pairId] = [];
+    buddyCachedMessages[pairId].push(data.message);
+    if (buddyCachedMessages[pairId].length > 50) buddyCachedMessages[pairId] = buddyCachedMessages[pairId].slice(-50);
+    renderBuddyMessagesForPair(pairId);
     haptic('light');
   } else {
     const reasons = {
@@ -9435,44 +9512,55 @@ async function buddySendMessage() {
       'filtered': 'Some words aren\u2019t allowed. Try rephrasing?',
       'not-paired': 'You\u2019re not paired with a buddy.',
     };
-    showBuddyStatus(reasons[data.reason] || 'Couldn\u2019t send. Try again?', 'var(--amber)');
+    showBuddyStatusForPair(pairId, reasons[data.reason] || 'Couldn\u2019t send. Try again?', 'var(--amber)');
   }
-  if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
 }
 
-async function buddySendNudge(nudgeType) {
+async function buddySendNudge(nudgeType, pairId) {
   const data = await buddyApi({
     action: 'nudge',
     buddyId: ensureBuddyId(),
     nudgeType,
+    pairId,
   });
   if (data.ok) {
-    buddyCachedMessages.push(data.message);
-    if (buddyCachedMessages.length > 50) buddyCachedMessages = buddyCachedMessages.slice(-50);
-    save('bloom_buddy_messages', buddyCachedMessages);
-    renderBuddyMessages();
+    if (!buddyCachedMessages[pairId]) buddyCachedMessages[pairId] = [];
+    buddyCachedMessages[pairId].push(data.message);
+    if (buddyCachedMessages[pairId].length > 50) buddyCachedMessages[pairId] = buddyCachedMessages[pairId].slice(-50);
+    renderBuddyMessagesForPair(pairId);
     haptic('light');
-    showBuddyStatus('Sent!', 'var(--sage)');
+    showBuddyStatusForPair(pairId, 'Sent!', 'var(--sage)');
   } else if (data.reason === 'rate-limit') {
-    showBuddyStatus('You\u2019ve sent a few nudges recently. Try again later.', 'var(--amber)');
+    showBuddyStatusForPair(pairId, 'You\u2019ve sent a few nudges recently. Try again later.', 'var(--amber)');
   }
 }
 
-async function buddyUnpair() {
-  if (!confirm('Unpair from your Bloom Buddy? You can find a new one anytime.')) return;
-  await buddyApi({ action: 'unpair', buddyId: ensureBuddyId() });
-  buddyState = { status: 'none' };
-  buddyCachedPartner = null;
-  buddyCachedMessages = [];
+async function buddyUnpair(pairId) {
+  if (!confirm('Unpair from this Bloom Buddy? You can find a new one anytime.')) return;
+  await buddyApi({ action: 'unpair', buddyId: ensureBuddyId(), pairId });
+  // Remove from local cache
+  buddyCachedBuddies = buddyCachedBuddies.filter(b => b.pairId !== pairId);
+  delete buddyCachedMessages[pairId];
+  if (buddyCachedBuddies.length === 0) {
+    buddyState = { status: 'none' };
+    stopBuddyPolling();
+  }
   save('bloom_buddy_state', buddyState);
-  save('bloom_buddy_partner', null);
-  save('bloom_buddy_messages', []);
-  stopBuddyPolling();
+  save('bloom_buddy_list', buddyCachedBuddies);
   renderBuddyContent();
 }
 
 function showBuddyStatus(text, color) {
   const el = document.getElementById('buddy-status-msg');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = color || 'var(--text-muted)';
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+function showBuddyStatusForPair(pairId, text, color) {
+  const el = document.getElementById('buddy-status-' + pairId);
   if (!el) return;
   el.textContent = text;
   el.style.color = color || 'var(--text-muted)';
@@ -9505,15 +9593,36 @@ function renderBuddyContent() {
   const container = document.getElementById('buddy-section');
   if (!container) return;
 
-  if (buddyState.status === 'paired') {
-    container.innerHTML = renderBuddyDashboard();
-    fetchBuddyMessages();
+  let html = '';
+
+  // Info header (always shown)
+  html += `<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 0 4px">
+    <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">Bloom Buddy</div>
+    <button onclick="openSheet('buddy-info-sheet')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted);padding:4px" title="What is Bloom Buddy?">&#9432;</button>
+  </div>`;
+
+  if (buddyState.status === 'paired' && buddyCachedBuddies.length > 0) {
+    // Stacked buddy cards
+    buddyCachedBuddies.forEach(b => {
+      html += renderBuddyCard(b);
+    });
+    // Add another buddy button
+    html += `<div style="text-align:center;padding:8px 0 4px">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('buddy-add-section').style.display=document.getElementById('buddy-add-section').style.display==='none'?'block':'none'">+ Add another buddy</button>
+    </div>`;
+    html += `<div id="buddy-add-section" style="display:none">${renderBuddySetup()}</div>`;
+    container.innerHTML = html;
+    // Fetch messages for each buddy
+    buddyCachedBuddies.forEach(b => fetchBuddyMessages(b.pairId));
     startBuddyPolling();
   } else if (buddyState.status === 'searching') {
-    container.innerHTML = renderBuddySearching();
+    html += renderBuddySearching();
+    container.innerHTML = html;
     startBuddyPolling();
   } else {
-    container.innerHTML = renderBuddySetup();
+    html += `<div style="font-size:13px;color:var(--text-secondary);text-align:center;margin-bottom:12px;line-height:1.6">Partner with someone for mutual encouragement<br>and accountability.</div>`;
+    html += renderBuddySetup();
+    container.innerHTML = html;
   }
 }
 
@@ -9622,72 +9731,70 @@ function renderBuddySearching() {
   `;
 }
 
-function renderBuddyDashboard() {
-  const p = buddyCachedPartner || {};
-  const moods = ['😔 Low', '😕 Rough', '😐 Okay', '🙂 Good', '😊 Great'];
-  const moodDisplay = p.mood !== undefined && p.mood !== null ? moods[p.mood] || '—' : '—';
-  const dotClass = buddyStatusDotClass(p.lastActive);
-  const pctWidth = Math.min(100, Math.max(0, p.habitPct || 0));
+function renderBuddyCard(b) {
+  const moods = ['\ud83d\ude14 Low', '\ud83d\ude15 Rough', '\ud83d\ude10 Okay', '\ud83d\ude42 Good', '\ud83d\ude0a Great'];
+  const moodDisplay = b.mood !== undefined && b.mood !== null ? moods[b.mood] || '\u2014' : '\u2014';
+  const dotClass = buddyStatusDotClass(b.lastActive);
+  const pctWidth = Math.min(100, Math.max(0, b.habitPct || 0));
+  const pid = b.pairId;
 
   return `
-    <div class="buddy-card">
+    <div class="buddy-card" style="margin-bottom:12px">
       <div class="buddy-card-header">
-        <div class="buddy-name">${escapeHtml(p.name || 'Your Buddy')}'s day <span class="buddy-status-dot ${dotClass}"></span></div>
+        <div class="buddy-name">${escapeHtml(b.name || 'Buddy')}'s day <span class="buddy-status-dot ${dotClass}"></span></div>
       </div>
       <div class="buddy-stats">
         <div class="buddy-stat"><span>${moodDisplay}</span></div>
-        <div class="buddy-stat">🔥 <span class="buddy-stat-value">${p.streak || 0}</span>-day streak</div>
+        <div class="buddy-stat">\ud83d\udd25 <span class="buddy-stat-value">${b.streak || 0}</span>-day streak</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
         <span style="font-size:12px;color:var(--text-secondary)">Habits</span>
         <div class="buddy-habit-bar" style="flex:1"><div class="buddy-habit-fill" style="width:${pctWidth}%"></div></div>
         <span style="font-size:12px;color:var(--text-muted)">${pctWidth}%</span>
       </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Last active ${buddyTimeAgo(p.lastActive)}</div>
-    </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Last active ${buddyTimeAgo(b.lastActive)}</div>
 
-    <div class="card" style="padding:14px 16px">
-      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">Quick nudge</div>
-      <div class="buddy-nudge-row">
-        <button class="buddy-nudge-btn" onclick="buddySendNudge('thinking')">💭 Thinking of you</button>
-        <button class="buddy-nudge-btn" onclick="buddySendNudge('gotthis')">💪 You got this</button>
-        <button class="buddy-nudge-btn" onclick="buddySendNudge('proud')">🌟 Proud of you</button>
-        <button class="buddy-nudge-btn" onclick="buddySendNudge('easytoday')">🤗 Take it easy</button>
-        <button class="buddy-nudge-btn" onclick="buddySendNudge('checkin')">👋 Checking in</button>
-        <button class="buddy-nudge-btn" onclick="buddySendNudge('youmatter')">💛 You matter</button>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
+        <div class="buddy-nudge-row">
+          <button class="buddy-nudge-btn" onclick="buddySendNudge('thinking','${pid}')">💭 Thinking of you</button>
+          <button class="buddy-nudge-btn" onclick="buddySendNudge('gotthis','${pid}')">💪 You got this</button>
+          <button class="buddy-nudge-btn" onclick="buddySendNudge('proud','${pid}')">🌟 Proud of you</button>
+          <button class="buddy-nudge-btn" onclick="buddySendNudge('easytoday','${pid}')">🤗 Take it easy</button>
+        </div>
       </div>
-      <div id="buddy-status-msg" style="font-size:12px;text-align:center;margin-top:6px;display:none"></div>
-    </div>
 
-    <div class="card" style="padding:14px 16px">
-      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">Messages</div>
-      <div class="buddy-messages" id="buddy-messages-list">
-        <div style="text-align:center;font-size:12px;color:var(--text-muted);padding:12px">Loading...</div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">Messages</div>
+        <div class="buddy-messages" id="buddy-msgs-${pid}">
+          <div style="text-align:center;font-size:12px;color:var(--text-muted);padding:8px">Loading...</div>
+        </div>
+        <div class="buddy-msg-input">
+          <textarea id="buddy-input-${pid}" placeholder="Say something kind..." rows="1" maxlength="200"></textarea>
+          <button class="btn btn-primary btn-sm" onclick="buddySendMessage('${pid}')" style="min-width:54px">Send</button>
+        </div>
       </div>
-      <div class="buddy-msg-input">
-        <textarea id="buddy-msg-input" placeholder="Say something kind..." rows="1" maxlength="200"></textarea>
-        <button class="btn btn-primary btn-sm" id="buddy-send-btn" onclick="buddySendMessage()" style="min-width:54px">Send</button>
-      </div>
-    </div>
 
-    <div style="text-align:center;padding:16px 0">
-      <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--text-muted)" onclick="buddyUnpair()">Unpair</button>
+      <div style="text-align:right;margin-top:8px">
+        <button class="btn btn-ghost btn-sm" style="font-size:10px;color:var(--text-muted)" onclick="buddyUnpair('${pid}')">Unpair</button>
+      </div>
     </div>
+    <div id="buddy-status-${pid}" style="font-size:12px;text-align:center;margin:4px 0 8px;display:none"></div>
   `;
 }
 
-function renderBuddyMessages() {
-  const container = document.getElementById('buddy-messages-list');
+function renderBuddyMessagesForPair(pairId) {
+  const container = document.getElementById('buddy-msgs-' + pairId);
   if (!container) return;
   const myId = bloomBuddyId;
+  const msgs = buddyCachedMessages[pairId] || [];
 
-  if (buddyCachedMessages.length === 0) {
-    container.innerHTML = '<div style="text-align:center;font-size:12px;color:var(--text-muted);padding:12px">No messages yet. Send a nudge to break the ice!</div>';
+  if (msgs.length === 0) {
+    container.innerHTML = '<div style="text-align:center;font-size:12px;color:var(--text-muted);padding:8px">No messages yet. Send a nudge!</div>';
     return;
   }
 
   let html = '';
-  buddyCachedMessages.forEach(msg => {
+  msgs.forEach(msg => {
     const isMine = msg.from === myId;
     const isNudge = msg.type === 'nudge';
     const cls = isMine ? 'buddy-msg sent' : 'buddy-msg received';
@@ -9708,30 +9815,55 @@ function openBuddyMatchSheet() {
   openSheet('buddy-match-sheet');
 }
 
+function selectBuddyPref(type, value) {
+  buddyMatchPrefs[type] = value;
+  // Update button states
+  document.querySelectorAll(`[data-pref-type="${type}"]`).forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.prefValue === value);
+  });
+  // Update submit button
+  const submit = document.getElementById('buddy-match-submit');
+  if (submit) submit.disabled = !(buddyMatchPrefs.frequency && buddyMatchPrefs.focus);
+  haptic('light');
+}
+
 function renderBuddyMatchForm() {
-  const f = buddyMatchPrefs.frequency;
-  const fo = buddyMatchPrefs.focus;
   return `
-    <div style="padding:0 20px 8px">
+    <div style="padding:4px 20px 20px">
       <div class="sheet-title">Find a Bloom Buddy</div>
-      <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px">
-        Answer a couple quick questions so we can match you with someone compatible.
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">
+        Quick questions so we can match you with someone compatible.
       </p>
 
-      <div style="font-size:13px;color:var(--cream);margin-bottom:8px;font-weight:500">How often do you check in?</div>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <button class="buddy-pref-option ${f === 'daily' ? 'selected' : ''}" onclick="buddyMatchPrefs.frequency='daily';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Daily</button>
-        <button class="buddy-pref-option ${f === 'few-days' ? 'selected' : ''}" onclick="buddyMatchPrefs.frequency='few-days';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Every few days</button>
+      <div style="font-size:14px;color:var(--cream);margin-bottom:10px;font-weight:500">How often do you check in?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+        <button class="buddy-pref-option" data-pref-type="frequency" data-pref-value="daily" onclick="selectBuddyPref('frequency','daily')">
+          <div style="font-size:20px;margin-bottom:4px">📅</div>
+          <div>Daily</div>
+        </button>
+        <button class="buddy-pref-option" data-pref-type="frequency" data-pref-value="few-days" onclick="selectBuddyPref('frequency','few-days')">
+          <div style="font-size:20px;margin-bottom:4px">🗓</div>
+          <div>Every few days</div>
+        </button>
       </div>
 
-      <div style="font-size:13px;color:var(--cream);margin-bottom:8px;font-weight:500">What are you working on?</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
-        <button class="buddy-pref-option ${fo === 'self-care' ? 'selected' : ''}" onclick="buddyMatchPrefs.focus='self-care';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Self-care</button>
-        <button class="buddy-pref-option ${fo === 'mental-health' ? 'selected' : ''}" onclick="buddyMatchPrefs.focus='mental-health';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Mental health</button>
-        <button class="buddy-pref-option ${fo === 'habits' ? 'selected' : ''}" onclick="buddyMatchPrefs.focus='habits';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Building habits</button>
+      <div style="font-size:14px;color:var(--cream);margin-bottom:10px;font-weight:500">What are you working on?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px">
+        <button class="buddy-pref-option" data-pref-type="focus" data-pref-value="self-care" onclick="selectBuddyPref('focus','self-care')">
+          <div style="font-size:20px;margin-bottom:4px">🧴</div>
+          <div>Self-care</div>
+        </button>
+        <button class="buddy-pref-option" data-pref-type="focus" data-pref-value="mental-health" onclick="selectBuddyPref('focus','mental-health')">
+          <div style="font-size:20px;margin-bottom:4px">🧠</div>
+          <div>Mental health</div>
+        </button>
+        <button class="buddy-pref-option" data-pref-type="focus" data-pref-value="habits" onclick="selectBuddyPref('focus','habits')">
+          <div style="font-size:20px;margin-bottom:4px">🌱</div>
+          <div>Habits</div>
+        </button>
       </div>
 
-      <button class="btn btn-primary" style="width:100%" onclick="buddyFindMatch(buddyMatchPrefs)" ${(!f || !fo) ? 'disabled' : ''}>Find my buddy</button>
+      <button class="btn btn-primary" id="buddy-match-submit" style="width:100%" onclick="buddyFindMatch(buddyMatchPrefs)" disabled>Find my buddy</button>
     </div>
   `;
 }
