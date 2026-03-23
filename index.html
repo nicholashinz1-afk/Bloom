@@ -1346,6 +1346,14 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   100% { opacity: 0; transform: var(--particle-end) scale(0); }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
 /* ============================================================
    DAILY AFFIRMATION OVERLAY
    ============================================================ */
@@ -3210,19 +3218,92 @@ function dismissAffirmation() {
   }, 600);
 }
 
-// ── New week detection ───────────────────────────────────────
+// ============================================================
+//  SESSION TIMEOUT — treat as fresh open after 30min background
+// ============================================================
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+
+function handleVisibilityChange() {
+  if (document.visibilityState === 'hidden') {
+    // Record when we went to background
+    save('bloom_last_active', Date.now());
+  } else {
+    // Coming back to foreground — check how long we were gone
+    const lastActive = load('bloom_last_active', null);
+    if (lastActive && (Date.now() - lastActive) >= SESSION_TIMEOUT_MS) {
+      // Been away long enough — treat as fresh open
+      // Clear today's date cache so archiving works correctly
+      const t = today();
+      // Re-check daily affirmation
+      const lastAffirmation = load('bloom_affirmation_date', null);
+      if (lastAffirmation !== t) {
+        checkDailyAffirmation();
+      }
+      // Re-run new week check in case day rolled over
+      checkNewWeek();
+      // Re-render today tab in case date changed
+      renderTodayTab();
+    }
+    save('bloom_last_active', Date.now());
+  }
+}
+
+document.addEventListener('visibilitychange', handleVisibilityChange);
+// ── Local notification helper ────────────────────────────────
+async function sendLocalNotification(title, body, tag) {
+  try {
+    if (Notification.permission !== 'granted') return;
+    const regs = await navigator.serviceWorker.getRegistrations();
+    const reg = regs.find(r => r.active);
+    if (!reg) return;
+    await reg.showNotification(title, {
+      body,
+      icon: '/icon.svg',
+      badge: '/icon.svg',
+      tag: tag || 'bloom',
+      renotify: false,
+    });
+  } catch(e) {}
+}
+
+// ── Weekly reflection availability check ─────────────────────
+function checkWeeklyReflectionAvailable() {
+  const dow = dayOfWeek(); // 0=Sun, 6=Sat
+  if (dow !== 6 && dow !== 0) return; // only Sat + Sun
+
+  const ws = weekStart();
+  const lastNotified = load('bloom_reflection_notif', null);
+  if (lastNotified === ws) return; // already notified this week
+  save('bloom_reflection_notif', ws);
+
+  // Show in-app banner
+  state.showReflectionBanner = true;
+
+  // Send push notification if enabled
+  const notifs = state.prefs?.notifications;
+  if (notifs?.sundayReminder !== false) {
+    const dayName = dow === 6 ? 'Saturday' : 'Sunday';
+    setTimeout(() => {
+      sendLocalNotification(
+        'Time to reflect 🪞',
+        `Your weekly reflection is ready. Take a few minutes for yourself.`,
+        'weekly-reflection'
+      );
+    }, 2000);
+  }
+}
+
 function checkNewWeek() {
   const lastWeek = load('bloom_last_week_start');
   const thisWeek = weekStart();
   if (lastWeek && lastWeek !== thisWeek) {
-    // It's a new week — show banner and goals prompt
     state.showNewWeekBanner = true;
-    // Show goals prompt if it's Monday (day 1)
     if (dayOfWeek() === 1) {
       setTimeout(() => showNewWeekGoalsSheet(), 1200);
     }
   }
   save('bloom_last_week_start', thisWeek);
+  checkWeeklyReflectionAvailable();
 }
 
 function showNewWeekGoalsSheet() {
@@ -3525,6 +3606,7 @@ function toggleHabit(habitId, el) {
   if (!wasDone) {
     const xpVal = XP_VALUES[habitId] || 10;
     addXP(xpVal, el);
+    checkFirstTaskStreak();
     celebrate(habitId, el);
   } else {
     state.xpData.total = Math.max(0, (state.xpData.total || 0) - (XP_VALUES[habitId] || 10));
@@ -3555,6 +3637,7 @@ function toggleWeeklyHabit(habitId, action, el) {
     if (wd[habitId] < goal) {
       wd[habitId]++;
       addXP(XP_VALUES[habitId] || 15, el);
+      checkFirstTaskStreak();
       const atGoal = wd[habitId] >= goal;
       celebrate(atGoal ? 'weekly_goal' : habitId, el);
     }
@@ -3570,6 +3653,7 @@ function toggleHouseholdTask(taskId, el) {
 
   if (wd.household[taskId]) {
     addXP(15, el);
+    checkFirstTaskStreak();
     celebrate('household', el);
   } else {
     state.xpData.total = Math.max(0, (state.xpData.total || 0) - 15);
@@ -3579,6 +3663,84 @@ function toggleHouseholdTask(taskId, el) {
   }
   saveState();
   renderTodayTab();
+}
+
+// ============================================================
+//  FIRST TASK STREAK OVERLAY
+// ============================================================
+function checkFirstTaskStreak() {
+  const t = today();
+  if (load('bloom_first_task_date', null) === t) return; // already shown today
+  save('bloom_first_task_date', t);
+
+  // Update streak now — this is the moment it should count
+  updateStreak();
+
+  const streak = state.xpData.streak || 1;
+  const isNew = streak === 1;
+
+  // Pick message based on streak length
+  let headline, sub;
+  if (isNew) {
+    headline = 'Day one. 🌱';
+    sub = 'Every streak starts here. You showed up.';
+  } else if (streak < 7) {
+    headline = `${streak} days in a row.`;
+    sub = 'Something is building. Keep going.';
+  } else if (streak < 14) {
+    headline = `${streak} days strong. 🌿`;
+    sub = 'A week and counting. This is becoming real.';
+  } else if (streak < 30) {
+    headline = `${streak} days. ✨`;
+    sub = 'You keep coming back. That means everything.';
+  } else {
+    headline = `${streak} days. 🌻`;
+    sub = 'This kind of consistency is rare. Be proud.';
+  }
+
+  haptic('medium');
+  playSound('habit');
+
+  const div = document.createElement('div');
+  div.id = 'streak-welcome-overlay';
+  div.style.cssText = `
+    position:fixed;inset:0;z-index:790;
+    background:rgba(13,22,16,0.92);
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    padding:48px 36px;
+    animation:fadeIn 0.4s ease forwards;
+  `;
+  div.innerHTML = `
+    <div style="text-align:center;max-width:300px">
+      <div style="font-size:64px;margin-bottom:20px">🔥</div>
+      <div style="font-family:Fraunces,serif;font-size:13px;color:var(--amber);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px">
+        ${streak === 1 ? 'streak started' : `${streak}-day streak`}
+      </div>
+      <div style="font-family:Fraunces,serif;font-size:30px;font-weight:300;color:var(--cream);margin-bottom:12px;line-height:1.2">
+        ${headline}
+      </div>
+      <div style="font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:36px">
+        ${sub}
+      </div>
+      <button onclick="document.getElementById('streak-welcome-overlay').remove()" style="
+        background:none;border:1px solid rgba(255,255,255,0.12);
+        color:var(--text-secondary);font-family:Fraunces,serif;
+        font-style:italic;font-size:15px;padding:10px 28px;
+        border-radius:99px;cursor:pointer;
+      ">Continue →</button>
+    </div>
+  `;
+  document.body.appendChild(div);
+
+  // Auto-dismiss after 6 seconds if not tapped
+  setTimeout(() => {
+    const el = document.getElementById('streak-welcome-overlay');
+    if (el) {
+      el.style.animation = 'fadeOut 0.4s ease forwards';
+      setTimeout(() => el.remove(), 400);
+    }
+  }, 6000);
 }
 
 // ============================================================
@@ -3747,6 +3909,24 @@ function renderTodayTop() {
     </div>`;
   }
 
+  // Weekly reflection available banner (Saturday + Sunday)
+  if (state.showReflectionBanner) {
+    const hasReflected = Object.keys(state.wellnessData?.reflections?.[weekStart()] || {}).length > 0;
+    if (!hasReflected) {
+      html += `<div class="banner" style="background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.22)">
+        <div class="banner-icon">🪞</div>
+        <div class="banner-body">
+          <div class="banner-title" style="color:var(--sage-light)">Weekly reflection is ready</div>
+          <div class="banner-text">Take a few quiet minutes to look back at your week.</div>
+          <div class="banner-actions">
+            <div class="banner-action" onclick="switchTab('wellness');state.showReflectionBanner=false;">Reflect now</div>
+            <div class="banner-action" onclick="state.showReflectionBanner=false;renderTodayTop()">Later</div>
+          </div>
+        </div>
+      </div>`;
+    }
+  }
+
   // New week banner
   if (state.showNewWeekBanner) {
     html += `<div class="banner banner-all-done" style="background:rgba(122,158,126,0.1);border:1px solid rgba(122,158,126,0.25)">
@@ -3827,8 +4007,21 @@ function toggleInlineBreathe() {
   inlineBreathCycle = 0;
   renderTodayTop();
   if (state.inlineBreatheOpen) {
-    setTimeout(() => renderInlineBreathPhase(), 100);
+    setTimeout(() => runInlineBreathCountdown(3), 150);
   }
+}
+
+function runInlineBreathCountdown(n) {
+  const ui = document.getElementById('inline-breath-ui');
+  if (!ui) return;
+  playSound('breath_count');
+  ui.innerHTML = `
+    <div style="text-align:center;padding:16px 0 8px">
+      <div style="font-family:Fraunces,serif;font-size:64px;font-weight:300;color:var(--sky-light);line-height:1;animation:breathCountNum 0.4s cubic-bezier(0.34,1.56,0.64,1)">${n}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:6px;font-style:italic">get ready...</div>
+    </div>`;
+  if (n > 1) setTimeout(() => runInlineBreathCountdown(n - 1), 900);
+  else setTimeout(() => renderInlineBreathPhase(), 900);
 }
 
 function renderInlineBreathPhase() {
@@ -3841,19 +4034,22 @@ function renderInlineBreathPhase() {
     saveState();
     celebrate('breath', document.getElementById('inline-breath-zone'));
     ui.innerHTML = `
-      <div style="font-size:28px;margin-bottom:6px">🌿</div>
-      <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--sky-light);margin-bottom:12px">Four cycles complete.</div>
-      <div style="display:flex;gap:8px;justify-content:center">
-        <button class="btn btn-sm" style="background:rgba(106,154,176,0.2);border:1px solid rgba(106,154,176,0.3);color:var(--sky-light);border-radius:var(--r-full)" onclick="inlineContinueBreathing()">Keep going</button>
-        <button class="btn btn-ghost btn-sm" onclick="toggleInlineBreathe()">Done</button>
+      <div style="text-align:center;padding:8px 0">
+        <div style="font-size:36px;margin-bottom:8px">🌿</div>
+        <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sage-light);margin-bottom:6px">Four cycles complete.</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Take a moment. How do you feel?</div>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button class="btn btn-sm" style="background:rgba(106,154,176,0.2);border:1px solid rgba(106,154,176,0.35);color:var(--sky-light);border-radius:var(--r-full)" onclick="inlineContinueBreathing()">Keep going</button>
+          <button class="btn btn-ghost btn-sm" onclick="stopInlineBreathing()">I'm done</button>
+        </div>
       </div>`;
     return;
   }
 
   const phases = [
-    { name: 'Inhale', dur: 4, color: 'var(--sky-light)',  sound: 'breath_inhale' },
-    { name: 'Hold',   dur: 7, color: 'var(--sage-light)', sound: 'breath_hold' },
-    { name: 'Exhale', dur: 8, color: 'var(--rose-light)', sound: 'breath_exhale' },
+    { name: 'Inhale', dur: 4, class: 'inhale', color: 'var(--sage-light)',  sound: 'breath_inhale' },
+    { name: 'Hold',   dur: 7, class: 'hold',   color: 'var(--amber-light)', sound: 'breath_hold'   },
+    { name: 'Exhale', dur: 8, class: 'exhale', color: 'var(--sky-light)',   sound: 'breath_exhale' },
   ];
   const ph = phases[inlineBreathPhase];
   let countdown = ph.dur;
@@ -3861,30 +4057,14 @@ function renderInlineBreathPhase() {
   playSound(ph.sound);
 
   ui.innerHTML = `
-    <div id="inline-breath-circle" style="
-      width:80px;height:80px;border-radius:50%;margin:0 auto 8px;
-      background:radial-gradient(circle,rgba(106,154,176,0.25),rgba(106,154,176,0.05));
-      border:2px solid rgba(106,154,176,0.4);
-      display:flex;align-items:center;justify-content:center;
-      transition:transform ${ph.dur}s ease-in-out;
-      transform:scale(${inlineBreathPhase === 0 ? 1 : inlineBreathPhase === 1 ? 1.3 : 1})">
-      <span id="inline-breath-count" style="font-family:Fraunces,serif;font-size:20px;color:${ph.color}">${countdown}</span>
-    </div>
-    <div style="font-family:Fraunces,serif;font-style:italic;font-size:13px;color:${ph.color};margin-bottom:4px">${ph.name}</div>
-    <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Cycle ${inlineBreathCycle + 1} of 4</div>
-    <button class="btn btn-ghost btn-sm" onclick="stopInlineBreathing()" style="font-size:11px">Finish early</button>`;
-
-  if (inlineBreathPhase === 0) {
-    requestAnimationFrame(() => {
-      const c = document.getElementById('inline-breath-circle');
-      if (c) c.style.transform = 'scale(1.3)';
-    });
-  } else if (inlineBreathPhase === 2) {
-    requestAnimationFrame(() => {
-      const c = document.getElementById('inline-breath-circle');
-      if (c) c.style.transform = 'scale(1)';
-    });
-  }
+    <div style="text-align:center">
+      <div class="breath-circle ${ph.class}" style="width:130px;height:130px;margin:12px auto">
+        <span style="font-size:22px;color:${ph.color};font-family:Fraunces,serif;font-style:italic" id="inline-breath-count">${countdown}</span>
+      </div>
+      <div class="breath-label" style="color:${ph.color};font-size:16px">${ph.name}</div>
+      <div class="breath-count" style="margin:4px 0 12px">Cycle ${inlineBreathCycle + 1} of 4</div>
+      <button class="btn btn-ghost btn-sm" onclick="stopInlineBreathing()">Finish early</button>
+    </div>`;
 
   if (inlineBreathInterval) clearInterval(inlineBreathInterval);
   inlineBreathInterval = setInterval(() => {
@@ -3908,9 +4088,11 @@ function stopInlineBreathing() {
   playSound('breath_done');
   const ui = document.getElementById('inline-breath-ui');
   if (ui) ui.innerHTML = `
-    <div style="font-size:24px;margin-bottom:6px">🌿</div>
-    <div style="font-family:Fraunces,serif;font-style:italic;font-size:13px;color:var(--sage-light);margin-bottom:10px">Well done.</div>
-    <button class="btn btn-ghost btn-sm" onclick="toggleInlineBreathe()">Close</button>`;
+    <div style="text-align:center;padding:8px 0">
+      <div style="font-size:32px;margin-bottom:8px">🌿</div>
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--sage-light);margin-bottom:14px">Well done. Take a moment.</div>
+      <button class="btn btn-ghost btn-sm" onclick="toggleInlineBreathe()">Close</button>
+    </div>`;
 }
 
 function inlineContinueBreathing() {
@@ -4305,11 +4487,11 @@ function renderWellnessTab() {
   html += `<div style="font-family:Fraunces,serif;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.12em;padding:16px 4px 10px;display:flex;align-items:center;gap:8px"><span>This week</span><div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div></div>`;
 
   // --- WEEKLY REFLECTION (Sun + Mon only) ---
-  if (dow === 0 || dow === 1) {
+  if (dow === 6 || dow === 0) {
     const refData = state.wellnessData?.reflections?.[ws] || {};
     html += `<div class="card" id="reflection-card">
       <div class="card-title">🪞 Weekly reflection</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.5">Available Sunday & Monday — bloom will respond to each answer.</div>`;
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.5">Available Saturday & Sunday — bloom will respond to each answer.</div>`;
     REFLECTION_QUESTIONS.forEach((q, qi) => {
       const answer = refData[qi];
       html += `<div class="reflection-q">
@@ -4336,7 +4518,7 @@ function renderWellnessTab() {
   } else {
     html += `<div class="card" style="opacity:0.5">
       <div class="card-title">🪞 Weekly reflection</div>
-      <div style="font-size:13px;color:var(--text-secondary)">Opens on Sunday and Monday each week.</div>
+      <div style="font-size:13px;color:var(--text-secondary)">Opens on Saturday and Sunday each week.</div>
     </div>`;
   }
 
@@ -4976,7 +5158,7 @@ function renderSettingsTab() {
     </div>
     <div class="divider"></div>
     <div class="toggle-row">
-      <div><div class="toggle-label">Sunday goal reminder</div><div class="toggle-sub">Weekly nudge to set household tasks</div></div>
+      <div><div class="toggle-label">Weekly reflection reminder</div><div class="toggle-sub">Notifies you Saturday & Sunday when the reflection opens</div></div>
       <div class="toggle${notifs.sundayReminder?' on':''}" onclick="toggleNotif('sundayReminder')"></div>
     </div>
     <div class="divider"></div>
