@@ -1826,7 +1826,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   font-family: 'Instrument Sans', sans-serif;
 }
 .community-toggle-btn.active {
-  background: var(--primary);
+  background: var(--sage);
   color: var(--bg);
 }
 
@@ -1888,7 +1888,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 .buddy-habit-fill {
   height: 100%;
   border-radius: 3px;
-  background: var(--primary);
+  background: var(--sage);
   transition: width 0.4s ease;
 }
 
@@ -1938,13 +1938,13 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   word-wrap: break-word;
 }
 .buddy-msg.sent {
-  background: var(--primary);
+  background: var(--sage);
   color: var(--bg);
   align-self: flex-end;
   border-bottom-right-radius: 4px;
 }
 .buddy-msg.received {
-  background: var(--bg-elevated);
+  background: rgba(255,255,255,0.08);
   color: var(--cream);
   align-self: flex-start;
   border-bottom-left-radius: 4px;
@@ -1987,7 +1987,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   font-weight: 400;
   letter-spacing: 6px;
   text-align: center;
-  color: var(--primary-light);
+  color: var(--sage-light);
   padding: 20px;
   background: rgba(255,255,255,0.03);
   border-radius: var(--r-lg);
@@ -2049,7 +2049,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--sage);
   animation: buddyPulse 1.4s ease-in-out infinite;
 }
 .buddy-searching-dots span:nth-child(2) { animation-delay: 0.2s; }
