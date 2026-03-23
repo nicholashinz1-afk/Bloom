@@ -4029,7 +4029,8 @@ function renderSettingsTab() {
     </div>
     <div class="divider"></div>
     <button class="btn btn-ghost btn-sm" onclick="testNotification()">🔔 Test notification</button>
-    <div id="notif-test-status" style="font-size:12px;color:var(--text-muted);margin-top:8px"></div>
+    <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="resetServiceWorker()">↺ Reset notification worker</button>
+    <div id="notif-test-status" style="font-size:12px;color:var(--text-muted);margin-top:8px;white-space:pre-wrap"></div>
   `);
 
   // Streak & protection
@@ -4154,6 +4155,27 @@ function removeCustomTask(id) {
   state.prefs.householdTasks = (state.prefs.householdTasks || []).filter(t => t.id !== id);
   save('bloom_prefs', state.prefs);
   renderSettingsTab();
+}
+
+async function resetServiceWorker() {
+  const status = document.getElementById('notif-test-status');
+  const update = (msg) => { if (status) status.textContent = msg; };
+  update('Resetting...');
+
+  try {
+    // Unregister all existing service workers
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for (const reg of regs) {
+      await reg.unregister();
+    }
+    update('Unregistered ' + regs.length + ' worker(s). Registering OneSignal worker...');
+
+    // Re-register OneSignal worker
+    const reg = await navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' });
+    update('✓ Worker registered!\nScope: ' + reg.scope + '\nTap "Test notification" now.');
+  } catch(e) {
+    update('Error: ' + e.message);
+  }
 }
 
 function testNotification() {
