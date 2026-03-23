@@ -1900,14 +1900,14 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   margin-bottom: 12px;
 }
 .buddy-nudge-btn {
-  -webkit-appearance: none;
-  appearance: none;
-  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
   border-radius: 99px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
   background: rgba(255,255,255,0.04);
-  color: var(--text-muted);
-  font-size: 11px;
+  color: var(--text-secondary);
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
   font-family: 'Instrument Sans', sans-serif;
@@ -2013,14 +2013,12 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 
 /* Preference picker */
 .buddy-pref-option {
-  -webkit-appearance: none;
-  appearance: none;
-  padding: 4px 10px;
-  border-radius: 99px;
-  border: 1px solid rgba(255,255,255,0.08);
+  padding: 12px 10px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(255,255,255,0.15);
   background: rgba(255,255,255,0.04);
-  color: var(--text-muted);
-  font-size: 11px;
+  color: var(--text-secondary);
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
   font-family: 'Instrument Sans', sans-serif;

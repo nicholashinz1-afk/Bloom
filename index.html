@@ -2094,9 +2094,9 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 <div class="bottom-sheet" id="buddy-info-sheet">
   <div class="sheet-handle"></div>
   <div style="padding:4px 20px 20px">
-    <div class="sheet-title">What is Bloom Buddy?</div>
+    <div class="sheet-title">What is bloom buddy?</div>
     <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
-      <p style="margin-bottom:12px">Bloom Buddy pairs you with someone for <strong style="color:var(--cream)">mutual encouragement and accountability</strong>. Here's what your buddy can see:</p>
+      <p style="margin-bottom:12px">bloom buddy pairs you with someone for <strong style="color:var(--cream)">mutual encouragement and accountability</strong>. Here's what your buddy can see:</p>
       <div style="margin-bottom:12px">
         <div style="margin-bottom:4px"><span style="color:var(--cream)">Your current mood</span> (Low / Rough / Okay / Good / Great)</div>
         <div style="margin-bottom:4px"><span style="color:var(--cream)">Your streak count</span> (how many days in a row)</div>
@@ -2179,8 +2179,8 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'Bloom Buddy — pair up with someone for mutual encouragement and accountability. See their mood, streak, and progress. Send nudges and messages. Find yours on the Community tab!', spotlight: '#nav-community', tab: 'community', featured: true },
-  { text: 'Multiple buddies — you can now have more than one Bloom Buddy. Toggle this in Settings under Bloom Buddy.', spotlight: null },
+  { text: 'bloom buddy — pair up with someone for mutual encouragement and accountability. See their mood, streak, and progress. Send nudges and messages. Find yours on the Community tab!', spotlight: '#nav-community', tab: 'community', featured: true },
+  { text: 'Multiple buddies — you can now have more than one bloom buddy. Toggle this in Settings under bloom buddy.', spotlight: null },
   { text: 'Encouragement wall — a shared, anonymous space to leave kind words for strangers. Tap the 💛 Wall tab to see it.', spotlight: '#nav-community', tab: 'today', featured: true },
   { text: 'Seasonal mood awareness — bloom now notices monthly and seasonal patterns in your mood over time', spotlight: null, tab: 'progress' },
   { text: 'Weekly summary notification — a gentle Sunday evening recap of your mood, streaks, and journal activity', spotlight: null },
@@ -6975,7 +6975,7 @@ function renderSettingsTab() {
   // ── BLOOM BUDDY ────────────────────────────────────────────
   const multiBuddyOn = prefs.multiBuddy || false;
   const myBuddyId = load('bloom_buddy_id', 'Not yet generated');
-  html += settingsSection('buddy', '🤝 Bloom Buddy', `
+  html += settingsSection('buddy', '🤝 bloom buddy', `
     <div class="toggle-row" style="padding:12px 0">
       <div>
         <div class="toggle-label">Allow multiple buddies</div>
@@ -8765,7 +8765,7 @@ function renderOBBuddyIntro(body, footer) {
   body.innerHTML = `
     <div style="text-align:center;margin-bottom:20px">
       <div style="font-size:64px;line-height:1;margin-bottom:16px">🤝</div>
-      <div class="ob-title" style="text-align:center">Bloom Buddy</div>
+      <div class="ob-title" style="text-align:center">bloom buddy</div>
       <div class="ob-sub" style="text-align:center">Partner with someone for mutual encouragement. Your buddy can see your mood, streak, and habit progress — but not your journal or specific habits.</div>
     </div>
 
@@ -9535,7 +9535,7 @@ async function buddySendNudge(nudgeType, pairId) {
 }
 
 async function buddyUnpair(pairId) {
-  if (!confirm('Unpair from this Bloom Buddy? You can find a new one anytime.')) return;
+  if (!confirm('Unpair from this bloom buddy? You can find a new one anytime.')) return;
   await buddyApi({ action: 'unpair', buddyId: ensureBuddyId(), pairId });
   // Remove from local cache
   buddyCachedBuddies = buddyCachedBuddies.filter(b => b.pairId !== pairId);
@@ -9602,8 +9602,8 @@ function renderBuddyContent() {
 
   // Info header (always shown)
   html += `<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 0 4px">
-    <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">Bloom Buddy</div>
-    <button onclick="openSheet('buddy-info-sheet')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted);padding:4px" title="What is Bloom Buddy?">&#9432;</button>
+    <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">bloom buddy</div>
+    <button onclick="openSheet('buddy-info-sheet')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted);padding:4px" title="What is bloom buddy?">&#9432;</button>
   </div>`;
 
   if (buddyState.status === 'paired' && buddyCachedBuddies.length > 0) {
@@ -9635,7 +9635,7 @@ function renderBuddySetup() {
   return `
     <div style="text-align:center;padding:8px 0 16px">
       <div style="font-size:32px;margin-bottom:8px">🤝</div>
-      <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">Bloom Buddy</div>
+      <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">bloom buddy</div>
       <div style="font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6">Partner with someone for mutual encouragement<br>and accountability. Share moods, trade nudges,<br>and keep each other going.</div>
     </div>
     <div id="buddy-status-msg" style="font-size:12px;text-align:center;margin:8px 0;display:none"></div>
@@ -9704,7 +9704,7 @@ function renderBuddyInviteView(code) {
 function buddyShareInvite(code, url) {
   if (navigator.share) {
     navigator.share({
-      title: 'Be my Bloom Buddy',
+      title: 'Be my bloom buddy',
       text: 'Join me on Bloom! Use code ' + code + ' or tap the link:',
       url: url,
     }).catch(() => {});
@@ -9839,7 +9839,7 @@ function selectBuddyPref(type, value) {
 function renderBuddyMatchForm() {
   return `
     <div style="padding:4px 20px 20px">
-      <div class="sheet-title">Find a Bloom Buddy</div>
+      <div class="sheet-title">Find a bloom buddy</div>
       <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">
         Quick questions so we can match you with someone compatible.
       </p>
@@ -9983,7 +9983,7 @@ function renderCommunityTab() {
     </div>
   </div>`;
 
-  // Bloom Buddy section (below wall)
+  // bloom buddy section (below wall)
   html += `<div style="margin-top:24px;border-top:1px solid rgba(255,255,255,0.06);padding-top:20px">
     <div id="buddy-section"></div>
   </div>`;
