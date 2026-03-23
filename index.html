@@ -4160,35 +4160,40 @@ function testNotification() {
   const status = document.getElementById('notif-test-status');
   const update = (msg) => { if (status) status.textContent = msg; };
 
-  // Check native permission first
-  if (!('Notification' in window)) {
+  if (!('Notification' in window) && !('serviceWorker' in navigator)) {
     update('Notifications not supported on this browser.');
     return;
   }
 
   if (Notification.permission === 'denied') {
-    update('Notifications are blocked. Enable them in your browser settings.');
+    update('Notifications are blocked. Enable them in your browser/app settings.');
     return;
   }
 
-  if (Notification.permission === 'default') {
-    Notification.requestPermission().then(p => {
-      if (p === 'granted') testNotification();
-      else update('Permission denied.');
-    });
+  const sendViaServiceWorker = () => {
+    navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification('bloom 🌿', {
+        body: "Notifications are working! You're all set.",
+        icon: '/icon.svg',
+        badge: '/icon.svg',
+      });
+      update('✓ Test sent — check your notifications.');
+    }).catch(e => update('Could not send: ' + e.message));
+  };
+
+  if (Notification.permission === 'granted') {
+    sendViaServiceWorker();
     return;
   }
 
-  // Permission granted — send a test
-  try {
-    new Notification('bloom 🌿', {
-      body: 'Notifications are working! You\'re all set.',
-      icon: '/icon.svg',
-    });
-    update('✓ Test sent — check your notifications.');
-  } catch(e) {
-    update('Could not send: ' + e.message);
-  }
+  // Request permission first
+  Notification.requestPermission().then(permission => {
+    if (permission === 'granted') {
+      sendViaServiceWorker();
+    } else {
+      update('Permission denied.');
+    }
+  });
 }
 
 function setWaterMode(mode) {
