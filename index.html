@@ -7931,6 +7931,7 @@ function checkShowTutorial() {
 }
 
 function migrateToNewDailyHabits() {
+  if (!state.prefs) return;
   const p = state.prefs;
   if (p._migratedDailyHabits) return;
 
