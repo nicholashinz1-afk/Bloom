@@ -9286,10 +9286,42 @@ function renderCommunityTab() {
 
   scroll.innerHTML = html;
 
-  // Auto-fetch if not loaded
-  if (!wallLoading && wallMessages.length === 0) {
-    fetchWallMessages().then(() => renderCommunityTab());
+  // Auto-fetch if not loaded — only update messages area, not entire tab
+  if (!wallLoading && wallMessages.length === 0 && !state._wallFetched) {
+    state._wallFetched = true;
+    fetchWallMessages().then(() => renderWallMessages());
   }
+}
+
+function renderWallMessages() {
+  const container = document.getElementById('wall-messages');
+  if (!container) return;
+  let html = '';
+  if (wallMessages.length === 0) {
+    html += `<div class="card" style="text-align:center;padding:20px">
+      <div style="font-size:24px;margin-bottom:8px">🌱</div>
+      <div style="font-size:13px;color:var(--text-secondary)">Be the first to share something kind.</div>
+    </div>`;
+  } else {
+    wallMessages.forEach(msg => {
+      const timeAgo = getTimeAgo(msg.ts);
+      const hearted = wallHearted[msg.id];
+      html += `<div class="card wall-message" style="padding:14px 16px;margin-bottom:8px">
+        <div style="font-size:14px;color:var(--cream);line-height:1.6;font-family:Fraunces,serif;font-style:italic">"${escapeHtml(msg.text)}"</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button onclick="heartWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:99px;transition:all 0.2s;${hearted ? 'background:rgba(201,149,74,0.15)' : ''}" ${hearted ? 'disabled' : ''}>
+              <span style="font-size:14px">${hearted ? '💛' : '🤍'}</span>
+              <span style="font-size:12px;color:${hearted ? 'var(--amber-light)' : 'var(--text-muted)'}">${msg.hearts || 0}</span>
+            </button>
+            <button onclick="reportWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);opacity:0.5;padding:4px" title="Report">flag</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted)">${timeAgo}</div>
+        </div>
+      </div>`;
+    });
+  }
+  container.innerHTML = html;
 }
 
 function updateWallCharCount() {
@@ -9324,9 +9356,9 @@ async function postToWall() {
       updateWallCharCount();
       haptic('medium');
       showWallStatus('Your words are out there now, making someone\'s day a little brighter.', 'var(--sage)');
-      // Refresh
+      // Refresh messages only, preserve textarea
       await fetchWallMessages();
-      renderCommunityTab();
+      renderWallMessages();
     } else {
       const reasons = {
         'length': 'Message should be 3-140 characters.',
@@ -9362,7 +9394,7 @@ async function heartWallMessage(id) {
   // Optimistic update
   const msg = wallMessages.find(m => m.id === id);
   if (msg) msg.hearts = (msg.hearts || 0) + 1;
-  renderCommunityTab();
+  renderWallMessages();
 
   try {
     await fetch('/api/wall', {
@@ -9382,7 +9414,7 @@ async function reportWallMessage(id) {
         body: JSON.stringify({ action: 'report', id }),
       });
       wallMessages = wallMessages.filter(m => m.id !== id);
-      renderCommunityTab();
+      renderWallMessages();
       haptic('medium');
     } catch(e) {}
   }
