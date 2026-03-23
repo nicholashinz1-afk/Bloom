@@ -5598,7 +5598,7 @@ function renderTodayTab() {
       <div style="margin-left:auto;font-size:11px;color:var(--sky);background:rgba(106,154,176,0.15);padding:2px 8px;border-radius:99px">4-7-8</div>
     </div>
     <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
-    <button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">Begin breathing exercise</button>
+    <div style="text-align:center"><button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">Begin breathing exercise</button></div>
   </div>`;
 
   // Just write — open journal anytime
@@ -5608,7 +5608,7 @@ function renderTodayTab() {
       <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--amber-light)">Just write</div>
     </div>
     <div style="font-size:13px;color:rgba(186,156,124,0.7);margin-bottom:14px;font-style:italic">No prompt, no structure — just get it out</div>
-    <button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button>
+    <div style="text-align:center"><button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button></div>
   </div>`;
 
   // Subtle share nudge at bottom of Today
@@ -6082,7 +6082,7 @@ function renderWellnessTab() {
         <div style="margin-left:auto;font-size:11px;color:var(--sky);background:rgba(106,154,176,0.15);padding:2px 8px;border-radius:99px">4-7-8</div>
       </div>
       <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
-      <div id="breath-ui">
+      <div id="breath-ui" style="text-align:center">
         <button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="startBreathing()">Begin breathing exercise</button>
       </div>
     </div>
@@ -6096,7 +6096,7 @@ function renderWellnessTab() {
         <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--amber-light)">Just write</div>
       </div>
       <div style="font-size:13px;color:rgba(186,156,124,0.7);margin-bottom:14px;font-style:italic">No prompt, no structure — just get it out</div>
-      <button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button>
+      <div style="text-align:center"><button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button></div>
     </div>
   </div>`;
 
