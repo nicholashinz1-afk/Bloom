@@ -1954,6 +1954,53 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   </div>
 </div>
 
+<!-- Medication timing sheet -->
+<div class="bottom-sheet" id="medication-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:0 20px 24px">
+    <div class="sheet-title">💊 Medication reminder</div>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">
+      A private, judgment-free nudge. Choose which times of day are relevant to you — you can change this any time.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+      ${['morning','afternoon','evening'].map(time => `
+        <div onclick="toggleMedTime('${time}')" id="med-time-${time}" style="
+          display:flex;align-items:center;justify-content:space-between;
+          padding:14px 16px;border-radius:var(--r-lg);cursor:pointer;
+          background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.15);
+          transition:all 0.15s">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:20px">${time === 'morning' ? '🌅' : time === 'afternoon' ? '☀️' : '🌙'}</span>
+            <div>
+              <div style="font-size:14px;color:var(--sky-light);font-weight:500;text-transform:capitalize">${time}</div>
+              <div style="font-size:12px;color:var(--text-muted)">${time === 'morning' ? 'Start of day' : time === 'afternoon' ? 'Midday' : 'End of day'}</div>
+            </div>
+          </div>
+          <div id="med-check-${time}" style="font-size:18px;color:var(--sky-light);opacity:0.3">○</div>
+        </div>`).join('')}
+      <div style="height:1px;background:rgba(255,255,255,0.06);margin:4px 0"></div>
+      <div onclick="toggleMedTime('once')" id="med-time-once" style="
+        display:flex;align-items:center;justify-content:space-between;
+        padding:14px 16px;border-radius:var(--r-lg);cursor:pointer;
+        background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.15);
+        transition:all 0.15s">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px">💊</span>
+          <div>
+            <div style="font-size:14px;color:var(--sky-light);font-weight:500">Once a day</div>
+            <div style="font-size:12px;color:var(--text-muted)">Single daily reminder</div>
+          </div>
+        </div>
+        <div id="med-check-once" style="font-size:18px;color:var(--sky-light);opacity:0.3">○</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveMedicationTiming()">Save</button>
+      <button class="btn btn-ghost" onclick="closeAllSheets()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Re-intro sheet for existing users -->
 <div class="bottom-sheet" id="reintro-sheet">
   <div class="sheet-handle"></div>
@@ -1992,9 +2039,9 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 </div>
 
 <!-- Re-intro mini onboarding overlay -->
-<div id="reintro-overlay" style="display:none;position:fixed;inset:0;z-index:750;background:var(--bg);flex-direction:column">
-  <div style="flex:1;overflow-y:auto;padding:24px 20px 0" id="reintro-body"></div>
-  <div style="padding:16px 20px;display:flex;gap:10px;border-top:1px solid rgba(255,255,255,0.06)" id="reintro-footer"></div>
+<div id="reintro-overlay" style="display:none;position:fixed;inset:0;z-index:780;background:var(--bg);flex-direction:column;overflow:hidden">
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(var(--safe-top) + 20px) 20px 0" id="reintro-body"></div>
+  <div style="padding:16px 20px calc(var(--safe-bottom) + 16px);display:flex;gap:10px;border-top:1px solid rgba(255,255,255,0.06);background:var(--bg);flex-shrink:0" id="reintro-footer"></div>
 </div>
 
 <!-- Daily affirmation overlay -->
@@ -3567,8 +3614,15 @@ const SELF_CARE_CATEGORIES = [
   },
 ];
 
-// Medication is handled separately with extra-gentle framing
-const MEDICATION_TASK = { id: 'sc_medication', icon: '💊', label: 'Took my medication' };
+// Medication tasks — flexible timing
+const MEDICATION_TIMES = [
+  { id: 'sc_medication_morning',   icon: '💊', label: 'Morning medication',   time: 'morning' },
+  { id: 'sc_medication_afternoon', icon: '💊', label: 'Afternoon medication', time: 'afternoon' },
+  { id: 'sc_medication_evening',   icon: '💊', label: 'Evening medication',   time: 'evening' },
+  { id: 'sc_medication',           icon: '💊', label: 'Took my medication',   time: 'once' },
+];
+
+const MEDICATION_TASK = MEDICATION_TIMES[3]; // default single
 
 const SELF_CARE_TASKS = SELF_CARE_CATEGORIES.flatMap(c => c.tasks).concat([MEDICATION_TASK]);
 
@@ -3714,6 +3768,55 @@ const CELEBRATIONS = {
     messages: [
       { title: 'Insight generated.', sub: 'bloom looked at your week and found something.' },
       { title: 'Your week, reflected back.', sub: 'Scroll up to read it.' },
+    ],
+  },
+  // Self-care task celebrations
+  sc_body: {
+    emoji: '💛', xp: 10,
+    messages: [
+      { title: 'You took care of yourself.', sub: 'That\'s not small. That matters.' },
+      { title: 'Body care — done.', sub: 'One kind act for yourself today.' },
+      { title: 'You showed up for you.', sub: 'This is what self-care looks like.' },
+    ],
+  },
+  sc_morning: {
+    emoji: '☀️', xp: 10,
+    messages: [
+      { title: 'Morning moment — checked.', sub: 'You started the day with yourself.' },
+      { title: 'The day began gently.', sub: 'That\'s worth something.' },
+      { title: 'A good start.', sub: 'However the rest goes, you began well.' },
+    ],
+  },
+  sc_movement: {
+    emoji: '🧘', xp: 10,
+    messages: [
+      { title: 'You moved.', sub: 'Any movement is the right movement.' },
+      { title: 'Body in motion.', sub: 'Even a little counts. Especially a little.' },
+      { title: 'You listened to your body.', sub: 'That\'s exactly right.' },
+    ],
+  },
+  sc_connection: {
+    emoji: '💚', xp: 10,
+    messages: [
+      { title: 'Connection — made.', sub: 'You reached beyond yourself today.' },
+      { title: 'You weren\'t alone today.', sub: 'That matters more than you know.' },
+      { title: 'A moment of connection.', sub: 'Small bridges hold the most weight.' },
+    ],
+  },
+  sc_wind_down: {
+    emoji: '🌙', xp: 10,
+    messages: [
+      { title: 'Winding down.', sub: 'Rest is part of the work.' },
+      { title: 'You\'re taking care of tomorrow too.', sub: 'Rest well.' },
+      { title: 'The day is done.', sub: 'You can let it go now.' },
+    ],
+  },
+  sc_medication: {
+    emoji: '💊', xp: 10,
+    messages: [
+      { title: 'Medication taken.', sub: 'Taking care of yourself in every way.' },
+      { title: 'Done.', sub: 'One quiet act of self-care.' },
+      { title: 'You remembered.', sub: 'That counts.' },
     ],
   },
 };
@@ -4067,10 +4170,10 @@ function renderTodayTop() {
   if (!container) return;
   let html = '';
 
-  // Hard day button — only show if mood hasn't been logged yet
-  // Once they've told us how they feel, this is redundant
+  // Hard day button — show if mood not logged, or if logged as rough/low (0-1)
   const mood = state.todayData.mood;
-  if (!state.hardDayMode && mood === undefined) {
+  const moodIsOkayOrBetter = mood !== undefined && mood >= 2;
+  if (!state.hardDayMode && !moodIsOkayOrBetter) {
     html += `<div onclick="activateHardDayMode()" style="
       display:flex;align-items:center;gap:12px;
       background:rgba(176,120,120,0.07);
@@ -4493,10 +4596,14 @@ function renderTodayTab() {
 
   // --- SELF-CARE TASKS ---
   const selectedSCTasks = state.prefs?.selfCareTasks || [];
-  const hasMedication = selectedSCTasks.includes('sc_medication');
-  const regularSCTasks = selectedSCTasks.filter(id => id !== 'sc_medication');
+  const medTiming = state.prefs?.medicationTiming || []; // array of 'morning','afternoon','evening', or ['once']
+  const hasMedication = selectedSCTasks.includes('sc_medication') ||
+    medTiming.some(t2 => ['morning','afternoon','evening','once'].includes(t2));
 
-  if (selectedSCTasks.length > 0) {
+  // Separate medication IDs from regular tasks
+  const regularSCTasks = selectedSCTasks.filter(id => !id.startsWith('sc_medication'));
+
+  if (regularSCTasks.length > 0 || hasMedication) {
     const scDone = td.selfCare || {};
     html += `<div class="section-label">💚 Self-care</div>`;
 
@@ -4508,28 +4615,35 @@ function renderTodayTab() {
         const done = scDone[id];
         html += `<div class="habit-row" onclick="tapSelfCare('${id}', this)">
           <div class="habit-check${done ? ' done' : ''}">${done ? '✓' : task.icon}</div>
-          <div class="habit-info">
-            <div class="habit-name">${task.label}</div>
-          </div>
+          <div class="habit-info"><div class="habit-name">${task.label}</div></div>
           ${!done ? '<div class="habit-xp">+10</div>' : ''}
         </div>`;
       });
       html += `</div>`;
     }
 
-    // Medication — its own quiet card
+    // Medication — its own quiet card with timing-based rows
     if (hasMedication) {
-      const medDone = scDone['sc_medication'];
-      html += `<div class="card" style="background:rgba(106,154,176,0.06);border-color:rgba(106,154,176,0.15)">
-        <div class="habit-row" onclick="tapSelfCare('sc_medication', this)" style="border-bottom:none">
-          <div class="habit-check${medDone ? ' done' : ''}" style="${!medDone ? 'border-color:rgba(106,154,176,0.3)' : ''}">${medDone ? '✓' : '💊'}</div>
+      const activeMedTasks = medTiming.length > 0
+        ? MEDICATION_TIMES.filter(m => medTiming.includes(m.time))
+        : [MEDICATION_TASK]; // fallback to single
+
+      html += `<div class="card" style="background:rgba(106,154,176,0.06);border-color:rgba(106,154,176,0.15)">`;
+
+      activeMedTasks.forEach((med, i) => {
+        const done = scDone[med.id];
+        const isLast = i === activeMedTasks.length - 1;
+        html += `<div class="habit-row" onclick="tapSelfCare('${med.id}', this)" style="${isLast ? 'border-bottom:none' : ''}">
+          <div class="habit-check${done ? ' done' : ''}" style="${!done ? 'border-color:rgba(106,154,176,0.3)' : ''}">${done ? '✓' : '💊'}</div>
           <div class="habit-info">
-            <div class="habit-name" style="color:var(--sky-light)">Took my medication</div>
-            <div class="habit-sub" style="color:var(--text-muted)">Just a gentle nudge — no judgment either way</div>
+            <div class="habit-name" style="color:var(--sky-light)">${med.label}</div>
+            ${i === 0 ? '<div class="habit-sub" style="color:var(--text-muted)">A gentle nudge — no judgment either way</div>' : ''}
           </div>
-          ${!medDone ? '<div class="habit-xp" style="background:rgba(106,154,176,0.15);border-color:rgba(106,154,176,0.3);color:var(--sky-light)">+10</div>' : ''}
-        </div>
-      </div>`;
+          ${!done ? '<div class="habit-xp" style="background:rgba(106,154,176,0.15);border-color:rgba(106,154,176,0.3);color:var(--sky-light)">+10</div>' : ''}
+        </div>`;
+      });
+
+      html += `</div>`;
     }
   }
 
@@ -4608,7 +4722,7 @@ function tapSelfCare(id, el) {
   if (!wasDone) {
     addXP(10, el);
     checkFirstTaskStreak();
-    celebrate('household', el); // reuse household celebration type
+    celebrate(getSelfCareCelebType(id), el);
   } else {
     state.xpData.total = Math.max(0, (state.xpData.total || 0) - 10);
     haptic('light');
@@ -4621,7 +4735,16 @@ function tapSelfCare(id, el) {
   renderTodayTab();
 }
 
+function getSelfCareCelebType(id) {
+  if (id.startsWith('sc_medication')) return 'sc_medication';
+  const cat = SELF_CARE_CATEGORIES.find(c => c.tasks.some(t => t.id === id));
+  if (!cat) return 'sc_body';
+  const map = { body: 'sc_body', morning: 'sc_morning', movement: 'sc_movement', connection: 'sc_connection', wind_down: 'sc_wind_down' };
+  return map[cat.id] || 'sc_body';
+}
+
 function logMood(val) {
+  const wasLow = state.todayData.mood !== undefined && state.todayData.mood <= 2;
   state.todayData.mood = val;
   saveState();
   archiveToday();
@@ -5654,7 +5777,7 @@ function renderSettingsTab() {
   scHtml += `<div style="background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.15);border-radius:var(--r-lg);padding:12px 14px;margin-top:4px">
     <div style="font-size:12px;color:var(--sky-light);font-weight:500;margin-bottom:4px">💊 Medication</div>
     <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">A private, judgment-free nudge. Just "did I remember?" — nothing more.</div>
-    <div onclick="toggleSelfCareTask('sc_medication')" id="sc-pill-sc_medication" style="${medStyle}">💊 Took my medication</div>
+    <div onclick="openMedicationSheet()" id="sc-pill-sc_medication" style="${medStyle}">${medOn ? "💊 Medication ✓" : "💊 Set up reminder →"}</div>
   </div>
   <div style="font-size:11px;color:var(--text-muted);margin-top:12px;font-style:italic;line-height:1.6;text-align:center">
     This is entirely yours. Add, remove, or change anything, any time.
@@ -5764,6 +5887,66 @@ function goalStepper(name, key, val, compact = false) {
       <div class="stepper-btn" onclick="adjustGoal('${key}',1)">+</div>
     </div>
   </div>`;
+}
+
+function openMedicationSheet() {
+  // Pre-fill current selections
+  const current = state.prefs?.medicationTiming || ['once'];
+  ['morning','afternoon','evening','once'].forEach(t2 => {
+    const check = document.getElementById('med-check-' + t2);
+    const row = document.getElementById('med-time-' + t2);
+    if (!check || !row) return;
+    const on = current.includes(t2);
+    check.textContent = on ? '✓' : '○';
+    check.style.opacity = on ? '1' : '0.3';
+    row.style.background = on ? 'rgba(106,154,176,0.14)' : 'rgba(106,154,176,0.06)';
+    row.style.borderColor = on ? 'rgba(106,154,176,0.4)' : 'rgba(106,154,176,0.15)';
+  });
+  openSheet('medication-sheet');
+}
+
+function toggleMedTime(time) {
+  if (!state.prefs.medicationTiming) state.prefs.medicationTiming = [];
+  const times = state.prefs.medicationTiming;
+
+  // 'once' is mutually exclusive with specific times
+  if (time === 'once') {
+    state.prefs.medicationTiming = times.includes('once') ? [] : ['once'];
+  } else {
+    // Remove 'once' if selecting specific times
+    const withoutOnce = times.filter(t2 => t2 !== 'once');
+    const idx = withoutOnce.indexOf(time);
+    if (idx > -1) withoutOnce.splice(idx, 1);
+    else withoutOnce.push(time);
+    state.prefs.medicationTiming = withoutOnce;
+  }
+
+  // Update UI
+  openMedicationSheet();
+}
+
+function saveMedicationTiming() {
+  const timing = state.prefs.medicationTiming || [];
+  // Make sure sc_medication is in selfCareTasks if any timing is set
+  if (!state.prefs.selfCareTasks) state.prefs.selfCareTasks = [];
+  if (timing.length > 0) {
+    // Add the base medication task id so hasMedication check passes
+    if (!state.prefs.selfCareTasks.includes('sc_medication')) {
+      state.prefs.selfCareTasks.push('sc_medication');
+    }
+  } else {
+    // Remove medication entirely if no times selected
+    state.prefs.selfCareTasks = state.prefs.selfCareTasks.filter(id => id !== 'sc_medication');
+  }
+  save('bloom_prefs', state.prefs);
+  closeAllSheets();
+  renderTodayTab();
+  renderSettingsTab();
+  setTimeout(() => {
+    const sh = document.getElementById('sh-selfcare');
+    const sb = document.getElementById('sb-selfcare');
+    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
+  }, 50);
 }
 
 function toggleSelfCareTask(id) {
@@ -6197,7 +6380,7 @@ function renderReintroStep() {
     html += `<div style="background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.15);border-radius:var(--r-lg);padding:12px 14px;margin-bottom:20px">
       <div style="font-size:12px;color:var(--sky-light);font-weight:500;margin-bottom:4px">💊 Medication</div>
       <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">A private, judgment-free nudge. Just "did I remember?" — nothing more.</div>
-      <div onclick="reintroToggleSC('sc_medication')" id="ri-sc-sc_medication" style="${medPs}">💊 Took my medication</div>
+      <div onclick="openMedicationSheet()" id="ri-sc-sc_medication" style="${medPs}">${medOn ? "💊 Medication ✓" : "💊 Set up reminder →"}</div>
     </div>`;
 
     body.innerHTML = html;
@@ -6253,10 +6436,35 @@ function reintroBack() {
 }
 
 function closeReintro() {
+  // Remove any tour spotlights that might be lingering
+  document.getElementById('tour-spotlight')?.remove();
+  document.getElementById('streak-welcome-overlay')?.remove();
+
   const overlay = document.getElementById('reintro-overlay');
-  if (overlay) overlay.style.display = 'none';
+  if (overlay) {
+    overlay.style.display = 'none';
+    // Clear body content to prevent stale state
+    const body = document.getElementById('reintro-body');
+    const footer = document.getElementById('reintro-footer');
+    if (body) body.innerHTML = '';
+    if (footer) footer.innerHTML = '';
+  }
+
+  // Re-render today tab to show any newly selected self-care tasks
   renderTodayTab();
-  renderSettingsTab();
+
+  // Show a warm completion toast
+  setTimeout(() => {
+    const div = document.createElement('div');
+    div.style.cssText = `position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+      background:#1e3022;border:2px solid #5a9e60;border-radius:99px;
+      padding:12px 24px;font-size:14px;color:var(--cream);z-index:600;
+      font-family:Fraunces,serif;font-style:italic;white-space:nowrap;
+      animation:celebrateIn 0.4s ease forwards`;
+    div.textContent = "You're all set 🌿";
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 2500);
+  }, 200);
 }
 
 let whatsNewTourStep = 0;
@@ -6266,6 +6474,13 @@ function startWhatsNewTour() {
   const tourItems = WHATS_NEW.filter(i => i.spotlight);
   if (tourItems.length === 0) return;
   runWhatsNewTourStep(tourItems);
+}
+
+function cancelWhatsNewTour() {
+  document.getElementById('tour-spotlight')?.remove();
+  whatsNewTourStep = 0;
+  // Return to today tab cleanly
+  switchTab('today');
 }
 
 function runWhatsNewTourStep(items) {
@@ -6350,7 +6565,7 @@ function showTourSpotlight(el, text, total, onNext) {
         ${text}
       </div>
       <div style="display:flex;gap:10px">
-        <button onclick="document.getElementById('tour-spotlight').remove()" style="
+        <button onclick="cancelWhatsNewTour()" style="
           background:none;border:1px solid rgba(255,255,255,0.15);
           color:var(--text-muted);border-radius:99px;padding:8px 16px;
           font-size:13px;cursor:pointer;font-family:Instrument Sans,sans-serif">
@@ -6809,7 +7024,7 @@ function renderOBSelfCare(body, footer) {
   html += `<div style="background:rgba(158,196,216,0.06);border:1px solid rgba(158,196,216,0.15);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:8px">
     <div style="font-size:12px;color:var(--sky-light);font-weight:500;margin-bottom:4px">💊 Medication</div>
     <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">A quiet, private nudge — just a gentle "did I remember?" with no judgment either way.</div>
-    <div onclick="obToggleSelfCare('sc_medication')" id="ob-sc-sc_medication" style="${medPillStyle}">💊 Took my medication</div>
+    <div onclick="openMedicationSheet()" id="ob-sc-sc_medication" style="${medPillStyle}">${medOn ? "💊 Medication ✓" : "💊 Set up reminder →"}</div>
   </div>`;
 
   body.innerHTML = html;
