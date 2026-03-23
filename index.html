@@ -2084,6 +2084,12 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   </div>
 </div>
 
+<!-- Buddy match sheet -->
+<div class="bottom-sheet" id="buddy-match-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-content" id="buddy-match-content"></div>
+</div>
+
 <!-- Tutorial overlay -->
 <div id="tutorial-overlay"></div>
 
@@ -2514,6 +2520,7 @@ function loadState() {
     wellnessData:load('bloom_wellness', { journal: {}, reflections: {}, insights: [], wins: {}, affirmations: [] }),
     seenVersion: load('bloom_version', null),
     backupDate:  load('bloom_backup_date', null),
+    buddyData:   load('bloom_buddy_state', { status: 'none' }),
   };
 }
 
@@ -5046,8 +5053,10 @@ function switchTab(tab) {
   if (tab === 'weekly') renderWeeklyTab();
   if (tab === 'wellness') renderWellnessTab();
   if (tab === 'progress') { renderProgressTab(); setTimeout(() => generateRollingInsight(), 800); }
-  if (tab === 'community') renderCommunityTab();
+  if (tab === 'community') { renderCommunityTab(); if (buddyState.status === 'paired') { fetchBuddyData(); fetchBuddyMessages(); } }
   if (tab === 'settings') renderSettingsTab();
+  // Stop buddy polling when leaving community tab
+  if (tab !== 'community') stopBuddyPolling();
   // Stagger cards
   setTimeout(() => staggerCards(panel), 50);
 }
@@ -5775,6 +5784,7 @@ function logMood(val) {
   const moodEl = document.querySelectorAll('.mood-btn')[val];
   celebrate('mood', moodEl);
   if (val <= 2 && !wasLow) showAffirmation('mood');
+  scheduleBuddySync();
 }
 
 function logSleep(val) {
@@ -7557,6 +7567,7 @@ function tapDailyHabit(id, timeSlot, el) {
   archiveToday();
   renderTodayTab();
   checkAllDone();
+  scheduleBuddySync();
 }
 
 function adjustGoal(key, delta) {
@@ -8782,6 +8793,15 @@ function initOneSignal() {
       serviceWorkerPath: '/OneSignalSDKWorker.js',
     });
 
+    // Capture player ID for buddy notifications
+    try {
+      OneSignal.User.PushSubscription.addEventListener('change', (e) => {
+        if (e.current?.id) save('bloom_onesignal_pid', e.current.id);
+      });
+      const pid = OneSignal.User.PushSubscription.id;
+      if (pid) save('bloom_onesignal_pid', pid);
+    } catch(e) {}
+
     // Request permission after a short delay if not yet granted
     setTimeout(async () => {
       try {
@@ -9179,6 +9199,545 @@ function migrateToNewDailyHabits() {
 }
 
 // ============================================================
+//  BLOOM BUDDY
+// ============================================================
+let bloomBuddyId = load('bloom_buddy_id', null);
+let buddyState = load('bloom_buddy_state', { status: 'none' }); // none | searching | paired
+let buddyCachedPartner = load('bloom_buddy_partner', null);
+let buddyCachedMessages = load('bloom_buddy_messages', []);
+let buddyLoading = false;
+let buddyPollTimer = null;
+let buddySyncDebounce = null;
+let communityView = 'buddy'; // 'buddy' or 'wall'
+
+function ensureBuddyId() {
+  if (!bloomBuddyId) {
+    bloomBuddyId = 'b_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    save('bloom_buddy_id', bloomBuddyId);
+  }
+  return bloomBuddyId;
+}
+
+function getBuddyDisplayName() {
+  return state.prefs?.name || '';
+}
+
+function getHabitPct() {
+  const { pct } = getCompletionRate();
+  return Math.round(pct * 100);
+}
+
+// ── Buddy API helpers ─────────────────────────────────────
+async function buddyApi(payload) {
+  try {
+    const res = await fetch('/api/buddy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    return await res.json();
+  } catch(e) {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+async function syncBuddyStatus() {
+  if (buddyState.status !== 'paired' && buddyState.status !== 'searching') return;
+  const id = ensureBuddyId();
+  const playerId = load('bloom_onesignal_pid', null);
+  await buddyApi({
+    action: 'sync',
+    buddyId: id,
+    mood: state.todayData?.mood,
+    streak: state.xpData?.streak || 0,
+    habitPct: getHabitPct(),
+  });
+  // Also keep register up to date with name/playerId
+  await buddyApi({
+    action: 'register',
+    buddyId: id,
+    name: getBuddyDisplayName(),
+    oneSignalId: playerId,
+  });
+}
+
+function scheduleBuddySync() {
+  if (buddySyncDebounce) return;
+  buddySyncDebounce = setTimeout(() => {
+    buddySyncDebounce = null;
+    syncBuddyStatus();
+  }, 3000);
+}
+
+async function fetchBuddyData() {
+  if (buddyLoading) return;
+  buddyLoading = true;
+  const data = await buddyApi({ action: 'get-buddy', buddyId: ensureBuddyId() });
+  buddyLoading = false;
+  if (data.ok && data.paired) {
+    buddyState = { status: 'paired', pairId: data.pairId, partnerId: data.partnerId };
+    buddyCachedPartner = data.partner;
+    save('bloom_buddy_state', buddyState);
+    save('bloom_buddy_partner', buddyCachedPartner);
+    renderBuddyContent();
+  } else if (data.ok && !data.paired) {
+    if (buddyState.status === 'paired') {
+      // Was paired, now unpaired by partner
+      buddyState = { status: 'none' };
+      buddyCachedPartner = null;
+      buddyCachedMessages = [];
+      save('bloom_buddy_state', buddyState);
+      save('bloom_buddy_partner', null);
+      save('bloom_buddy_messages', []);
+      renderBuddyContent();
+    }
+  }
+}
+
+async function fetchBuddyMessages() {
+  const data = await buddyApi({ action: 'get-messages', buddyId: ensureBuddyId() });
+  if (data.ok) {
+    buddyCachedMessages = data.messages || [];
+    save('bloom_buddy_messages', buddyCachedMessages);
+    renderBuddyMessages();
+  }
+}
+
+function startBuddyPolling() {
+  stopBuddyPolling();
+  if (buddyState.status === 'paired') {
+    buddyPollTimer = setInterval(() => {
+      fetchBuddyData();
+      fetchBuddyMessages();
+    }, 300000); // 5 minutes
+  } else if (buddyState.status === 'searching') {
+    buddyPollTimer = setInterval(() => {
+      fetchBuddyData(); // check if matched
+    }, 30000); // 30 seconds while searching
+  }
+}
+
+function stopBuddyPolling() {
+  if (buddyPollTimer) { clearInterval(buddyPollTimer); buddyPollTimer = null; }
+}
+
+// ── Buddy actions ─────────────────────────────────────────
+async function buddyRegisterAndSync() {
+  const id = ensureBuddyId();
+  const playerId = load('bloom_onesignal_pid', null);
+  await buddyApi({
+    action: 'register',
+    buddyId: id,
+    name: getBuddyDisplayName(),
+    oneSignalId: playerId,
+  });
+}
+
+async function buddyCreateInvite() {
+  await buddyRegisterAndSync();
+  const data = await buddyApi({ action: 'create-invite', buddyId: ensureBuddyId() });
+  if (data.ok) {
+    save('bloom_buddy_invite', data.code);
+    renderBuddyInviteView(data.code);
+  } else if (data.reason === 'already-paired') {
+    buddyState = { status: 'paired' };
+    save('bloom_buddy_state', buddyState);
+    fetchBuddyData();
+  }
+}
+
+async function buddyAcceptInvite(code) {
+  if (!code || code.length < 4) return;
+  await buddyRegisterAndSync();
+  const data = await buddyApi({
+    action: 'accept-invite',
+    buddyId: ensureBuddyId(),
+    code: code.toUpperCase().trim(),
+  });
+  if (data.ok) {
+    buddyState = { status: 'paired', pairId: data.pairId, partnerId: data.partnerId };
+    buddyCachedPartner = { name: data.partnerName };
+    save('bloom_buddy_state', buddyState);
+    save('bloom_buddy_partner', buddyCachedPartner);
+    haptic('medium');
+    renderBuddyContent();
+    fetchBuddyData();
+    fetchBuddyMessages();
+  } else {
+    const reasons = {
+      'invalid': 'That code doesn\u2019t seem right. Double-check and try again?',
+      'expired': 'This invite has expired. Ask your buddy for a new one.',
+      'self-pair': 'That\u2019s your own invite code!',
+      'already-paired': 'You already have a buddy.',
+      'inviter-paired': 'The person who sent this is already paired.',
+    };
+    showBuddyStatus(reasons[data.reason] || 'Something went wrong.', 'var(--amber)');
+  }
+}
+
+async function buddyFindMatch(prefs) {
+  await buddyRegisterAndSync();
+  const data = await buddyApi({
+    action: 'find-match',
+    buddyId: ensureBuddyId(),
+    prefs,
+  });
+  if (data.ok && data.matched) {
+    buddyState = { status: 'paired', pairId: data.pairId, partnerId: data.partnerId };
+    buddyCachedPartner = { name: data.partnerName };
+    save('bloom_buddy_state', buddyState);
+    save('bloom_buddy_partner', buddyCachedPartner);
+    haptic('medium');
+    closeAllSheets();
+    renderBuddyContent();
+    fetchBuddyData();
+    fetchBuddyMessages();
+  } else if (data.ok && data.queued) {
+    buddyState = { status: 'searching' };
+    save('bloom_buddy_state', buddyState);
+    closeAllSheets();
+    renderBuddyContent();
+    startBuddyPolling();
+  }
+}
+
+async function buddyCancelSearch() {
+  await buddyApi({ action: 'cancel-search', buddyId: ensureBuddyId() });
+  buddyState = { status: 'none' };
+  save('bloom_buddy_state', buddyState);
+  stopBuddyPolling();
+  renderBuddyContent();
+}
+
+async function buddySendMessage() {
+  const input = document.getElementById('buddy-msg-input');
+  if (!input || !input.value.trim()) return;
+  const text = input.value.trim();
+  const btn = document.getElementById('buddy-send-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+  const data = await buddyApi({
+    action: 'send-message',
+    buddyId: ensureBuddyId(),
+    text,
+  });
+
+  if (data.ok) {
+    input.value = '';
+    buddyCachedMessages.push(data.message);
+    if (buddyCachedMessages.length > 50) buddyCachedMessages = buddyCachedMessages.slice(-50);
+    save('bloom_buddy_messages', buddyCachedMessages);
+    renderBuddyMessages();
+    haptic('light');
+  } else {
+    const reasons = {
+      'rate-limit': 'Easy there! Try again in a bit.',
+      'harmful': 'Let\u2019s keep things gentle. Try rephrasing?',
+      'filtered': 'Some words aren\u2019t allowed. Try rephrasing?',
+      'not-paired': 'You\u2019re not paired with a buddy.',
+    };
+    showBuddyStatus(reasons[data.reason] || 'Couldn\u2019t send. Try again?', 'var(--amber)');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
+}
+
+async function buddySendNudge(nudgeType) {
+  const data = await buddyApi({
+    action: 'nudge',
+    buddyId: ensureBuddyId(),
+    nudgeType,
+  });
+  if (data.ok) {
+    buddyCachedMessages.push(data.message);
+    if (buddyCachedMessages.length > 50) buddyCachedMessages = buddyCachedMessages.slice(-50);
+    save('bloom_buddy_messages', buddyCachedMessages);
+    renderBuddyMessages();
+    haptic('light');
+    showBuddyStatus('Sent!', 'var(--sage)');
+  } else if (data.reason === 'rate-limit') {
+    showBuddyStatus('You\u2019ve sent a few nudges recently. Try again later.', 'var(--amber)');
+  }
+}
+
+async function buddyUnpair() {
+  if (!confirm('Unpair from your Bloom Buddy? You can find a new one anytime.')) return;
+  await buddyApi({ action: 'unpair', buddyId: ensureBuddyId() });
+  buddyState = { status: 'none' };
+  buddyCachedPartner = null;
+  buddyCachedMessages = [];
+  save('bloom_buddy_state', buddyState);
+  save('bloom_buddy_partner', null);
+  save('bloom_buddy_messages', []);
+  stopBuddyPolling();
+  renderBuddyContent();
+}
+
+function showBuddyStatus(text, color) {
+  const el = document.getElementById('buddy-status-msg');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = color || 'var(--text-muted)';
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+function buddyTimeAgo(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  return days + 'd ago';
+}
+
+function buddyStatusDotClass(lastActive) {
+  if (!lastActive) return 'away';
+  const diff = Date.now() - lastActive;
+  if (diff < 3600000) return 'online';    // < 1 hour
+  if (diff < 86400000) return 'recent';   // < 24 hours
+  return 'away';
+}
+
+// ── Buddy UI rendering ────────────────────────────────────
+function renderBuddyContent() {
+  const container = document.getElementById('buddy-section');
+  if (!container) return;
+
+  if (buddyState.status === 'paired') {
+    container.innerHTML = renderBuddyDashboard();
+    fetchBuddyMessages();
+    startBuddyPolling();
+  } else if (buddyState.status === 'searching') {
+    container.innerHTML = renderBuddySearching();
+    startBuddyPolling();
+  } else {
+    container.innerHTML = renderBuddySetup();
+  }
+}
+
+function renderBuddySetup() {
+  return `
+    <div style="text-align:center;padding:8px 0 16px">
+      <div style="font-size:32px;margin-bottom:8px">🤝</div>
+      <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">Bloom Buddy</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6">Partner with someone for mutual encouragement<br>and accountability. Share moods, trade nudges,<br>and keep each other going.</div>
+    </div>
+    <div id="buddy-status-msg" style="font-size:12px;text-align:center;margin:8px 0;display:none"></div>
+
+    <div class="buddy-setup-option" onclick="buddyCreateInvite()">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:24px">📬</div>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Invite someone I know</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Share a code with a friend or partner</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="buddy-setup-option" onclick="openBuddyMatchSheet()">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:24px">🔀</div>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Match me with someone</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Get paired with someone on a similar journey</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;text-align:center">Have an invite code?</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="buddy-code-input" placeholder="Enter code" maxlength="6" style="flex:1;text-transform:uppercase;text-align:center;font-size:16px;letter-spacing:3px;padding:10px;font-family:Fraunces,serif">
+        <button class="btn btn-primary btn-sm" onclick="buddyAcceptInvite(document.getElementById('buddy-code-input').value)" style="min-width:60px">Join</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderBuddyInviteView(code) {
+  const container = document.getElementById('buddy-section');
+  if (!container) return;
+
+  const shareUrl = location.origin + '/?buddy=' + code;
+
+  container.innerHTML = `
+    <div style="text-align:center;padding:8px 0 16px">
+      <div style="font-size:32px;margin-bottom:8px">📬</div>
+      <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">Share this code</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6">Send it to someone you trust. They\u2019ll enter it<br>in their Bloom app to pair up with you.</div>
+    </div>
+    <div id="buddy-status-msg" style="font-size:12px;text-align:center;margin:8px 0;display:none"></div>
+
+    <div class="buddy-invite-code">${escapeHtml(code)}</div>
+
+    <div style="display:flex;gap:8px;justify-content:center;margin:16px 0">
+      <button class="btn btn-primary btn-sm" onclick="buddyShareInvite('${escapeHtml(code)}', '${escapeHtml(shareUrl)}')">Share</button>
+      <button class="btn btn-secondary btn-sm" onclick="buddyCopyCode('${escapeHtml(code)}')">Copy code</button>
+    </div>
+
+    <div style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:8px">
+      This code expires in 48 hours.
+    </div>
+
+    <div style="text-align:center;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="renderBuddyContent()">Back</button>
+    </div>
+  `;
+}
+
+function buddyShareInvite(code, url) {
+  if (navigator.share) {
+    navigator.share({
+      title: 'Be my Bloom Buddy',
+      text: 'Join me on Bloom! Use code ' + code + ' or tap the link:',
+      url: url,
+    }).catch(() => {});
+  } else {
+    buddyCopyCode(code);
+  }
+}
+
+function buddyCopyCode(code) {
+  navigator.clipboard.writeText(code).then(() => {
+    showBuddyStatus('Code copied!', 'var(--sage)');
+  }).catch(() => {
+    showBuddyStatus('Couldn\u2019t copy. Code: ' + code, 'var(--amber)');
+  });
+}
+
+function renderBuddySearching() {
+  return `
+    <div class="buddy-searching">
+      <div style="font-size:32px;margin-bottom:12px">🌱</div>
+      <div style="font-family:Fraunces,serif;font-size:18px;font-weight:300;color:var(--cream)">Looking for your buddy...</div>
+      <div class="buddy-searching-dots"><span></span><span></span><span></span></div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-top:8px">
+        We\u2019ll pair you with someone who\u2019s on a similar journey.<br>
+        You\u2019ll get a notification when matched!
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:16px" onclick="buddyCancelSearch()">Cancel search</button>
+    </div>
+  `;
+}
+
+function renderBuddyDashboard() {
+  const p = buddyCachedPartner || {};
+  const moods = ['😔 Low', '😕 Rough', '😐 Okay', '🙂 Good', '😊 Great'];
+  const moodDisplay = p.mood !== undefined && p.mood !== null ? moods[p.mood] || '—' : '—';
+  const dotClass = buddyStatusDotClass(p.lastActive);
+  const pctWidth = Math.min(100, Math.max(0, p.habitPct || 0));
+
+  return `
+    <div class="buddy-card">
+      <div class="buddy-card-header">
+        <div class="buddy-name">${escapeHtml(p.name || 'Your Buddy')}'s day <span class="buddy-status-dot ${dotClass}"></span></div>
+      </div>
+      <div class="buddy-stats">
+        <div class="buddy-stat"><span>${moodDisplay}</span></div>
+        <div class="buddy-stat">🔥 <span class="buddy-stat-value">${p.streak || 0}</span>-day streak</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--text-secondary)">Habits</span>
+        <div class="buddy-habit-bar" style="flex:1"><div class="buddy-habit-fill" style="width:${pctWidth}%"></div></div>
+        <span style="font-size:12px;color:var(--text-muted)">${pctWidth}%</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Last active ${buddyTimeAgo(p.lastActive)}</div>
+    </div>
+
+    <div class="card" style="padding:14px 16px">
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">Quick nudge</div>
+      <div class="buddy-nudge-row">
+        <button class="buddy-nudge-btn" onclick="buddySendNudge('thinking')">💭 Thinking of you</button>
+        <button class="buddy-nudge-btn" onclick="buddySendNudge('gotthis')">💪 You got this</button>
+        <button class="buddy-nudge-btn" onclick="buddySendNudge('proud')">🌟 Proud of you</button>
+        <button class="buddy-nudge-btn" onclick="buddySendNudge('easytoday')">🤗 Take it easy</button>
+        <button class="buddy-nudge-btn" onclick="buddySendNudge('checkin')">👋 Checking in</button>
+        <button class="buddy-nudge-btn" onclick="buddySendNudge('youmatter')">💛 You matter</button>
+      </div>
+      <div id="buddy-status-msg" style="font-size:12px;text-align:center;margin-top:6px;display:none"></div>
+    </div>
+
+    <div class="card" style="padding:14px 16px">
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">Messages</div>
+      <div class="buddy-messages" id="buddy-messages-list">
+        <div style="text-align:center;font-size:12px;color:var(--text-muted);padding:12px">Loading...</div>
+      </div>
+      <div class="buddy-msg-input">
+        <textarea id="buddy-msg-input" placeholder="Say something kind..." rows="1" maxlength="200"></textarea>
+        <button class="btn btn-primary btn-sm" id="buddy-send-btn" onclick="buddySendMessage()" style="min-width:54px">Send</button>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:16px 0">
+      <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--text-muted)" onclick="buddyUnpair()">Unpair</button>
+    </div>
+  `;
+}
+
+function renderBuddyMessages() {
+  const container = document.getElementById('buddy-messages-list');
+  if (!container) return;
+  const myId = bloomBuddyId;
+
+  if (buddyCachedMessages.length === 0) {
+    container.innerHTML = '<div style="text-align:center;font-size:12px;color:var(--text-muted);padding:12px">No messages yet. Send a nudge to break the ice!</div>';
+    return;
+  }
+
+  let html = '';
+  buddyCachedMessages.forEach(msg => {
+    const isMine = msg.from === myId;
+    const isNudge = msg.type === 'nudge';
+    const cls = isMine ? 'buddy-msg sent' : 'buddy-msg received';
+    const nudgeCls = isNudge ? ' nudge' : '';
+    html += `<div class="${cls}${nudgeCls}">${escapeHtml(msg.text)}</div>`;
+  });
+  container.innerHTML = html;
+  container.scrollTop = container.scrollHeight;
+}
+
+// ── Match preferences bottom sheet ────────────────────────
+let buddyMatchPrefs = { frequency: null, focus: null };
+
+function openBuddyMatchSheet() {
+  buddyMatchPrefs = { frequency: null, focus: null };
+  const content = document.getElementById('buddy-match-content');
+  if (content) content.innerHTML = renderBuddyMatchForm();
+  openSheet('buddy-match-sheet');
+}
+
+function renderBuddyMatchForm() {
+  const f = buddyMatchPrefs.frequency;
+  const fo = buddyMatchPrefs.focus;
+  return `
+    <div style="padding:0 20px 8px">
+      <div class="sheet-title">Find a Bloom Buddy</div>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px">
+        Answer a couple quick questions so we can match you with someone compatible.
+      </p>
+
+      <div style="font-size:13px;color:var(--cream);margin-bottom:8px;font-weight:500">How often do you check in?</div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="buddy-pref-option ${f === 'daily' ? 'selected' : ''}" onclick="buddyMatchPrefs.frequency='daily';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Daily</button>
+        <button class="buddy-pref-option ${f === 'few-days' ? 'selected' : ''}" onclick="buddyMatchPrefs.frequency='few-days';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Every few days</button>
+      </div>
+
+      <div style="font-size:13px;color:var(--cream);margin-bottom:8px;font-weight:500">What are you working on?</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+        <button class="buddy-pref-option ${fo === 'self-care' ? 'selected' : ''}" onclick="buddyMatchPrefs.focus='self-care';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Self-care</button>
+        <button class="buddy-pref-option ${fo === 'mental-health' ? 'selected' : ''}" onclick="buddyMatchPrefs.focus='mental-health';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Mental health</button>
+        <button class="buddy-pref-option ${fo === 'habits' ? 'selected' : ''}" onclick="buddyMatchPrefs.focus='habits';document.getElementById('buddy-match-content').innerHTML=renderBuddyMatchForm()">Building habits</button>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%" onclick="buddyFindMatch(buddyMatchPrefs)" ${(!f || !fo) ? 'disabled' : ''}>Find my buddy</button>
+    </div>
+  `;
+}
+
+// ============================================================
 //  ENCOURAGEMENT WALL (Community)
 // ============================================================
 let wallMessages = [];
@@ -9223,7 +9782,20 @@ function renderCommunityTab() {
 
   let html = '';
 
-  // Header
+  // Segmented toggle
+  html += `<div class="community-toggle">
+    <button class="community-toggle-btn ${communityView === 'buddy' ? 'active' : ''}" onclick="communityView='buddy';renderCommunityTab()">🤝 Bloom Buddy</button>
+    <button class="community-toggle-btn ${communityView === 'wall' ? 'active' : ''}" onclick="communityView='wall';renderCommunityTab()">💛 Wall</button>
+  </div>`;
+
+  if (communityView === 'buddy') {
+    html += `<div id="buddy-section"></div>`;
+    scroll.innerHTML = html;
+    renderBuddyContent();
+    return;
+  }
+
+  // Wall header
   html += `<div style="text-align:center;padding:8px 0 16px">
     <div style="font-size:32px;margin-bottom:8px">💛</div>
     <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">Encouragement wall</div>
@@ -9651,6 +10223,18 @@ function initApp() {
   updateStreak();
   checkMilestones();
   initOneSignal();
+  // Buddy: register/sync if opted in, and check for pending invite
+  if (buddyState.status !== 'none') {
+    buddyRegisterAndSync();
+    syncBuddyStatus();
+  }
+  const pendingBuddyInvite = load('bloom_pending_buddy_invite', null);
+  if (pendingBuddyInvite) {
+    save('bloom_pending_buddy_invite', null);
+    setTimeout(() => {
+      buddyRegisterAndSync().then(() => buddyAcceptInvite(pendingBuddyInvite));
+    }, 1500);
+  }
   showWhatsNew();
   checkBackupReminder();
   checkShowTutorial();
@@ -9675,6 +10259,13 @@ async function main() {
   const restored = tryRestoreFromURL();
   if (restored) {
     loadState();
+  }
+
+  // Check for buddy invite link (?buddy=CODE)
+  const buddyInviteParam = new URLSearchParams(location.search).get('buddy');
+  if (buddyInviteParam) {
+    save('bloom_pending_buddy_invite', buddyInviteParam.toUpperCase().trim());
+    history.replaceState({}, '', location.pathname);
   }
 
   const prefs = load('bloom_prefs');
