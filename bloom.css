@@ -1900,21 +1900,23 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   margin-bottom: 12px;
 }
 .buddy-nudge-btn {
-  padding: 6px 12px;
-  border-radius: var(--r-full);
-  border: 1px solid rgba(255,255,255,0.1);
-  background: var(--bg-elevated);
-  color: var(--text-secondary);
-  font-size: 12px;
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  font-size: 11px;
   cursor: pointer;
   transition: all 0.2s;
   font-family: 'Instrument Sans', sans-serif;
   white-space: nowrap;
 }
 .buddy-nudge-btn:active {
-  background: rgba(122,158,126,0.15);
+  background: rgba(122,158,126,0.2);
   color: var(--sage-light);
-  border-color: var(--sage);
+  border-color: rgba(122,158,126,0.4);
   transform: scale(0.95);
 }
 
@@ -1995,9 +1997,9 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 
 /* Setup flow */
 .buddy-setup-option {
-  background: var(--bg-elevated);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: var(--r-full);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--r-md);
   padding: 14px 18px;
   margin-bottom: 10px;
   cursor: pointer;
@@ -2005,18 +2007,20 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 .buddy-setup-option:active {
   transform: scale(0.98);
-  background: rgba(122,158,126,0.15);
-  border-color: var(--sage);
+  background: rgba(122,158,126,0.2);
+  border-color: rgba(122,158,126,0.4);
 }
 
 /* Preference picker */
 .buddy-pref-option {
-  padding: 10px 16px;
-  border-radius: var(--r-full);
-  border: 1px solid rgba(255,255,255,0.1);
-  background: var(--bg-elevated);
-  color: var(--text-secondary);
-  font-size: 12px;
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  font-size: 11px;
   cursor: pointer;
   transition: all 0.2s;
   font-family: 'Instrument Sans', sans-serif;
@@ -2027,9 +2031,9 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   transform: scale(0.96);
 }
 .buddy-pref-option.selected {
-  background: rgba(122,158,126,0.15);
+  background: rgba(122,158,126,0.2);
   color: var(--sage-light);
-  border-color: var(--sage);
+  border-color: rgba(122,158,126,0.4);
   font-weight: 500;
 }
 
