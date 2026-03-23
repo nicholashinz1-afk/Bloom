@@ -392,7 +392,11 @@ export default async function handler(req, res) {
       let score = 0;
       const cp = candidate.prefs || {};
       if (myPrefs.frequency && cp.frequency && myPrefs.frequency === cp.frequency) score += 2;
-      if (myPrefs.focus && cp.focus && myPrefs.focus === cp.focus) score += 1;
+      // focus can be a string (legacy) or array (multi-select)
+      const myFocus = Array.isArray(myPrefs.focus) ? myPrefs.focus : (myPrefs.focus ? [myPrefs.focus] : []);
+      const cpFocus = Array.isArray(cp.focus) ? cp.focus : (cp.focus ? [cp.focus] : []);
+      const overlap = myFocus.filter(f => cpFocus.includes(f)).length;
+      score += overlap;
       if (score > bestScore) {
         bestScore = score;
         bestMatch = candidate;

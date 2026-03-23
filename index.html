@@ -10072,25 +10072,33 @@ function renderBuddyMessagesForPair(pairId) {
 }
 
 // ── Match preferences bottom sheet ────────────────────────
-let buddyMatchPrefs = { frequency: null, focus: null };
+let buddyMatchPrefs = { frequency: null, focus: [] };
 
 function openBuddyMatchSheet() {
-  buddyMatchPrefs = { frequency: null, focus: null };
+  buddyMatchPrefs = { frequency: null, focus: [] };
   const content = document.getElementById('buddy-match-content');
   if (content) content.innerHTML = renderBuddyMatchForm();
   openSheet('buddy-match-sheet');
 }
 
 function selectBuddyPref(type, value) {
-  buddyMatchPrefs[type] = value;
-  // Update button states
-  document.querySelectorAll(`[data-pref-type="${type}"]`).forEach(btn => {
-    btn.classList.toggle('selected', btn.dataset.prefValue === value);
-  });
+  if (type === 'focus') {
+    const idx = buddyMatchPrefs.focus.indexOf(value);
+    if (idx === -1) buddyMatchPrefs.focus.push(value);
+    else buddyMatchPrefs.focus.splice(idx, 1);
+    document.querySelectorAll(`[data-pref-type="focus"]`).forEach(btn => {
+      btn.classList.toggle('selected', buddyMatchPrefs.focus.includes(btn.dataset.prefValue));
+    });
+  } else {
+    buddyMatchPrefs[type] = value;
+    document.querySelectorAll(`[data-pref-type="${type}"]`).forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.prefValue === value);
+    });
+  }
   // Update submit button
   const submit = document.getElementById('buddy-match-submit');
   if (submit) {
-    const ready = buddyMatchPrefs.frequency && buddyMatchPrefs.focus;
+    const ready = buddyMatchPrefs.frequency && buddyMatchPrefs.focus.length > 0;
     submit.style.opacity = ready ? '1' : '0.4';
     submit.style.pointerEvents = ready ? 'auto' : 'none';
   }
