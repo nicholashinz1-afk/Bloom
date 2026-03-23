@@ -655,7 +655,14 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
 /* ============================================================
    FOOD CHECK
    ============================================================ */
-.food-chips {
+.food-chip-felt {
+  border-style: dashed !important;
+  opacity: 0.9;
+}
+.food-chip-felt.selected {
+  border-style: solid !important;
+  opacity: 1;
+}
   display: flex;
   gap: 6px;
   flex-wrap: nowrap;
@@ -4227,12 +4234,24 @@ function renderTodayTab() {
 
   // --- NOURISHMENT ---
   const waterCount = td.water || 0;
-  const foodItems = [
-    { id: 'ate_meal', label: '🍽 Ate a meal' },
-    { id: 'had_veggies', label: '🥦 Had veggies' },
+  const trackMeals = state.prefs?.habits?.track_meals;
+  const foodDone = td.food || {};
+
+  // Build food items based on mode
+  const foodItems = trackMeals ? [
+    { id: 'breakfast', label: '🌅 Breakfast' },
+    { id: 'lunch',     label: '☀️ Lunch' },
+    { id: 'dinner',    label: '🌙 Dinner' },
+    { id: 'felt_nourished', label: '💚 Felt nourished' },
+  ] : [
+    { id: 'ate_meal',       label: '🍽 Ate a meal' },
+    { id: 'had_veggies',    label: '🥦 Had veggies' },
     { id: 'felt_nourished', label: '💚 Felt nourished' },
   ];
-  const foodDone = td.food || {};
+
+  // XP threshold — 2 of the main items (not counting felt_nourished separately)
+  const mainItems = foodItems.filter(f => f.id !== 'felt_nourished');
+  const mainDone = mainItems.filter(f => foodDone[f.id]).length;
   const foodCount = Object.values(foodDone).filter(Boolean).length;
 
   html += `<div class="section-label">💧 Hydration & nourishment</div>`;
@@ -4256,11 +4275,21 @@ function renderTodayTab() {
 
   // Food card
   html += `<div class="card">
-    <div class="card-title" style="margin-bottom:10px">🍽 Nourishment check-in${foodCount >= 2 ? ' ✓' : ''}</div>
-    <div class="food-chips">
-      ${foodItems.map(f => `<div class="food-chip${foodDone[f.id] ? ' selected' : ''}" onclick="tapFood('${f.id}')">${f.label}</div>`).join('')}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="card-title" style="margin-bottom:0">🍽 Nourishment${mainDone >= 2 ? ' ✓' : ''}</div>
     </div>
-    ${foodCount >= 2 ? '<div style="font-size:12px;color:var(--sage);margin-top:10px">+10 XP earned 🌿</div>' : '<div style="font-size:12px;color:var(--text-muted);margin-top:10px">Check off 2 of 3 for +10 XP</div>'}
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;line-height:1.5;font-style:italic">
+      ${trackMeals
+        ? 'Not tracking what you eat — just a kind reminder that every meal is taking care of yourself.'
+        : 'A gentle check-in. Nourishing yourself matters, however that looks today.'}
+    </div>
+    <div class="food-chips">
+      ${foodItems.map(f => {
+        const isFelt = f.id === 'felt_nourished';
+        return `<div class="food-chip${foodDone[f.id] ? ' selected' : ''}${isFelt ? ' food-chip-felt' : ''}" onclick="tapFood('${f.id}')">${f.label}</div>`;
+      }).join('')}
+    </div>
+    ${mainDone >= 2 ? '<div style="font-size:12px;color:var(--sage);margin-top:10px">+10 XP earned 🌿</div>' : '<div style="font-size:12px;color:var(--text-muted);margin-top:10px">Check off 2 or more for +10 XP</div>'}
   </div>`;
 
   // --- WELLNESS / JOURNAL ---
@@ -4378,7 +4407,11 @@ function tapFood(id) {
   if (!state.todayData.food) state.todayData.food = {};
   const wasSelected = state.todayData.food[id];
   state.todayData.food[id] = !wasSelected;
-  const count = Object.values(state.todayData.food).filter(Boolean).length;
+
+  // Count only main items (not felt_nourished) for XP threshold
+  const food = state.todayData.food;
+  const mainCount = Object.entries(food)
+    .filter(([k, v]) => v && k !== 'felt_nourished').length;
 
   haptic('light');
   saveState();
@@ -4386,8 +4419,7 @@ function tapFood(id) {
   renderTodayTab();
 
   if (!wasSelected) {
-    // Celebrate each individual chip tap
-    if (count >= 2 && !state.todayData.foodXPGiven) {
+    if (mainCount >= 2 && !state.todayData.foodXPGiven) {
       state.todayData.foodXPGiven = true;
       addXP(10, null);
       saveState();
@@ -5113,6 +5145,14 @@ function renderSettingsTab() {
     ${goalStepper('Shower', 'w_shower', goals.w_shower || 3)}
     ${goalStepper('Exercise', 'w_exercise', goals.w_exercise || 3)}
     ${goalStepper('Go outside', 'w_outside', goals.w_outside || 3)}
+    <div class="divider"></div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">🍽 Track daily meals</div>
+        <div class="toggle-sub" style="line-height:1.5">Adds Breakfast, Lunch & Dinner to your daily check-in. Not a food diary — just a gentle reminder that eating is self-care.</div>
+      </div>
+      <div class="toggle${prefs.habits?.track_meals?' on':''}" onclick="toggleMealTracking()"></div>
+    </div>
   `);
 
   // Household tasks
@@ -5259,6 +5299,20 @@ function adjustGoal(key, delta) {
   save('bloom_prefs', state.prefs);
   const el = document.getElementById('goal-' + key);
   if (el) el.textContent = state.prefs.goals[key] + 'x';
+}
+
+function toggleMealTracking() {
+  if (!state.prefs.habits) state.prefs.habits = {};
+  state.prefs.habits.track_meals = !state.prefs.habits.track_meals;
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
+  renderTodayTab();
+  // Reopen goals section
+  setTimeout(() => {
+    const sh = document.getElementById('sh-goals');
+    const sb = document.getElementById('sb-goals');
+    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
+  }, 50);
 }
 
 function saveSettingsName() {
@@ -5543,7 +5597,7 @@ function renderDailyQuote() {
 let obStep = 0;
 let obData = {
   name: '',
-  habits: { m_teeth: true, e_teeth: true, w_shower: true, w_exercise: true, w_outside: true },
+  habits: { m_teeth: true, e_teeth: true, w_shower: true, w_exercise: true, w_outside: true, track_meals: false },
   goals: { w_shower: 3, w_exercise: 3, w_outside: 3 },
   householdTasks: [],
   notifications: { waterMode: 'smart', sundayReminder: true },
@@ -5669,6 +5723,21 @@ function renderOBHabits(body, footer) {
     </div>`;
   });
 
+  // Meals tracking option
+  const mealsOn = obData.habits.track_meals;
+  html += `
+  <div style="height:1px;background:rgba(255,255,255,0.06);margin:4px 0"></div>
+  <div class="toggle-row" style="padding:12px 0">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <span style="font-size:20px;margin-top:2px">🍽</span>
+      <div>
+        <div class="toggle-label">Track daily meals</div>
+        <div class="toggle-sub" style="line-height:1.5">Adds Breakfast, Lunch & Dinner to your daily check-in — not as a nutrition tracker, just a gentle reminder that feeding yourself is an act of self-care.</div>
+      </div>
+    </div>
+    <div class="toggle${mealsOn?' on':''}" style="flex-shrink:0;margin-top:2px" onclick="obToggleHabit('track_meals','daily')"></div>
+  </div>`;
+
   body.innerHTML = html;
   footer.innerHTML = `
     <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
@@ -5758,7 +5827,7 @@ function renderOBWater(body, footer) {
   body.innerHTML = `
     <div class="ob-logo" style="font-size:48px">💧</div>
     <div class="ob-title">Water &<br>nourishment</div>
-    <div class="ob-sub">These are always on — staying hydrated and eating regularly are the foundation of everything.</div>
+    <div class="ob-sub">These are always on — staying hydrated and eating something each day are simple acts of care for yourself.</div>
     <div class="card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <span style="font-size:24px">💧</span>
@@ -5768,13 +5837,16 @@ function renderOBWater(body, footer) {
         </div>
         <div class="chip chip-sage" style="margin-left:auto">Always on</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:24px">🍽</span>
-        <div>
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <span style="font-size:24px;margin-top:2px">🍽</span>
+        <div style="flex:1">
           <div style="font-size:15px;font-weight:500">Nourishment check-in</div>
-          <div style="font-size:12px;color:var(--text-secondary)">Meal, veggies, felt nourished</div>
+          ${obData.habits.track_meals
+            ? `<div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-top:2px">Breakfast, Lunch & Dinner — plus "Felt nourished" always. Not a food tracker, just a kind reminder to eat.</div>`
+            : `<div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-top:2px">Ate a meal, had veggies, felt nourished — gentle check-ins, no pressure.</div>`
+          }
         </div>
-        <div class="chip chip-sage" style="margin-left:auto">Always on</div>
+        <div class="chip chip-sage" style="margin-left:auto;margin-top:2px">Always on</div>
       </div>
     </div>
   `;
