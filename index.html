@@ -9850,8 +9850,8 @@ function renderBuddyContent() {
 
   if (buddyState.status === 'paired' && buddyCachedBuddies.length > 0) {
     // Stacked buddy cards
-    buddyCachedBuddies.forEach(b => {
-      html += renderBuddyCard(b);
+    buddyCachedBuddies.forEach((b, i) => {
+      html += renderBuddyCard(b, i);
     });
     // Add another buddy button
     html += `<div style="text-align:center;padding:8px 0 4px">
@@ -9978,52 +9978,70 @@ function renderBuddySearching() {
   `;
 }
 
-function renderBuddyCard(b) {
+function toggleBuddyCard(pid) {
+  const body = document.getElementById('buddy-body-' + pid);
+  const chevron = document.getElementById('buddy-chevron-' + pid);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (chevron) chevron.textContent = open ? '▸' : '▾';
+  if (!open) fetchBuddyMessages(pid);
+}
+
+function renderBuddyCard(b, index) {
   const moods = ['\ud83d\ude14 Low', '\ud83d\ude15 Rough', '\ud83d\ude10 Okay', '\ud83d\ude42 Good', '\ud83d\ude0a Great'];
   const moodDisplay = b.mood !== undefined && b.mood !== null ? moods[b.mood] || '\u2014' : '\u2014';
   const dotClass = buddyStatusDotClass(b.lastActive);
   const pctWidth = Math.min(100, Math.max(0, b.habitPct || 0));
   const pid = b.pairId;
+  const isFirst = index === 0;
+  const multipleCards = buddyCachedBuddies.length > 1;
 
   return `
     <div class="buddy-card" style="margin-bottom:12px">
-      <div class="buddy-card-header">
-        <div class="buddy-name">${escapeHtml(b.name || 'Buddy')}'s day <span class="buddy-status-dot ${dotClass}"></span></div>
-      </div>
-      <div class="buddy-stats">
-        <div class="buddy-stat"><span>${moodDisplay}</span></div>
-        <div class="buddy-stat">\ud83d\udd25 <span class="buddy-stat-value">${b.streak || 0}</span>-day streak</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span style="font-size:12px;color:var(--text-secondary)">Habits</span>
-        <div class="buddy-habit-bar" style="flex:1"><div class="buddy-habit-fill" style="width:${pctWidth}%"></div></div>
-        <span style="font-size:12px;color:var(--text-muted)">${pctWidth}%</span>
-      </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Last active ${buddyTimeAgo(b.lastActive)}</div>
-
-      <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
-        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">Quick nudge</div>
-        <div class="buddy-nudge-row">
-          <div class="buddy-nudge-btn" onclick="buddySendNudge('thinking','${pid}')">Thinking of you 💭</div>
-          <div class="buddy-nudge-btn" onclick="buddySendNudge('gotthis','${pid}')">You got this 💪</div>
-          <div class="buddy-nudge-btn" onclick="buddySendNudge('proud','${pid}')">Proud of you 🌟</div>
-          <div class="buddy-nudge-btn" onclick="buddySendNudge('easytoday','${pid}')">Take it easy 🤗</div>
+      <div class="buddy-card-header" onclick="${multipleCards ? `toggleBuddyCard('${pid}')` : ''}" style="${multipleCards ? 'cursor:pointer' : ''}">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <div class="buddy-name">${escapeHtml(b.name || 'Buddy')}'s day <span class="buddy-status-dot ${dotClass}"></span></div>
+          <span style="font-size:12px;color:var(--text-muted)">${moodDisplay}</span>
         </div>
+        ${multipleCards ? `<span id="buddy-chevron-${pid}" style="font-size:14px;color:var(--text-muted);transition:transform 0.2s">${isFirst ? '▾' : '▸'}</span>` : ''}
       </div>
-
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
-        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">Messages</div>
-        <div class="buddy-messages" id="buddy-msgs-${pid}">
-          <div style="text-align:center;font-size:12px;color:var(--text-muted);padding:8px">Loading...</div>
+      <div id="buddy-body-${pid}" style="display:${isFirst || !multipleCards ? 'block' : 'none'}">
+        <div class="buddy-stats">
+          <div class="buddy-stat"><span>${moodDisplay}</span></div>
+          <div class="buddy-stat">\ud83d\udd25 <span class="buddy-stat-value">${b.streak || 0}</span> day streak</div>
         </div>
-        <div class="buddy-msg-input">
-          <textarea id="buddy-input-${pid}" placeholder="Say something kind..." rows="1" maxlength="200"></textarea>
-          <button class="btn btn-primary btn-sm" onclick="buddySendMessage('${pid}')" style="min-width:54px">Send</button>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:12px;color:var(--text-secondary)">Habits</span>
+          <div class="buddy-habit-bar" style="flex:1"><div class="buddy-habit-fill" style="width:${pctWidth}%"></div></div>
+          <span style="font-size:12px;color:var(--text-muted)">${pctWidth}%</span>
         </div>
-      </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Last active ${buddyTimeAgo(b.lastActive)}</div>
 
-      <div style="text-align:right;margin-top:8px">
-        <button class="btn btn-ghost btn-sm" style="font-size:10px;color:var(--text-muted)" onclick="buddyUnpair('${pid}')">Unpair</button>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">Quick nudge</div>
+          <div class="buddy-nudge-row">
+            <div class="buddy-nudge-btn" onclick="buddySendNudge('thinking','${pid}')">Thinking of you 💭</div>
+            <div class="buddy-nudge-btn" onclick="buddySendNudge('gotthis','${pid}')">You got this 💪</div>
+            <div class="buddy-nudge-btn" onclick="buddySendNudge('proud','${pid}')">Proud of you 🌟</div>
+            <div class="buddy-nudge-btn" onclick="buddySendNudge('easytoday','${pid}')">Take it easy 🤗</div>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">Messages</div>
+          <div class="buddy-messages" id="buddy-msgs-${pid}">
+            <div style="text-align:center;font-size:12px;color:var(--text-muted);padding:8px">Loading...</div>
+          </div>
+          <div class="buddy-msg-input">
+            <textarea id="buddy-input-${pid}" placeholder="Say something kind..." rows="1" maxlength="200"></textarea>
+            <button class="btn btn-primary btn-sm" onclick="buddySendMessage('${pid}')" style="min-width:54px">Send</button>
+          </div>
+        </div>
+
+        <div style="text-align:right;margin-top:8px">
+          <button class="btn btn-ghost btn-sm" style="font-size:10px;color:var(--text-muted)" onclick="buddyUnpair('${pid}')">Unpair</button>
+        </div>
       </div>
     </div>
     <div id="buddy-status-${pid}" style="font-size:12px;text-align:center;margin:4px 0 8px;display:none"></div>
