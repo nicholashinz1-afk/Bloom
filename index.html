@@ -9761,10 +9761,10 @@ function renderBuddyCard(b) {
 
       <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
         <div class="buddy-nudge-row">
-          <button class="buddy-nudge-btn" onclick="buddySendNudge('thinking','${pid}')">Thinking of you 💭</button>
-          <button class="buddy-nudge-btn" onclick="buddySendNudge('gotthis','${pid}')">You got this 💪</button>
-          <button class="buddy-nudge-btn" onclick="buddySendNudge('proud','${pid}')">Proud of you 🌟</button>
-          <button class="buddy-nudge-btn" onclick="buddySendNudge('easytoday','${pid}')">Take it easy 🤗</button>
+          <div class="buddy-nudge-btn" onclick="buddySendNudge('thinking','${pid}')">Thinking of you 💭</div>
+          <div class="buddy-nudge-btn" onclick="buddySendNudge('gotthis','${pid}')">You got this 💪</div>
+          <div class="buddy-nudge-btn" onclick="buddySendNudge('proud','${pid}')">Proud of you 🌟</div>
+          <div class="buddy-nudge-btn" onclick="buddySendNudge('easytoday','${pid}')">Take it easy 🤗</div>
         </div>
       </div>
 
@@ -9828,7 +9828,11 @@ function selectBuddyPref(type, value) {
   });
   // Update submit button
   const submit = document.getElementById('buddy-match-submit');
-  if (submit) submit.disabled = !(buddyMatchPrefs.frequency && buddyMatchPrefs.focus);
+  if (submit) {
+    const ready = buddyMatchPrefs.frequency && buddyMatchPrefs.focus;
+    submit.style.opacity = ready ? '1' : '0.4';
+    submit.style.pointerEvents = ready ? 'auto' : 'none';
+  }
   haptic('light');
 }
 
@@ -9842,33 +9846,33 @@ function renderBuddyMatchForm() {
 
       <div style="font-size:14px;color:var(--cream);margin-bottom:10px;font-weight:500">How often do you check in?</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
-        <button class="buddy-pref-option" data-pref-type="frequency" data-pref-value="daily" onclick="selectBuddyPref('frequency','daily')">
+        <div class="buddy-pref-option" data-pref-type="frequency" data-pref-value="daily" onclick="selectBuddyPref('frequency','daily')">
           <div style="font-size:20px;margin-bottom:4px">📅</div>
           <div>Daily</div>
-        </button>
-        <button class="buddy-pref-option" data-pref-type="frequency" data-pref-value="few-days" onclick="selectBuddyPref('frequency','few-days')">
+        </div>
+        <div class="buddy-pref-option" data-pref-type="frequency" data-pref-value="few-days" onclick="selectBuddyPref('frequency','few-days')">
           <div style="font-size:20px;margin-bottom:4px">🗓</div>
           <div>Every few days</div>
-        </button>
+        </div>
       </div>
 
       <div style="font-size:14px;color:var(--cream);margin-bottom:10px;font-weight:500">What are you working on?</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px">
-        <button class="buddy-pref-option" data-pref-type="focus" data-pref-value="self-care" onclick="selectBuddyPref('focus','self-care')">
+        <div class="buddy-pref-option" data-pref-type="focus" data-pref-value="self-care" onclick="selectBuddyPref('focus','self-care')">
           <div style="font-size:20px;margin-bottom:4px">🧴</div>
           <div>Self-care</div>
-        </button>
-        <button class="buddy-pref-option" data-pref-type="focus" data-pref-value="mental-health" onclick="selectBuddyPref('focus','mental-health')">
+        </div>
+        <div class="buddy-pref-option" data-pref-type="focus" data-pref-value="mental-health" onclick="selectBuddyPref('focus','mental-health')">
           <div style="font-size:20px;margin-bottom:4px">🧠</div>
           <div>Mental health</div>
-        </button>
-        <button class="buddy-pref-option" data-pref-type="focus" data-pref-value="habits" onclick="selectBuddyPref('focus','habits')">
+        </div>
+        <div class="buddy-pref-option" data-pref-type="focus" data-pref-value="habits" onclick="selectBuddyPref('focus','habits')">
           <div style="font-size:20px;margin-bottom:4px">🌱</div>
           <div>Habits</div>
-        </button>
+        </div>
       </div>
 
-      <button class="btn btn-primary" id="buddy-match-submit" style="width:100%" onclick="buddyFindMatch(buddyMatchPrefs)" disabled>Find my buddy</button>
+      <div class="btn btn-primary" id="buddy-match-submit" style="width:100%;text-align:center;opacity:0.4;pointer-events:none" onclick="buddyFindMatch(buddyMatchPrefs)">Find my buddy</div>
     </div>
   `;
 }
