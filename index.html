@@ -1945,10 +1945,56 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 <div class="bottom-sheet" id="whats-new-sheet">
   <div class="sheet-handle"></div>
   <div style="padding:0 20px 20px">
-    <div class="sheet-title">What's new in v1.4.1 🌿</div>
+    <div class="sheet-title">What's new in v1.5.0 🌿</div>
     <div id="whats-new-list"></div>
-    <button class="btn btn-primary btn-block mt-4" onclick="closeAllSheets()">Let's go</button>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-primary" style="flex:1" id="whats-new-tour-btn" onclick="startWhatsNewTour()">Show me what's new</button>
+      <button class="btn btn-ghost" onclick="closeAllSheets()">Skip</button>
+    </div>
   </div>
+</div>
+
+<!-- Re-intro sheet for existing users -->
+<div class="bottom-sheet" id="reintro-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:0 20px 24px">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:40px;margin-bottom:12px">✨</div>
+      <div style="font-family:Fraunces,serif;font-size:22px;font-weight:300;color:var(--cream);margin-bottom:8px">A few new things for you</div>
+      <div style="font-size:14px;color:var(--text-secondary);line-height:1.7">
+        bloom now has color themes and daily self-care tasks — small things you can track that matter when everything feels hard.
+      </div>
+    </div>
+    <div style="background:var(--bg-card);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px">🎨</span>
+          <div style="font-size:13px;color:var(--text-secondary)">Choose a color palette that feels like you</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px">💚</span>
+          <div style="font-size:13px;color:var(--text-secondary)">Add gentle daily self-care reminders — brush hair, get dressed, anything that counts</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px">🔒</span>
+          <div style="font-size:13px;color:var(--text-secondary)">None of your existing data will change</div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:16px;font-style:italic">
+      Takes about a minute. You can always find these in Settings.
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" style="flex:1" onclick="startReintro()">Set it up</button>
+      <button class="btn btn-ghost" onclick="dismissReintro()">Maybe later</button>
+    </div>
+  </div>
+</div>
+
+<!-- Re-intro mini onboarding overlay -->
+<div id="reintro-overlay" style="display:none;position:fixed;inset:0;z-index:750;background:var(--bg);flex-direction:column">
+  <div style="flex:1;overflow-y:auto;padding:24px 20px 0" id="reintro-body"></div>
+  <div style="padding:16px 20px;display:flex;gap:10px;border-top:1px solid rgba(255,255,255,0.06)" id="reintro-footer"></div>
 </div>
 
 <!-- Daily affirmation overlay -->
@@ -2035,15 +2081,18 @@ function bloomIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '1.4.1';
+const VERSION = '1.5.0';
 
+// Each item can have an optional spotlight target selector
+// Items without spotlight just appear in the list
 const WHATS_NEW = [
-  'Sound feedback — soft chimes on habit completion, milestones, and breathing',
-  'Audio opt-in during onboarding with a preview button',
-  'Sound toggle in Settings — turn it on or off any time',
-  'Breathing phases each have their own distinct tone',
-  'Milestone and level-up moments now have sound',
-  'Hard day mode plays a warm, grounding tone',
+  { text: 'Color themes — choose your palette in Settings or onboarding', spotlight: '#sh-appearance', tab: 'settings' },
+  { text: 'What\'s New now includes a guided tour of key changes', spotlight: null },
+  { text: 'Meals tracking — opt-in Breakfast, Lunch & Dinner daily habits', spotlight: null },
+  { text: 'Weekly insight now covers emotional + self-care in one', spotlight: null },
+  { text: 'Rolling week visual in Progress shows habits as they happen', spotlight: '#tab-progress', tab: 'progress' },
+  { text: 'Hard day card hides once you\'ve logged your mood', spotlight: null },
+  { text: '"What\'s on your heart?" — open journal space from hard day and low mood', spotlight: null },
 ];
 
 // ============================================================
@@ -2478,6 +2527,10 @@ function getDailyCompletionCount() {
   if ((wd.w_shower || 0) > 0) count++;
   if ((wd.w_exercise || 0) > 0) count++;
   if ((wd.w_outside || 0) > 0) count++;
+  // Self-care tasks
+  const sc = state.todayData?.selfCare || {};
+  count += Object.values(sc).filter(Boolean).length;
+
   // Household tasks
   const household = wd.household || {};
   count += Object.values(household).filter(Boolean).length;
@@ -3146,6 +3199,79 @@ function applySeasonalTheme() {
 }
 
 // ============================================================
+//  COLOR THEMES
+// ============================================================
+const THEMES = {
+  forest: {
+    name: 'Forest', emoji: '🌿', description: 'Deep green, grounded',
+    bg: '#0d1610', bgMid: '#111a13', bgCard: '#162019', bgElevated: '#1c2a1f',
+    bgOverlay: 'rgba(13,22,16,0.93)',
+    primary: '#7a9e7e', primaryLight: '#a8c5ab', primaryDim: '#2e4d32',
+    textSecondary: '#8a9e8c', textMuted: '#4a5e4c', seasonal: '#a8c5ab',
+  },
+  ocean: {
+    name: 'Ocean', emoji: '🌊', description: 'Deep blue, calm',
+    bg: '#0d1318', bgMid: '#101820', bgCard: '#141e28', bgElevated: '#1a2838',
+    bgOverlay: 'rgba(13,19,24,0.93)',
+    primary: '#6a9ab0', primaryLight: '#9ec4d8', primaryDim: '#1a3a50',
+    textSecondary: '#7a9eb0', textMuted: '#3a5868', seasonal: '#9ec4d8',
+  },
+  rose: {
+    name: 'Rose', emoji: '🌸', description: 'Warm mauve, soft',
+    bg: '#180d10', bgMid: '#201015', bgCard: '#281418', bgElevated: '#341820',
+    bgOverlay: 'rgba(24,13,16,0.93)',
+    primary: '#b07878', primaryLight: '#d4a8a8', primaryDim: '#4a2030',
+    textSecondary: '#b08888', textMuted: '#603848', seasonal: '#d4a8a8',
+  },
+  amber: {
+    name: 'Amber', emoji: '🌅', description: 'Warm gold, cozy',
+    bg: '#180f08', bgMid: '#20130a', bgCard: '#28180c', bgElevated: '#342010',
+    bgOverlay: 'rgba(24,15,8,0.93)',
+    primary: '#c9954a', primaryLight: '#e0b87a', primaryDim: '#5c3f1a',
+    textSecondary: '#b09060', textMuted: '#604830', seasonal: '#e0b87a',
+  },
+};
+
+function applyTheme(themeKey) {
+  const t = THEMES[themeKey] || THEMES.forest;
+  const r = document.documentElement.style;
+  r.setProperty('--bg',             t.bg);
+  r.setProperty('--bg-mid',         t.bgMid);
+  r.setProperty('--bg-card',        t.bgCard);
+  r.setProperty('--bg-elevated',    t.bgElevated);
+  r.setProperty('--bg-overlay',     t.bgOverlay);
+  r.setProperty('--sage',           t.primary);
+  r.setProperty('--sage-light',     t.primaryLight);
+  r.setProperty('--sage-dim',       t.primaryDim);
+  r.setProperty('--text-secondary', t.textSecondary);
+  r.setProperty('--text-muted',     t.textMuted);
+  r.setProperty('--seasonal',       t.seasonal);
+  document.body.style.background = t.bg;
+}
+
+function initTheme() {
+  applyTheme(state.prefs?.theme || 'forest');
+}
+
+function setTheme(key) {
+  if (!state.prefs) state.prefs = {};
+  state.prefs.theme = key;
+  save('bloom_prefs', state.prefs);
+  applyTheme(key);
+  const headerIcon = document.getElementById('header-bloom-icon');
+  if (headerIcon) headerIcon.innerHTML = bloomIcon(26);
+  const navIcon = document.getElementById('nav-today-icon');
+  if (navIcon) navIcon.innerHTML = bloomIcon(20);
+  renderSettingsTab();
+  // Keep settings section open
+  setTimeout(() => {
+    const sh = document.getElementById('sh-appearance');
+    const sb = document.getElementById('sb-appearance');
+    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
+  }, 50);
+}
+
+// ============================================================
 //  DAILY AFFIRMATION
 // ============================================================
 function checkDailyAffirmation() {
@@ -3373,6 +3499,79 @@ function saveNewWeekGoals() {
 // ============================================================
 //  CELEBRATION DATA — every habit, every moment
 // ============================================================
+// ============================================================
+//  SELF-CARE TASKS
+// ============================================================
+const SELF_CARE_CATEGORIES = [
+  {
+    id: 'body',
+    icon: '🪥',
+    label: 'Body care',
+    sub: 'Small acts of physical care',
+    tasks: [
+      { id: 'sc_brush_hair',  icon: '🪥', label: 'Brush hair' },
+      { id: 'sc_wash_face',   icon: '🧴', label: 'Wash face' },
+      { id: 'sc_get_dressed', icon: '👕', label: 'Get dressed' },
+      { id: 'sc_floss',       icon: '🦷', label: 'Floss' },
+      { id: 'sc_skincare',    icon: '✨', label: 'Skincare routine' },
+    ],
+  },
+  {
+    id: 'morning',
+    icon: '☀️',
+    label: 'Morning moments',
+    sub: 'Gentle ways to start the day',
+    tasks: [
+      { id: 'sc_natural_light', icon: '☀️', label: 'Got some natural light' },
+      { id: 'sc_make_bed',      icon: '🛏', label: 'Made my bed' },
+      { id: 'sc_warm_drink',    icon: '☕', label: 'Had something warm to drink' },
+      { id: 'sc_open_window',   icon: '🪟', label: 'Opened a window' },
+    ],
+  },
+  {
+    id: 'movement',
+    icon: '🧘',
+    label: 'Movement & body',
+    sub: 'Any amount counts',
+    tasks: [
+      { id: 'sc_stretch',       icon: '🧘', label: 'Stretched or moved gently' },
+      { id: 'sc_short_walk',    icon: '🚶', label: 'Walked, even just a little' },
+      { id: 'sc_dance',         icon: '💃', label: 'Moved my body in any way' },
+      { id: 'sc_deep_breath',   icon: '😮‍💨', label: 'Took a few deep breaths' },
+    ],
+  },
+  {
+    id: 'connection',
+    icon: '💚',
+    label: 'Connection',
+    sub: 'With others, or the world around you',
+    tasks: [
+      { id: 'sc_reached_out',  icon: '📱', label: 'Reached out to someone' },
+      { id: 'sc_pet_care',     icon: '🐾', label: 'Cared for my pet' },
+      { id: 'sc_plant_care',   icon: '🪴', label: 'Watered a plant' },
+      { id: 'sc_read',         icon: '📖', label: 'Read something, even a page' },
+      { id: 'sc_music',        icon: '🎵', label: 'Listened to music I love' },
+    ],
+  },
+  {
+    id: 'wind_down',
+    icon: '🌙',
+    label: 'Wind down',
+    sub: 'Easing into rest',
+    tasks: [
+      { id: 'sc_reasonable_bedtime', icon: '🌙', label: 'Went to bed at a good time' },
+      { id: 'sc_screen_free',        icon: '📵', label: 'Had some screen-free time' },
+      { id: 'sc_moment_for_me',      icon: '🙏', label: 'Took a moment just for me' },
+      { id: 'sc_tidy',               icon: '🧹', label: 'Tidied one small thing' },
+    ],
+  },
+];
+
+// Medication is handled separately with extra-gentle framing
+const MEDICATION_TASK = { id: 'sc_medication', icon: '💊', label: 'Took my medication' };
+
+const SELF_CARE_TASKS = SELF_CARE_CATEGORIES.flatMap(c => c.tasks).concat([MEDICATION_TASK]);
+
 const CELEBRATIONS = {
   m_teeth: {
     emoji: '🦷', xp: 15,
@@ -3853,7 +4052,7 @@ function switchTab(tab) {
   haptic('light');
   if (tab === 'today') renderTodayTab();
   if (tab === 'wellness') renderWellnessTab();
-  if (tab === 'progress') renderProgressTab();
+  if (tab === 'progress') { renderProgressTab(); setTimeout(() => generateRollingInsight(), 800); }
   if (tab === 'history') renderHistoryTab();
   if (tab === 'settings') renderSettingsTab();
   // Stagger cards
@@ -4292,6 +4491,48 @@ function renderTodayTab() {
     ${mainDone >= 2 ? '<div style="font-size:12px;color:var(--sage);margin-top:10px">+10 XP earned 🌿</div>' : '<div style="font-size:12px;color:var(--text-muted);margin-top:10px">Check off 2 or more for +10 XP</div>'}
   </div>`;
 
+  // --- SELF-CARE TASKS ---
+  const selectedSCTasks = state.prefs?.selfCareTasks || [];
+  const hasMedication = selectedSCTasks.includes('sc_medication');
+  const regularSCTasks = selectedSCTasks.filter(id => id !== 'sc_medication');
+
+  if (selectedSCTasks.length > 0) {
+    const scDone = td.selfCare || {};
+    html += `<div class="section-label">💚 Self-care</div>`;
+
+    if (regularSCTasks.length > 0) {
+      html += `<div class="card">`;
+      regularSCTasks.forEach(id => {
+        const task = SELF_CARE_TASKS.find(t2 => t2.id === id);
+        if (!task) return;
+        const done = scDone[id];
+        html += `<div class="habit-row" onclick="tapSelfCare('${id}', this)">
+          <div class="habit-check${done ? ' done' : ''}">${done ? '✓' : task.icon}</div>
+          <div class="habit-info">
+            <div class="habit-name">${task.label}</div>
+          </div>
+          ${!done ? '<div class="habit-xp">+10</div>' : ''}
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Medication — its own quiet card
+    if (hasMedication) {
+      const medDone = scDone['sc_medication'];
+      html += `<div class="card" style="background:rgba(106,154,176,0.06);border-color:rgba(106,154,176,0.15)">
+        <div class="habit-row" onclick="tapSelfCare('sc_medication', this)" style="border-bottom:none">
+          <div class="habit-check${medDone ? ' done' : ''}" style="${!medDone ? 'border-color:rgba(106,154,176,0.3)' : ''}">${medDone ? '✓' : '💊'}</div>
+          <div class="habit-info">
+            <div class="habit-name" style="color:var(--sky-light)">Took my medication</div>
+            <div class="habit-sub" style="color:var(--text-muted)">Just a gentle nudge — no judgment either way</div>
+          </div>
+          ${!medDone ? '<div class="habit-xp" style="background:rgba(106,154,176,0.15);border-color:rgba(106,154,176,0.3);color:var(--sky-light)">+10</div>' : ''}
+        </div>
+      </div>`;
+    }
+  }
+
   // --- WELLNESS / JOURNAL ---
   const journalToday = state.wellnessData?.journal?.[t];
   html += `<div class="section-label">📓 Wellness</div>
@@ -4304,6 +4545,13 @@ function renderTodayTab() {
       <div style="font-size:20px">${journalToday ? '📝' : '📓'}</div>
     </div>
     ${!journalToday ? '<div class="habit-xp" style="margin-top:8px;display:inline-flex">+10 XP</div>' : ''}
+  </div>`;
+
+  // Subtle share nudge at bottom of Today
+  html += `<div style="text-align:center;padding:12px 0 20px">
+    <button onclick="shareApp()" style="background:none;border:none;font-size:12px;color:var(--text-muted);cursor:pointer;font-family:Fraunces,serif;font-style:italic">
+      Know someone who needs bloom? Share it 🌿
+    </button>
   </div>`;
 
   scroll.innerHTML = html;
@@ -4352,8 +4600,28 @@ function tapHouseholdTask(id, el) {
   toggleHouseholdTask(id, check || el);
 }
 
+function tapSelfCare(id, el) {
+  if (!state.todayData.selfCare) state.todayData.selfCare = {};
+  const wasDone = state.todayData.selfCare[id];
+  state.todayData.selfCare[id] = !wasDone;
+
+  if (!wasDone) {
+    addXP(10, el);
+    checkFirstTaskStreak();
+    celebrate('household', el); // reuse household celebration type
+  } else {
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - 10);
+    haptic('light');
+    saveState();
+    updateProgressTab();
+  }
+
+  saveState();
+  archiveToday();
+  renderTodayTab();
+}
+
 function logMood(val) {
-  const wasLow = state.todayData.mood !== undefined && state.todayData.mood <= 2;
   state.todayData.mood = val;
   saveState();
   archiveToday();
@@ -4556,29 +4824,37 @@ function renderWellnessTab() {
 
   // --- WEEKLY INSIGHTS ---
   const insights = state.wellnessData?.insights || [];
+  const latestInsight = insights[insights.length - 1];
+  const ws2 = weekStart();
+  const hasThisWeekInsight = latestInsight?.weekKey === ws2;
+
   html += `<div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="card-title" style="margin-bottom:0">💫 Weekly insights</div>
-      <button class="btn btn-ghost btn-sm" onclick="generateWeeklyInsight()">Generate</button>
-    </div>`;
-  if (insights.length === 0) {
-    html += `<div style="font-size:13px;color:var(--text-muted);line-height:1.6">Insights are generated each Sunday — or tap Generate any time. bloom looks at your week and offers something encouraging.</div>`;
-  } else {
-    insights.slice(-4).reverse().forEach(ins => {
-      html += `<div class="insight-card">
-        <div class="insight-week-label">Week of ${ins.weekLabel}</div>
-        <div class="insight-text">${ins.text}</div>
-      </div>`;
-    });
-  }
-  html += `</div>`;
-
-  // --- WEEKLY SUMMARY ---
-  html += `<div class="card">
-    <div class="card-title">📊 Weekly summary</div>
-    <div class="text-sm text-muted" style="margin-bottom:12px;line-height:1.6">Ask bloom how your week is going — it looks at your mood, habits, and journal entries and reflects back.</div>
-    <button class="btn btn-secondary btn-sm" onclick="generateWeeklySummary()">How am I doing?</button>
-    <div id="summary-ai-response" style="display:none;margin-top:12px"></div>
+      <div class="card-title" style="margin-bottom:0">💫 Weekly insight</div>
+      <button class="btn btn-ghost btn-sm" onclick="generateWeeklyInsight(event)">
+        ${hasThisWeekInsight ? 'Refresh' : 'Generate'}
+      </button>
+    </div>
+    ${hasThisWeekInsight
+      ? `<div class="insight-card" style="margin-bottom:0">
+          <div class="insight-week-label">Week of ${latestInsight.weekLabel}</div>
+          <div class="insight-text">${latestInsight.text}</div>
+        </div>`
+      : `<div style="font-size:13px;color:var(--text-muted);line-height:1.6">
+          Auto-generates each Sunday — or tap Generate any time. bloom looks at your whole week and reflects it back: how you felt, what you did for yourself, and what it all adds up to.
+        </div>`
+    }
+    ${insights.length > 1 ? `
+    <details style="margin-top:10px">
+      <summary style="font-size:12px;color:var(--text-muted);cursor:pointer;list-style:none;padding:4px 0">Past insights ›</summary>
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+        ${insights.slice(-4, -1).reverse().map(ins => `
+          <div class="insight-card">
+            <div class="insight-week-label">${ins.weekLabel}</div>
+            <div class="insight-text">${ins.text}</div>
+          </div>`).join('')}
+      </div>
+    </details>` : ''}
   </div>`;
 
   // --- MONTHLY REFLECTIONS ---
@@ -4702,51 +4978,65 @@ async function saveReflection(qi) {
   renderWellnessTab();
 }
 
-async function generateWeeklyInsight() {
-  const btn = event?.target;
-  if (btn) { btn.disabled = true; btn.textContent = 'Generating...'; }
+async function generateWeeklyInsight(e) {
+  const btn = e?.target;
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
 
   const ws = weekStart();
   const weekDates = getWeekDates();
-  const moodData = weekDates.map(d => {
-    const h = state.historyData[d];
-    return h?.mood !== undefined ? h.mood : null;
-  }).filter(m => m !== null);
 
-  const journalEntries = weekDates.map(d => state.wellnessData?.journal?.[d]?.text).filter(Boolean);
-  const avgMood = moodData.length > 0 ? (moodData.reduce((a,b) => a+b, 0) / moodData.length).toFixed(1) : 'unknown';
+  // Mood data
+  const moodData = weekDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined);
+  const avgMood = moodData.length > 0 ? (moodData.reduce((a,b) => a+b, 0) / moodData.length).toFixed(1) : null;
+  const lowDays = moodData.filter(m => m <= 1).length;
+  const goodDays = moodData.filter(m => m >= 3).length;
+
+  // Self-care data
+  const wd = state.weekData || {};
+  const exerciseCount = wd.w_exercise || 0;
+  const showerCount = wd.w_shower || 0;
+  const outsideCount = wd.w_outside || 0;
+  const journalDays = weekDates.filter(d => state.wellnessData?.journal?.[d]).length;
+  const waterDays = weekDates.filter(d => (state.historyData[d]?.habits?.waterXPGiven)).length;
+  const breathSessions = state.wellnessData?.breathSessions || 0;
+
+  // Journal excerpts
+  const journals = weekDates.map(d => state.wellnessData?.journal?.[d]?.text).filter(Boolean);
+
+  const selfCareContext = [
+    exerciseCount > 0 ? `exercised ${exerciseCount} time${exerciseCount > 1 ? 's' : ''}` : null,
+    showerCount > 0 ? `showered ${showerCount} time${showerCount > 1 ? 's' : ''}` : null,
+    outsideCount > 0 ? `went outside ${outsideCount} time${outsideCount > 1 ? 's' : ''}` : null,
+    journalDays > 0 ? `journaled ${journalDays} day${journalDays > 1 ? 's' : ''}` : null,
+    breathSessions > 0 ? `did ${breathSessions} breathing session${breathSessions > 1 ? 's' : ''}` : null,
+  ].filter(Boolean).join(', ');
 
   const ai = await callClaude(
-    `Generate a weekly insight for a user of a mental wellness app. Average mood this week: ${avgMood}/4. Journal excerpts: ${journalEntries.slice(0,3).map(j => j.substring(0,80)).join('; ')}. Write 3-4 warm, encouraging sentences that celebrate what went well and offer gentle support for hard parts. Never shame or criticize.`,
-    'You are Bloom. Encouraging, warm, never clinical. 3-4 sentences.'
+    `Write a weekly insight for a mental wellness app user. This week: ${avgMood ? `average mood ${avgMood}/4` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}.
+
+Write 3-4 sentences from an emotional lens — how they showed up for themselves this week. If it was a hard week emotionally but they still did self-care, reflect that back as evidence of resilience. Celebrate specific acts of self-care as emotional wins. Never shame, never clinical. End with something genuinely encouraging about the week ahead.`,
+    'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only.'
   );
 
   const d = new Date();
   const wl = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   if (!state.wellnessData.insights) state.wellnessData.insights = [];
-  state.wellnessData.insights.push({ weekLabel: wl, text: ai || 'You showed up this week. That matters more than you know.', date: today() });
-  if (state.wellnessData.insights.length > 4) state.wellnessData.insights.shift();
+
+  // Replace existing insight for this week or add new
+  const existingIdx = state.wellnessData.insights.findIndex(i => i.weekKey === ws);
+  const insightEntry = { weekLabel: wl, weekKey: ws, text: ai || 'You showed up for yourself this week. Every single act of care mattered.', date: today() };
+  if (existingIdx > -1) state.wellnessData.insights[existingIdx] = insightEntry;
+  else state.wellnessData.insights.push(insightEntry);
+  if (state.wellnessData.insights.length > 8) state.wellnessData.insights.shift();
+
   saveState();
   celebrate('insight', document.querySelector('.tab-scroll'));
   renderWellnessTab();
 }
 
 async function generateWeeklySummary() {
-  const container = document.getElementById('summary-ai-response');
-  if (!container) return;
-  showThinking('summary-ai-response');
-  container.style.display = 'block';
-
-  const weekDates = getWeekDates();
-  const moods = weekDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined);
-  const journals = weekDates.map(d => state.wellnessData?.journal?.[d]?.text).filter(Boolean);
-  const avgMood = moods.length ? (moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1) : 'unknown';
-
-  const ai = await callClaude(
-    `Create a personal weekly summary for a wellness app user. Mood average: ${avgMood}/4. Journal excerpts this week: ${journals.slice(0,2).map(j=>j.substring(0,100)).join(' | ')}. Write 4-5 sentences that feel like a caring friend reflecting on their week — celebrating wins, acknowledging hard parts, always encouraging.`,
-    'You are Bloom. Personal, warm, never clinical. 4-5 sentences.'
-  );
-  showAIResponse('summary-ai-response', ai || 'You made it through this week. Every single day you showed up, and that means something.');
+  // Kept for backwards compatibility — redirects to insight
+  generateWeeklyInsight();
 }
 
 function addWin() {
@@ -4932,14 +5222,17 @@ function renderProgressTab() {
     </div>
   </div>`;
 
-  // Week bar
+  // Rolling week visual
   const weekDates = getWeekDates();
   const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const todayStr = today();
 
-  html += `<div class="card">
-    <div class="card-title">This week</div>
-    <div class="week-bar">`;
+  html += `<div class="card" style="padding:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:0">This week</div>
+      <div style="font-size:11px;color:var(--text-muted)">${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+    </div>
+    <div class="week-bar" style="margin-bottom:16px">`;
 
   weekDates.forEach((d, i) => {
     const hist = state.historyData[d] || {};
@@ -4954,14 +5247,60 @@ function renderProgressTab() {
       else dotClass = 'missed';
     }
     if (isToday) dotClass += ' today';
-
     html += `<div class="week-day-dot">
       <div class="week-dot ${dotClass}">${moodEmoji || (isToday ? '○' : '')}</div>
       <div class="week-day-label">${dayLabels[i]}</div>
     </div>`;
   });
 
-  html += `</div></div>`;
+  html += `</div>`;
+
+  // Habit completion bars for the week
+  const habitRows = [
+    { key: 'm_teeth',    icon: '🦷', label: 'Morning brush', daily: true },
+    { key: 'e_teeth',    icon: '🦷', label: 'Evening brush',  daily: true },
+    { key: 'w_exercise', icon: '💪', label: 'Exercise',       daily: false },
+    { key: 'w_shower',   icon: '🚿', label: 'Shower',         daily: false },
+    { key: 'w_outside',  icon: '🌿', label: 'Go outside',     daily: false },
+  ].filter(h => state.prefs?.habits?.[h.key] !== false);
+
+  habitRows.forEach(h => {
+    if (h.daily) {
+      // Daily — show dot per day
+      const dots = weekDates.map(d => {
+        const done = state.historyData[d]?.habits?.[h.key];
+        const isToday = d === todayStr;
+        return `<div style="width:10px;height:10px;border-radius:50%;background:${done ? 'var(--sage)' : isToday ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'};transition:background 0.3s"></div>`;
+      }).join('');
+      html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="font-size:14px;width:20px;text-align:center">${h.icon}</span>
+        <div style="font-size:12px;color:var(--text-secondary);width:110px;flex-shrink:0">${h.label}</div>
+        <div style="display:flex;gap:6px;align-items:center">${dots}</div>
+      </div>`;
+    } else {
+      // Weekly — show count vs goal bar
+      const count = state.weekData?.[h.key] || 0;
+      const goal = state.prefs?.goals?.[h.key] || 3;
+      const pct2 = Math.min(100, Math.round((count / goal) * 100));
+      html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="font-size:14px;width:20px;text-align:center">${h.icon}</span>
+        <div style="font-size:12px;color:var(--text-secondary);width:110px;flex-shrink:0">${h.label}</div>
+        <div style="flex:1;height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct2}%;background:${pct2 >= 100 ? 'var(--sage)' : 'var(--sage-dim)'};border-radius:3px;transition:width 0.4s ease"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);width:32px;text-align:right">${count}/${goal}</div>
+      </div>`;
+    }
+  });
+
+  // Rolling AI sentence — cached per day so it doesn't regenerate constantly
+  const rollingKey = `bloom_rolling_${todayStr}`;
+  const rollingText = load(rollingKey, null);
+  html += `<div id="rolling-insight-text" style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);font-family:Fraunces,serif;font-style:italic;font-size:13px;color:var(--text-secondary);line-height:1.6">
+    ${rollingText || '<span style="opacity:0.4">bloom will reflect on your week as it unfolds...</span>'}
+  </div>`;
+
+  html += `</div>`;
 
   // Mood chart
   html += `<div class="card">
@@ -4999,6 +5338,43 @@ function renderProgressTab() {
   </div>`;
 
   scroll.innerHTML = html;
+}
+
+async function generateRollingInsight() {
+  const t = today();
+  const key = `bloom_rolling_${t}`;
+  if (load(key, null)) return; // already generated today
+
+  const weekDates = getWeekDates();
+  const moodData = weekDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined);
+  const avgMood = moodData.length > 0 ? (moodData.reduce((a,b) => a+b, 0) / moodData.length).toFixed(1) : null;
+  const daysIn = moodData.length;
+  const wd = state.weekData || {};
+  const selfCare = [
+    (wd.w_exercise || 0) > 0 ? 'exercised' : null,
+    (wd.w_shower || 0) > 0 ? 'showered' : null,
+    (wd.w_outside || 0) > 0 ? 'gone outside' : null,
+  ].filter(Boolean);
+
+  const ai = await callClaude(
+    `Write ONE short sentence (max 20 words) for a wellness app's live week view. It's day ${daysIn} of the week. ${avgMood ? `Average mood so far: ${avgMood}/4.` : ''} ${selfCare.length > 0 ? `Self-care done: ${selfCare.join(', ')}.` : ''} Be warm and specific to what's happened. No filler phrases.`,
+    'You are Bloom. One sentence only, max 20 words, warm and specific.'
+  );
+  if (ai) {
+    save(key, ai);
+    const el = document.getElementById('rolling-insight-text');
+    if (el) el.innerHTML = ai;
+  }
+}
+
+function checkAutoGenerateInsight() {
+  // Auto-generate weekly insight on Sundays
+  if (dayOfWeek() !== 0) return;
+  const ws = weekStart();
+  const existing = state.wellnessData?.insights?.find(i => i.weekKey === ws);
+  if (existing) return; // already generated this week
+  // Delay so it doesn't fire before the app is fully loaded
+  setTimeout(() => generateWeeklyInsight(null), 5000);
 }
 
 function updateProgressTab() {
@@ -5124,136 +5500,227 @@ function renderSettingsTab() {
   const prefs = state.prefs;
   const xp = state.xpData;
   const level = getLevel(xp.total || 0);
+  const notifs = prefs.notifications || {};
+  const goals = prefs.goals || {};
 
   let html = '';
 
-  // Profile
-  html += settingsSection('profile', '👤 Profile', `
-    <div class="toggle-row">
-      <div><div class="toggle-label">Name</div></div>
-      <input type="text" id="settings-name" value="${prefs.name || ''}" style="width:140px;padding:6px 10px;font-size:13px" onchange="saveSettingsName()">
-    </div>
-    <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
-      <div style="font-size:13px;color:var(--text-secondary)">Level: <span style="color:var(--cream)">${level.emoji} ${level.name}</span></div>
-      <div style="font-size:13px;color:var(--text-secondary);margin-top:4px">Total XP: <span style="color:var(--amber-light)">${xp.total || 0}</span></div>
+  // ── APPEARANCE ──────────────────────────────────────────────
+  const currentTheme = prefs.theme || 'forest';
+  html += settingsSection('appearance', '🎨 Appearance', `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      ${Object.entries(THEMES).map(([key, t]) => `
+        <div onclick="setTheme('${key}')" style="
+          background:${t.bg};border:2px solid ${key === currentTheme ? t.primary : 'rgba(255,255,255,0.08)'};
+          border-radius:var(--r-lg);padding:14px 12px;cursor:pointer;
+          transition:border-color 0.2s;position:relative;overflow:hidden">
+          <div style="display:flex;gap:5px;margin-bottom:8px">
+            <div style="width:12px;height:12px;border-radius:50%;background:#7a9e7e"></div>
+            <div style="width:12px;height:12px;border-radius:50%;background:#b07878"></div>
+            <div style="width:12px;height:12px;border-radius:50%;background:#6a9ab0"></div>
+            <div style="width:12px;height:12px;border-radius:50%;background:#c9954a"></div>
+          </div>
+          <div style="font-size:13px;font-weight:500;color:${t.primaryLight}">${t.emoji} ${t.name}</div>
+          <div style="font-size:11px;color:${t.textSecondary};margin-top:2px">${t.description}</div>
+          ${key === currentTheme ? `<div style="position:absolute;top:8px;right:8px;font-size:12px;color:${t.primary}">✓</div>` : ''}
+        </div>`).join('')}
     </div>
   `);
 
-  // Weekly goals
-  const goals = prefs.goals || {};
-  html += settingsSection('goals', '🎯 Weekly goals', `
-    ${goalStepper('Shower', 'w_shower', goals.w_shower || 3)}
-    ${goalStepper('Exercise', 'w_exercise', goals.w_exercise || 3)}
-    ${goalStepper('Go outside', 'w_outside', goals.w_outside || 3)}
+  // ── PROFILE ──────────────────────────────────────────────────
+  html += settingsSection('profile', '👤 Profile', `
+    <div class="toggle-row" style="border-bottom:none;margin-bottom:12px">
+      <div><div class="toggle-label">Your name</div></div>
+      <input type="text" id="settings-name" value="${prefs.name || ''}" style="width:140px;padding:6px 10px;font-size:13px" onchange="saveSettingsName()">
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05)">
+      <div style="font-size:32px">${level.emoji}</div>
+      <div>
+        <div style="font-size:15px;font-weight:500;color:var(--cream)">${level.name}</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">${xp.total || 0} XP total</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:24px">🔥</div>
+      <div>
+        <div style="font-size:15px;font-weight:500;color:var(--cream)">${xp.streak || 0}-day streak</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">${xp.freezeTokens || 0} freeze token${(xp.freezeTokens || 0) !== 1 ? 's' : ''} · earned at 7, 14 & 30 days</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.6">
+      Logging a Rough or Low mood automatically protects your streak — no token needed.
+    </div>
+  `);
+
+  // ── DAILY HABITS ─────────────────────────────────────────────
+  html += settingsSection('daily', '☀️ Daily habits', `
+    ${[
+      { id: 'm_teeth', icon: '🦷', label: 'Morning brush' },
+      { id: 'e_teeth', icon: '🦷', label: 'Evening brush' },
+    ].map(h => `<div class="toggle-row">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:18px">${h.icon}</span>
+        <div class="toggle-label">${h.label}</div>
+      </div>
+      <div class="toggle${prefs.habits?.[h.id] !== false ? ' on' : ''}" onclick="toggleHabitPref('${h.id}')"></div>
+    </div>`).join('')}
     <div class="divider"></div>
     <div class="toggle-row">
       <div>
-        <div class="toggle-label">🍽 Track daily meals</div>
-        <div class="toggle-sub" style="line-height:1.5">Adds Breakfast, Lunch & Dinner to your daily check-in. Not a food diary — just a gentle reminder that eating is self-care.</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">🍽</span>
+          <div class="toggle-label">Track daily meals</div>
+        </div>
+        <div class="toggle-sub" style="margin-left:26px;line-height:1.5">Adds Breakfast, Lunch & Dinner — a gentle reminder that eating is self-care, not a food diary.</div>
       </div>
-      <div class="toggle${prefs.habits?.track_meals?' on':''}" onclick="toggleMealTracking()"></div>
+      <div class="toggle${prefs.habits?.track_meals ? ' on' : ''}" onclick="toggleMealTracking()"></div>
     </div>
   `);
 
-  // Household tasks
+  // ── WEEKLY HABITS & TASKS ────────────────────────────────────
   const tasks = prefs.householdTasks || [];
   const defaultTasks = [
-    { id: 'laundry', name: 'Laundry', icon: '🧺' },
-    { id: 'trash', name: 'Trash', icon: '🗑' },
-    { id: 'dishes', name: 'Dishes', icon: '🍽' },
+    { id: 'laundry',    name: 'Laundry',    icon: '🧺' },
+    { id: 'trash',      name: 'Trash',      icon: '🗑' },
+    { id: 'dishes',     name: 'Dishes',     icon: '🍽' },
     { id: 'clean_room', name: 'Clean room', icon: '🧹' },
   ];
-  let tasksHtml = defaultTasks.map(t2 => {
+
+  let weeklyHtml = `
+    ${[
+      { id: 'w_shower',   icon: '🚿', label: 'Shower' },
+      { id: 'w_exercise', icon: '💪', label: 'Exercise' },
+      { id: 'w_outside',  icon: '🌿', label: 'Go outside' },
+    ].map(h => `<div class="toggle-row">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:18px">${h.icon}</span>
+        <div class="toggle-label">${h.label}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        ${prefs.habits?.[h.id] !== false ? goalStepper('', h.id, goals[h.id] || 3, true) : ''}
+        <div class="toggle${prefs.habits?.[h.id] !== false ? ' on' : ''}" onclick="toggleHabitPref('${h.id}')"></div>
+      </div>
+    </div>`).join('')}
+    <div class="divider"></div>
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;font-weight:500">Household tasks</div>`;
+
+  defaultTasks.forEach(t2 => {
     const active = tasks.some(t3 => t3.id === t2.id);
-    return `<div class="toggle-row">
+    weeklyHtml += `<div class="toggle-row">
       <div><div class="toggle-label">${t2.icon} ${t2.name}</div></div>
-      <div class="toggle${active?' on':''}" onclick="toggleHouseholdPref('${t2.id}','${t2.name}','${t2.icon}')"></div>
+      <div class="toggle${active ? ' on' : ''}" onclick="toggleHouseholdPref('${t2.id}','${t2.name}','${t2.icon}')"></div>
     </div>`;
-  }).join('');
+  });
+
   const customTasks = tasks.filter(t2 => !defaultTasks.some(d => d.id === t2.id));
-  tasksHtml += customTasks.map(t2 => `<div class="toggle-row">
-    <div><div class="toggle-label">✏️ ${t2.name}</div></div>
-    <div onclick="removeCustomTask('${t2.id}')" style="font-size:12px;color:var(--rose-light);cursor:pointer">Remove</div>
-  </div>`).join('');
-  tasksHtml += `<div style="display:flex;gap:8px;margin-top:12px">
+  customTasks.forEach(t2 => {
+    weeklyHtml += `<div class="toggle-row">
+      <div><div class="toggle-label">✏️ ${t2.name}</div></div>
+      <div onclick="removeCustomTask('${t2.id}')" style="font-size:12px;color:var(--rose-light);cursor:pointer">Remove</div>
+    </div>`;
+  });
+
+  weeklyHtml += `<div style="display:flex;gap:8px;margin-top:12px">
     <input type="text" id="custom-task-input" placeholder="Add custom task...">
     <button class="btn btn-primary btn-sm" onclick="addCustomTask()">Add</button>
   </div>`;
-  html += settingsSection('tasks', '🏠 Household tasks', tasksHtml);
 
-  // Notifications
-  const notifs = prefs.notifications || {};
+  html += settingsSection('goals', '📅 Weekly habits & tasks', weeklyHtml);
+
+  // ── SELF-CARE TASKS ──────────────────────────────────────────
+  const selectedSC = prefs.selfCareTasks || [];
+  let scHtml = `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:14px">
+      Small daily acts that matter. Pick what feels possible — you can always change these.
+    </div>`;
+
+  SELF_CARE_CATEGORIES.forEach(cat => {
+    scHtml += `<div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">${cat.icon} ${cat.label}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${cat.tasks.map(t2 => {
+          const on = selectedSC.includes(t2.id);
+          const ps = `display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;cursor:pointer;font-size:12px;background:${on ? 'rgba(122,158,126,0.18)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(122,158,126,0.45)' : 'rgba(255,255,255,0.08)'};color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
+          return `<div onclick="toggleSelfCareTask('${t2.id}')" id="sc-pill-${t2.id}" style="${ps}"><span>${t2.icon}</span>${t2.label}</div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  });
+
+  // Medication — separate card
+  const medOn = selectedSC.includes('sc_medication');
+  const medStyle = `display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:99px;cursor:pointer;font-size:12px;background:${medOn ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${medOn ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};color:${medOn ? 'var(--sky-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
+  scHtml += `<div style="background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.15);border-radius:var(--r-lg);padding:12px 14px;margin-top:4px">
+    <div style="font-size:12px;color:var(--sky-light);font-weight:500;margin-bottom:4px">💊 Medication</div>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">A private, judgment-free nudge. Just "did I remember?" — nothing more.</div>
+    <div onclick="toggleSelfCareTask('sc_medication')" id="sc-pill-sc_medication" style="${medStyle}">💊 Took my medication</div>
+  </div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:12px;font-style:italic;line-height:1.6;text-align:center">
+    This is entirely yours. Add, remove, or change anything, any time.
+  </div>`;
+
+  html += settingsSection('selfcare', '💚 Daily self-care', scHtml);
+
+  // ── NOTIFICATIONS & SOUND ────────────────────────────────────
   html += settingsSection('notifications', '🔔 Notifications & sound', `
     <div class="toggle-row">
-      <div><div class="toggle-label">🔔 Sound feedback</div><div class="toggle-sub">Soft chimes on habit completion and breathing</div></div>
-      <div class="toggle${prefs.audio !== false?' on':''}" onclick="toggleAudioPref()"></div>
+      <div><div class="toggle-label">Sound feedback</div><div class="toggle-sub">Soft chimes on habits, breathing, and milestones</div></div>
+      <div class="toggle${prefs.audio !== false ? ' on' : ''}" onclick="toggleAudioPref()"></div>
     </div>
     <div class="divider"></div>
     <div class="toggle-label" style="margin-bottom:8px;color:var(--text-secondary)">Water reminders</div>
     <div class="radio-group">
-      ${['smart','hourly','off'].map(m => `<div class="radio-option${(notifs.waterMode||'smart')===m?' selected':''}" onclick="setWaterMode('${m}')">
+      ${['smart','hourly','off'].map(m => `<div class="radio-option${(notifs.waterMode||'smart') === m ? ' selected' : ''}" onclick="setWaterMode('${m}')">
         <div class="radio-dot"></div>
-        <div class="radio-label">${m==='smart'?'Smart (4hr if under goal)':m==='hourly'?'Every hour':'Off'}</div>
+        <div class="radio-label">${m === 'smart' ? 'Smart — only if under goal' : m === 'hourly' ? 'Every hour' : 'Off'}</div>
       </div>`).join('')}
     </div>
     <div class="divider"></div>
     <div class="toggle-row">
-      <div><div class="toggle-label">Weekly reflection reminder</div><div class="toggle-sub">Notifies you Saturday & Sunday when the reflection opens</div></div>
-      <div class="toggle${notifs.sundayReminder?' on':''}" onclick="toggleNotif('sundayReminder')"></div>
+      <div><div class="toggle-label">Weekly reflection reminder</div><div class="toggle-sub">Notified Saturday & Sunday when reflection opens</div></div>
+      <div class="toggle${notifs.sundayReminder ? ' on' : ''}" onclick="toggleNotif('sundayReminder')"></div>
     </div>
     <div class="divider"></div>
-    <button class="btn btn-ghost btn-sm" onclick="testNotification()">🔔 Test notification</button>
-    <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="resetServiceWorker()">↺ Reset notification worker</button>
+    <button class="btn btn-ghost btn-sm" onclick="resetServiceWorker()">↺ Fix notifications</button>
     <div id="notif-test-status" style="font-size:12px;color:var(--text-muted);margin-top:8px;white-space:pre-wrap"></div>
   `);
 
-  // Streak & protection
-  html += settingsSection('streak', '🔥 Streak & protection', `
-    <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">
-      Freeze tokens protect your streak when life gets hard. Use one automatically if you miss a day.
-    </div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <div style="font-size:24px">❄️</div>
-      <div>
-        <div style="font-size:20px;font-weight:600;color:var(--sky-light)">${xp.freezeTokens || 0} tokens</div>
-        <div style="font-size:12px;color:var(--text-secondary)">Earned at 7, 14, 30 day streaks</div>
+  // ── DATA & PRIVACY ────────────────────────────────────────────
+  html += settingsSection('data', '🔒 Data & privacy', `
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px">
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.7">
+        <div style="font-weight:500;color:var(--cream);margin-bottom:4px">Your data belongs to you</div>
+        Everything in bloom stays on this device — your journal, moods, habits, reflections. Never uploaded, never shared, never seen by anyone else.
+        <div style="margin-top:6px;color:var(--text-muted)">AI responses send your prompt to Claude, but nothing is stored or linked to your identity.</div>
       </div>
     </div>
-    <div class="divider"></div>
-    <div style="font-size:13px;color:var(--text-secondary)">
-      Logging a Rough or Low mood automatically protects your streak that day — no token needed.
-    </div>
-  `);
-
-  // Share & data
-  html += settingsSection('data', '🔗 Share & data', `
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <button class="btn btn-primary btn-block" onclick="shareApp()" style="background:linear-gradient(135deg,var(--sage),var(--sage-dim));color:var(--cream)">🌿 Share bloom with someone</button>
+    <div style="display:flex;flex-direction:column;gap:8px">
       <button class="btn btn-secondary btn-block" onclick="showBackupSheet()">💾 Save restore link</button>
-      <button class="btn btn-secondary btn-block" onclick="exportJSON()">📤 Export data as JSON</button>
+      <button class="btn btn-secondary btn-block" onclick="exportJSON()">📤 Export my data</button>
       <button class="btn btn-ghost btn-block" onclick="resetToday()">↺ Reset today's data</button>
     </div>
-    <div class="divider"></div>
-    <div style="display:flex;align-items:flex-start;gap:10px;padding:4px 0">
-      <span style="font-size:18px;flex-shrink:0;margin-top:1px">🔒</span>
-      <div style="font-size:12px;color:var(--text-secondary);line-height:1.7">
-        <div style="font-weight:500;color:var(--cream);margin-bottom:4px">Your data is private and local</div>
-        Everything in bloom — your journal, moods, habits, and reflections — is stored only on this device. It's never uploaded to a server, never shared with anyone, and never accessed by us or anyone else.
-        <div style="margin-top:6px">The only data that ever leaves your device is when you use AI features — those prompts go to Claude to generate a response, but are never stored or tied to your identity.</div>
-      </div>
-    </div>
   `);
 
-  // About
-  html += settingsSection('about', '🌿 About', `
-    <div style="font-size:14px;color:var(--text-secondary);line-height:1.7">
-      <div>Bloom v${VERSION}</div>
-      <div style="margin-top:4px;font-style:italic;font-family:Fraunces,serif">A gentle place to show up for yourself.</div>
+  // ── ABOUT ────────────────────────────────────────────────────
+  html += settingsSection('about', '🌿 About bloom', `
+    <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sage-light);line-height:1.6;margin-bottom:12px">
+      A gentle place to show up for yourself.
     </div>
-    <button class="btn btn-ghost btn-sm mt-4" onclick="showWhatsNew(true)">View release notes</button>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Version ${VERSION}</div>
+    <button class="btn btn-ghost btn-sm" onclick="showWhatsNew(true)">📋 View release notes</button>
   `);
 
-  html += `<div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-muted)">Bloom v${VERSION} · Made with care 🌿</div>`;
+  // ── SHARE BLOOM ──────────────────────────────────────────────
+  html += `
+  <div style="margin:8px 0 4px;padding:20px 16px;background:linear-gradient(135deg,rgba(122,158,126,0.12),rgba(122,158,126,0.04));border:1px solid rgba(122,158,126,0.2);border-radius:var(--r-xl);text-align:center">
+    <div style="font-size:32px;margin-bottom:10px">${bloomIcon(40)}</div>
+    <div style="font-family:Fraunces,serif;font-size:17px;font-weight:300;color:var(--cream);margin-bottom:6px">Know someone who might need this?</div>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px">bloom is free. Share it with someone you care about.</div>
+    <button class="btn btn-primary" onclick="shareApp()" style="background:var(--sage);color:#0a1a0b;padding:12px 32px;font-size:15px">🌿 Share bloom</button>
+  </div>`;
+
+  html += `<div style="text-align:center;padding:20px 0 8px;font-size:11px;color:var(--text-muted)">bloom v${VERSION} · made with care 🌿</div>`;
 
   scroll.innerHTML = html;
 }
@@ -5281,7 +5748,14 @@ function toggleSettingsSection(id) {
   }
 }
 
-function goalStepper(name, key, val) {
+function goalStepper(name, key, val, compact = false) {
+  if (compact) {
+    return `<div class="stepper">
+      <div class="stepper-btn" onclick="adjustGoal('${key}',-1)">−</div>
+      <div class="stepper-val" id="goal-${key}">${val}x</div>
+      <div class="stepper-btn" onclick="adjustGoal('${key}',1)">+</div>
+    </div>`;
+  }
   return `<div class="toggle-row">
     <div class="toggle-label">${name}</div>
     <div class="stepper">
@@ -5290,6 +5764,41 @@ function goalStepper(name, key, val) {
       <div class="stepper-btn" onclick="adjustGoal('${key}',1)">+</div>
     </div>
   </div>`;
+}
+
+function toggleSelfCareTask(id) {
+  if (!state.prefs.selfCareTasks) state.prefs.selfCareTasks = [];
+  const idx = state.prefs.selfCareTasks.indexOf(id);
+  if (idx > -1) state.prefs.selfCareTasks.splice(idx, 1);
+  else state.prefs.selfCareTasks.push(id);
+  save('bloom_prefs', state.prefs);
+
+  // Update pill in place without full re-render
+  const el = document.getElementById('sc-pill-' + id);
+  if (el) {
+    const on = state.prefs.selfCareTasks.includes(id);
+    const isMed = id === 'sc_medication';
+    el.style.background = on ? (isMed ? 'rgba(106,154,176,0.2)' : 'rgba(122,158,126,0.18)') : 'rgba(255,255,255,0.04)';
+    el.style.borderColor = on ? (isMed ? 'rgba(106,154,176,0.4)' : 'rgba(122,158,126,0.45)') : 'rgba(255,255,255,0.08)';
+    el.style.color = on ? (isMed ? 'var(--sky-light)' : 'var(--sage-light)') : 'var(--text-secondary)';
+  }
+  renderTodayTab();
+}
+
+function toggleHabitPref(id) {
+  if (!state.prefs.habits) state.prefs.habits = {};
+  state.prefs.habits[id] = state.prefs.habits[id] === false ? true : false;
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
+  renderTodayTab();
+  setTimeout(() => {
+    const sh = document.getElementById('sh-daily');
+    const sb = document.getElementById('sb-daily');
+    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
+    const sh2 = document.getElementById('sh-goals');
+    const sb2 = document.getElementById('sb-goals');
+    if (sh2 && sb2) { sh2.classList.add('open'); sb2.classList.add('open'); }
+  }, 50);
 }
 
 function adjustGoal(key, delta) {
@@ -5567,18 +6076,301 @@ function openCrisisSheet() { openSheet('crisis-sheet'); }
 //  WHAT'S NEW
 // ============================================================
 function showWhatsNew(force = false) {
-  // Never show to first-time users — they don't need a changelog
   if (!load('bloom_tutorial_done') && !force) return;
   if (!force && load('bloom_version') === VERSION) return;
+
+  const isExistingUser = !!load('bloom_tutorial_done');
+  const hasSeenReintro = load('bloom_reintro_v150', false);
+
   save('bloom_version', VERSION);
 
   const list = document.getElementById('whats-new-list');
   if (list) {
     list.innerHTML = WHATS_NEW.map(item =>
-      `<div class="whats-new-item"><div class="whats-new-dot"></div><div>${item}</div></div>`
+      `<div class="whats-new-item"><div class="whats-new-dot"></div><div>${typeof item === 'string' ? item : item.text}</div></div>`
     ).join('');
   }
+
+  const tourBtn = document.getElementById('whats-new-tour-btn');
+  const hasTour = WHATS_NEW.some(i => i.spotlight);
+  if (tourBtn) tourBtn.style.display = hasTour ? '' : 'none';
+
   openSheet('whats-new-sheet');
+
+  // After What's New closes, show re-intro for existing users who haven't seen it
+  if (isExistingUser && !hasSeenReintro && !force) {
+    const sheet = document.getElementById('whats-new-sheet');
+    if (sheet) {
+      const observer = new MutationObserver(() => {
+        if (!sheet.classList.contains('open')) {
+          observer.disconnect();
+          setTimeout(() => {
+            if (!load('bloom_reintro_v150', false)) {
+              openSheet('reintro-sheet');
+            }
+          }, 400);
+        }
+      });
+      observer.observe(sheet, { attributes: true, attributeFilter: ['class'] });
+    }
+  }
+}
+
+function dismissReintro() {
+  save('bloom_reintro_v150', true);
+  closeAllSheets();
+}
+
+let reintroStep = 0;
+const REINTRO_STEPS = ['appearance', 'selfcare'];
+
+function startReintro() {
+  save('bloom_reintro_v150', true);
+  closeAllSheets();
+  reintroStep = 0;
+  const overlay = document.getElementById('reintro-overlay');
+  overlay.style.display = 'flex';
+  renderReintroStep();
+}
+
+function renderReintroStep() {
+  const body = document.getElementById('reintro-body');
+  const footer = document.getElementById('reintro-footer');
+  const step = REINTRO_STEPS[reintroStep];
+  const stepLabel = `<div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;text-align:right">${reintroStep + 1} of ${REINTRO_STEPS.length}</div>`;
+
+  if (step === 'appearance') {
+    const currentTheme = state.prefs?.theme || 'forest';
+    body.innerHTML = stepLabel + `
+      <div style="font-family:Fraunces,serif;font-size:24px;font-weight:300;color:var(--cream);margin-bottom:6px">Make it yours</div>
+      <div style="font-size:14px;color:var(--text-secondary);margin-bottom:20px;line-height:1.6">Choose a palette that feels right. You can always change it in Settings.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${Object.entries(THEMES).map(([key, t]) => `
+          <div onclick="reintroSetTheme('${key}')" id="reintro-theme-${key}" style="
+            background:${t.bg};border:2px solid ${key === currentTheme ? t.primary : 'rgba(255,255,255,0.1)'};
+            border-radius:var(--r-xl);padding:16px 14px;cursor:pointer;transition:border-color 0.2s,transform 0.15s;
+            ${key === currentTheme ? 'transform:scale(1.03)' : ''}">
+            <div style="display:flex;gap:5px;margin-bottom:10px">
+              <div style="width:14px;height:14px;border-radius:50%;background:#7a9e7e"></div>
+              <div style="width:14px;height:14px;border-radius:50%;background:#b07878"></div>
+              <div style="width:14px;height:14px;border-radius:50%;background:#6a9ab0"></div>
+              <div style="width:14px;height:14px;border-radius:50%;background:#c9954a"></div>
+            </div>
+            <div style="font-size:15px;font-weight:500;color:${t.primaryLight}">${t.emoji} ${t.name}</div>
+            <div style="font-size:12px;color:${t.textSecondary};margin-top:3px">${t.description}</div>
+            ${key === currentTheme ? `<div style="font-size:11px;color:${t.primary};margin-top:6px">Selected ✓</div>` : ''}
+          </div>`).join('')}
+      </div>`;
+
+    footer.innerHTML = `
+      <button class="btn btn-ghost" onclick="closeReintro()" style="color:var(--text-muted);font-size:13px">Skip</button>
+      <button class="btn btn-primary" style="flex:1" onclick="reintroNext()">Next →</button>`;
+
+  } else if (step === 'selfcare') {
+    const selected = state.prefs?.selfCareTasks || [];
+    let html = stepLabel + `
+      <div style="font-family:Fraunces,serif;font-size:24px;font-weight:300;color:var(--cream);margin-bottom:6px">Daily self-care</div>
+      <div style="font-size:14px;color:var(--text-secondary);margin-bottom:6px;line-height:1.6">Small acts that matter — especially on hard days. Pick what feels possible, not what feels perfect.</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;font-style:italic;line-height:1.5">You can add or remove these any time in Settings. There's no right answer.</div>`;
+
+    SELF_CARE_CATEGORIES.forEach(cat => {
+      html += `<div style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:15px">${cat.icon}</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--cream)">${cat.label}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${cat.sub}</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${cat.tasks.map(t => {
+            const on = selected.includes(t.id);
+            const ps = `display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;font-size:13px;background:${on ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
+            return `<div onclick="reintroToggleSC('${t.id}')" id="ri-sc-${t.id}" style="${ps}"><span>${t.icon}</span>${t.label}</div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    });
+
+    const medOn = selected.includes('sc_medication');
+    const medPs = `display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:99px;cursor:pointer;font-size:13px;background:${medOn ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${medOn ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};color:${medOn ? 'var(--sky-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
+    html += `<div style="background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.15);border-radius:var(--r-lg);padding:12px 14px;margin-bottom:20px">
+      <div style="font-size:12px;color:var(--sky-light);font-weight:500;margin-bottom:4px">💊 Medication</div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">A private, judgment-free nudge. Just "did I remember?" — nothing more.</div>
+      <div onclick="reintroToggleSC('sc_medication')" id="ri-sc-sc_medication" style="${medPs}">💊 Took my medication</div>
+    </div>`;
+
+    body.innerHTML = html;
+    footer.innerHTML = `
+      <button class="btn btn-ghost" onclick="reintroBack()">← Back</button>
+      <button class="btn btn-primary" style="flex:1" onclick="closeReintro()">All done 🌿</button>`;
+  }
+}
+
+function reintroSetTheme(key) {
+  setTheme(key);
+  Object.keys(THEMES).forEach(k => {
+    const el = document.getElementById('reintro-theme-' + k);
+    if (!el) return;
+    const t = THEMES[k];
+    el.style.borderColor = k === key ? t.primary : 'rgba(255,255,255,0.1)';
+    el.style.transform = k === key ? 'scale(1.03)' : 'scale(1)';
+  });
+}
+
+function reintroToggleSC(id) {
+  if (!state.prefs.selfCareTasks) state.prefs.selfCareTasks = [];
+  const idx = state.prefs.selfCareTasks.indexOf(id);
+  if (idx > -1) state.prefs.selfCareTasks.splice(idx, 1);
+  else state.prefs.selfCareTasks.push(id);
+  save('bloom_prefs', state.prefs);
+  const el = document.getElementById('ri-sc-' + id);
+  if (el) {
+    const on = state.prefs.selfCareTasks.includes(id);
+    const isMed = id === 'sc_medication';
+    el.style.background = on ? (isMed ? 'rgba(106,154,176,0.2)' : 'rgba(122,158,126,0.2)') : 'rgba(255,255,255,0.04)';
+    el.style.borderColor = on ? (isMed ? 'rgba(106,154,176,0.4)' : 'rgba(122,158,126,0.5)') : 'rgba(255,255,255,0.08)';
+    el.style.color = on ? (isMed ? 'var(--sky-light)' : 'var(--sage-light)') : 'var(--text-secondary)';
+  }
+}
+
+function reintroNext() {
+  reintroStep++;
+  if (reintroStep >= REINTRO_STEPS.length) {
+    closeReintro();
+  } else {
+    const body = document.getElementById('reintro-body');
+    if (body) body.scrollTop = 0;
+    renderReintroStep();
+  }
+}
+
+function reintroBack() {
+  reintroStep = Math.max(0, reintroStep - 1);
+  const body = document.getElementById('reintro-body');
+  if (body) body.scrollTop = 0;
+  renderReintroStep();
+}
+
+function closeReintro() {
+  const overlay = document.getElementById('reintro-overlay');
+  if (overlay) overlay.style.display = 'none';
+  renderTodayTab();
+  renderSettingsTab();
+}
+
+let whatsNewTourStep = 0;
+function startWhatsNewTour() {
+  closeAllSheets();
+  whatsNewTourStep = 0;
+  const tourItems = WHATS_NEW.filter(i => i.spotlight);
+  if (tourItems.length === 0) return;
+  runWhatsNewTourStep(tourItems);
+}
+
+function runWhatsNewTourStep(items) {
+  if (whatsNewTourStep >= items.length) {
+    // Tour done
+    const div = document.createElement('div');
+    div.id = 'tour-done-toast';
+    div.style.cssText = `position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+      background:#1e3022;border:2px solid #5a9e60;border-radius:99px;
+      padding:12px 24px;font-size:14px;color:var(--cream);z-index:600;
+      font-family:Fraunces,serif;font-style:italic;white-space:nowrap;
+      animation:celebrateIn 0.4s ease forwards`;
+    div.textContent = "You're all caught up 🌿";
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 2500);
+    return;
+  }
+
+  const item = items[whatsNewTourStep];
+
+  // Switch to correct tab if needed
+  if (item.tab) switchTab(item.tab);
+
+  setTimeout(() => {
+    const target = document.querySelector(item.spotlight);
+    if (!target) {
+      whatsNewTourStep++;
+      runWhatsNewTourStep(items);
+      return;
+    }
+
+    // Scroll target into view
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Show spotlight overlay
+    showTourSpotlight(target, item.text, items.length, () => {
+      whatsNewTourStep++;
+      runWhatsNewTourStep(items);
+    });
+  }, item.tab ? 400 : 100);
+}
+
+function showTourSpotlight(el, text, total, onNext) {
+  // Remove any existing spotlight
+  document.getElementById('tour-spotlight')?.remove();
+
+  const rect = el.getBoundingClientRect();
+  const pad = 8;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'tour-spotlight';
+  overlay.style.cssText = `position:fixed;inset:0;z-index:700;pointer-events:none`;
+
+  // Dark overlay with hole
+  overlay.innerHTML = `
+    <svg width="100%" height="100%" style="position:absolute;inset:0">
+      <defs>
+        <mask id="tour-mask">
+          <rect width="100%" height="100%" fill="white"/>
+          <rect x="${rect.left - pad}" y="${rect.top - pad}"
+            width="${rect.width + pad*2}" height="${rect.height + pad*2}"
+            rx="12" fill="black"/>
+        </mask>
+      </defs>
+      <rect width="100%" height="100%" fill="rgba(0,0,0,0.7)" mask="url(#tour-mask)"/>
+      <rect x="${rect.left - pad}" y="${rect.top - pad}"
+        width="${rect.width + pad*2}" height="${rect.height + pad*2}"
+        rx="12" fill="none" stroke="#5a9e60" stroke-width="2"
+        style="animation:pulse 1.5s ease-in-out infinite"/>
+    </svg>
+    <div style="
+      position:absolute;
+      left:16px;right:16px;
+      ${rect.top > window.innerHeight / 2 ? `bottom:${window.innerHeight - rect.top + 16}px` : `top:${rect.bottom + pad + 12}px`};
+      background:#1e3022;border:2px solid #5a9e60;border-radius:20px;
+      padding:16px 18px;pointer-events:all;
+      box-shadow:0 8px 32px rgba(0,0,0,0.8)">
+      <div style="font-size:11px;color:var(--sage-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">
+        What's new — ${whatsNewTourStep + 1} of ${total}
+      </div>
+      <div style="font-size:15px;color:var(--cream);line-height:1.5;margin-bottom:14px;font-family:Fraunces,serif;font-style:italic">
+        ${text}
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="document.getElementById('tour-spotlight').remove()" style="
+          background:none;border:1px solid rgba(255,255,255,0.15);
+          color:var(--text-muted);border-radius:99px;padding:8px 16px;
+          font-size:13px;cursor:pointer;font-family:Instrument Sans,sans-serif">
+          Skip tour
+        </button>
+        <button id="tour-next-btn" style="
+          flex:1;background:rgba(90,158,96,0.2);border:1px solid #5a9e60;
+          color:#a8c5ab;border-radius:99px;padding:8px 16px;
+          font-size:13px;cursor:pointer;font-family:Instrument Sans,sans-serif">
+          ${whatsNewTourStep + 1 >= total ? 'Done ✓' : 'Next →'}
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.getElementById('tour-next-btn').addEventListener('click', () => {
+    overlay.remove();
+    onNext();
+  });
 }
 
 // ============================================================
@@ -5602,30 +6394,33 @@ let obData = {
   householdTasks: [],
   notifications: { waterMode: 'smart', sundayReminder: true },
   audio: true,
+  theme: 'forest',
+  selfCareTasks: [],
 };
 
-const OB_STEPS = 9;
+const OB_STEPS = 11;
 
 function renderOnboarding() {
   const progress = document.getElementById('ob-progress');
   const body = document.getElementById('ob-body');
   const footer = document.getElementById('ob-footer');
 
-  // Progress pips
   progress.innerHTML = Array.from({length: OB_STEPS}, (_, i) =>
-    `<div class="ob-pip${i < obStep ? ' done' : i === obStep ? ' active' : ''}"></div>`
+    `<div class="ob-dot${i === obStep ? ' active' : i < obStep ? ' done' : ''}"></div>`
   ).join('');
 
   switch(obStep) {
-    case 0: renderOBWelcome(body, footer); break;
-    case 1: renderOBName(body, footer); break;
-    case 2: renderOBHabits(body, footer); break;
-    case 3: renderOBHousehold(body, footer); break;
-    case 4: renderOBWater(body, footer); break;
-    case 5: renderOBNotifications(body, footer); break;
-    case 6: renderOBAudio(body, footer); break;
-    case 7: renderOBInstall(body, footer); break;
-    case 8: renderOBReady(body, footer); break;
+    case 0:  renderOBWelcome(body, footer); break;
+    case 1:  renderOBName(body, footer); break;
+    case 2:  renderOBHabits(body, footer); break;
+    case 3:  renderOBHousehold(body, footer); break;
+    case 4:  renderOBWater(body, footer); break;
+    case 5:  renderOBNotifications(body, footer); break;
+    case 6:  renderOBAudio(body, footer); break;
+    case 7:  renderOBAppearance(body, footer); break;
+    case 8:  renderOBSelfCare(body, footer); break;
+    case 9:  renderOBInstall(body, footer); break;
+    case 10: renderOBReady(body, footer); break;
   }
 }
 
@@ -5940,6 +6735,112 @@ function obToggleAudio() {
 
 function obPreviewSound() {
   playSound('habit');
+}
+
+function renderOBAppearance(body, footer) {
+  const current = obData.theme || 'forest';
+  body.innerHTML = `
+    <div class="ob-title">Make it yours</div>
+    <div class="ob-sub">Choose a color palette — you can change this any time in Settings.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+      ${Object.entries(THEMES).map(([key, t]) => `
+        <div onclick="obSetTheme('${key}')" style="
+          background:${t.bg};
+          border:2px solid ${key === current ? t.primary : 'rgba(255,255,255,0.1)'};
+          border-radius:var(--r-xl);padding:16px 14px;cursor:pointer;
+          transition:border-color 0.2s,transform 0.15s;
+          ${key === current ? `transform:scale(1.03)` : ''}">
+          <div style="display:flex;gap:5px;margin-bottom:10px">
+            <div style="width:14px;height:14px;border-radius:50%;background:#7a9e7e"></div>
+            <div style="width:14px;height:14px;border-radius:50%;background:#b07878"></div>
+            <div style="width:14px;height:14px;border-radius:50%;background:#6a9ab0"></div>
+            <div style="width:14px;height:14px;border-radius:50%;background:#c9954a"></div>
+          </div>
+          <div style="font-size:15px;font-weight:500;color:${t.primaryLight}">${t.emoji} ${t.name}</div>
+          <div style="font-size:12px;color:${t.textSecondary};margin-top:3px">${t.description}</div>
+          ${key === current ? `<div style="font-size:11px;color:${t.primary};margin-top:6px">Selected ✓</div>` : ''}
+        </div>`).join('')}
+    </div>
+  `;
+  footer.innerHTML = `
+    <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
+    <button class="btn btn-primary" id="ob-btn-next" style="flex:1">Continue</button>
+  `;
+  document.getElementById('ob-btn-back').addEventListener('click', obBack);
+  document.getElementById('ob-btn-next').addEventListener('click', obNext);
+}
+
+function obSetTheme(key) {
+  obData.theme = key;
+  applyTheme(key);
+  renderOnboarding();
+}
+
+function renderOBSelfCare(body, footer) {
+  const selected = obData.selfCareTasks || [];
+
+  let html = `
+    <div class="ob-title">Daily self-care</div>
+    <div class="ob-sub" style="line-height:1.7">Choose what you'd like to gently track each day. There's no right answer — pick what feels possible, not what feels perfect.</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;font-style:italic;line-height:1.6">You can add, change, or remove any of these later. This is entirely yours.</div>`;
+
+  SELF_CARE_CATEGORIES.forEach(cat => {
+    html += `<div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:16px">${cat.icon}</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--cream)">${cat.label}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${cat.sub}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${cat.tasks.map(t => {
+          const on = selected.includes(t.id);
+          const pillStyle = `display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;background:${on ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};font-size:13px;color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
+          return `<div onclick="obToggleSelfCare('${t.id}')" id="ob-sc-${t.id}" style="${pillStyle}"><span>${t.icon}</span>${t.label}</div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  });
+
+  // Medication — separate, extra gentle
+  const medOn = selected.includes('sc_medication');
+  const medPillStyle = `display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:99px;cursor:pointer;background:${medOn ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${medOn ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};font-size:13px;color:${medOn ? 'var(--sky-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
+  html += `<div style="background:rgba(158,196,216,0.06);border:1px solid rgba(158,196,216,0.15);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:8px">
+    <div style="font-size:12px;color:var(--sky-light);font-weight:500;margin-bottom:4px">💊 Medication</div>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">A quiet, private nudge — just a gentle "did I remember?" with no judgment either way.</div>
+    <div onclick="obToggleSelfCare('sc_medication')" id="ob-sc-sc_medication" style="${medPillStyle}">💊 Took my medication</div>
+  </div>`;
+
+  body.innerHTML = html;
+  footer.innerHTML = `
+    <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
+    <button class="btn btn-ghost" id="ob-btn-skip" style="color:var(--text-muted)">Skip for now</button>
+    <button class="btn btn-primary" id="ob-btn-next" style="flex:1">Continue</button>
+  `;
+  document.getElementById('ob-btn-back').addEventListener('click', obBack);
+  document.getElementById('ob-btn-skip').addEventListener('click', obNext);
+  document.getElementById('ob-btn-next').addEventListener('click', obNext);
+}
+
+function obToggleSelfCare(id) {
+  if (!obData.selfCareTasks) obData.selfCareTasks = [];
+  const idx = obData.selfCareTasks.indexOf(id);
+  if (idx > -1) obData.selfCareTasks.splice(idx, 1);
+  else obData.selfCareTasks.push(id);
+
+  // Update pill style in place without full re-render
+  const el = document.getElementById('ob-sc-' + id);
+  if (!el) return;
+  const on = obData.selfCareTasks.includes(id);
+  el.style.background = on ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)';
+  el.style.borderColor = on ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)';
+  el.style.color = on ? 'var(--sage-light)' : 'var(--text-secondary)';
+  if (id === 'sc_medication') {
+    el.style.background = on ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)';
+    el.style.borderColor = on ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)';
+    el.style.color = on ? 'var(--sky-light)' : 'var(--text-secondary)';
+  }
 }
 
 function renderOBInstall(body, footer) {
@@ -6361,11 +7262,13 @@ function checkShowTutorial() {
 
 function initApp() {
   loadState();
+  initTheme();
   renderDailyQuote();
   applySeasonalTheme();
   checkNewWeek();
   checkMonthlyReflection();
   checkDailyAffirmation();
+  checkAutoGenerateInsight();
   renderTodayTab();
   updateStreak();
   checkMilestones();
