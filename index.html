@@ -1089,54 +1089,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   padding: 12px 16px 16px;
 }
 
-/* ============================================================
-   QUICK ACTION FAB
-   ============================================================ */
-.fab-container {
-  position: fixed;
-  bottom: calc(var(--nav-height) + var(--safe-bottom) + 20px);
-  right: max(calc((100vw - 430px) / 2 + 16px), 16px);
-  z-index: 50;
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: flex-end;
-  gap: 8px;
-}
-.fab-btn {
-  width: 52px; height: 52px;
-  border-radius: 50%;
-  background: var(--sage);
-  border: none;
-  color: var(--text-on-sage);
-  font-size: 22px;
-  cursor: pointer;
-  box-shadow: var(--shadow-md);
-  transition: transform 0.2s, background 0.2s;
-  display: flex; align-items: center; justify-content: center;
-}
-.fab-btn:active { transform: scale(0.92); }
-.fab-btn.open { background: var(--bg-elevated); color: var(--text-primary); }
-.fab-menu {
-  display: none;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
-}
-.fab-menu.show { display: flex; animation: tabFadeIn 0.2s ease; }
-.fab-menu-item {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--bg-card);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: var(--r-full);
-  padding: 8px 16px 8px 12px;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: background 0.15s;
-  white-space: nowrap;
-}
-.fab-menu-item:active { background: var(--bg-elevated); }
-.fab-menu-item span:first-child { font-size: 16px; }
-.fab-menu-item span:last-child { font-size: 13px; color: var(--text-secondary); }
 
 /* ============================================================
    ONBOARDING
@@ -1949,16 +1901,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
     </button>
   </nav>
 
-  <!-- Quick Action FAB -->
-  <div class="fab-container" id="fab-container">
-    <button class="fab-btn" id="fab-toggle" onclick="toggleFAB()">⚡</button>
-    <div class="fab-menu" id="fab-menu">
-      <div class="fab-menu-item" onclick="fabAction('mood')"><span>💚</span><span>Log mood</span></div>
-      <div class="fab-menu-item" onclick="fabAction('water')"><span>💧</span><span>Add water</span></div>
-      <div class="fab-menu-item" onclick="fabAction('journal')"><span>📓</span><span>Quick journal</span></div>
-      <div class="fab-menu-item" onclick="fabAction('breathe')"><span>🌬</span><span>Breathe</span></div>
-    </div>
-  </div>
 </div>
 
 <!-- ============================================================
@@ -2203,7 +2145,7 @@ function listenForSWUpdate() {
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
   { text: 'Quick journal — write a thought right from the Daily tab, no navigation needed', spotlight: '#quick-journal-card', tab: 'today' },
-  { text: 'Quick-action button — tap ⚡ to log mood, water, journal, or breathe instantly', spotlight: '#fab-toggle', tab: 'today' },
+  { text: 'Breathe section — quick breathing exercise right on the Daily tab', spotlight: null },
   { text: 'Progress celebrations — bloom cheers you at 50% and 75% completion, not just 100%', spotlight: null },
   { text: 'Undo protection — accidentally unchecked a habit? 5-second undo button appears', spotlight: null },
   { text: 'Habit triggers — set "when/after" cues for each habit in Settings for 2-3x follow-through', spotlight: '#sh-triggers', tab: 'settings' },
@@ -5092,10 +5034,9 @@ function renderTodayTop() {
   if (!container) return;
   let html = '';
 
-  // Hard day button — show if mood not logged, or if logged as rough/low (0-1)
+  // Hard day button — only show if mood is not yet selected
   const mood = state.todayData.mood;
-  const moodIsOkayOrBetter = mood !== undefined && mood >= 2;
-  if (!state.hardDayMode && !moodIsOkayOrBetter) {
+  if (!state.hardDayMode && mood === undefined) {
     html += `<div onclick="activateHardDayMode()" style="
       display:flex;align-items:center;gap:12px;
       background:rgba(176,120,120,0.07);
@@ -5211,8 +5152,8 @@ function renderTodayTop() {
     </div>`;
   }
 
-  // Low mood banner
-  if (mood !== undefined && mood <= 2) {
+  // Low mood banner — only for Low (0) and Rough (1)
+  if (mood !== undefined && mood <= 1) {
     const yesterdayLow = checkYesterdayLowMood();
     const breatheExpanded = state.inlineBreatheOpen;
 
@@ -5645,6 +5586,15 @@ function renderTodayTab() {
     </div>`;
   }
 
+  // Quick breathe section at bottom of Today
+  html += `<div class="section-label">🌬 Take a breath</div>
+  <div class="card" style="text-align:center;padding:20px">
+    <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:14px">A moment of calm, whenever you need it.</div>
+    <button class="btn btn-secondary" onclick="switchTab('wellness');setTimeout(()=>scrollToBreath(),300)" style="display:inline-flex;align-items:center;gap:8px">
+      🌬 Start breathing exercise
+    </button>
+  </div>`;
+
   // Subtle share nudge at bottom of Today
   html += `<div style="text-align:center;padding:12px 0 20px">
     <button onclick="shareApp()" style="background:none;border:none;font-size:12px;color:var(--text-muted);cursor:pointer;font-family:Fraunces,serif;font-style:italic">
@@ -5657,7 +5607,7 @@ function renderTodayTab() {
   checkAllDone();
 
   // Low mood AI trigger
-  if (state.todayData.mood !== undefined && state.todayData.mood <= 2 && checkYesterdayLowMood() && !state.lowMoodAIResponse) {
+  if (state.todayData.mood !== undefined && state.todayData.mood <= 1 && checkYesterdayLowMood() && !state.lowMoodAIResponse) {
     triggerLowMoodAI();
   }
 }
@@ -9060,41 +9010,6 @@ function migrateToNewDailyHabits() {
 
   p._migratedDailyHabits = true;
   save('bloom_prefs', p);
-}
-
-// ── Quick Action FAB ─────────────────────────────────────────
-function toggleFAB() {
-  const menu = document.getElementById('fab-menu');
-  const btn = document.getElementById('fab-toggle');
-  if (!menu || !btn) return;
-  const isOpen = menu.classList.contains('show');
-  menu.classList.toggle('show');
-  btn.classList.toggle('open');
-  btn.textContent = isOpen ? '⚡' : '✕';
-  haptic('light');
-}
-
-function fabAction(action) {
-  toggleFAB(); // close the menu
-  if (action === 'mood') {
-    switchTab('today');
-    setTimeout(() => {
-      const moodRow = document.getElementById('mood-row');
-      if (moodRow) moodRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 200);
-  } else if (action === 'water') {
-    switchTab('today');
-    setTimeout(() => tapWater(state.todayData.water || 0), 200);
-  } else if (action === 'journal') {
-    switchTab('today');
-    setTimeout(() => {
-      const el = document.getElementById('quick-journal-input') || document.getElementById('journal-card');
-      if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); if (el.focus) el.focus(); }
-    }, 200);
-  } else if (action === 'breathe') {
-    switchTab('wellness');
-    setTimeout(() => scrollToBreath(), 300);
-  }
 }
 
 function initApp() {
