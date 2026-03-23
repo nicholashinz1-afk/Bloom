@@ -2553,19 +2553,22 @@ function playWarmTone(freq, duration, volume = 0.18, delay = 0) {
 function getDailyCompletionCount() {
   const td = state.todayData || {};
   let count = 0;
-  // Legacy teeth
-  if (td.m_teeth) count++;
-  if (td.e_teeth) count++;
-  // New daily habits
+  // New daily habits (preferred) or legacy teeth
   const dhP = state.prefs?.dailyHabits || {};
   const htP = state.prefs?.habitTimes || {};
-  [...DAILY_HABITS, MEDICATION_HABIT].forEach(h => {
-    if (!dhP[h.id]) return;
-    const time = htP[h.id] || h.defaultTime || 'any';
-    if ((time === 'am' || time === 'both') && td[h.id + '_am']) count++;
-    if ((time === 'pm' || time === 'both') && td[h.id + '_pm']) count++;
-    if (time === 'any' && td[h.id + '_any']) count++;
-  });
+  const hasNewHabits = Object.values(dhP).some(Boolean);
+  if (hasNewHabits) {
+    [...DAILY_HABITS, MEDICATION_HABIT].forEach(h => {
+      if (!dhP[h.id]) return;
+      const time = htP[h.id] || h.defaultTime || 'any';
+      if ((time === 'am' || time === 'both') && td[h.id + '_am']) count++;
+      if ((time === 'pm' || time === 'both') && td[h.id + '_pm']) count++;
+      if (time === 'any' && td[h.id + '_any']) count++;
+    });
+  } else {
+    if (td.m_teeth) count++;
+    if (td.e_teeth) count++;
+  }
   if (td.mood !== undefined) count++;
   if (td.water >= 3) count++;
   if (td.foodXPGiven) count++;
@@ -3478,8 +3481,48 @@ function checkScheduledReminders() {
   });
 }
 
+// Evening nudge — if user hasn't done anything all day
+const EVENING_NUDGE_MESSAGES = [
+  { title: 'Still here for you 🌙', body: 'Even opening this app counts. One small thing is enough — or just rest. That\'s okay too.' },
+  { title: 'No pressure, just a nudge 💚', body: 'If today was hard, that\'s okay. Logging your mood or writing one sentence in your journal is more than enough.' },
+  { title: 'A quiet check-in 🌿', body: 'You don\'t have to do everything. Even just saying how you feel today matters. We\'re here whenever you\'re ready.' },
+  { title: 'Hey — just checking in 🤍', body: 'Some days are harder than others. If you can, just log your mood. If not, tomorrow is a fresh start.' },
+];
+
+function checkEveningNudge() {
+  if (!state.prefs?.notifications?.habitReminders) return;
+  const now = new Date();
+  const hour = now.getHours();
+  if (hour < 19) return; // Only after 7pm
+
+  const t = today();
+  const sentKey = `bloom_reminders_${t}`;
+  const sent = load(sentKey, {});
+  if (sent.evening_nudge) return;
+
+  const td = state.todayData || {};
+  const anyDailyHabit = Object.keys(td).some(k => (k.endsWith('_am') || k.endsWith('_pm') || k.endsWith('_any')) && td[k]);
+  const anySelfCare = td.selfCare && Object.values(td.selfCare).some(Boolean);
+  const anyActivity = (
+    td.m_teeth || td.e_teeth || anyDailyHabit ||
+    td.mood !== undefined ||
+    (td.water && td.water > 0) ||
+    (td.food && Object.values(td.food).some(Boolean)) ||
+    td.journalXPGiven ||
+    anySelfCare ||
+    state.wellnessData?.journal?.[t]
+  );
+
+  if (!anyActivity) {
+    sent.evening_nudge = true;
+    save(sentKey, sent);
+    const msg = EVENING_NUDGE_MESSAGES[Math.floor(Math.random() * EVENING_NUDGE_MESSAGES.length)];
+    sendLocalNotification(msg.title, msg.body, 'reminder-evening-nudge');
+  }
+}
+
 // Check reminders every 15 minutes
-setInterval(checkScheduledReminders, 15 * 60 * 1000);
+setInterval(() => { checkScheduledReminders(); checkEveningNudge(); }, 15 * 60 * 1000);
 
 // ── Weekly reflection availability check ─────────────────────
 function checkWeeklyReflectionAvailable() {
@@ -3985,12 +4028,12 @@ const XP_VALUES = {
   w_outside: 20, water_goal: 10, food: 10, journal: 10,
   household: 15, reflection: 15,
   // New daily habits
-  brush_teeth_am: 15, brush_teeth_pm: 15,
-  brush_hair_am: 15, brush_hair_pm: 15,
-  wash_face_am: 15, wash_face_pm: 15,
-  get_dressed_am: 15, get_dressed_pm: 15,
-  floss_am: 15, floss_pm: 15,
-  skincare_am: 15, skincare_pm: 15,
+  brush_teeth_am: 15, brush_teeth_pm: 15, brush_teeth_any: 15,
+  brush_hair_am: 15, brush_hair_pm: 15, brush_hair_any: 15,
+  wash_face_am: 15, wash_face_pm: 15, wash_face_any: 15,
+  get_dressed_am: 15, get_dressed_pm: 15, get_dressed_any: 15,
+  floss_am: 15, floss_pm: 15, floss_any: 15,
+  skincare_am: 15, skincare_pm: 15, skincare_any: 15,
   medication_am: 10, medication_pm: 10, medication_any: 10,
 };
 
@@ -6398,7 +6441,23 @@ function toggleDailyHabitPref(id) {
 
 function setHabitTime(id, time) {
   if (!state.prefs.habitTimes) state.prefs.habitTimes = {};
+  const oldTime = state.prefs.habitTimes[id];
   state.prefs.habitTimes[id] = time;
+
+  // Migrate today's completion data to new time slot keys
+  const td = state.todayData;
+  const oldSlots = oldTime === 'both' ? ['am','pm'] : oldTime === 'any' ? ['any'] : [oldTime || 'any'];
+  const newSlots = time === 'both' ? ['am','pm'] : time === 'any' ? ['any'] : [time];
+  // Collect any completions from old slots
+  const wasDone = oldSlots.some(s => td[id + '_' + s]);
+  if (wasDone) {
+    // Clear old slots
+    oldSlots.forEach(s => { delete td[id + '_' + s]; });
+    // Set new slots
+    newSlots.forEach(s => { td[id + '_' + s] = true; });
+    saveState();
+  }
+
   save('bloom_prefs', state.prefs);
   renderSettingsTab();
   renderTodayTab();
@@ -7936,7 +7995,7 @@ function migrateToNewDailyHabits() {
   if (p._migratedDailyHabits) return;
 
   // Migrate old m_teeth/e_teeth to new brush_teeth with 'both'
-  if (p.habits?.m_teeth !== false || p.habits?.e_teeth !== false) {
+  if (p.habits && (p.habits.m_teeth === true || p.habits.e_teeth === true)) {
     if (!p.dailyHabits) p.dailyHabits = {};
     if (!p.habitTimes) p.habitTimes = {};
     if (!p.dailyHabits.brush_teeth) {
@@ -7989,6 +8048,36 @@ function migrateToNewDailyHabits() {
     if (p.selfCareTasks) p.selfCareTasks = p.selfCareTasks.filter(id => !id.startsWith('sc_medication'));
   }
 
+  // Migrate today's completion data to new keys
+  const td = state.todayData;
+  if (td) {
+    if (td.m_teeth && !td.brush_teeth_am) td.brush_teeth_am = true;
+    if (td.e_teeth && !td.brush_teeth_pm) td.brush_teeth_pm = true;
+    // Migrate body care self-care completions
+    const sc = td.selfCare || {};
+    const scToDaily = { sc_brush_hair: 'brush_hair', sc_wash_face: 'wash_face', sc_get_dressed: 'get_dressed', sc_floss: 'floss', sc_skincare: 'skincare' };
+    Object.entries(scToDaily).forEach(([oldId, newId]) => {
+      if (sc[oldId]) {
+        const time = p.habitTimes?.[newId] || 'any';
+        if (time === 'am' || time === 'both') td[newId + '_am'] = true;
+        else if (time === 'pm') td[newId + '_pm'] = true;
+        else td[newId + '_any'] = true;
+      }
+    });
+    // Migrate medication completions
+    if (sc.sc_medication || sc.sc_medication_morning || sc.sc_medication_evening) {
+      const medTime = p.habitTimes?.medication || 'am';
+      if (sc.sc_medication_morning || sc.sc_medication) {
+        if (medTime === 'am' || medTime === 'both' || medTime === 'any') td.medication_am = true;
+        if (medTime === 'any') td.medication_any = true;
+      }
+      if (sc.sc_medication_evening) {
+        if (medTime === 'pm' || medTime === 'both') td.medication_pm = true;
+      }
+    }
+    save('bloom_today_' + today(), td);
+  }
+
   p._migratedDailyHabits = true;
   save('bloom_prefs', p);
 }
@@ -8012,6 +8101,7 @@ function initApp() {
   checkBackupReminder();
   checkShowTutorial();
   checkScheduledReminders();
+  checkEveningNudge();
   const headerIcon = document.getElementById('header-bloom-icon');
   if (headerIcon) headerIcon.innerHTML = bloomIcon(26);
   const navIcon = document.getElementById('nav-today-icon');
