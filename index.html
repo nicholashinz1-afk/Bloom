@@ -5194,8 +5194,13 @@ function renderSettingsTab() {
       <button class="btn btn-ghost btn-block" onclick="resetToday()">↺ Reset today's data</button>
     </div>
     <div class="divider"></div>
-    <div style="font-size:12px;color:var(--text-muted);line-height:1.6">
-      Your data is stored only on this device. Save a restore link or export regularly to protect it.
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:4px 0">
+      <span style="font-size:18px;flex-shrink:0;margin-top:1px">🔒</span>
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.7">
+        <div style="font-weight:500;color:var(--cream);margin-bottom:4px">Your data is private and local</div>
+        Everything in bloom — your journal, moods, habits, and reflections — is stored only on this device. It's never uploaded to a server, never shared with anyone, and never accessed by us or anyone else.
+        <div style="margin-top:6px">The only data that ever leaves your device is when you use AI features — those prompts go to Claude to generate a response, but are never stored or tied to your identity.</div>
+      </div>
     </div>
   `);
 
@@ -5604,7 +5609,10 @@ function renderOBWelcome(body, footer) {
         </div>
         <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-card);border-radius:14px">
           <span style="font-size:22px">🔒</span>
-          <div style="text-align:left"><div style="font-size:13px;font-weight:500;color:var(--cream)">Private by design</div><div style="font-size:12px;color:var(--text-muted)">Your data stays on your device</div></div>
+          <div style="text-align:left">
+            <div style="font-size:13px;font-weight:500;color:var(--cream)">Yours, and only yours</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.5;margin-top:2px">Everything stays on your device. No accounts, no servers, no one else ever sees it.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -5913,10 +5921,24 @@ function renderOBReady(body, footer) {
     <div class="ob-logo">🌱</div>
     <div class="ob-title">You're all set,<br>${obData.name || 'friend'}</div>
     <div class="ob-sub">bloom is ready whenever you are. No rush — every small step counts.</div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:22px;flex-shrink:0">🔒</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px">Your data is completely private</div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+            Everything you write in bloom — your journal, your moods, your habits — lives only on this device. It's never uploaded, never shared, and never seen by anyone else. Not us, not anyone.
+          </div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-top:8px">
+            The only exception is when you use the AI features — those prompts are sent to Claude to generate a response, but are never stored or linked to you.
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="card">
       <div style="font-size:14px;font-weight:500;margin-bottom:10px">💾 Save a backup link</div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">
-        Your data lives only on this device. Bookmark a restore link so you never lose your progress if you switch phones or clear your browser.
+        Because your data lives only on this device, we recommend saving a restore link — it lets you recover everything if you switch phones or clear your browser.
       </div>
       <button class="btn btn-secondary btn-block" onclick="obShowBackup()">Generate backup link</button>
       <div id="ob-backup-url" style="display:none;margin-top:10px" class="backup-url-box"></div>
