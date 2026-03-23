@@ -1953,7 +1953,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 <div class="bottom-sheet" id="whats-new-sheet">
   <div class="sheet-handle"></div>
   <div style="padding:0 20px 20px">
-    <div class="sheet-title">What's new in v1.5.0 🌿</div>
+    <div class="sheet-title" id="whats-new-title">What's new 🌿</div>
     <div id="whats-new-list"></div>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button class="btn btn-primary" style="flex:1" id="whats-new-tour-btn" onclick="startWhatsNewTour()">Show me what's new</button>
@@ -2095,7 +2095,7 @@ function bloomIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.0.1';
+const VERSION = '2.0.2';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -6435,6 +6435,9 @@ function showWhatsNew(force = false) {
   const hasSeenReintro = load('bloom_reintro_v150', false);
 
   save('bloom_version', VERSION);
+
+  const title = document.getElementById('whats-new-title');
+  if (title) title.textContent = `What's new in v${VERSION} 🌿`;
 
   const list = document.getElementById('whats-new-list');
   if (list) {
