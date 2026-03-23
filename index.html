@@ -5233,7 +5233,7 @@ function renderInlineBreathPhase() {
         <div style="font-family:Fraunces,serif;font-style:italic;font-size:17px;color:var(--sage-light);margin-bottom:6px">Four cycles complete.</div>
         <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px">Take a moment. How do you feel?</div>
         <div style="display:flex;gap:10px;justify-content:center">
-          <button class="btn btn-secondary btn-sm" onclick="inlineContinueBreathing()">Keep going</button>
+          <button class="btn btn-sm" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="inlineContinueBreathing()">Keep going</button>
           <button class="btn btn-ghost btn-sm" onclick="stopInlineBreathing()">I'm done</button>
         </div>
       </div>`;
@@ -5595,7 +5595,7 @@ function renderTodayTab() {
       <div style="margin-left:auto;font-size:11px;color:var(--sky);background:rgba(106,154,176,0.15);padding:2px 8px;border-radius:99px">4-7-8</div>
     </div>
     <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
-    <button class="btn btn-secondary" onclick="switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">Begin breathing exercise</button>
+    <button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">Begin breathing exercise</button>
   </div>`;
 
   // Subtle share nudge at bottom of Today
@@ -6070,7 +6070,7 @@ function renderWellnessTab() {
       </div>
       <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
       <div id="breath-ui">
-        <button class="btn btn-secondary" onclick="startBreathing()">Begin breathing exercise</button>
+        <button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="startBreathing()">Begin breathing exercise</button>
       </div>
     </div>
   </div>`;
@@ -6304,7 +6304,7 @@ function renderBreathPhase() {
         <div style="font-family:Fraunces,serif;font-style:italic;font-size:17px;color:var(--sage-light);margin-bottom:6px">Four cycles complete.</div>
         <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px">Take a moment. How do you feel?</div>
         <div style="display:flex;gap:10px;justify-content:center">
-          <button class="btn btn-secondary btn-sm" onclick="continueBreathing()">Keep going</button>
+          <button class="btn btn-sm" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="continueBreathing()">Keep going</button>
           <button class="btn btn-ghost btn-sm" onclick="stopBreathing()">I'm done</button>
         </div>
       </div>`;
