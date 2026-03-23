@@ -2095,7 +2095,23 @@ function bloomIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.0.0';
+const VERSION = '2.0.1';
+
+// ── Auto-update check ────────────────────────────────────────
+// Fetches the live page, compares VERSION, and reloads if newer.
+// Runs on app open and when returning from background.
+async function checkForUpdate() {
+  try {
+    const res = await fetch(window.location.href, { cache: 'no-store' });
+    if (!res.ok) return;
+    const html = await res.text();
+    const match = html.match(/const VERSION\s*=\s*'([^']+)'/);
+    if (match && match[1] !== VERSION) {
+      // New version available — reload transparently
+      window.location.reload();
+    }
+  } catch(e) { /* offline or network error — skip silently */ }
+}
 
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
@@ -3327,6 +3343,8 @@ function handleVisibilityChange() {
   if (document.visibilityState === 'hidden') {
     save('bloom_last_active', Date.now());
   } else {
+    // Check for app updates on every foreground return
+    checkForUpdate();
     const lastActive = load('bloom_last_active', null);
     if (lastActive && (Date.now() - lastActive) >= SESSION_TIMEOUT_MS) {
       // Been away 30+ min — full refresh
@@ -7629,6 +7647,7 @@ function checkShowTutorial() {
 function initApp() {
   loadState();
   initTheme();
+  checkForUpdate();
   renderDailyQuote();
   applySeasonalTheme();
   checkNewWeek();
