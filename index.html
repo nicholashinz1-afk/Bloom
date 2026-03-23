@@ -2838,6 +2838,7 @@ function updateStreak() {
     (td.food && Object.values(td.food).some(Boolean)) ||
     td.journalXPGiven ||
     anySelfCare ||
+    td.nudge_opened ||
     state.wellnessData?.journal?.[t]
   );
 
@@ -3377,6 +3378,7 @@ function handleVisibilityChange() {
   } else {
     // Check for app updates on every foreground return
     checkForUpdate();
+    checkNudgeCredit();
     const lastActive = load('bloom_last_active', null);
     if (lastActive && (Date.now() - lastActive) >= SESSION_TIMEOUT_MS) {
       // Been away 30+ min — full refresh
@@ -3518,6 +3520,38 @@ function checkEveningNudge() {
     save(sentKey, sent);
     const msg = EVENING_NUDGE_MESSAGES[Math.floor(Math.random() * EVENING_NUDGE_MESSAGES.length)];
     sendLocalNotification(msg.title, msg.body, 'reminder-evening-nudge');
+  }
+}
+
+// If the evening nudge fired and user opens the app, give them credit
+function checkNudgeCredit() {
+  const t = today();
+  const sentKey = `bloom_reminders_${t}`;
+  const sent = load(sentKey, {});
+  if (!sent.evening_nudge) return; // nudge didn't fire today
+  if (sent.nudge_credit_given) return; // already credited
+
+  const td = state.todayData || {};
+  const anyDailyHabit = Object.keys(td).some(k => (k.endsWith('_am') || k.endsWith('_pm') || k.endsWith('_any')) && td[k]);
+  const anySelfCare = td.selfCare && Object.values(td.selfCare).some(Boolean);
+  const anyActivity = (
+    td.m_teeth || td.e_teeth || anyDailyHabit ||
+    td.mood !== undefined ||
+    (td.water && td.water > 0) ||
+    (td.food && Object.values(td.food).some(Boolean)) ||
+    td.journalXPGiven ||
+    anySelfCare ||
+    state.wellnessData?.journal?.[t]
+  );
+
+  if (!anyActivity) {
+    // They came back after the nudge with nothing done — showing up counts
+    state.todayData.nudge_opened = true;
+    sent.nudge_credit_given = true;
+    save(sentKey, sent);
+    saveState();
+    archiveToday();
+    updateStreak();
   }
 }
 
@@ -8102,6 +8136,7 @@ function initApp() {
   checkShowTutorial();
   checkScheduledReminders();
   checkEveningNudge();
+  checkNudgeCredit();
   const headerIcon = document.getElementById('header-bloom-icon');
   if (headerIcon) headerIcon.innerHTML = bloomIcon(26);
   const navIcon = document.getElementById('nav-today-icon');
