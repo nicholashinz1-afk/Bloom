@@ -3446,10 +3446,115 @@ async function sendLocalNotification(title, body, tag) {
 const HABIT_REMINDERS = [
   { id: 'm_teeth', hour: 8,  title: 'Morning reminder 🦷', body: 'Have you brushed your teeth yet? A small act of care to start the day.', check: () => state.todayData.m_teeth || state.todayData.brush_teeth_am },
   { id: 'e_teeth', hour: 21, title: 'Evening reminder 🦷', body: 'Time to brush your teeth before bed. You\'ve got this.', check: () => state.todayData.e_teeth || state.todayData.brush_teeth_pm },
-  { id: 'water',   hour: 12, title: 'Hydration check 💧',  body: 'Have you had some water today? Your body will thank you.', check: () => (state.todayData.water || 0) >= 2 },
-  { id: 'medication_morning',   hour: 9,  title: 'Medication reminder 💊', body: 'A gentle nudge — have you taken your morning medication?', check: () => state.todayData.medication_am || state.todayData.medication_any || state.todayData.selfCare?.sc_medication_morning || state.todayData.selfCare?.sc_medication },
-  { id: 'medication_evening',   hour: 20, title: 'Medication reminder 💊', body: 'Evening medication reminder — taking care of yourself in every way.', check: () => state.todayData.medication_pm || state.todayData.selfCare?.sc_medication_evening },
 ];
+
+// ── Medication reminders (respects medicationReminders setting) ──
+const MED_REMINDER_MESSAGES = [
+  { title: 'Medication reminder 💊', body: 'A gentle nudge — have you taken your medication? No judgment, just care.' },
+  { title: 'Medication check-in 💊', body: 'Just a quiet reminder — your medication is waiting when you\'re ready.' },
+  { title: 'Hey, a small reminder 💊', body: 'Have you had your medication? Taking care of yourself matters.' },
+];
+
+function checkMedicationReminders() {
+  if (!state.prefs?.notifications?.habitReminders) return;
+  const medOn = state.prefs?.dailyHabits?.medication;
+  if (!medOn) return;
+  const medRemindMode2 = state.prefs?.notifications?.medicationReminders || 'auto';
+  if (medRemindMode2 === 'off') return;
+
+  const medTime = state.prefs?.habitTimes?.medication || 'am';
+  const td = state.todayData;
+  const now = new Date();
+  const hour = now.getHours();
+  const t = today();
+  const sentKey = `bloom_reminders_${t}`;
+  const sent = load(sentKey, {});
+
+  // Build schedule: { slotKey, firstHour, followupHour, checkFn }
+  const schedule = [];
+  if (medTime === 'am' || medTime === 'both') {
+    schedule.push({ slot: 'am', firstHour: 9, followupHour: 11, done: () => td.medication_am });
+  }
+  if (medTime === 'pm' || medTime === 'both') {
+    schedule.push({ slot: 'pm', firstHour: 20, followupHour: 22, done: () => td.medication_pm });
+  }
+  if (medTime === 'any') {
+    schedule.push({ slot: 'any', firstHour: 12, followupHour: 14, done: () => td.medication_any });
+  }
+
+  schedule.forEach(s => {
+    if (s.done()) return;
+    const msg = MED_REMINDER_MESSAGES[Math.floor(Math.random() * MED_REMINDER_MESSAGES.length)];
+
+    // First reminder
+    const firstKey = 'med_' + s.slot + '_first';
+    if (hour >= s.firstHour && !sent[firstKey]) {
+      sent[firstKey] = true;
+      save(sentKey, sent);
+      sendLocalNotification(msg.title, msg.body, 'reminder-med-' + s.slot);
+    }
+
+    // Follow-up (only in 'auto' mode)
+    if (medRemindMode2 === 'auto') {
+      const followKey = 'med_' + s.slot + '_followup';
+      if (hour >= s.followupHour && !sent[followKey]) {
+        sent[followKey] = true;
+        save(sentKey, sent);
+        sendLocalNotification('Still here 💊', 'No rush — just another gentle nudge about your ' + (s.slot === 'any' ? '' : s.slot.toUpperCase() + ' ') + 'medication.', 'reminder-med-' + s.slot + '-f');
+      }
+    }
+  });
+}
+
+// ── Water reminders (respects waterMode setting) ─────────────
+const WATER_MESSAGES = [
+  { title: 'Water check 💧', body: 'A small sip goes a long way. Your body will thank you.' },
+  { title: 'Hydration nudge 💧', body: 'Have you had some water recently? Even a few sips count.' },
+  { title: 'Gentle reminder 💧', body: 'Water is self-care too. Take a moment for a drink.' },
+  { title: 'Stay hydrated 💧', body: 'You\'re doing great — just a little water when you can.' },
+];
+
+function checkWaterReminders() {
+  if (!state.prefs?.notifications?.habitReminders) return;
+  const waterMode = state.prefs?.notifications?.waterMode || 'smart';
+  if (waterMode === 'off') return;
+
+  const waterCount = state.todayData.water || 0;
+  if (waterCount >= 3) return; // goal reached, no more reminders
+
+  const now = new Date();
+  const hour = now.getHours();
+  if (hour < 12 || hour > 21) return; // only between noon and 9pm
+
+  const t = today();
+  const sentKey = `bloom_reminders_${t}`;
+  const sent = load(sentKey, {});
+
+  if (waterMode === 'hourly') {
+    // Send once per hour, keyed by hour
+    const waterKey = `water_h${hour}`;
+    if (sent[waterKey]) return;
+    sent[waterKey] = true;
+    save(sentKey, sent);
+    const msg = WATER_MESSAGES[Math.floor(Math.random() * WATER_MESSAGES.length)];
+    sendLocalNotification(msg.title, msg.body, 'reminder-water');
+  } else if (waterMode === 'smart') {
+    // Smart: remind every 4 hours if under goal, starting at noon
+    // Noon (12), late afternoon (16), evening (20)
+    const smartHours = [12, 16, 20];
+    const due = smartHours.find(h => hour >= h && !sent[`water_s${h}`]);
+    if (!due) return;
+    sent[`water_s${due}`] = true;
+    save(sentKey, sent);
+    const bottlesLeft = 3 - waterCount;
+    const bodies = [
+      `You've had ${waterCount}/3 bottles today. A sip when you're ready — no rush.`,
+      `Gentle nudge — ${bottlesLeft} more bottle${bottlesLeft !== 1 ? 's' : ''} to go. You've got this.`,
+      `How's your water today? ${waterCount > 0 ? 'You\'re on your way — keep it up.' : 'Even one sip counts.'}`,
+    ];
+    sendLocalNotification('Hydration check 💧', bodies[Math.floor(Math.random() * bodies.length)], 'reminder-water');
+  }
+}
 
 function checkScheduledReminders() {
   if (!state.prefs?.notifications?.habitReminders) return;
@@ -3461,21 +3566,6 @@ function checkScheduledReminders() {
 
   HABIT_REMINDERS.forEach(r => {
     if (hour >= r.hour && !sent[r.id] && !r.check()) {
-      // Check if this reminder is relevant (e.g., medication only if enabled)
-      if (r.id.startsWith('medication')) {
-        const medOn2 = state.prefs?.dailyHabits?.medication;
-        const medTime2 = state.prefs?.habitTimes?.medication || 'am';
-        const oldMed = state.prefs?.selfCareTasks?.includes('sc_medication');
-        if (!medOn2 && !oldMed) return;
-        if (medOn2) {
-          if (r.id === 'medication_morning' && medTime2 !== 'am' && medTime2 !== 'both' && medTime2 !== 'any') return;
-          if (r.id === 'medication_evening' && medTime2 !== 'pm' && medTime2 !== 'both') return;
-        } else {
-          const medTiming = state.prefs?.medicationTiming || [];
-          if (r.id === 'medication_morning' && !medTiming.includes('morning') && !medTiming.includes('once')) return;
-          if (r.id === 'medication_evening' && !medTiming.includes('evening')) return;
-        }
-      }
       sent[r.id] = true;
       save(sentKey, sent);
       sendLocalNotification(r.title, r.body, `reminder-${r.id}`);
@@ -3591,7 +3681,7 @@ function checkNudgeCredit() {
 }
 
 // Check reminders every 15 minutes
-setInterval(() => { checkScheduledReminders(); checkEveningNudge(); }, 15 * 60 * 1000);
+setInterval(() => { checkScheduledReminders(); checkWaterReminders(); checkMedicationReminders(); checkEveningNudge(); }, 15 * 60 * 1000);
 
 // ── Weekly reflection availability check ─────────────────────
 function checkWeeklyReflectionAvailable() {
@@ -6229,24 +6319,65 @@ function renderSettingsTab() {
   html += settingsSection('selfcare', '💚 Daily self-care', scHtml);
 
   // ── NOTIFICATIONS & SOUND ────────────────────────────────────
-  html += settingsSection('notifications', '🔔 Notifications & sound', `
+  const medHabitOn = prefs.dailyHabits?.medication;
+  const medTimeVal = prefs.habitTimes?.medication || 'am';
+  const medRemindMode = notifs.medicationReminders || 'auto';
+
+  let notifHtml = `
     <div class="toggle-row">
       <div><div class="toggle-label">Sound feedback</div><div class="toggle-sub">Soft chimes on habits, breathing, and milestones</div></div>
       <div class="toggle${prefs.audio !== false ? ' on' : ''}" onclick="toggleAudioPref()"></div>
     </div>
     <div class="divider"></div>
-    <div class="toggle-label" style="margin-bottom:8px;color:var(--text-secondary)">Water reminders</div>
-    <div class="radio-group">
-      ${['smart','hourly','off'].map(m => `<div class="radio-option${(notifs.waterMode||'smart') === m ? ' selected' : ''}" onclick="setWaterMode('${m}')">
-        <div class="radio-dot"></div>
-        <div class="radio-label">${m === 'smart' ? 'Smart — only if under goal' : m === 'hourly' ? 'Every hour' : 'Off'}</div>
-      </div>`).join('')}
-    </div>
-    <div class="divider"></div>
     <div class="toggle-row">
-      <div><div class="toggle-label">Habit reminders</div><div class="toggle-sub">Teeth brushing at 8am & 9pm, water at noon, medication at scheduled times</div></div>
+      <div><div class="toggle-label">Habit reminders</div><div class="toggle-sub">Teeth brushing at 8am & 9pm, evening check-in at 7pm</div></div>
       <div class="toggle${notifs.habitReminders ? ' on' : ''}" onclick="toggleNotif('habitReminders')"></div>
-    </div>
+    </div>`;
+
+  if (notifs.habitReminders) {
+    // Water reminders
+    notifHtml += `
+    <div class="divider"></div>
+    <div class="toggle-label" style="margin-bottom:4px;color:var(--text-secondary)">💧 Water reminders</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;line-height:1.5">Between noon and 9pm, until you hit your goal.</div>
+    <div class="radio-group">
+      ${['smart','hourly','off'].map(m => {
+        const labels = {
+          smart: 'Smart — every 4 hours if under goal (noon, 4pm, 8pm)',
+          hourly: 'Every hour',
+          off: 'Off',
+        };
+        return `<div class="radio-option${(notifs.waterMode||'smart') === m ? ' selected' : ''}" onclick="setWaterMode('${m}')">
+          <div class="radio-dot"></div>
+          <div class="radio-label">${labels[m]}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+    // Medication reminders (only if medication is enabled)
+    if (medHabitOn) {
+      const timeDesc = medTimeVal === 'am' ? '9am' : medTimeVal === 'pm' ? '8pm' : medTimeVal === 'both' ? '9am & 8pm' : 'noon';
+      const followupDesc = medTimeVal === 'am' ? '11am' : medTimeVal === 'pm' ? '10pm' : medTimeVal === 'both' ? '11am & 10pm' : '2pm';
+      const medOpts = [
+        { id: 'auto', label: 'Remind + follow up — ' + timeDesc + ', then ' + followupDesc + ' if not logged' },
+        { id: 'gentle', label: 'Once only — ' + timeDesc + ', no follow-up' },
+        { id: 'off', label: 'Off — no medication reminders' },
+      ];
+      notifHtml += '<div class="divider"></div>' +
+        '<div class="toggle-label" style="margin-bottom:4px;color:var(--sky-light)">💊 Medication reminders</div>' +
+        '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;line-height:1.5">Based on your ' + (medTimeVal === 'both' ? 'AM & PM' : medTimeVal.toUpperCase()) + ' schedule.</div>' +
+        '<div class="radio-group">' +
+        medOpts.map(function(o) {
+          return '<div class="radio-option' + (medRemindMode === o.id ? ' selected' : '') + '" onclick="setMedRemindMode(\'' + o.id + '\')">' +
+            '<div class="radio-dot"></div>' +
+            '<div class="radio-label">' + o.label + '</div>' +
+          '</div>';
+        }).join('') +
+        '</div>';
+    }
+  }
+
+  notifHtml += `
     <div class="divider"></div>
     <div class="toggle-row">
       <div><div class="toggle-label">Weekly reflection reminder</div><div class="toggle-sub">Notified Saturday & Sunday when reflection opens</div></div>
@@ -6257,8 +6388,9 @@ function renderSettingsTab() {
       <button class="btn btn-ghost btn-sm" onclick="resetServiceWorker()">↺ Fix notifications</button>
       <button class="btn btn-ghost btn-sm" onclick="testPushNotification()">🔔 Test notification</button>
     </div>
-    <div id="notif-test-status" style="font-size:12px;color:var(--text-muted);margin-top:8px;white-space:pre-wrap"></div>
-  `);
+    <div id="notif-test-status" style="font-size:12px;color:var(--text-muted);margin-top:8px;white-space:pre-wrap"></div>`;
+
+  html += settingsSection('notifications', '🔔 Notifications & sound', notifHtml);
 
   // ── DATA & PRIVACY ────────────────────────────────────────────
   html += settingsSection('data', '🔒 Data & privacy', `
@@ -6713,6 +6845,14 @@ function toggleAudioPref() {
 function setWaterMode(mode) {
   if (!state.prefs.notifications) state.prefs.notifications = {};
   state.prefs.notifications.waterMode = mode;
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
+  setTimeout(() => { const sh = document.getElementById('sh-notifications'); const sb = document.getElementById('sb-notifications'); if(sh&&sb){sh.classList.add('open');sb.classList.add('open');} }, 50);
+}
+
+function setMedRemindMode(mode) {
+  if (!state.prefs.notifications) state.prefs.notifications = {};
+  state.prefs.notifications.medicationReminders = mode;
   save('bloom_prefs', state.prefs);
   renderSettingsTab();
   setTimeout(() => { const sh = document.getElementById('sh-notifications'); const sb = document.getElementById('sb-notifications'); if(sh&&sb){sh.classList.add('open');sb.classList.add('open');} }, 50);
@@ -8173,6 +8313,8 @@ function initApp() {
   checkBackupReminder();
   checkShowTutorial();
   checkScheduledReminders();
+  checkWaterReminders();
+  checkMedicationReminders();
   checkEveningNudge();
   checkNudgeCredit();
   const headerIcon = document.getElementById('header-bloom-icon');
