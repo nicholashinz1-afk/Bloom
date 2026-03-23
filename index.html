@@ -1823,6 +1823,248 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   max-height: 80px;
   overflow: hidden;
 }
+
+/* ============================================================
+   BLOOM BUDDY
+   ============================================================ */
+.community-toggle {
+  display: flex;
+  background: var(--bg-mid);
+  border-radius: var(--r-full);
+  padding: 3px;
+  margin: 0 auto 16px;
+  max-width: 300px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.community-toggle-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Instrument Sans', sans-serif;
+}
+.community-toggle-btn.active {
+  background: var(--sage);
+  color: var(--bg);
+}
+.buddy-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  margin-bottom: 12px;
+}
+.buddy-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.buddy-name {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--cream);
+}
+.buddy-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 8px;
+}
+.buddy-status-dot.online { background: #4ade80; }
+.buddy-status-dot.recent { background: #fbbf24; }
+.buddy-status-dot.away   { background: var(--text-muted); }
+.buddy-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.buddy-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.buddy-stat-value {
+  color: var(--cream);
+  font-weight: 500;
+}
+.buddy-habit-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+  margin-top: 4px;
+}
+.buddy-habit-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--sage);
+  transition: width 0.4s ease;
+}
+.buddy-nudge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.buddy-nudge-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 99px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Instrument Sans', sans-serif;
+  white-space: nowrap;
+}
+.buddy-nudge-btn:active {
+  background: rgba(122,158,126,0.2);
+  color: var(--sage-light);
+  border-color: rgba(122,158,126,0.4);
+  transform: scale(0.95);
+}
+.buddy-messages {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.buddy-msg {
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 85%;
+  word-wrap: break-word;
+}
+.buddy-msg.sent {
+  background: var(--sage);
+  color: var(--bg);
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+.buddy-msg.received {
+  background: rgba(255,255,255,0.08);
+  color: var(--cream);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+.buddy-msg.nudge {
+  font-style: italic;
+  opacity: 0.85;
+  font-size: 12px;
+}
+.buddy-msg-time {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.buddy-msg-input {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  margin-top: 8px;
+}
+.buddy-msg-input textarea {
+  flex: 1;
+  resize: none;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--bg-mid);
+  color: var(--cream);
+  font-size: 13px;
+  font-family: 'Instrument Sans', sans-serif;
+  min-height: 40px;
+  max-height: 80px;
+}
+.buddy-invite-code {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: 6px;
+  text-align: center;
+  color: var(--sage-light);
+  padding: 20px;
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--r-lg);
+  border: 1px dashed rgba(255,255,255,0.12);
+  margin: 12px 0;
+}
+.buddy-setup-option {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--r-md);
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.buddy-setup-option:active {
+  transform: scale(0.98);
+  background: rgba(122,158,126,0.2);
+  border-color: rgba(122,158,126,0.4);
+}
+.buddy-pref-option {
+  padding: 12px 10px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Instrument Sans', sans-serif;
+  text-align: center;
+  line-height: 1.3;
+}
+.buddy-pref-option:active {
+  transform: scale(0.96);
+}
+.buddy-pref-option.selected {
+  background: rgba(122,158,126,0.2);
+  color: var(--sage-light);
+  border-color: rgba(122,158,126,0.4);
+  font-weight: 500;
+}
+.buddy-searching {
+  text-align: center;
+  padding: 30px 20px;
+}
+.buddy-searching-dots {
+  display: inline-flex;
+  gap: 6px;
+  margin: 16px 0;
+}
+.buddy-searching-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sage);
+  animation: buddyPulse 1.4s ease-in-out infinite;
+}
+.buddy-searching-dots span:nth-child(2) { animation-delay: 0.2s; }
+.buddy-searching-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes buddyPulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
 </style>
 </head>
 <body>
@@ -9760,6 +10002,7 @@ function renderBuddyCard(b) {
       <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Last active ${buddyTimeAgo(b.lastActive)}</div>
 
       <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">Quick nudge</div>
         <div class="buddy-nudge-row">
           <div class="buddy-nudge-btn" onclick="buddySendNudge('thinking','${pid}')">Thinking of you 💭</div>
           <div class="buddy-nudge-btn" onclick="buddySendNudge('gotthis','${pid}')">You got this 💪</div>
