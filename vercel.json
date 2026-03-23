@@ -1,7 +1,4 @@
 {
-  "toolbarConfig": {
-    "show": false
-  },
   "routes": [
     {
       "src": "/OneSignalSDKWorker.js",
