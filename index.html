@@ -170,6 +170,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   line-height: 1;
 }
 #crisis-heart:active { opacity: 0.8; transform: scale(0.92); }
+#settings-gear:active { opacity: 0.8; transform: scale(0.92); }
 
 /* Tab content area */
 #tab-content {
@@ -1844,6 +1845,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
     <div class="header-bloom">
       <span id="header-bloom-icon"></span>
       <span class="header-bloom-name">bloom</span>
+      <button id="settings-gear" onclick="switchTab('settings')" title="Settings" style="position:absolute;left:0;background:none;border:none;cursor:pointer;font-size:17px;padding:4px;opacity:0.35;transition:opacity 0.2s;line-height:1">⚙️</button>
       <button id="crisis-heart" onclick="openCrisisSheet()" title="Mental health resources">🤍</button>
     </div>
     <div class="header-quote" id="daily-quote"></div>
@@ -1871,6 +1873,11 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
       <div class="tab-scroll" id="progress-scroll"></div>
     </div>
 
+    <!-- COMMUNITY TAB -->
+    <div class="tab-panel" id="tab-community">
+      <div class="tab-scroll" id="community-scroll"></div>
+    </div>
+
     <!-- SETTINGS TAB -->
     <div class="tab-panel" id="tab-settings">
       <div class="tab-scroll" id="settings-scroll"></div>
@@ -1895,9 +1902,9 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
       <span class="nav-icon">✨</span>
       <span class="nav-label">Progress</span>
     </button>
-    <button class="nav-btn" id="nav-settings" onclick="switchTab('settings')">
-      <span class="nav-icon">⚙️</span>
-      <span class="nav-label">Settings</span>
+    <button class="nav-btn" id="nav-community" onclick="switchTab('community')">
+      <span class="nav-icon">💛</span>
+      <span class="nav-label">Community</span>
     </button>
   </nav>
 
@@ -2098,7 +2105,7 @@ function bloomIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.2.0';
+const VERSION = '2.3.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -2144,6 +2151,10 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
+  { text: 'Encouragement wall — a shared, anonymous space to leave kind words for strangers. Tap the 💛 Wall tab to see it.', spotlight: '#nav-community', tab: 'today', featured: true },
+  { text: 'Seasonal mood awareness — bloom now notices monthly and seasonal patterns in your mood over time', spotlight: null, tab: 'progress' },
+  { text: 'Weekly summary notification — a gentle Sunday evening recap of your mood, streaks, and journal activity', spotlight: null },
+  { text: 'Custom check-ins — track anything that matters to you, your way. Add your own daily questions in Settings.', spotlight: '#sh-checkins', tab: 'settings' },
   { text: 'Quick journal — write a thought right from the Daily tab, no navigation needed', spotlight: '#quick-journal-card', tab: 'today' },
   { text: 'Breathe section — quick breathing exercise right on the Daily tab', spotlight: null },
   { text: 'Progress celebrations — bloom cheers you at 50% and 75% completion, not just 100%', spotlight: null },
@@ -5024,13 +5035,18 @@ function switchTab(tab) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const panel = document.getElementById('tab-' + tab);
   panel.classList.add('active');
-  document.getElementById('nav-' + tab).classList.add('active');
+  const navBtn = document.getElementById('nav-' + tab);
+  if (navBtn) navBtn.classList.add('active');
+  // Highlight settings gear when settings tab is active
+  const gear = document.getElementById('settings-gear');
+  if (gear) gear.style.opacity = tab === 'settings' ? '0.8' : '0.35';
   // Haptic
   haptic('light');
   if (tab === 'today') renderTodayTab();
   if (tab === 'weekly') renderWeeklyTab();
   if (tab === 'wellness') renderWellnessTab();
   if (tab === 'progress') { renderProgressTab(); setTimeout(() => generateRollingInsight(), 800); }
+  if (tab === 'community') renderCommunityTab();
   if (tab === 'settings') renderSettingsTab();
   // Stagger cards
   setTimeout(() => staggerCards(panel), 50);
@@ -5607,6 +5623,54 @@ function renderTodayTab() {
     <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
     <div style="text-align:center"><button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">Begin breathing exercise</button></div>
   </div>`;
+
+  // Custom check-ins
+  const customCheckins = getCustomCheckins();
+  if (customCheckins.length > 0) {
+    html += `<div class="card">
+      <div class="card-title">📝 My check-ins</div>`;
+    const ccData = td.customCheckins || {};
+    customCheckins.forEach(cc => {
+      const val = ccData[cc.id];
+      if (cc.type === 'yesno') {
+        html += `<div class="toggle-row" style="padding:8px 0">
+          <div class="toggle-label">${cc.name}</div>
+          <div style="display:flex;gap:6px">
+            <div onclick="logCustomCheckin('${cc.id}',true)" style="padding:5px 14px;border-radius:99px;cursor:pointer;font-size:12px;
+              background:${val === true ? 'rgba(122,158,126,0.25)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${val === true ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};
+              color:${val === true ? 'var(--sage-light)' : 'var(--text-muted)'}">Yes</div>
+            <div onclick="logCustomCheckin('${cc.id}',false)" style="padding:5px 14px;border-radius:99px;cursor:pointer;font-size:12px;
+              background:${val === false ? 'rgba(176,120,120,0.2)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${val === false ? 'rgba(176,120,120,0.4)' : 'rgba(255,255,255,0.08)'};
+              color:${val === false ? 'var(--rose-light)' : 'var(--text-muted)'}">No</div>
+          </div>
+        </div>`;
+      } else if (cc.type === 'scale') {
+        html += `<div style="padding:8px 0">
+          <div style="font-size:13px;color:var(--cream);margin-bottom:6px">${cc.name}</div>
+          <div style="display:flex;gap:4px">
+            ${[1,2,3,4,5].map(v => `<div onclick="logCustomCheckin('${cc.id}',${v})" style="
+              width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+              cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s;
+              background:${val === v ? 'rgba(122,158,126,0.3)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${val === v ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};
+              color:${val === v ? 'var(--sage-light)' : 'var(--text-muted)'}">${v}</div>`).join('')}
+          </div>
+        </div>`;
+      } else if (cc.type === 'number') {
+        html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+          <div style="font-size:13px;color:var(--cream);flex:1">${cc.name}</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div onclick="logCustomCheckin('${cc.id}',Math.max(0,(${val || 0})-1))" class="stepper-btn" style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--text-secondary);cursor:pointer;font-size:14px">−</div>
+            <div style="min-width:28px;text-align:center;font-size:15px;font-weight:500;color:var(--cream)">${val || 0}</div>
+            <div onclick="logCustomCheckin('${cc.id}',(${val || 0})+1)" class="stepper-btn" style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--text-secondary);cursor:pointer;font-size:14px">+</div>
+          </div>
+        </div>`;
+      }
+    });
+    html += `</div>`;
+  }
 
   // Just write — open journal anytime
   html += `<div style="margin-top:10px;background:linear-gradient(135deg,rgba(186,156,124,0.12),rgba(186,156,124,0.05));border:1px solid rgba(186,156,124,0.25);border-radius:var(--r-lg);padding:18px 16px">
@@ -6605,12 +6669,14 @@ function renderProgressTab() {
     </div>
   </div>`;
 
-  // Mood-habit correlation insights
+  // Mood-habit correlation insights + seasonal awareness
   const insightData = getMoodHabitCorrelation();
-  if (insightData && insightData.length > 0) {
+  const seasonalData = getSeasonalInsights();
+  const allInsights = [...(insightData || []), ...seasonalData];
+  if (allInsights.length > 0) {
     html += `<div class="card">
       <div class="card-title">Insights</div>`;
-    insightData.forEach(ins => {
+    allInsights.forEach(ins => {
       html += `<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:10px;background:rgba(106,154,176,0.06);border-radius:var(--r-md)">
         <div style="font-size:18px;flex-shrink:0">${ins.emoji}</div>
         <div>
@@ -7057,6 +7123,43 @@ function renderSettingsTab() {
 
   html += settingsSection('selfcare', '💚 Daily self-care', scHtml);
 
+  // ── CUSTOM CHECK-INS ──────────────────────────────────────────
+  const ccs = getCustomCheckins();
+  let ccHtml = `<div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:14px">
+    Track anything that matters to you. These appear on your Daily tab as simple daily questions.
+  </div>`;
+
+  if (ccs.length > 0) {
+    ccs.forEach(cc => {
+      const typeLabels = { yesno: 'Yes/No', scale: '1-5 Scale', number: 'Counter' };
+      ccHtml += `<div class="toggle-row">
+        <div>
+          <div class="toggle-label">${cc.name}</div>
+          <div class="toggle-sub">${typeLabels[cc.type] || cc.type}</div>
+        </div>
+        <div onclick="removeCustomCheckin('${cc.id}')" style="font-size:12px;color:var(--rose-light);cursor:pointer">Remove</div>
+      </div>`;
+    });
+  }
+
+  if (ccs.length < 10) {
+    ccHtml += `<div style="margin-top:12px">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="custom-checkin-name" placeholder="e.g. Did I take a walk?" style="flex:1">
+        <select id="custom-checkin-type" style="padding:6px 10px;font-size:13px;background:var(--bg-elevated);color:var(--cream);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-sm)">
+          <option value="yesno">Yes/No</option>
+          <option value="scale">1-5 Scale</option>
+          <option value="number">Counter</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="addCustomCheckin()">Add check-in</button>
+    </div>`;
+  } else {
+    ccHtml += `<div style="font-size:11px;color:var(--text-muted);margin-top:8px">Maximum 10 custom check-ins reached.</div>`;
+  }
+
+  html += settingsSection('checkins', '📝 Custom check-ins', ccHtml);
+
   // ── NOTIFICATIONS & SOUND ────────────────────────────────────
   const medHabitOn = prefs.dailyHabits?.medication;
   const medTimeVal = prefs.habitTimes?.medication || 'am';
@@ -7123,6 +7226,11 @@ function renderSettingsTab() {
       <div class="toggle${notifs.sundayReminder ? ' on' : ''}" onclick="toggleNotif('sundayReminder')"></div>
     </div>
     <div class="divider"></div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">Weekly summary</div><div class="toggle-sub">A gentle Sunday evening recap of your mood, streak, and journal activity</div></div>
+      <div class="toggle${notifs.weeklySummary ? ' on' : ''}" onclick="toggleNotif('weeklySummary')"></div>
+    </div>
+    <div class="divider"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="resetServiceWorker()">↺ Fix notifications</button>
       <button class="btn btn-ghost btn-sm" onclick="testPushNotification()">🔔 Test notification</button>
@@ -7138,6 +7246,7 @@ function renderSettingsTab() {
         <div style="font-weight:500;color:var(--cream);margin-bottom:4px">Your data belongs to you</div>
         Everything in bloom stays on this device — your journal, moods, habits, reflections. Never uploaded, never shared, never seen by anyone else.
         <div style="margin-top:6px;color:var(--text-muted)">AI responses send your prompt to Claude, but nothing is stored or linked to your identity.</div>
+        <div style="margin-top:6px;color:var(--text-muted)">Encouragement wall messages are anonymous — no personal data is attached or shared.</div>
       </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px">
@@ -8810,6 +8919,14 @@ const TUTORIAL_STEPS = [
   },
   {
     tab: 'today',
+    spotlight: '#nav-community',
+    cardPos: 'bottom',
+    pulse: true,
+    title: '💛 Encouragement wall',
+    text: 'A shared, anonymous space. Leave a kind word for someone who needs it, or just scroll through and feel a little less alone. No profiles, no judgement — just warmth.',
+  },
+  {
+    tab: 'today',
     spotlight: null,
     cardPos: 'mid',
     title: 'You\'re all set 🌱',
@@ -9061,6 +9178,430 @@ function migrateToNewDailyHabits() {
   save('bloom_prefs', p);
 }
 
+// ============================================================
+//  ENCOURAGEMENT WALL (Community)
+// ============================================================
+let wallMessages = [];
+let wallLoading = false;
+let wallPosting = false;
+let wallHearted = load('bloom_wall_hearted', {});
+let wallFingerprint = load('bloom_wall_fp', null);
+if (!wallFingerprint) {
+  wallFingerprint = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  save('bloom_wall_fp', wallFingerprint);
+}
+
+async function fetchWallMessages() {
+  wallLoading = true;
+  try {
+    const res = await fetch('/api/wall');
+    const data = await res.json();
+    wallMessages = data.messages || [];
+  } catch(e) {
+    // Fallback: show seed messages if API unavailable
+    wallMessages = getWallSeedMessages();
+  }
+  wallLoading = false;
+}
+
+function getWallSeedMessages() {
+  return [
+    { id: 'seed1', text: 'You showed up today. That matters.', hearts: 12, ts: Date.now() - 86400000 },
+    { id: 'seed2', text: 'Sending a hug to whoever needs it right now', hearts: 24, ts: Date.now() - 43200000 },
+    { id: 'seed3', text: 'One step at a time. You are not behind.', hearts: 18, ts: Date.now() - 21600000 },
+    { id: 'seed4', text: 'Someone out there is proud of you', hearts: 31, ts: Date.now() - 7200000 },
+    { id: 'seed5', text: 'Rest is not giving up. It is how you keep going.', hearts: 15, ts: Date.now() - 3600000 },
+    { id: 'seed6', text: 'The fact that you are trying is enough', hearts: 22, ts: Date.now() - 1800000 },
+    { id: 'seed7', text: 'Your feelings are real and they are valid', hearts: 19, ts: Date.now() - 900000 },
+    { id: 'seed8', text: 'Even on hard days, you are still growing', hearts: 27, ts: Date.now() - 600000 },
+  ];
+}
+
+function renderCommunityTab() {
+  const scroll = document.getElementById('community-scroll');
+  if (!scroll) return;
+
+  let html = '';
+
+  // Header
+  html += `<div style="text-align:center;padding:8px 0 16px">
+    <div style="font-size:32px;margin-bottom:8px">💛</div>
+    <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">Encouragement wall</div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6">Anonymous words of kindness from the bloom community.<br>Leave something gentle for someone who needs it.</div>
+  </div>`;
+
+  // Post form
+  html += `<div class="card" id="wall-post-card">
+    <div style="display:flex;gap:8px;align-items:flex-end">
+      <textarea id="wall-input" placeholder="Leave a kind word for someone..." rows="2" maxlength="140" style="flex:1;resize:none" oninput="updateWallCharCount()"></textarea>
+      <button class="btn btn-primary btn-sm" id="wall-post-btn" onclick="postToWall()" style="min-width:60px">Post</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px">
+      <div style="font-size:11px;color:var(--text-muted);font-style:italic">Anonymous — no one knows it's you</div>
+      <div id="wall-char-count" style="font-size:11px;color:var(--text-muted)">0/140</div>
+    </div>
+    <div id="wall-post-status" style="font-size:12px;margin-top:6px;display:none"></div>
+  </div>`;
+
+  // Messages
+  html += `<div id="wall-messages">`;
+  if (wallLoading) {
+    html += `<div class="card" style="text-align:center">
+      <div class="ai-thinking" style="justify-content:center;margin:12px 0"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
+      <div style="font-size:13px;color:var(--text-muted)">Loading encouragement...</div>
+    </div>`;
+  } else if (wallMessages.length === 0) {
+    html += `<div class="card" style="text-align:center;padding:20px">
+      <div style="font-size:24px;margin-bottom:8px">🌱</div>
+      <div style="font-size:13px;color:var(--text-secondary)">Be the first to share something kind.</div>
+    </div>`;
+  } else {
+    wallMessages.forEach(msg => {
+      const timeAgo = getTimeAgo(msg.ts);
+      const hearted = wallHearted[msg.id];
+      html += `<div class="card wall-message" style="padding:14px 16px;margin-bottom:8px">
+        <div style="font-size:14px;color:var(--cream);line-height:1.6;font-family:Fraunces,serif;font-style:italic">"${escapeHtml(msg.text)}"</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button onclick="heartWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:99px;transition:all 0.2s;${hearted ? 'background:rgba(201,149,74,0.15)' : ''}" ${hearted ? 'disabled' : ''}>
+              <span style="font-size:14px">${hearted ? '💛' : '🤍'}</span>
+              <span style="font-size:12px;color:${hearted ? 'var(--amber-light)' : 'var(--text-muted)'}">${msg.hearts || 0}</span>
+            </button>
+            <button onclick="reportWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);opacity:0.5;padding:4px" title="Report">flag</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted)">${timeAgo}</div>
+        </div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  // Community guidelines
+  html += `<div style="text-align:center;padding:12px 16px 20px">
+    <div style="font-size:11px;color:var(--text-muted);line-height:1.7">
+      This is a safe, moderated space. Messages are anonymous and screened automatically.
+      <br>Be kind. Be real. Be gentle with each other.
+    </div>
+  </div>`;
+
+  scroll.innerHTML = html;
+
+  // Auto-fetch if not loaded
+  if (!wallLoading && wallMessages.length === 0) {
+    fetchWallMessages().then(() => renderCommunityTab());
+  }
+}
+
+function updateWallCharCount() {
+  const input = document.getElementById('wall-input');
+  const count = document.getElementById('wall-char-count');
+  if (input && count) count.textContent = `${input.value.length}/140`;
+}
+
+async function postToWall() {
+  const input = document.getElementById('wall-input');
+  const status = document.getElementById('wall-post-status');
+  const btn = document.getElementById('wall-post-btn');
+  if (!input || !input.value.trim()) return;
+
+  const text = input.value.trim();
+  if (text.length < 3) {
+    showWallStatus('A little more? Even a few words can mean the world.', 'var(--amber)');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const res = await fetch('/api/wall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'post', text, fp: wallFingerprint }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      input.value = '';
+      updateWallCharCount();
+      haptic('medium');
+      showWallStatus('Your words are out there now, making someone\'s day a little brighter.', 'var(--sage)');
+      // Refresh
+      await fetchWallMessages();
+      renderCommunityTab();
+    } else {
+      const reasons = {
+        'length': 'Message should be 3-140 characters.',
+        'harmful': 'Let\'s keep this space gentle and safe. Try rephrasing?',
+        'filtered': 'Some words aren\'t allowed here to keep this space safe. Try rephrasing?',
+        'rate-limit': 'You\'ve shared recently — come back in a bit to post again.',
+        'no-text': 'Write a few words of encouragement.',
+      };
+      showWallStatus(reasons[data.reason] || 'Something went wrong. Try again?', 'var(--amber)');
+    }
+  } catch(e) {
+    showWallStatus('Couldn\'t connect. Your kindness will have to wait a moment.', 'var(--text-muted)');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Post';
+}
+
+function showWallStatus(text, color) {
+  const status = document.getElementById('wall-post-status');
+  if (!status) return;
+  status.style.display = 'block';
+  status.style.color = color;
+  status.textContent = text;
+  setTimeout(() => { if (status) status.style.display = 'none'; }, 5000);
+}
+
+async function heartWallMessage(id) {
+  if (wallHearted[id]) return;
+  wallHearted[id] = true;
+  save('bloom_wall_hearted', wallHearted);
+  haptic('light');
+
+  // Optimistic update
+  const msg = wallMessages.find(m => m.id === id);
+  if (msg) msg.hearts = (msg.hearts || 0) + 1;
+  renderCommunityTab();
+
+  try {
+    await fetch('/api/wall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'heart', id }),
+    });
+  } catch(e) {}
+}
+
+async function reportWallMessage(id) {
+  if (confirm('Report this message as inappropriate?')) {
+    try {
+      await fetch('/api/wall', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'report', id }),
+      });
+      wallMessages = wallMessages.filter(m => m.id !== id);
+      renderCommunityTab();
+      haptic('medium');
+    } catch(e) {}
+  }
+}
+
+function getTimeAgo(ts) {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return `${Math.floor(days / 7)}w ago`;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ============================================================
+//  SEASONAL / CYCLICAL MOOD AWARENESS
+// ============================================================
+function getSeasonalInsights() {
+  const history = state.historyData;
+  const dates = Object.keys(history).sort();
+  if (dates.length < 30) return []; // Need at least 30 days of data
+
+  const insights = [];
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  // Group mood by month
+  const monthMoods = {};
+  dates.forEach(d => {
+    const h = history[d];
+    if (h?.mood === undefined) return;
+    const month = parseInt(d.split('-')[1]) - 1; // 0-indexed
+    if (!monthMoods[month]) monthMoods[month] = [];
+    monthMoods[month].push(h.mood);
+  });
+
+  // Need at least 2 months with data
+  const monthsWithData = Object.keys(monthMoods).filter(m => monthMoods[m].length >= 5);
+  if (monthsWithData.length < 2) return [];
+
+  // Calculate monthly averages
+  const monthAvgs = {};
+  monthsWithData.forEach(m => {
+    const moods = monthMoods[m];
+    monthAvgs[m] = moods.reduce((a,b) => a+b, 0) / moods.length;
+  });
+
+  // Find best and hardest months
+  let bestMonth = null, hardestMonth = null;
+  let bestAvg = -1, hardestAvg = 5;
+  Object.entries(monthAvgs).forEach(([m, avg]) => {
+    if (avg > bestAvg) { bestAvg = avg; bestMonth = m; }
+    if (avg < hardestAvg) { hardestAvg = avg; hardestMonth = m; }
+  });
+
+  if (bestMonth !== null && hardestMonth !== null && bestMonth !== hardestMonth && bestAvg - hardestAvg >= 0.5) {
+    insights.push({
+      emoji: '📅',
+      title: 'Seasonal pattern',
+      text: `Your mood tends to be highest in ${monthNames[bestMonth]} and lower in ${monthNames[hardestMonth]}. Knowing this can help you plan ahead with extra self-care.`,
+    });
+  }
+
+  // Check current month vs overall average
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentMonthData = monthMoods[currentMonth];
+  if (currentMonthData && currentMonthData.length >= 5) {
+    const allMoods = dates.map(d => history[d]?.mood).filter(m => m !== undefined);
+    const overallAvg = allMoods.reduce((a,b) => a+b, 0) / allMoods.length;
+    const currentAvg = currentMonthData.reduce((a,b) => a+b, 0) / currentMonthData.length;
+    const diff = currentAvg - overallAvg;
+
+    if (diff <= -0.5) {
+      insights.push({
+        emoji: '🌧',
+        title: `${monthNames[currentMonth]} tends to be harder`,
+        text: `Your mood this month averages a bit lower than usual. That's okay — it's a pattern, not a personal failing. Be extra gentle with yourself.`,
+      });
+    } else if (diff >= 0.5) {
+      insights.push({
+        emoji: '☀️',
+        title: `${monthNames[currentMonth]} is usually a good month`,
+        text: `Your mood tends to be higher this time of year. Enjoy it and notice what's working well.`,
+      });
+    }
+  }
+
+  // Day-of-week pattern
+  const dowMoods = { 0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[] };
+  const dowNames = ['Sundays','Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays'];
+  dates.forEach(d => {
+    const h = history[d];
+    if (h?.mood === undefined) return;
+    const dow = new Date(d + 'T12:00:00').getDay();
+    dowMoods[dow].push(h.mood);
+  });
+
+  let bestDow = null, worstDow = null;
+  let bestDowAvg = -1, worstDowAvg = 5;
+  Object.entries(dowMoods).forEach(([d, moods]) => {
+    if (moods.length < 3) return;
+    const avg = moods.reduce((a,b) => a+b, 0) / moods.length;
+    if (avg > bestDowAvg) { bestDowAvg = avg; bestDow = d; }
+    if (avg < worstDowAvg) { worstDowAvg = avg; worstDow = d; }
+  });
+
+  if (bestDow !== null && worstDow !== null && bestDow !== worstDow && bestDowAvg - worstDowAvg >= 0.6) {
+    insights.push({
+      emoji: '📊',
+      title: 'Weekly rhythm',
+      text: `${dowNames[bestDow]} tend to be your best days, while ${dowNames[worstDow]} are often harder. Plan something kind for yourself on ${dowNames[worstDow]}.`,
+    });
+  }
+
+  return insights.slice(0, 2); // max 2 seasonal insights
+}
+
+// ============================================================
+//  WEEKLY SUMMARY PUSH NOTIFICATION
+// ============================================================
+function checkWeeklySummaryNotification() {
+  if (!state.prefs?.notifications?.habitReminders) return;
+  if (!state.prefs?.notifications?.weeklySummary) return;
+
+  const now = new Date();
+  if (now.getDay() !== 0) return; // Sunday only
+  if (now.getHours() < 18) return; // After 6pm
+
+  const t = today();
+  const sentKey = `bloom_reminders_${t}`;
+  const sent = load(sentKey, {});
+  if (sent.weekly_summary) return;
+
+  sent.weekly_summary = true;
+  save(sentKey, sent);
+
+  // Build summary
+  const weekDates = getWeekDates();
+  const moodData = weekDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined);
+  const avgMood = moodData.length > 0 ? (moodData.reduce((a,b) => a+b, 0) / moodData.length) : null;
+  const moodEmojis = ['😔','😕','😐','🙂','😊'];
+  const moodLabel = avgMood !== null ? moodEmojis[Math.round(avgMood)] : '';
+
+  const journalCount = Object.keys(state.wellnessData?.journal || {}).filter(d => weekDates.includes(d)).length;
+  const streak = state.xpData?.streak || 0;
+
+  let summaryParts = [];
+  if (avgMood !== null) summaryParts.push(`Mood: ${moodLabel} avg ${avgMood.toFixed(1)}/4`);
+  if (streak > 0) summaryParts.push(`${streak}-day streak`);
+  if (journalCount > 0) summaryParts.push(`${journalCount} journal ${journalCount === 1 ? 'entry' : 'entries'}`);
+
+  const body = summaryParts.length > 0
+    ? `This week: ${summaryParts.join(' · ')}. You're doing meaningful work showing up for yourself.`
+    : 'Another week in the books. You showed up, and that matters.';
+
+  sendLocalNotification('Your week in bloom 🌿', body, 'weekly-summary');
+}
+
+// ============================================================
+//  CUSTOM CHECK-IN QUESTIONS
+// ============================================================
+function getCustomCheckins() {
+  return state.prefs?.customCheckins || [];
+}
+
+function addCustomCheckin() {
+  const nameInput = document.getElementById('custom-checkin-name');
+  const typeSelect = document.getElementById('custom-checkin-type');
+  if (!nameInput || !nameInput.value.trim()) return;
+
+  const name = nameInput.value.trim();
+  const type = typeSelect?.value || 'yesno'; // yesno, scale, number
+  const id = 'cc_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + Date.now().toString(36).slice(-4);
+
+  if (!state.prefs.customCheckins) state.prefs.customCheckins = [];
+
+  // Max 10 custom check-ins
+  if (state.prefs.customCheckins.length >= 10) {
+    return;
+  }
+
+  state.prefs.customCheckins.push({ id, name, type });
+  save('bloom_prefs', state.prefs);
+  nameInput.value = '';
+  renderSettingsTab();
+  renderTodayTab();
+  haptic('light');
+}
+
+function removeCustomCheckin(id) {
+  if (!state.prefs.customCheckins) return;
+  state.prefs.customCheckins = state.prefs.customCheckins.filter(c => c.id !== id);
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
+  renderTodayTab();
+}
+
+function logCustomCheckin(id, value) {
+  if (!state.todayData.customCheckins) state.todayData.customCheckins = {};
+  state.todayData.customCheckins[id] = value;
+  save('bloom_today_' + today(), state.todayData);
+
+  // Save to history
+  if (!state.historyData[today()]) state.historyData[today()] = {};
+  if (!state.historyData[today()].customCheckins) state.historyData[today()].customCheckins = {};
+  state.historyData[today()].customCheckins[id] = value;
+  save('bloom_history', state.historyData);
+
+  haptic('light');
+  renderTodayTab();
+}
+
 function initApp() {
   loadState();
   migrateToNewDailyHabits();
@@ -9086,6 +9627,7 @@ function initApp() {
   checkMedicationReminders();
   checkEveningNudge();
   checkNudgeCredit();
+  checkWeeklySummaryNotification();
   const headerIcon = document.getElementById('header-bloom-icon');
   if (headerIcon) headerIcon.innerHTML = bloomIcon(26);
   const navIcon = document.getElementById('nav-today-icon');
