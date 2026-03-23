@@ -4160,40 +4160,50 @@ function testNotification() {
   const status = document.getElementById('notif-test-status');
   const update = (msg) => { if (status) status.textContent = msg; };
 
-  if (!('Notification' in window) && !('serviceWorker' in navigator)) {
+  if (!('Notification' in window)) {
     update('Notifications not supported on this browser.');
     return;
   }
 
   if (Notification.permission === 'denied') {
-    update('Notifications are blocked. Enable them in your browser/app settings.');
+    update('Notifications are blocked. Go to your browser/app settings to enable them.');
     return;
   }
 
-  const sendViaServiceWorker = () => {
+  const doSend = () => {
+    // Try via OneSignal first
+    if (window.OneSignal) {
+      try {
+        window.OneSignal.Notifications.requestPermission().then(() => {
+          update('✓ OneSignal permission granted. You should receive notifications.');
+        }).catch(() => {
+          update('OneSignal permission request failed.');
+        });
+        return;
+      } catch(e) {}
+    }
+    // Fall back to service worker notification
     navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification('bloom 🌿', {
+      return reg.showNotification('bloom 🌿', {
         body: "Notifications are working! You're all set.",
         icon: '/icon.svg',
         badge: '/icon.svg',
       });
+    }).then(() => {
       update('✓ Test sent — check your notifications.');
-    }).catch(e => update('Could not send: ' + e.message));
+    }).catch(e => {
+      update('Could not send: ' + e.message);
+    });
   };
 
   if (Notification.permission === 'granted') {
-    sendViaServiceWorker();
-    return;
+    doSend();
+  } else {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') doSend();
+      else update('Permission denied.');
+    });
   }
-
-  // Request permission first
-  Notification.requestPermission().then(permission => {
-    if (permission === 'granted') {
-      sendViaServiceWorker();
-    } else {
-      update('Permission denied.');
-    }
-  });
 }
 
 function setWaterMode(mode) {
@@ -4757,26 +4767,8 @@ function initOneSignal() {
 //  SERVICE WORKER
 // ============================================================
 function registerServiceWorker() {
-  if (!('serviceWorker' in navigator)) return;
-  const swCode = `
-const CACHE = 'bloom-v${VERSION}';
-self.addEventListener('install', e => {
-  self.skipWaiting();
-});
-self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys =>
-    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-  ));
-});
-self.addEventListener('fetch', e => {
-  if (e.request.mode === 'navigate') {
-    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-  }
-});
-  `;
-  const blob = new Blob([swCode], { type: 'application/javascript' });
-  const swURL = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swURL).catch(() => {});
+  // OneSignalSDKWorker.js handles the service worker.
+  // We do not register a competing blob: service worker.
 }
 
 // ============================================================
