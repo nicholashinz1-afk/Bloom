@@ -1,4 +1,4 @@
-// Vercel serverless function for Bloom Buddy
+// Vercel serverless function for bloom buddy
 // Uses Vercel KV (Upstash Redis) via REST API — same pattern as wall.js
 
 // ── Content moderation (shared with wall) ──────────────────
@@ -213,8 +213,8 @@ export default async function handler(req, res) {
           await kvSet(`bloom_buddy:${buddyId}`, profile);
           await sendPush(
             partner.oneSignalId,
-            'Bloom Buddy',
-            `${profile.name || 'Your Bloom Buddy'} is having a rough day \u2014 a kind word could mean a lot`
+            'bloom buddy',
+            `${profile.name || 'Your bloom buddy'} is having a rough day \u2014 a kind word could mean a lot`
           );
         }
       }
@@ -229,8 +229,8 @@ export default async function handler(req, res) {
             await kvSet(`bloom_buddy:${pair.partnerId}`, partner);
             await sendPush(
               partner.oneSignalId,
-              'Bloom Buddy',
-              'Your Bloom Buddy is thinking of you \u2014 it\'s a new day to check in'
+              'bloom buddy',
+              'Your bloom buddy is thinking of you \u2014 it\'s a new day to check in'
             );
           }
         }
@@ -246,8 +246,8 @@ export default async function handler(req, res) {
               await kvSet(`bloom_buddy:${buddyId}`, profile);
               await sendPush(
                 partner.oneSignalId,
-                'Bloom Buddy',
-                `${profile.name || 'Your Bloom Buddy'} just hit a ${m}-day streak!`
+                'bloom buddy',
+                `${profile.name || 'Your bloom buddy'} just hit a ${m}-day streak!`
               );
             }
           }
@@ -346,17 +346,17 @@ export default async function handler(req, res) {
 
     // Notify both
     if (theirProfile.oneSignalId) {
-      await sendPush(theirProfile.oneSignalId, 'Bloom Buddy', `You've been paired with ${myProfile.name || 'a Bloom Buddy'}! Open Bloom to say hi`);
+      await sendPush(theirProfile.oneSignalId, 'bloom buddy', `You've been paired with ${myProfile.name || 'a bloom buddy'}! Open Bloom to say hi`);
     }
     if (myProfile.oneSignalId) {
-      await sendPush(myProfile.oneSignalId, 'Bloom Buddy', `You've been paired with ${theirProfile.name || 'a Bloom Buddy'}! Open Bloom to say hi`);
+      await sendPush(myProfile.oneSignalId, 'bloom buddy', `You've been paired with ${theirProfile.name || 'a bloom buddy'}! Open Bloom to say hi`);
     }
 
     return res.json({
       ok: true,
       pairId,
       partnerId: invite.buddyId,
-      partnerName: theirProfile.name || 'Bloom Buddy',
+      partnerName: theirProfile.name || 'bloom buddy',
     });
   }
 
@@ -431,10 +431,10 @@ export default async function handler(req, res) {
 
       // Notify both
       if (partnerProfile.oneSignalId) {
-        await sendPush(partnerProfile.oneSignalId, 'Bloom Buddy', `You've been matched with ${profile.name || 'a Bloom Buddy'}! Open Bloom to say hi`);
+        await sendPush(partnerProfile.oneSignalId, 'bloom buddy', `You've been matched with ${profile.name || 'a bloom buddy'}! Open Bloom to say hi`);
       }
       if (profile.oneSignalId) {
-        await sendPush(profile.oneSignalId, 'Bloom Buddy', `You've been matched with ${partnerProfile.name || 'a Bloom Buddy'}! Open Bloom to say hi`);
+        await sendPush(profile.oneSignalId, 'bloom buddy', `You've been matched with ${partnerProfile.name || 'a bloom buddy'}! Open Bloom to say hi`);
       }
 
       return res.json({
@@ -442,7 +442,7 @@ export default async function handler(req, res) {
         matched: true,
         pairId,
         partnerId: bestMatch.buddyId,
-        partnerName: partnerProfile.name || 'Bloom Buddy',
+        partnerName: partnerProfile.name || 'bloom buddy',
       });
     } else {
       // No match found — add to queue
@@ -475,7 +475,7 @@ export default async function handler(req, res) {
       buddies.push({
         pairId: pair.pairId,
         partnerId: pair.partnerId,
-        name: partner.name || 'Bloom Buddy',
+        name: partner.name || 'bloom buddy',
         mood: partner.mood,
         moodTs: partner.moodTs,
         streak: partner.streak || 0,
@@ -549,7 +549,7 @@ export default async function handler(req, res) {
     const partner = await kvGet(`bloom_buddy:${targetPair.partnerId}`);
     const myProfile = await kvGet(`bloom_buddy:${buddyId}`);
     if (partner?.oneSignalId) {
-      await sendPush(partner.oneSignalId, 'Bloom Buddy', `${myProfile?.name || 'Your buddy'}: ${text.slice(0, 80)}`);
+      await sendPush(partner.oneSignalId, 'bloom buddy', `${myProfile?.name || 'Your buddy'}: ${text.slice(0, 80)}`);
     }
 
     return res.json({ ok: true, message: msg });
@@ -600,7 +600,7 @@ export default async function handler(req, res) {
     const partner = await kvGet(`bloom_buddy:${targetPair.partnerId}`);
     const myProfile = await kvGet(`bloom_buddy:${buddyId}`);
     if (partner?.oneSignalId) {
-      await sendPush(partner.oneSignalId, 'Bloom Buddy', `${myProfile?.name || 'Your Bloom Buddy'} says: ${nudgeText}`);
+      await sendPush(partner.oneSignalId, 'bloom buddy', `${myProfile?.name || 'Your bloom buddy'} says: ${nudgeText}`);
     }
 
     return res.json({ ok: true, message: msg });
@@ -620,7 +620,7 @@ export default async function handler(req, res) {
     // Notify partner before deleting
     const partner = await kvGet(`bloom_buddy:${targetPair.partnerId}`);
     if (partner?.oneSignalId) {
-      await sendPush(partner.oneSignalId, 'Bloom Buddy', 'Your Bloom Buddy has moved on. You can find a new buddy anytime.');
+      await sendPush(partner.oneSignalId, 'bloom buddy', 'Your bloom buddy has moved on. You can find a new buddy anytime.');
     }
 
     // Clean up pair data and remove from both lookups
