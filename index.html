@@ -2852,22 +2852,21 @@ function updateStreak() {
       checkStreakMilestone(xp.streak);
     }
   } else {
-    if ((xp.freezeTokens || 0) > 0) {
+    // No action taken today yet — handle missed-day logic but don't lock
+    // lastStreakDate to today, so the first task can still increment streak
+    if ((xp.freezeTokens || 0) > 0 && xp.lastStreakDate && xp.lastStreakDate !== yStr && xp.lastStreakDate !== t) {
       xp.freezeTokens--;
       xp.lastStreakDate = t;
-    } else {
-      if (xp.lastStreakDate && xp.lastStreakDate !== yStr) {
-        const lostStreak = xp.streak || 0;
-        xp.streak = 0;
-        xp.lastStreakDate = t;
-        // Show streak recovery message if they had a meaningful streak
-        if (lostStreak >= 3) {
-          state.showStreakRecovery = true;
-          state.lostStreakCount = lostStreak;
-        }
+    } else if (xp.lastStreakDate && xp.lastStreakDate !== yStr && xp.lastStreakDate !== t) {
+      const lostStreak = xp.streak || 0;
+      xp.streak = 0;
+      // Don't set lastStreakDate = t here — allow first action to start fresh streak
+      if (lostStreak >= 3) {
+        state.showStreakRecovery = true;
+        state.lostStreakCount = lostStreak;
       }
-      xp.lastStreakDate = t;
     }
+    // If lastStreakDate is yesterday, leave it — first action today will pick it up
   }
 
   // Update individual habit streaks
@@ -6419,6 +6418,7 @@ function tapDailyHabit(id, timeSlot, el) {
     const xpVal = XP_VALUES[key] || 15;
     addXP(xpVal, el);
     checkFirstTaskStreak();
+    updateHabitStreaks();
     celebrate(id, el);
   } else {
     const xpVal = XP_VALUES[key] || 15;
