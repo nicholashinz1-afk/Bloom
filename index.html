@@ -4158,43 +4158,56 @@ function removeCustomTask(id) {
 
 function testNotification() {
   const status = document.getElementById('notif-test-status');
-  const update = (msg) => { if (status) status.textContent = msg; };
+  const update = (msg) => { if (status) status.style.whiteSpace = 'pre-wrap', status.textContent = msg; };
 
-  const debug = [
+  const lines = [
     'Notification API: ' + ('Notification' in window ? '✓' : '✗'),
     'Permission: ' + (window.Notification?.permission || 'unknown'),
     'ServiceWorker: ' + ('serviceWorker' in navigator ? '✓' : '✗'),
-    'OneSignal loaded: ' + (window.OneSignal ? '✓' : '✗'),
-    'OneSignalDeferred: ' + (window.OneSignalDeferred ? '✓' : '✗'),
+    'OneSignal: ' + (window.OneSignal ? '✓' : '✗'),
   ];
-  update(debug.join('\n'));
+  update(lines.join('\n'));
 
-  if (!('Notification' in window)) return;
-
-  if (Notification.permission === 'default') {
+  if (Notification.permission !== 'granted') {
     Notification.requestPermission().then(p => {
-      update(debug.join('\n') + '\nPermission result: ' + p);
+      lines.push('Permission result: ' + p);
+      update(lines.join('\n'));
     });
     return;
   }
 
-  if (Notification.permission === 'denied') {
-    update(debug.join('\n') + '\n✗ Blocked — enable in Android Settings → Apps → Chrome → Notifications');
-    return;
-  }
+  // List all registered service workers
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      if (regs.length === 0) {
+        lines.push('SW registrations: NONE — OneSignalSDKWorker.js not found');
+        update(lines.join('\n'));
+        return;
+      }
+      regs.forEach((reg, i) => {
+        lines.push('SW ' + (i+1) + ': ' + reg.scope + ' (' + (reg.active ? 'active' : reg.installing ? 'installing' : 'waiting') + ')');
+      });
+      update(lines.join('\n'));
 
-  // Permission granted — try service worker
-  navigator.serviceWorker.ready.then(reg => {
-    update(debug.join('\n') + '\nSW scope: ' + reg.scope);
-    return reg.showNotification('bloom 🌿', {
-      body: "Test notification from bloom.",
-      icon: '/icon.svg',
+      // Try to show notification via the active registration
+      const active = regs.find(r => r.active);
+      if (!active) {
+        lines.push('No active SW found yet.');
+        update(lines.join('\n'));
+        return;
+      }
+      active.showNotification('bloom 🌿', {
+        body: "Test — notifications are working!",
+        icon: '/icon.svg',
+      }).then(() => {
+        lines.push('✓ Notification sent!');
+        update(lines.join('\n'));
+      }).catch(e => {
+        lines.push('Error: ' + e.message);
+        update(lines.join('\n'));
+      });
     });
-  }).then(() => {
-    update(debug.join('\n') + '\n✓ Notification sent!');
-  }).catch(e => {
-    update(debug.join('\n') + '\nError: ' + e.message);
-  });
+  }
 }
 
 function setWaterMode(mode) {
