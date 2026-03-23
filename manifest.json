@@ -1,0 +1,18 @@
+{
+  "name": "Bloom",
+  "short_name": "Bloom",
+  "description": "A gentle self-care habit tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1610",
+  "theme_color": "#0d1610",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' ry='112' fill='%230d1610'/%3E%3Ccircle cx='179' cy='179' r='92' fill='%237a9e7e' opacity='.9'/%3E%3Ccircle cx='179' cy='179' r='52' fill='%23a8c5ab'/%3E%3Ccircle cx='333' cy='179' r='92' fill='%23b07878' opacity='.9'/%3E%3Ccircle cx='333' cy='179' r='52' fill='%23d4a8a8'/%3E%3Ccircle cx='179' cy='333' r='92' fill='%236a9ab0' opacity='.9'/%3E%3Ccircle cx='179' cy='333' r='52' fill='%239ec4d8'/%3E%3Ccircle cx='333' cy='333' r='92' fill='%23c9954a' opacity='.9'/%3E%3Ccircle cx='333' cy='333' r='52' fill='%23e0b87a'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

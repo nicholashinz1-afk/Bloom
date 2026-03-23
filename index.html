@@ -15,78 +15,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
-<!-- PWA Manifest + Icons -->
-<script>
-(function() {
-  var iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">'
-    + '<rect width="512" height="512" rx="112" ry="112" fill="#0d1610"/>'
-    + '<circle cx="179" cy="179" r="92" fill="#7a9e7e" opacity="0.9"/>'
-    + '<circle cx="179" cy="179" r="52" fill="#a8c5ab"/>'
-    + '<circle cx="333" cy="179" r="92" fill="#b07878" opacity="0.9"/>'
-    + '<circle cx="333" cy="179" r="52" fill="#d4a8a8"/>'
-    + '<circle cx="179" cy="333" r="92" fill="#6a9ab0" opacity="0.9"/>'
-    + '<circle cx="179" cy="333" r="52" fill="#9ec4d8"/>'
-    + '<circle cx="333" cy="333" r="92" fill="#c9954a" opacity="0.9"/>'
-    + '<circle cx="333" cy="333" r="52" fill="#e0b87a"/>'
-    + '</svg>';
+<!-- PWA Manifest — static, required for Android home screen install -->
+<link rel="manifest" href="/manifest.json">
 
-  var svgURL = 'data:image/svg+xml,' + encodeURIComponent(iconSVG);
-
-  // Render SVG to PNG via canvas for reliable iOS home screen icon
-  function setIconsFromSVG(svgUrl) {
-    try {
-      var img = new Image();
-      img.onload = function() {
-        var canvas = document.createElement('canvas');
-        canvas.width = 512; canvas.height = 512;
-        var ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, 512, 512);
-        var pngURL = canvas.toDataURL('image/png');
-
-        var apple = document.createElement('link');
-        apple.rel = 'apple-touch-icon';
-        apple.href = pngURL;
-        document.head.appendChild(apple);
-
-        // Manifest with PNG icon
-        var manifestData = {
-          name: "Bloom", short_name: "Bloom",
-          description: "A gentle self-care habit tracker",
-          start_url: "/", display: "standalone",
-          background_color: "#0d1610", theme_color: "#0d1610",
-          orientation: "portrait",
-          icons: [
-            { src: pngURL, sizes: "512x512", type: "image/png", purpose: "any maskable" }
-          ]
-        };
-        var blob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
-        var mlink = document.createElement('link');
-        mlink.rel = 'manifest';
-        mlink.href = URL.createObjectURL(blob);
-        document.head.appendChild(mlink);
-      };
-      img.src = svgUrl;
-    } catch(e) {
-      // Fallback manifest without canvas
-      var manifestData = {
-        name: "Bloom", short_name: "Bloom",
-        description: "A gentle self-care habit tracker",
-        start_url: "/", display: "standalone",
-        background_color: "#0d1610", theme_color: "#0d1610",
-        orientation: "portrait",
-        icons: [{ src: svgUrl, sizes: "512x512", type: "image/svg+xml" }]
-      };
-      var blob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
-      var mlink = document.createElement('link');
-      mlink.rel = 'manifest';
-      mlink.href = URL.createObjectURL(blob);
-      document.head.appendChild(mlink);
-    }
-  }
-
-  setIconsFromSVG(svgURL);
-})();
-</script>
+<!-- Icons -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' ry='112' fill='%230d1610'/%3E%3Ccircle cx='179' cy='179' r='92' fill='%237a9e7e' opacity='.9'/%3E%3Ccircle cx='179' cy='179' r='52' fill='%23a8c5ab'/%3E%3Ccircle cx='333' cy='179' r='92' fill='%23b07878' opacity='.9'/%3E%3Ccircle cx='333' cy='179' r='52' fill='%23d4a8a8'/%3E%3Ccircle cx='179' cy='333' r='92' fill='%236a9ab0' opacity='.9'/%3E%3Ccircle cx='179' cy='333' r='52' fill='%239ec4d8'/%3E%3Ccircle cx='333' cy='333' r='92' fill='%23c9954a' opacity='.9'/%3E%3Ccircle cx='333' cy='333' r='52' fill='%23e0b87a'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' ry='112' fill='%230d1610'/%3E%3Ccircle cx='179' cy='179' r='92' fill='%237a9e7e' opacity='.9'/%3E%3Ccircle cx='179' cy='179' r='52' fill='%23a8c5ab'/%3E%3Ccircle cx='333' cy='179' r='92' fill='%23b07878' opacity='.9'/%3E%3Ccircle cx='333' cy='179' r='52' fill='%23d4a8a8'/%3E%3Ccircle cx='179' cy='333' r='92' fill='%236a9ab0' opacity='.9'/%3E%3Ccircle cx='179' cy='333' r='52' fill='%239ec4d8'/%3E%3Ccircle cx='333' cy='333' r='92' fill='%23c9954a' opacity='.9'/%3E%3Ccircle cx='333' cy='333' r='52' fill='%23e0b87a'/%3E%3C/svg%3E">
 
 <style>
 /* ============================================================
