@@ -2156,34 +2156,64 @@ function bloomIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.1.0';
+const VERSION = '2.2.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
 // Runs on app open and when returning from background.
 async function checkForUpdate() {
   try {
-    const res = await fetch(window.location.href, { cache: 'no-store' });
+    // Bypass service worker cache with cache-busting query param
+    const url = window.location.href.split('?')[0] + '?_v=' + Date.now();
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return;
     const html = await res.text();
     const match = html.match(/const VERSION\s*=\s*'([^']+)'/);
     if (match && match[1] !== VERSION) {
-      // New version available — reload transparently
-      window.location.reload();
+      // Clear service worker caches before reloading
+      if ('caches' in window) {
+        const names = await caches.keys();
+        await Promise.all(names.map(n => caches.delete(n)));
+      }
+      // Force service worker to update
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.update()));
+      }
+      // Hard reload — bypass cache
+      window.location.reload(true);
     }
   } catch(e) { /* offline or network error — skip silently */ }
+}
+
+// ── Force refresh on service worker update ──────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    // New service worker took over — reload to get fresh content
+    if (!window._swReloading) {
+      window._swReloading = true;
+      window.location.reload();
+    }
+  });
 }
 
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'Daily & Weekly are now separate tabs — cleaner, less clutter', spotlight: '#nav-weekly', tab: 'today' },
-  { text: 'Morning & evening routines — assign self-care tasks to AM or PM', spotlight: '#sh-selfcare', tab: 'settings' },
-  { text: 'Habit reminders — teeth brushing at 8am, medication, water at noon', spotlight: '#sh-notifications', tab: 'settings' },
-  { text: 'Medication settings now work — pick morning, afternoon, evening, or once daily', spotlight: null },
-  { text: 'Streak fixes — streaks now properly update and show after completing any task', spotlight: null },
-  { text: 'Session refresh — bloom refreshes after 30 min away with a gentle indicator', spotlight: null },
-  { text: 'History is now in the Weekly tab — everything in one place', spotlight: null },
+  { text: 'Quick journal — write a thought right from the Daily tab, no navigation needed', spotlight: '#quick-journal-card', tab: 'today' },
+  { text: 'Quick-action button — tap ⚡ to log mood, water, journal, or breathe instantly', spotlight: '#fab-toggle', tab: 'today' },
+  { text: 'Progress celebrations — bloom cheers you at 50% and 75% completion, not just 100%', spotlight: null },
+  { text: 'Undo protection — accidentally unchecked a habit? 5-second undo button appears', spotlight: null },
+  { text: 'Habit triggers — set "when/after" cues for each habit in Settings for 2-3x follow-through', spotlight: '#sh-triggers', tab: 'settings' },
+  { text: '30-day heatmap — see your consistency pattern on the Progress tab', spotlight: null, tab: 'progress' },
+  { text: 'Mood insights — bloom now shows how habits and sleep affect your mood', spotlight: null, tab: 'progress' },
+  { text: 'Sleep-mood overlay — see sleep quality alongside mood on the weekly chart', spotlight: null, tab: 'progress' },
+  { text: 'Share your week — generate a beautiful image card from Progress tab', spotlight: null, tab: 'progress' },
+  { text: 'Hard day mode — on low-mood days, bloom shows only your top 2 habits', spotlight: null },
+  { text: 'Welcome back — after time away, bloom greets you warmly with +25 XP', spotlight: null },
+  { text: 'Smarter nudges — evening notifications now remind you of specific remaining habits', spotlight: null },
+  { text: 'More celebration variety — 6-8 messages per habit plus rare golden messages', spotlight: null },
+  { text: 'Auto data cleanup — history older than 90 days is trimmed to keep things fast', spotlight: null },
 ];
 
 // ============================================================
