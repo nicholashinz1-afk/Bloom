@@ -1806,7 +1806,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 .community-toggle {
   display: flex;
   background: var(--bg-mid);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-full);
   padding: 3px;
   margin: 0 auto 16px;
   max-width: 300px;
@@ -1816,7 +1816,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   flex: 1;
   padding: 8px 12px;
   border: none;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-full);
   background: transparent;
   color: var(--text-secondary);
   font-size: 13px;
@@ -1900,20 +1900,21 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   margin-bottom: 12px;
 }
 .buddy-nudge-btn {
-  padding: 8px 14px;
-  border-radius: var(--r-pill);
+  padding: 6px 12px;
+  border-radius: var(--r-full);
   border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.04);
+  background: var(--bg-elevated);
   color: var(--text-secondary);
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
   font-family: 'Instrument Sans', sans-serif;
+  white-space: nowrap;
 }
 .buddy-nudge-btn:active {
-  background: var(--primary);
-  color: var(--bg);
-  border-color: var(--primary);
+  background: rgba(122,158,126,0.15);
+  color: var(--sage-light);
+  border-color: var(--sage);
   transform: scale(0.95);
 }
 
@@ -1994,25 +1995,26 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 
 /* Setup flow */
 .buddy-setup-option {
-  background: var(--bg-card);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: var(--r-lg);
-  padding: 20px;
+  background: var(--bg-elevated);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--r-full);
+  padding: 14px 18px;
   margin-bottom: 10px;
   cursor: pointer;
   transition: all 0.2s;
 }
 .buddy-setup-option:active {
   transform: scale(0.98);
-  border-color: var(--primary);
+  background: rgba(122,158,126,0.15);
+  border-color: var(--sage);
 }
 
 /* Preference picker */
 .buddy-pref-option {
-  padding: 14px 10px;
-  border-radius: var(--r-lg);
-  border: 2px solid rgba(255,255,255,0.08);
-  background: var(--bg-card);
+  padding: 10px 16px;
+  border-radius: var(--r-full);
+  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--bg-elevated);
   color: var(--text-secondary);
   font-size: 12px;
   cursor: pointer;
@@ -2026,8 +2028,8 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 .buddy-pref-option.selected {
   background: rgba(122,158,126,0.15);
-  color: var(--cream);
-  border-color: var(--primary);
+  color: var(--sage-light);
+  border-color: var(--sage);
   font-weight: 500;
 }
 

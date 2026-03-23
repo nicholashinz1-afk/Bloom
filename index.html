@@ -5077,7 +5077,7 @@ function switchTab(tab) {
   if (tab === 'weekly') renderWeeklyTab();
   if (tab === 'wellness') renderWellnessTab();
   if (tab === 'progress') { renderProgressTab(); setTimeout(() => generateRollingInsight(), 800); }
-  if (tab === 'community') { renderCommunityTab(); if (buddyState.status === 'paired') { fetchBuddyData(); fetchBuddyMessages(); } }
+  if (tab === 'community') { renderCommunityTab(); fetchBuddyData(); if (buddyState.status === 'paired') { buddyCachedBuddies.forEach(b => fetchBuddyMessages(b.pairId)); } }
   if (tab === 'settings') renderSettingsTab();
   // Stop buddy polling when leaving community tab
   if (tab !== 'community') stopBuddyPolling();
@@ -10354,9 +10354,10 @@ function initApp() {
   updateStreak();
   checkMilestones();
   initOneSignal();
-  // Buddy: register/sync if opted in, and check for pending invite
+  // Buddy: always register so admin fallback works, and check for server-side pairs
+  buddyRegisterAndSync();
+  fetchBuddyData();
   if (buddyState.status !== 'none') {
-    buddyRegisterAndSync();
     syncBuddyStatus();
   }
   const pendingBuddyInvite = load('bloom_pending_buddy_invite', null);
