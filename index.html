@@ -53,8 +53,8 @@
   --text-muted:     #4a5e4c;
   --text-on-sage:   #0a1a0b;
 
-  /* Semantic */
-  --success: var(--sage);
+  --seasonal:      #a8c5ab;
+  --seasonal-hint: rgba(168,197,171,0.08);
   --warning: var(--amber);
   --danger:  var(--rose);
   --info:    var(--sky);
@@ -137,9 +137,10 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   font-family: 'Fraunces', serif;
   font-style: italic;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--seasonal, var(--text-secondary));
   text-align: center;
   line-height: 1.4;
+  opacity: 0.8;
 }
 .header-bloom {
   display: flex;
@@ -1868,10 +1869,16 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 <div class="bottom-sheet" id="whats-new-sheet">
   <div class="sheet-handle"></div>
   <div style="padding:0 20px 20px">
-    <div class="sheet-title">What's new in v1.3.2 🌿</div>
+    <div class="sheet-title">What's new in v1.4.1 🌿</div>
     <div id="whats-new-list"></div>
     <button class="btn btn-primary btn-block mt-4" onclick="closeAllSheets()">Let's go</button>
   </div>
+</div>
+
+<!-- Hard day sheet -->
+<div class="bottom-sheet" id="hard-day-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:0 20px 20px" id="hard-day-content"></div>
 </div>
 
 <!-- New week goals sheet -->
@@ -1922,17 +1929,15 @@ function bloomIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '1.3.2';
+const VERSION = '1.4.1';
 
 const WHATS_NEW = [
-  'New week prompt — pick your household tasks every Monday',
-  'Fresh start banner on Mondays with last week\'s progress saved',
-  'Streak now counts any single action — mood, water, journal, anything',
-  'Nourishment chips now celebrate every tap',
-  'Celebration toasts are more solid and always centered',
-  'Breathing exercise has a 3-2-1 countdown before it begins',
-  'Share bloom button in Settings',
-  '🤍 crisis resources quietly tucked in the header',
+  'Sound feedback — soft chimes on habit completion, milestones, and breathing',
+  'Audio opt-in during onboarding with a preview button',
+  'Sound toggle in Settings — turn it on or off any time',
+  'Breathing phases each have their own distinct tone',
+  'Milestone and level-up moments now have sound',
+  'Hard day mode plays a warm, grounding tone',
 ];
 
 // ============================================================
@@ -2003,6 +2008,46 @@ const JOURNAL_PROMPTS = [
   "What are you proud of, even quietly?",
   "What does growth feel like for you lately?",
 ];
+
+// Mood-responsive prompts — shown when mood is logged low (0-1)
+const JOURNAL_PROMPTS_LOW = [
+  "You don't have to explain yourself. What's here right now?",
+  "What does your body feel like today?",
+  "If you could ask for one thing right now, what would it be?",
+  "What's one tiny thing that might help, even a little?",
+  "What would you say to a friend feeling the way you do?",
+  "Is there anything you need to put down today?",
+  "What does rest look like for you right now?",
+  "You showed up. That matters. What's on your mind?",
+];
+
+// Shown when mood is okay (2)
+const JOURNAL_PROMPTS_OKAY = [
+  "Okay is still something. What's making up your day?",
+  "What's taking up the most space in your head right now?",
+  "What would make tomorrow feel a little easier?",
+  "What's one thing you're carrying that you could set down?",
+  "How has your energy been today?",
+  "What do you need that you haven't given yourself yet?",
+];
+
+// Shown when mood is good/great (3-4)
+const JOURNAL_PROMPTS_GOOD = [
+  "What's behind the good mood today?",
+  "What's working well right now that you want to remember?",
+  "What are you proud of today, even quietly?",
+  "Who or what contributed to how you're feeling?",
+  "What do you want to carry into tomorrow?",
+  "What does this kind of day teach you about yourself?",
+];
+
+function getJournalPrompt() {
+  const mood = state.todayData?.mood;
+  if (mood === undefined) return JOURNAL_PROMPTS[getDayIndex() % JOURNAL_PROMPTS.length];
+  if (mood <= 1) return JOURNAL_PROMPTS_LOW[getDayIndex() % JOURNAL_PROMPTS_LOW.length];
+  if (mood === 2) return JOURNAL_PROMPTS_OKAY[getDayIndex() % JOURNAL_PROMPTS_OKAY.length];
+  return JOURNAL_PROMPTS_GOOD[getDayIndex() % JOURNAL_PROMPTS_GOOD.length];
+}
 
 const REFLECTION_QUESTIONS = [
   "What went well this week, even in small ways?",
@@ -2244,6 +2289,121 @@ function haptic(style = 'light') {
   } catch(e) {}
 }
 
+// ============================================================
+//  AUDIO ENGINE
+// ============================================================
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  return audioCtx;
+}
+
+function isAudioEnabled() {
+  return state.prefs?.audio !== false;
+}
+
+function playTone(freq, duration, type = 'sine', volume = 0.18, delay = 0) {
+  if (!isAudioEnabled()) return;
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+    gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+    gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + delay + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+    osc.start(ctx.currentTime + delay);
+    osc.stop(ctx.currentTime + delay + duration + 0.05);
+  } catch(e) {}
+}
+
+function playSound(type) {
+  if (!isAudioEnabled()) return;
+  // Resume context if suspended (browser autoplay policy)
+  if (audioCtx?.state === 'suspended') audioCtx.resume();
+
+  switch(type) {
+    case 'habit':
+      // Warm single chime — soft and satisfying
+      playTone(523, 0.3, 'sine', 0.15);       // C5
+      playTone(659, 0.25, 'sine', 0.1, 0.08); // E5
+      break;
+
+    case 'all_done':
+      // Gentle 3-note ascending resolution
+      playTone(523, 0.25, 'sine', 0.14);        // C5
+      playTone(659, 0.25, 'sine', 0.12, 0.12);  // E5
+      playTone(784, 0.4,  'sine', 0.15, 0.24);  // G5
+      break;
+
+    case 'water':
+      // Bubbly pop
+      playTone(880, 0.12, 'sine', 0.12);
+      playTone(1047,0.12, 'sine', 0.1, 0.08);
+      playTone(1319,0.2,  'sine', 0.12, 0.16);
+      break;
+
+    case 'milestone':
+      // Fuller, celebratory
+      playTone(523, 0.2, 'sine', 0.14);
+      playTone(659, 0.2, 'sine', 0.12, 0.1);
+      playTone(784, 0.2, 'sine', 0.13, 0.2);
+      playTone(1047,0.5, 'sine', 0.15, 0.3);
+      break;
+
+    case 'breath_inhale':
+      // Soft rising tone
+      playTone(392, 0.5, 'sine', 0.08);
+      break;
+
+    case 'breath_hold':
+      // Sustained middle tone
+      playTone(440, 0.4, 'sine', 0.07);
+      break;
+
+    case 'breath_exhale':
+      // Gentle falling tone
+      playTone(349, 0.6, 'sine', 0.08);
+      break;
+
+    case 'breath_done':
+      // Peaceful resolution
+      playTone(523, 0.3, 'sine', 0.1);
+      playTone(440, 0.5, 'sine', 0.08, 0.2);
+      break;
+
+    case 'mood':
+      // Soft single note acknowledgment
+      playTone(440, 0.2, 'sine', 0.08);
+      break;
+
+    case 'win':
+      // Light upward sparkle
+      playTone(659, 0.15, 'sine', 0.1);
+      playTone(784, 0.15, 'sine', 0.1, 0.08);
+      playTone(988, 0.25, 'sine', 0.12, 0.16);
+      break;
+
+    case 'journal':
+      // Thoughtful, single soft tone
+      playTone(392, 0.4, 'sine', 0.1);
+      break;
+
+    case 'hard_day':
+      // Grounding, low and warm
+      playTone(261, 0.6, 'sine', 0.1);
+      playTone(329, 0.5, 'sine', 0.08, 0.3);
+      break;
+  }
+}
+
 // ── Ripple on element ────────────────────────────────────────
 function addRipple(el, e) {
   if (!el) return;
@@ -2311,6 +2471,7 @@ function checkLevelUp(oldXP, newXP) {
 
 function showLevelUp(level) {
   haptic('heavy');
+  playSound('milestone');
   launchConfetti(window.innerWidth/2, window.innerHeight/2, 60);
 
   const div = document.createElement('div');
@@ -2413,8 +2574,327 @@ function updateStreak() {
 }
 
 // ============================================================
-//  NEW WEEK DETECTION
+//  STREAK SYSTEM
 // ============================================================
+function updateStreak() {
+  const xp = state.xpData;
+  const td = state.todayData;
+  const t = today();
+
+  if (xp.lastStreakDate === t) return;
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+
+  const anyAction = (
+    td.m_teeth || td.e_teeth ||
+    td.mood !== undefined ||
+    td.sleep !== undefined ||
+    (td.water && td.water > 0) ||
+    (td.food && Object.values(td.food).some(Boolean)) ||
+    td.journalXPGiven ||
+    state.wellnessData?.journal?.[t]
+  );
+
+  const moodGrace = td.mood !== undefined && td.mood <= 2;
+
+  if (anyAction || moodGrace) {
+    if (xp.lastStreakDate === yStr || !xp.lastStreakDate) {
+      const oldStreak = xp.streak || 0;
+      xp.streak = oldStreak + 1;
+      xp.lastStreakDate = t;
+      if ([7,14,30].includes(xp.streak) || (xp.streak > 30 && xp.streak % 30 === 0)) {
+        if ((xp.freezeTokens || 0) < 5) xp.freezeTokens = (xp.freezeTokens || 0) + 1;
+      }
+      // Check streak milestones
+      checkStreakMilestone(xp.streak);
+    }
+  } else {
+    if ((xp.freezeTokens || 0) > 0) {
+      xp.freezeTokens--;
+      xp.lastStreakDate = t;
+    } else {
+      if (xp.lastStreakDate && xp.lastStreakDate !== yStr) {
+        const lostStreak = xp.streak || 0;
+        xp.streak = 0;
+        xp.lastStreakDate = t;
+        // Show streak recovery message if they had a meaningful streak
+        if (lostStreak >= 3) {
+          state.showStreakRecovery = true;
+          state.lostStreakCount = lostStreak;
+        }
+      }
+      xp.lastStreakDate = t;
+    }
+  }
+
+  // Update individual habit streaks
+  updateHabitStreaks();
+  saveState();
+}
+
+// ── Individual habit streaks ─────────────────────────────────
+function updateHabitStreaks() {
+  const td = state.todayData;
+  const t = today();
+  if (!state.xpData.habitStreaks) state.xpData.habitStreaks = {};
+  const hs = state.xpData.habitStreaks;
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+
+  const habits = [
+    { id: 'm_teeth', done: td.m_teeth },
+    { id: 'e_teeth', done: td.e_teeth },
+  ];
+
+  habits.forEach(h => {
+    if (!hs[h.id]) hs[h.id] = { streak: 0, lastDate: null };
+    const entry = hs[h.id];
+    if (h.done && entry.lastDate !== t) {
+      if (entry.lastDate === yStr || !entry.lastDate) {
+        entry.streak++;
+      } else if (entry.lastDate !== t) {
+        entry.streak = 1;
+      }
+      entry.lastDate = t;
+    }
+  });
+}
+
+function getHabitStreak(habitId) {
+  return state.xpData.habitStreaks?.[habitId]?.streak || 0;
+}
+
+// ── Streak milestones ────────────────────────────────────────
+function checkStreakMilestone(streak) {
+  const milestones = [3, 7, 14, 30, 60, 100];
+  if (!milestones.includes(streak)) return;
+  const messages = {
+    3:   { emoji: '🌱', title: '3 days in a row!', sub: 'A habit is starting to form.' },
+    7:   { emoji: '🌿', title: 'One full week!', sub: 'Seven days of showing up. That\'s real.' },
+    14:  { emoji: '🌸', title: 'Two weeks strong!', sub: 'You\'re building something that lasts.' },
+    30:  { emoji: '🌻', title: '30 day streak!', sub: 'A full month. You should be proud.' },
+    60:  { emoji: '✨', title: '60 days!', sub: 'Two months of consistency. Incredible.' },
+    100: { emoji: '🌟', title: '100 days!', sub: 'One hundred days of you. Extraordinary.' },
+  };
+  const msg = messages[streak];
+  if (!msg) return;
+  setTimeout(() => {
+    launchConfetti(window.innerWidth/2, window.innerHeight/3, 80);
+    haptic('heavy');
+    playSound('milestone');
+    const div = document.createElement('div');
+    div.id = 'levelup-overlay';
+    div.innerHTML = `<div class="levelup-card">
+      <div class="levelup-emoji">${msg.emoji}</div>
+      <div style="font-family:Fraunces,serif;font-size:13px;color:var(--amber);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">${streak}-day streak</div>
+      <div style="font-family:Fraunces,serif;font-size:24px;font-weight:300;color:var(--cream);margin-bottom:8px">${msg.title}</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">${msg.sub}</div>
+      <button class="btn btn-primary btn-block" id="levelup-close">Keep going 🌿</button>
+    </div>`;
+    document.body.appendChild(div);
+    document.getElementById('levelup-close').addEventListener('click', () => div.remove());
+    setTimeout(() => { if (div.parentNode) div.remove(); }, 10000);
+  }, 500);
+}
+
+// ── General milestone checks ─────────────────────────────────
+function checkMilestones() {
+  const wellness = state.wellnessData;
+  const journalCount = Object.keys(wellness?.journal || {}).length;
+  const milestones = load('bloom_milestones', {});
+
+  // Journal entry milestones
+  const journalMilestones = [1, 10, 25, 50, 100];
+  journalMilestones.forEach(m => {
+    if (journalCount >= m && !milestones['journal_' + m]) {
+      milestones['journal_' + m] = true;
+      save('bloom_milestones', milestones);
+      if (m === 1) return; // skip first entry — journal save already celebrates
+      setTimeout(() => showMilestone(
+        m === 10 ? '📓' : m === 25 ? '✍️' : m === 50 ? '📚' : '🏆',
+        `${m} journal entries`,
+        m === 10 ? 'Ten entries. You\'ve been honest with yourself.' :
+        m === 25 ? 'Twenty-five reflections. That\'s a real practice.' :
+        m === 50 ? 'Fifty entries. You\'ve built something meaningful here.' :
+        'One hundred journal entries. That\'s extraordinary self-awareness.'
+      ), 600);
+    }
+  });
+}
+
+function showMilestone(emoji, title, sub) {
+  haptic('medium');
+  playSound('milestone');
+  launchConfetti(window.innerWidth/2, window.innerHeight/3, 50);
+  const div = document.createElement('div');
+  div.id = 'levelup-overlay';
+  div.innerHTML = `<div class="levelup-card">
+    <div class="levelup-emoji">${emoji}</div>
+    <div style="font-family:Fraunces,serif;font-size:13px;color:var(--sage);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Milestone</div>
+    <div style="font-family:Fraunces,serif;font-size:24px;font-weight:300;color:var(--cream);margin-bottom:8px">${title}</div>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">${sub}</div>
+    <button class="btn btn-primary btn-block" id="levelup-close">✓</button>
+  </div>`;
+  document.body.appendChild(div);
+  document.getElementById('levelup-close').addEventListener('click', () => div.remove());
+  setTimeout(() => { if (div.parentNode) div.remove(); }, 8000);
+}
+
+// ── Mood pattern analysis ────────────────────────────────────
+function getMoodPattern() {
+  const history = state.historyData;
+  const dates = Object.keys(history).sort().slice(-14); // last 2 weeks
+  if (dates.length < 5) return null;
+
+  const withMood = dates.filter(d => history[d]?.mood !== undefined);
+  if (withMood.length < 5) return null;
+
+  const recent = withMood.slice(-7).map(d => history[d].mood);
+  const older = withMood.slice(0, -7).map(d => history[d].mood);
+
+  const avgRecent = recent.reduce((a,b) => a+b, 0) / recent.length;
+  const avgOlder = older.length ? older.reduce((a,b) => a+b, 0) / older.length : null;
+
+  // Check exercise correlation
+  const exerciseDays = dates.filter(d => history[d]?.habits?.w_exercise);
+  const exerciseMoods = exerciseDays.map(d => history[d].mood).filter(m => m !== undefined);
+  const nonExerciseMoods = dates
+    .filter(d => !history[d]?.habits?.w_exercise && history[d]?.mood !== undefined)
+    .map(d => history[d].mood);
+
+  const avgExercise = exerciseMoods.length >= 3 ? exerciseMoods.reduce((a,b)=>a+b,0)/exerciseMoods.length : null;
+  const avgNonExercise = nonExerciseMoods.length >= 3 ? nonExerciseMoods.reduce((a,b)=>a+b,0)/nonExerciseMoods.length : null;
+
+  const patterns = [];
+
+  if (avgOlder !== null) {
+    const diff = avgRecent - avgOlder;
+    if (diff >= 0.5) patterns.push({ type: 'improving', text: 'Your mood has been trending upward this week.' });
+    else if (diff <= -0.5) patterns.push({ type: 'declining', text: 'Your mood has been a little lower this week than last.' });
+  }
+
+  if (avgExercise !== null && avgNonExercise !== null && avgExercise - avgNonExercise >= 0.7) {
+    patterns.push({ type: 'exercise', text: 'You tend to feel better on days you exercise.' });
+  }
+
+  return patterns.length > 0 ? patterns[0] : null;
+}
+
+// ── Hard day mode ────────────────────────────────────────────
+function activateHardDayMode() {
+  state.hardDayMode = true;
+  state.todayData.mood = state.todayData.mood ?? 1;
+  saveState();
+  archiveToday();
+  playSound('hard_day');
+  closeAllSheets();
+  renderHardDaySheet();
+  openSheet('hard-day-sheet');
+}
+
+async function renderHardDaySheet() {
+  const name = state.prefs?.name ? `, ${state.prefs.name}` : '';
+  const sheet = document.getElementById('hard-day-content');
+  if (!sheet) return;
+
+  sheet.innerHTML = `
+    <div style="text-align:center;padding:8px 0 20px">
+      <div style="font-size:48px;margin-bottom:12px">🫂</div>
+      <div style="font-family:Fraunces,serif;font-size:22px;font-weight:300;color:var(--cream);margin-bottom:8px">It's okay${name}.</div>
+      <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">Hard days happen. Your streak is protected today — you don't have to do anything you don't want to.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+      <button class="btn btn-secondary btn-block" onclick="closeAllSheets();switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">🌬 Take a breath</button>
+      <button class="btn btn-secondary btn-block" onclick="closeAllSheets();switchTab('wellness')">📓 Write it out</button>
+      <button class="btn btn-secondary btn-block" onclick="closeAllSheets();openCrisisSheet()">🤍 I need more support</button>
+    </div>
+    <div id="hard-day-ai" style="font-size:13px;color:var(--text-muted);font-style:italic;text-align:center;line-height:1.7">bloom is here with you...</div>
+  `;
+
+  // Get AI response
+  const ai = await callClaude(
+    `Someone is having a hard day and activated hard day mode in a wellness app. Write 2 sentences of warm, human presence. No advice. No silver linings. Just acknowledge that it's hard and that they're not alone. Address them gently.`,
+    'You are Bloom. 2 sentences only. Warm, human, no toxic positivity.'
+  );
+  const aiEl = document.getElementById('hard-day-ai');
+  if (aiEl && ai) {
+    aiEl.style.color = 'var(--sky-light)';
+    aiEl.style.fontStyle = 'italic';
+    aiEl.textContent = ai;
+  }
+}
+
+// ── Monthly reflection check ─────────────────────────────────
+function checkMonthlyReflection() {
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const lastMonth = load('bloom_last_monthly', null);
+
+  if (lastMonth === monthKey) return;
+
+  // Only prompt on the 1st or 2nd of the month
+  if (now.getDate() > 2) return;
+
+  // Need at least 2 weeks of data
+  const historyCount = Object.keys(state.historyData || {}).length;
+  if (historyCount < 14) return;
+
+  save('bloom_last_monthly', monthKey);
+  setTimeout(() => showMonthlyReflectionPrompt(), 2000);
+}
+
+async function showMonthlyReflectionPrompt() {
+  const prevMonth = new Date();
+  prevMonth.setMonth(prevMonth.getMonth() - 1);
+  const monthName = prevMonth.toLocaleDateString('en-US', { month: 'long' });
+
+  // Get last month's data
+  const prevMonthStr = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth()+1).padStart(2,'0')}`;
+  const prevDates = Object.keys(state.historyData).filter(d => d.startsWith(prevMonthStr));
+  const moods = prevDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined);
+  const avgMood = moods.length ? (moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1) : 'unknown';
+  const journalCount = prevDates.filter(d => state.historyData[d]?.journal).length;
+
+  const ai = await callClaude(
+    `Write a warm monthly reflection for a wellness app user. Month: ${monthName}. Average mood: ${avgMood}/4. Journal entries: ${journalCount}. Write 3-4 sentences that feel like a caring friend reflecting on their month — personal, encouraging, honest. Never shame.`,
+    'You are Bloom. 3-4 sentences. Warm, personal, never clinical.'
+  );
+
+  // Store it
+  if (!state.wellnessData.monthlyReflections) state.wellnessData.monthlyReflections = [];
+  state.wellnessData.monthlyReflections.push({
+    month: monthName,
+    text: ai || `${monthName} is behind you. Whatever it held, you made it through.`,
+    date: today(),
+  });
+  if (state.wellnessData.monthlyReflections.length > 12) state.wellnessData.monthlyReflections.shift();
+  saveState();
+
+  // Show in wellness tab
+  state.showMonthlyReflectionBadge = true;
+  renderWellnessTab();
+}
+
+// ── Seasonal theme ───────────────────────────────────────────
+function getSeasonalAccent() {
+  const month = new Date().getMonth(); // 0-11
+  if (month >= 2 && month <= 4) return { name: 'spring', color: '#a8c5ab', hint: 'rgba(168,197,171,0.08)' };
+  if (month >= 5 && month <= 7) return { name: 'summer', color: '#e0b87a', hint: 'rgba(224,184,122,0.08)' };
+  if (month >= 8 && month <= 10) return { name: 'autumn', color: '#c9954a', hint: 'rgba(201,149,74,0.08)' };
+  return { name: 'winter', color: '#9ec4d8', hint: 'rgba(158,196,216,0.08)' };
+}
+
+function applySeasonalTheme() {
+  const season = getSeasonalAccent();
+  document.documentElement.style.setProperty('--seasonal', season.color);
+  document.documentElement.style.setProperty('--seasonal-hint', season.hint);
+}
+
+// ── New week detection ───────────────────────────────────────
 function checkNewWeek() {
   const lastWeek = load('bloom_last_week_start');
   const thisWeek = weekStart();
@@ -2643,6 +3123,15 @@ function celebrate(type, sourceEl) {
 
   haptic(data.confetti ? 'success' : 'medium');
 
+  // Play audio
+  const audioMap = {
+    water: 'water', food: 'habit', journal: 'journal',
+    win: 'win', all_done: 'all_done', weekly_goal: 'milestone',
+    reflection: 'journal', breath: 'breath_done',
+    mood: 'mood', sleep: 'mood',
+  };
+  playSound(audioMap[type] || 'habit');
+
   const msg = data.messages[Math.floor(Math.random() * data.messages.length)];
 
   // Particle burst from source
@@ -2821,11 +3310,13 @@ function archiveToday() {
 // ============================================================
 async function callClaude(prompt, systemPrompt) {
   try {
+    const name = state.prefs?.name;
+    const nameContext = name ? ` The user's name is ${name} — use it occasionally but naturally, not in every sentence.` : '';
     const res = await fetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        system: systemPrompt || 'You are Bloom, a warm and compassionate mental wellness companion. Keep responses brief, warm, and human. Never clinical. 1-4 sentences maximum.',
+        system: (systemPrompt || 'You are Bloom, a warm and compassionate mental wellness companion. Keep responses brief, warm, and human. Never clinical. 1-4 sentences maximum.') + nameContext,
         message: prompt,
       })
     });
@@ -2882,6 +3373,34 @@ function renderTodayTop() {
   const container = document.getElementById('today-top');
   if (!container) return;
   let html = '';
+
+  // Streak recovery banner
+  if (state.showStreakRecovery && state.lostStreakCount) {
+    html += `<div class="banner" style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.2)">
+      <div class="banner-icon">🌱</div>
+      <div class="banner-body">
+        <div class="banner-title" style="color:var(--amber-light)">Starting fresh</div>
+        <div class="banner-text">Your ${state.lostStreakCount}-day streak ended, but everything you built still happened. Today is day one of something new.</div>
+        <div class="banner-actions">
+          <div class="banner-action" onclick="state.showStreakRecovery=false;renderTodayTop()">I've got this</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Mood pattern insight
+  const pattern = getMoodPattern();
+  if (pattern && !state.dismissedPattern) {
+    html += `<div class="banner" style="background:rgba(106,154,176,0.08);border:1px solid rgba(106,154,176,0.18)">
+      <div class="banner-icon">💡</div>
+      <div class="banner-body">
+        <div class="banner-text" style="color:var(--sky-light)">${pattern.text}</div>
+        <div class="banner-actions">
+          <div class="banner-action" onclick="state.dismissedPattern=true;renderTodayTop()">Got it</div>
+        </div>
+      </div>
+    </div>`;
+  }
 
   // New week banner
   if (state.showNewWeekBanner) {
@@ -3210,6 +3729,15 @@ function renderTodayTab() {
     ${!journalToday ? '<div class="habit-xp" style="margin-top:8px;display:inline-flex">+10 XP</div>' : ''}
   </div>`;
 
+  // --- HARD DAY BUTTON ---
+  if (!state.hardDayMode) {
+    html += `<div style="text-align:center;padding:8px 0 16px">
+      <button onclick="activateHardDayMode()" style="background:none;border:none;font-size:12px;color:var(--text-muted);cursor:pointer;font-family:Instrument Sans,sans-serif;text-decoration:underline;text-underline-offset:3px">
+        Having a hard day?
+      </button>
+    </div>`;
+  }
+
   scroll.innerHTML = html;
   renderTodayTop();
   checkAllDone();
@@ -3230,12 +3758,15 @@ function habitRow(id, icon, name, sub, done, optedIn, xp) {
       </div>
     </div>`;
   }
+  const habitStreak = getHabitStreak(id);
+  const streakBadge = habitStreak >= 2 ? `<div style="font-size:11px;color:var(--amber);background:rgba(201,149,74,0.1);padding:2px 7px;border-radius:99px;margin-right:6px">🔥${habitStreak}</div>` : '';
   return `<div class="habit-row" onclick="tapHabit('${id}', this)">
     <div class="habit-check${done ? ' done' : ''}">${done ? '✓' : icon}</div>
     <div class="habit-info">
       <div class="habit-name">${name}</div>
       <div class="habit-sub">${sub}${done ? ' · Done ✓' : ''}</div>
     </div>
+    ${streakBadge}
     ${!done ? `<div class="habit-xp">+${xp}</div>` : ''}
   </div>`;
 }
@@ -3349,7 +3880,7 @@ function renderWellnessTab() {
 
   // --- JOURNAL ---
   const journalEntry = state.wellnessData?.journal?.[t];
-  const journalPrompt = JOURNAL_PROMPTS[getDayIndex() % JOURNAL_PROMPTS.length];
+  const journalPrompt = getJournalPrompt();
 
   html += `<div class="card" id="journal-card">
     <div class="card-title">📓 Daily journal</div>
@@ -3472,7 +4003,21 @@ function renderWellnessTab() {
     <div id="summary-ai-response" style="display:none;margin-top:12px"></div>
   </div>`;
 
-  // ── BREATHE ────────────────────────────────────────────────
+  // --- MONTHLY REFLECTIONS ---
+  const monthlyReflections = state.wellnessData?.monthlyReflections || [];
+  if (monthlyReflections.length > 0) {
+    html += `<div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="card-title" style="margin-bottom:0">🗓 Monthly reflections</div>
+      </div>`;
+    monthlyReflections.slice(-3).reverse().forEach(r => {
+      html += `<div class="insight-card" style="margin-bottom:10px">
+        <div class="insight-week-label">${r.month}</div>
+        <div class="insight-text">${r.text}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
   html += `<div id="breath-section" style="margin:8px 0 0">
     <div style="background:linear-gradient(135deg,rgba(106,154,176,0.12),rgba(106,154,176,0.05));border:1px solid rgba(106,154,176,0.25);border-radius:var(--r-lg);padding:18px 16px" id="breath-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
@@ -3514,6 +4059,7 @@ async function saveJournal() {
     addXP(10, null);
     celebrate('journal', document.getElementById('journal-card'));
     archiveToday();
+    checkMilestones();
   }
 
   const ai = await callClaude(
@@ -3702,6 +4248,10 @@ function renderBreathPhase() {
 
   const ph = BREATH_PHASES[breathPhase];
   let countdown = ph.duration;
+
+  // Play phase transition sound
+  const phaseSounds = ['breath_inhale', 'breath_hold', 'breath_exhale'];
+  playSound(phaseSounds[breathPhase] || 'breath_inhale');
 
   ui.innerHTML = `<div class="breath-circle ${ph.class}"><span style="font-size:24px;color:var(--sage-light);font-family:Fraunces,serif;font-style:italic" id="breath-count-display">${countdown}</span></div>
   <div class="breath-label">${ph.name}</div>
@@ -4014,7 +4564,12 @@ function renderSettingsTab() {
 
   // Notifications
   const notifs = prefs.notifications || {};
-  html += settingsSection('notifications', '🔔 Notifications', `
+  html += settingsSection('notifications', '🔔 Notifications & sound', `
+    <div class="toggle-row">
+      <div><div class="toggle-label">🔔 Sound feedback</div><div class="toggle-sub">Soft chimes on habit completion and breathing</div></div>
+      <div class="toggle${prefs.audio !== false?' on':''}" onclick="toggleAudioPref()"></div>
+    </div>
+    <div class="divider"></div>
     <div class="toggle-label" style="margin-bottom:8px;color:var(--text-secondary)">Water reminders</div>
     <div class="radio-group">
       ${['smart','hourly','off'].map(m => `<div class="radio-option${(notifs.waterMode||'smart')===m?' selected':''}" onclick="setWaterMode('${m}')">
@@ -4232,6 +4787,18 @@ function testNotification() {
   }
 }
 
+function toggleAudioPref() {
+  state.prefs.audio = state.prefs.audio === false ? true : false;
+  save('bloom_prefs', state.prefs);
+  if (state.prefs.audio) playSound('habit'); // preview on enable
+  renderSettingsTab();
+  setTimeout(() => {
+    const sh = document.getElementById('sh-notifications');
+    const sb = document.getElementById('sb-notifications');
+    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
+  }, 50);
+}
+
 function setWaterMode(mode) {
   if (!state.prefs.notifications) state.prefs.notifications = {};
   state.prefs.notifications.waterMode = mode;
@@ -4396,9 +4963,10 @@ let obData = {
   goals: { w_shower: 3, w_exercise: 3, w_outside: 3 },
   householdTasks: [],
   notifications: { waterMode: 'smart', sundayReminder: true },
+  audio: true,
 };
 
-const OB_STEPS = 8;
+const OB_STEPS = 9;
 
 function renderOnboarding() {
   const progress = document.getElementById('ob-progress');
@@ -4417,8 +4985,9 @@ function renderOnboarding() {
     case 3: renderOBHousehold(body, footer); break;
     case 4: renderOBWater(body, footer); break;
     case 5: renderOBNotifications(body, footer); break;
-    case 6: renderOBInstall(body, footer); break;
-    case 7: renderOBReady(body, footer); break;
+    case 6: renderOBAudio(body, footer); break;
+    case 7: renderOBInstall(body, footer); break;
+    case 8: renderOBReady(body, footer); break;
   }
 }
 
@@ -4664,6 +5233,54 @@ function obSetWaterMode(mode) {
 function obToggleSundayReminder() {
   obData.notifications.sundayReminder = !obData.notifications.sundayReminder;
   renderOnboarding();
+}
+
+function renderOBAudio(body, footer) {
+  const on = obData.audio !== false; // default on
+  body.innerHTML = `
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:64px;margin-bottom:16px">🔔</div>
+      <div class="ob-title" style="text-align:center">Sound feedback</div>
+      <div class="ob-sub" style="text-align:center;margin-bottom:0">Soft chimes when you complete habits — like a gentle acknowledgment.</div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="toggle-row" style="border-bottom:none">
+        <div>
+          <div class="toggle-label">Enable sounds</div>
+          <div class="toggle-sub">Soft tones on habit completion, breathing phases, and milestones</div>
+        </div>
+        <div class="toggle${on?' on':''}" id="ob-audio-toggle" onclick="obToggleAudio()"></div>
+      </div>
+    </div>
+    <div style="background:var(--bg-card);border-radius:var(--r-lg);padding:14px 16px;cursor:pointer" onclick="obPreviewSound()" id="ob-preview-btn">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(122,158,126,0.15);border:1px solid rgba(122,158,126,0.3);display:flex;align-items:center;justify-content:center;font-size:16px">▶</div>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Preview sound</div>
+          <div style="font-size:12px;color:var(--text-secondary)">Tap to hear what habit completion sounds like</div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:16px;line-height:1.6">
+      You can change this any time in Settings. Sounds play even on silent mode — turn off if you prefer silence.
+    </div>
+  `;
+  footer.innerHTML = `
+    <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
+    <button class="btn btn-primary" id="ob-btn-next" style="flex:1">Continue</button>
+  `;
+  document.getElementById('ob-btn-back').addEventListener('click', obBack);
+  document.getElementById('ob-btn-next').addEventListener('click', obNext);
+}
+
+function obToggleAudio() {
+  obData.audio = !(obData.audio !== false);
+  const toggle = document.getElementById('ob-audio-toggle');
+  if (toggle) toggle.className = 'toggle' + (obData.audio ? ' on' : '');
+}
+
+function obPreviewSound() {
+  playSound('habit');
 }
 
 function renderOBInstall(body, footer) {
@@ -5072,9 +5689,12 @@ function checkShowTutorial() {
 function initApp() {
   loadState();
   renderDailyQuote();
+  applySeasonalTheme();
   checkNewWeek();
+  checkMonthlyReflection();
   renderTodayTab();
   updateStreak();
+  checkMilestones();
   initOneSignal();
   showWhatsNew();
   checkBackupReminder();
