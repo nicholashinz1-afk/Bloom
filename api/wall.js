@@ -1,5 +1,5 @@
 // Vercel serverless function for encouragement wall
-// Uses Vercel KV (Redis) if available, falls back to in-memory with periodic persistence
+// Uses Vercel KV (Upstash Redis) via REST API — no npm packages needed
 
 // Simple profanity/harmful content filter
 const BLOCKED_PATTERNS = [
@@ -27,31 +27,44 @@ function moderateMessage(text) {
   return { ok: true };
 }
 
-// In-memory fallback (refreshes per cold start, ~5 min on Vercel)
-let memoryMessages = null;
+// ── Upstash Redis REST helpers ──────────────────────────────
+async function kvGet(key) {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  if (!url || !token) return null;
+  try {
+    const res = await fetch(`${url}/get/${key}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (data.result === null) return null;
+    return JSON.parse(data.result);
+  } catch(e) { return null; }
+}
+
+async function kvSet(key, value) {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  if (!url || !token) return;
+  try {
+    await fetch(`${url}/set/${key}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(JSON.stringify(value)),
+    });
+  } catch(e) {}
+}
 
 async function getMessages() {
-  // Try Vercel KV first
-  if (process.env.KV_REST_API_URL) {
-    try {
-      const { kv } = await import('@vercel/kv');
-      const msgs = await kv.get('bloom_wall_messages');
-      return msgs || [];
-    } catch(e) {}
-  }
-  if (memoryMessages === null) memoryMessages = [];
-  return memoryMessages;
+  const stored = await kvGet('bloom_wall_messages');
+  return stored || [];
 }
 
 async function saveMessages(messages) {
-  if (process.env.KV_REST_API_URL) {
-    try {
-      const { kv } = await import('@vercel/kv');
-      await kv.set('bloom_wall_messages', messages);
-      return;
-    } catch(e) {}
-  }
-  memoryMessages = messages;
+  await kvSet('bloom_wall_messages', messages);
 }
 
 export default async function handler(req, res) {
@@ -61,12 +74,17 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // Check KV is configured
+  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+    return res.status(503).json({ error: 'Wall storage not configured', messages: [] });
+  }
+
   if (req.method === 'GET') {
     const messages = await getMessages();
     const recent = messages
       .sort((a, b) => b.ts - a.ts)
       .slice(0, 30)
-      .map(({ fp, ...m }) => m); // strip fingerprint
+      .map(({ fp, ...m }) => m);
     return res.json({ messages: recent });
   }
 
