@@ -1347,8 +1347,69 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 
 /* ============================================================
-   TUTORIAL OVERLAY
+   DAILY AFFIRMATION OVERLAY
    ============================================================ */
+#affirmation-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  background: var(--bg);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 36px;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+#affirmation-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.affirmation-line {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 28px;
+  color: var(--cream);
+  text-align: center;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  margin: 6px 0;
+}
+.affirmation-line.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.affirmation-line.final {
+  font-size: 36px;
+  font-style: italic;
+  color: var(--sage-light);
+  margin-top: 16px;
+}
+.affirmation-line.final strong {
+  font-weight: 400;
+}
+.affirmation-name {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 48px;
+  opacity: 0;
+  transition: opacity 0.7s ease;
+}
+.affirmation-name.show { opacity: 1; }
+.affirmation-begin {
+  margin-top: 52px;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.affirmation-begin.show { opacity: 1; }
 #tutorial-overlay {
   position: fixed;
   inset: 0;
@@ -1875,6 +1936,36 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   </div>
 </div>
 
+<!-- Daily affirmation overlay -->
+<div id="affirmation-overlay" style="display:none">
+  <div class="affirmation-name" id="affirmation-greeting"></div>
+  <div class="affirmation-line" id="aff-1">I am kind</div>
+  <div class="affirmation-line" id="aff-2">I am smart</div>
+  <div class="affirmation-line" id="aff-3">I am brave</div>
+  <div class="affirmation-line" id="aff-4">I am important</div>
+  <div class="affirmation-line final" id="aff-5"><em>I am <strong>enough</strong></em></div>
+  <div class="affirmation-begin" id="affirmation-begin">
+    <button class="btn btn-ghost" onclick="dismissAffirmation()" style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--text-secondary);border-color:rgba(255,255,255,0.08)">
+      Begin your day →
+    </button>
+  </div>
+</div>
+
+<!-- Open journal sheet — soft, unstructured space -->
+<div class="bottom-sheet" id="open-journal-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:0 20px 20px">
+    <div style="font-family:Fraunces,serif;font-style:italic;font-size:20px;font-weight:300;color:var(--rose-light);margin-bottom:6px">What's on your heart right now?</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">No prompts. No structure. Just space — say whatever needs saying.</div>
+    <textarea id="open-journal-textarea" placeholder="You don't have to make it make sense..." rows="7" style="margin-bottom:12px"></textarea>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" style="flex:1" id="open-journal-save">Let it out</button>
+      <button class="btn btn-ghost" onclick="closeAllSheets()">Close</button>
+    </div>
+    <div id="open-journal-ai" style="display:none;margin-top:14px"></div>
+  </div>
+</div>
+
 <!-- Hard day sheet -->
 <div class="bottom-sheet" id="hard-day-sheet">
   <div class="sheet-handle"></div>
@@ -2324,82 +2415,163 @@ function playTone(freq, duration, type = 'sine', volume = 0.18, delay = 0) {
   } catch(e) {}
 }
 
-function playSound(type) {
+// ── Count completed habits today (for rising scale) ──────────
+// ── Warm marimba-style tone with natural decay ───────────────
+function playWarmTone(freq, duration, volume = 0.18, delay = 0) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+    gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+    gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + delay + 0.01);
+    gain.gain.exponentialRampToValueAtTime(volume * 0.4, ctx.currentTime + delay + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+    osc.start(ctx.currentTime + delay);
+    osc.stop(ctx.currentTime + delay + duration + 0.05);
+
+    // Subtle harmonic for warmth
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(freq * 2, ctx.currentTime + delay);
+    gain2.gain.setValueAtTime(0, ctx.currentTime + delay);
+    gain2.gain.linearRampToValueAtTime(volume * 0.25, ctx.currentTime + delay + 0.01);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration * 0.6);
+    osc2.start(ctx.currentTime + delay);
+    osc2.stop(ctx.currentTime + delay + duration);
+  } catch(e) {}
+}
+
+function getDailyCompletionCount() {
+  const td = state.todayData || {};
+  let count = 0;
+  if (td.m_teeth) count++;
+  if (td.e_teeth) count++;
+  if (td.mood !== undefined) count++;
+  if (td.water >= 3) count++;
+  if (td.foodXPGiven) count++;
+  if (td.journalXPGiven) count++;
+  // Weekly habits done this week
+  const wd = state.weekData || {};
+  if ((wd.w_shower || 0) > 0) count++;
+  if ((wd.w_exercise || 0) > 0) count++;
+  if ((wd.w_outside || 0) > 0) count++;
+  // Household tasks
+  const household = wd.household || {};
+  count += Object.values(household).filter(Boolean).length;
+  return count;
+}
+
+function playSound(type, param) {
   if (!isAudioEnabled()) return;
-  // Resume context if suspended (browser autoplay policy)
   if (audioCtx?.state === 'suspended') audioCtx.resume();
 
   switch(type) {
-    case 'habit':
-      // Warm single chime — soft and satisfying
-      playTone(523, 0.3, 'sine', 0.15);       // C5
-      playTone(659, 0.25, 'sine', 0.1, 0.08); // E5
+
+    case 'habit': {
+      const scale = [261, 294, 330, 392, 440, 523, 587, 659];
+      const count = getDailyCompletionCount();
+      const idx = Math.min(count, scale.length - 1);
+      const freq = scale[idx];
+      playWarmTone(freq, 0.75, 0.17);
+      if (idx >= 4) playWarmTone(freq * 1.5, 0.6, 0.07, 0.05);
       break;
+    }
 
     case 'all_done':
-      // Gentle 3-note ascending resolution
-      playTone(523, 0.25, 'sine', 0.14);        // C5
-      playTone(659, 0.25, 'sine', 0.12, 0.12);  // E5
-      playTone(784, 0.4,  'sine', 0.15, 0.24);  // G5
+      playWarmTone(523,  0.8, 0.16);
+      playWarmTone(659,  0.8, 0.14, 0.1);
+      playWarmTone(784,  1.1, 0.16, 0.2);
+      playWarmTone(1047, 0.9, 0.12, 0.35);
+      break;
+
+    case 'water_1':
+      playWarmTone(392, 0.65, 0.15);
+      break;
+
+    case 'water_2':
+      playWarmTone(523, 0.65, 0.15);
+      break;
+
+    case 'water_3':
+      playWarmTone(659, 0.7,  0.15);
+      playWarmTone(784, 0.9,  0.13, 0.12);
+      playWarmTone(523, 0.9,  0.10, 0.12);
       break;
 
     case 'water':
-      // Bubbly pop
-      playTone(880, 0.12, 'sine', 0.12);
-      playTone(1047,0.12, 'sine', 0.1, 0.08);
-      playTone(1319,0.2,  'sine', 0.12, 0.16);
+      playWarmTone(523, 0.7, 0.14);
+      break;
+
+    case 'food':
+      playWarmTone(440, 0.6, 0.13);
+      playWarmTone(554, 0.7, 0.11, 0.1);
       break;
 
     case 'milestone':
-      // Fuller, celebratory
-      playTone(523, 0.2, 'sine', 0.14);
-      playTone(659, 0.2, 'sine', 0.12, 0.1);
-      playTone(784, 0.2, 'sine', 0.13, 0.2);
-      playTone(1047,0.5, 'sine', 0.15, 0.3);
-      break;
-
-    case 'breath_inhale':
-      // Soft rising tone
-      playTone(392, 0.5, 'sine', 0.08);
-      break;
-
-    case 'breath_hold':
-      // Sustained middle tone
-      playTone(440, 0.4, 'sine', 0.07);
-      break;
-
-    case 'breath_exhale':
-      // Gentle falling tone
-      playTone(349, 0.6, 'sine', 0.08);
-      break;
-
-    case 'breath_done':
-      // Peaceful resolution
-      playTone(523, 0.3, 'sine', 0.1);
-      playTone(440, 0.5, 'sine', 0.08, 0.2);
-      break;
-
-    case 'mood':
-      // Soft single note acknowledgment
-      playTone(440, 0.2, 'sine', 0.08);
+      playWarmTone(392, 0.6,  0.13);
+      playWarmTone(494, 0.6,  0.13, 0.12);
+      playWarmTone(587, 0.6,  0.14, 0.22);
+      playWarmTone(784, 1.0,  0.15, 0.34);
+      playWarmTone(988, 0.9,  0.12, 0.5);
       break;
 
     case 'win':
-      // Light upward sparkle
-      playTone(659, 0.15, 'sine', 0.1);
-      playTone(784, 0.15, 'sine', 0.1, 0.08);
-      playTone(988, 0.25, 'sine', 0.12, 0.16);
+      playWarmTone(523, 0.5, 0.12);
+      playWarmTone(659, 0.5, 0.12, 0.09);
+      playWarmTone(880, 0.7, 0.14, 0.18);
       break;
 
     case 'journal':
-      // Thoughtful, single soft tone
-      playTone(392, 0.4, 'sine', 0.1);
+      playWarmTone(329, 0.9, 0.14);
+      break;
+
+    case 'mood':
+      playWarmTone(440, 0.5, 0.08);
+      break;
+
+    case 'affirmation':
+      playWarmTone(659, 0.5, 0.1);
+      playWarmTone(784, 0.6, 0.1, 0.1);
       break;
 
     case 'hard_day':
-      // Grounding, low and warm
-      playTone(261, 0.6, 'sine', 0.1);
-      playTone(329, 0.5, 'sine', 0.08, 0.3);
+      playWarmTone(261, 1.0, 0.12);
+      playWarmTone(329, 1.0, 0.09, 0.25);
+      playWarmTone(392, 1.2, 0.10, 0.5);
+      break;
+
+    case 'breath_inhale':
+      playTone(220, 1.8, 'sine', 0.07);
+      playTone(440, 1.8, 'sine', 0.04, 0.0);
+      playTone(660, 1.2, 'sine', 0.02, 0.1);
+      break;
+
+    case 'breath_hold':
+      playTone(261, 2.0, 'sine', 0.07);
+      playTone(392, 2.0, 'sine', 0.04, 0.05);
+      break;
+
+    case 'breath_exhale':
+      playTone(293, 2.2, 'sine', 0.07);
+      playTone(220, 2.5, 'sine', 0.05, 0.2);
+      break;
+
+    case 'breath_done':
+      playTone(523, 1.2, 'sine', 0.1);
+      playTone(659, 1.2, 'sine', 0.08, 0.4);
+      playTone(784, 1.5, 'sine', 0.1,  0.8);
+      break;
+
+    case 'breath_count':
+      playTone(880, 0.12, 'sine', 0.05);
       break;
   }
 }
@@ -2785,6 +2957,70 @@ function getMoodPattern() {
 }
 
 // ── Hard day mode ────────────────────────────────────────────
+function openOpenJournal() {
+  closeAllSheets();
+  openSheet('open-journal-sheet');
+  setTimeout(() => {
+    const btn = document.getElementById('open-journal-save');
+    if (btn) btn.addEventListener('click', saveOpenJournal);
+    const ta = document.getElementById('open-journal-textarea');
+    if (ta) ta.focus();
+  }, 400);
+}
+
+async function saveOpenJournal() {
+  const ta = document.getElementById('open-journal-textarea');
+  if (!ta || !ta.value.trim()) return;
+  const text = ta.value.trim();
+  const t = today();
+
+  // Save to journal (appends to any existing entry or creates new)
+  if (!state.wellnessData.journal) state.wellnessData.journal = {};
+  const existing = state.wellnessData.journal[t];
+  if (existing) {
+    existing.text = existing.text + '\n\n' + text;
+    existing.ai = null;
+  } else {
+    state.wellnessData.journal[t] = { text, ai: null };
+  }
+  state.loadingJournalAI = true;
+  saveState();
+  archiveToday();
+  playSound('journal');
+
+  const btn = document.getElementById('open-journal-save');
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+  const aiEl = document.getElementById('open-journal-ai');
+  if (aiEl) {
+    aiEl.style.display = 'block';
+    aiEl.innerHTML = '<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>';
+  }
+
+  const ai = await callClaude(
+    `Someone is having a hard day and wrote: "${text}". Respond with just 1-2 sentences of warm, human presence. No advice. No silver linings. Just witness what they said and remind them they're not alone.`,
+    'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity, no advice.'
+  );
+
+  state.loadingJournalAI = false;
+  if (ai) {
+    state.wellnessData.journal[t].ai = ai;
+    saveState();
+    archiveToday();
+    if (aiEl) {
+      aiEl.innerHTML = `<div class="ai-response"><div class="ai-response-text">${ai}</div></div>`;
+    }
+  }
+  if (btn) { btn.textContent = 'Saved ✓'; btn.disabled = true; }
+
+  if (!state.todayData.journalXPGiven) {
+    state.todayData.journalXPGiven = true;
+    addXP(10, null);
+    saveState();
+    checkMilestones();
+  }
+}
+
 function activateHardDayMode() {
   state.hardDayMode = true;
   state.todayData.mood = state.todayData.mood ?? 1;
@@ -2809,7 +3045,7 @@ async function renderHardDaySheet() {
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
       <button class="btn btn-secondary btn-block" onclick="closeAllSheets();switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">🌬 Take a breath</button>
-      <button class="btn btn-secondary btn-block" onclick="closeAllSheets();switchTab('wellness')">📓 Write it out</button>
+      <button class="btn btn-secondary btn-block" onclick="closeAllSheets();openOpenJournal()">📓 Just write it out</button>
       <button class="btn btn-secondary btn-block" onclick="closeAllSheets();openCrisisSheet()">🤍 I need more support</button>
     </div>
     <div id="hard-day-ai" style="font-size:13px;color:var(--text-muted);font-style:italic;text-align:center;line-height:1.7">bloom is here with you...</div>
@@ -2892,6 +3128,86 @@ function applySeasonalTheme() {
   const season = getSeasonalAccent();
   document.documentElement.style.setProperty('--seasonal', season.color);
   document.documentElement.style.setProperty('--seasonal-hint', season.hint);
+}
+
+// ============================================================
+//  DAILY AFFIRMATION
+// ============================================================
+function checkDailyAffirmation() {
+  const lastShown = load('bloom_affirmation_date', null);
+  const t = today();
+  if (lastShown === t) return;
+  save('bloom_affirmation_date', t);
+  setTimeout(() => showDailyAffirmation(), 300);
+}
+
+function showDailyAffirmation() {
+  const overlay = document.getElementById('affirmation-overlay');
+  if (!overlay) return;
+
+  const name = state.prefs?.name;
+  const greeting = document.getElementById('affirmation-greeting');
+  if (greeting && name) {
+    greeting.textContent = `Good to see you, ${name}.`;
+  }
+
+  overlay.style.display = 'flex';
+  overlay.style.pointerEvents = 'none';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      overlay.classList.add('visible');
+      overlay.style.pointerEvents = 'all';
+    });
+  });
+
+  const timings = [
+    { id: 'affirmation-greeting', delay: 400 },
+    { id: 'aff-1', delay: 1000 },
+    { id: 'aff-2', delay: 1700 },
+    { id: 'aff-3', delay: 2400 },
+    { id: 'aff-4', delay: 3100 },
+    { id: 'aff-5', delay: 4000 },
+    { id: 'affirmation-begin', delay: 5600 },
+  ];
+
+  timings.forEach(({ id, delay }) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('show');
+      if (id.startsWith('aff-')) {
+        // C4, E4, F4, G4, C5+E5+G5 chord — open, contemplative, meditative
+        const tones = [261, 330, 349, 392, 523];
+        const idx = parseInt(id.replace('aff-', '')) - 1;
+        const freq = tones[idx];
+        const isFinal = id === 'aff-5';
+        if (isFinal) {
+          // Full C major chord — C5, E5, G5 — ringing together
+          playTone(523, 3.5, 'sine', 0.10);        // C5
+          playTone(659, 3.5, 'sine', 0.08, 0.0);   // E5
+          playTone(784, 3.2, 'sine', 0.07, 0.0);   // G5
+          // Octave harmonics for richness
+          playTone(1046, 2.5, 'sine', 0.03, 0.02); // C6
+          playTone(1318, 2.0, 'sine', 0.02, 0.02); // E6
+        } else {
+          // Single singing bowl tone for each line
+          playTone(freq,     2.0, 'sine', 0.07);
+          playTone(freq * 2, 1.6, 'sine', 0.03, 0.02);
+          playTone(freq * 3, 1.2, 'sine', 0.015, 0.04);
+        }
+      }
+    }, delay);
+  });
+}
+
+function dismissAffirmation() {
+  const overlay = document.getElementById('affirmation-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('visible');
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    ['affirmation-greeting','aff-1','aff-2','aff-3','aff-4','aff-5','affirmation-begin']
+      .forEach(id => document.getElementById(id)?.classList.remove('show'));
+  }, 600);
 }
 
 // ── New week detection ───────────────────────────────────────
@@ -3125,12 +3441,21 @@ function celebrate(type, sourceEl) {
 
   // Play audio
   const audioMap = {
-    water: 'water', food: 'habit', journal: 'journal',
-    win: 'win', all_done: 'all_done', weekly_goal: 'milestone',
-    reflection: 'journal', breath: 'breath_done',
-    mood: 'mood', sleep: 'mood',
+    water: null,        // handled per-bottle in tapWater
+    food: 'food',
+    journal: 'journal',
+    win: 'win',
+    all_done: 'all_done',
+    weekly_goal: 'milestone',
+    reflection: 'journal',
+    breath: 'breath_done',
+    mood: 'mood',
+    sleep: 'mood',
+    affirmation: 'affirmation',
+    insight: 'milestone',
   };
-  playSound(audioMap[type] || 'habit');
+  const sound = audioMap.hasOwnProperty(type) ? audioMap[type] : 'habit';
+  if (sound) playSound(sound);
 
   const msg = data.messages[Math.floor(Math.random() * data.messages.length)];
 
@@ -3374,6 +3699,26 @@ function renderTodayTop() {
   if (!container) return;
   let html = '';
 
+  // Hard day button — only show if mood hasn't been logged yet
+  // Once they've told us how they feel, this is redundant
+  const mood = state.todayData.mood;
+  if (!state.hardDayMode && mood === undefined) {
+    html += `<div onclick="activateHardDayMode()" style="
+      display:flex;align-items:center;gap:12px;
+      background:rgba(176,120,120,0.07);
+      border:1px solid rgba(176,120,120,0.18);
+      border-radius:var(--r-lg);padding:12px 16px;
+      margin-bottom:12px;cursor:pointer;
+      transition:background 0.2s">
+      <span style="font-size:22px">🫂</span>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:500;color:var(--rose-light)">Having a hard day?</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Tap for support — your streak is protected</div>
+      </div>
+      <div style="font-size:18px;color:var(--text-muted)">›</div>
+    </div>`;
+  }
+
   // Streak recovery banner
   if (state.showStreakRecovery && state.lostStreakCount) {
     html += `<div class="banner" style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.2)">
@@ -3434,7 +3779,6 @@ function renderTodayTop() {
   }
 
   // Low mood banner
-  const mood = state.todayData.mood;
   if (mood !== undefined && mood <= 2) {
     const yesterdayLow = checkYesterdayLowMood();
     const breatheExpanded = state.inlineBreatheOpen;
@@ -3446,7 +3790,7 @@ function renderTodayTop() {
         <div class="banner-text">${yesterdayLow ? (state.lowMoodAIResponse || 'Two hard days in a row takes real courage to keep going. You\'re not alone.') : 'Hard days happen. You don\'t have to push through anything right now.'}</div>
         <div class="banner-actions">
           <div class="banner-action" id="inline-breathe-btn" onclick="toggleInlineBreathe()">${breatheExpanded ? '✕ Close' : '🌬 Breathe'}</div>
-          <div class="banner-action" onclick="switchTab('wellness')">📓 Journal</div>
+          <div class="banner-action" onclick="openOpenJournal()">📓 Just write</div>
           <div class="banner-action" onclick="openCrisisSheet()">🤍 Support</div>
         </div>
         ${breatheExpanded ? `
@@ -3497,36 +3841,39 @@ function renderInlineBreathPhase() {
     saveState();
     celebrate('breath', document.getElementById('inline-breath-zone'));
     ui.innerHTML = `
-      <div style="font-size:32px;margin-bottom:8px">🌿</div>
-      <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sky-light)">Well done</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-top:6px">Take a moment to notice how you feel</div>
-      <button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="toggleInlineBreathe()">Close</button>`;
+      <div style="font-size:28px;margin-bottom:6px">🌿</div>
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--sky-light);margin-bottom:12px">Four cycles complete.</div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button class="btn btn-sm" style="background:rgba(106,154,176,0.2);border:1px solid rgba(106,154,176,0.3);color:var(--sky-light);border-radius:var(--r-full)" onclick="inlineContinueBreathing()">Keep going</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleInlineBreathe()">Done</button>
+      </div>`;
     return;
   }
 
   const phases = [
-    { name: 'Inhale', dur: 4, color: 'var(--sky-light)' },
-    { name: 'Hold',   dur: 7, color: 'var(--sage-light)' },
-    { name: 'Exhale', dur: 8, color: 'var(--rose-light)' },
+    { name: 'Inhale', dur: 4, color: 'var(--sky-light)',  sound: 'breath_inhale' },
+    { name: 'Hold',   dur: 7, color: 'var(--sage-light)', sound: 'breath_hold' },
+    { name: 'Exhale', dur: 8, color: 'var(--rose-light)', sound: 'breath_exhale' },
   ];
   const ph = phases[inlineBreathPhase];
   let countdown = ph.dur;
-  const scale = inlineBreathPhase === 1 ? 1.3 : 1;
+
+  playSound(ph.sound);
 
   ui.innerHTML = `
     <div id="inline-breath-circle" style="
-      width:80px;height:80px;border-radius:50%;margin:0 auto 10px;
+      width:80px;height:80px;border-radius:50%;margin:0 auto 8px;
       background:radial-gradient(circle,rgba(106,154,176,0.25),rgba(106,154,176,0.05));
       border:2px solid rgba(106,154,176,0.4);
       display:flex;align-items:center;justify-content:center;
       transition:transform ${ph.dur}s ease-in-out;
-      transform:scale(${inlineBreathPhase === 0 ? 1 : scale})">
+      transform:scale(${inlineBreathPhase === 0 ? 1 : inlineBreathPhase === 1 ? 1.3 : 1})">
       <span id="inline-breath-count" style="font-family:Fraunces,serif;font-size:20px;color:${ph.color}">${countdown}</span>
     </div>
-    <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:${ph.color}">${ph.name}</div>
-    <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Cycle ${inlineBreathCycle + 1} of 4</div>`;
+    <div style="font-family:Fraunces,serif;font-style:italic;font-size:13px;color:${ph.color};margin-bottom:4px">${ph.name}</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Cycle ${inlineBreathCycle + 1} of 4</div>
+    <button class="btn btn-ghost btn-sm" onclick="stopInlineBreathing()" style="font-size:11px">Finish early</button>`;
 
-  // Trigger CSS scale transition on next frame
   if (inlineBreathPhase === 0) {
     requestAnimationFrame(() => {
       const c = document.getElementById('inline-breath-circle');
@@ -3551,6 +3898,25 @@ function renderInlineBreathPhase() {
       setTimeout(() => renderInlineBreathPhase(), 300);
     }
   }, 1000);
+}
+
+function stopInlineBreathing() {
+  if (inlineBreathInterval) clearInterval(inlineBreathInterval);
+  if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
+  state.wellnessData.breathSessions++;
+  saveState();
+  playSound('breath_done');
+  const ui = document.getElementById('inline-breath-ui');
+  if (ui) ui.innerHTML = `
+    <div style="font-size:24px;margin-bottom:6px">🌿</div>
+    <div style="font-family:Fraunces,serif;font-style:italic;font-size:13px;color:var(--sage-light);margin-bottom:10px">Well done.</div>
+    <button class="btn btn-ghost btn-sm" onclick="toggleInlineBreathe()">Close</button>`;
+}
+
+function inlineContinueBreathing() {
+  inlineBreathCycle = 0;
+  inlineBreathPhase = 0;
+  renderInlineBreathPhase();
 }
 
 async function triggerLowMoodAI() {
@@ -3729,15 +4095,6 @@ function renderTodayTab() {
     ${!journalToday ? '<div class="habit-xp" style="margin-top:8px;display:inline-flex">+10 XP</div>' : ''}
   </div>`;
 
-  // --- HARD DAY BUTTON ---
-  if (!state.hardDayMode) {
-    html += `<div style="text-align:center;padding:8px 0 16px">
-      <button onclick="activateHardDayMode()" style="background:none;border:none;font-size:12px;color:var(--text-muted);cursor:pointer;font-family:Instrument Sans,sans-serif;text-decoration:underline;text-underline-offset:3px">
-        Having a hard day?
-      </button>
-    </div>`;
-  }
-
   scroll.innerHTML = html;
   renderTodayTop();
   checkAllDone();
@@ -3810,12 +4167,16 @@ function logSleep(val) {
 function tapWater(i) {
   const cur = state.todayData.water || 0;
   if (i + 1 === cur) {
+    // Deselecting — no sound or a soft low tick
     state.todayData.water = cur - 1;
     haptic('light');
   } else {
     state.todayData.water = Math.max(cur, i + 1);
     haptic('light');
     animateWaterBottle(i);
+    // Play rising tone per bottle — 1=low, 2=mid, 3=high+chord
+    const bottleSounds = ['water_1', 'water_2', 'water_3'];
+    playSound(bottleSounds[i] || 'water');
   }
   const newCount = state.todayData.water;
   if (newCount >= 3 && !state.todayData.waterXPGiven) {
@@ -3824,7 +4185,7 @@ function tapWater(i) {
     setTimeout(() => {
       const wEl = document.getElementById('water-bottles-row');
       celebrate('water', wEl);
-    }, 100);
+    }, 200);
   }
   saveState();
   archiveToday();
@@ -3925,7 +4286,10 @@ function renderWellnessTab() {
   // --- CUSTOM AFFIRMATIONS ---
   const affirmations = state.wellnessData?.affirmations || [];
   html += `<div class="card">
-    <div class="card-title">💌 My affirmations</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="card-title" style="margin-bottom:0">💌 My affirmations</div>
+      <button onclick="showDailyAffirmation()" style="background:none;border:none;font-size:12px;color:var(--text-muted);cursor:pointer;font-family:Fraunces,serif;font-style:italic;text-decoration:underline;text-underline-offset:3px">I am enough ›</button>
+    </div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <input type="text" id="affirm-input" placeholder="Write something kind to yourself...">
       <button class="btn btn-primary btn-sm" onclick="addAffirmation()">Save</button>
@@ -4218,9 +4582,10 @@ function startBreathing() {
 function runBreathCountdown(n) {
   const ui = document.getElementById('breath-ui');
   if (!ui) return;
+  playSound('breath_count');
   ui.innerHTML = `
     <div style="text-align:center;padding:20px 0">
-      <div style="font-family:Fraunces,serif;font-size:72px;font-weight:300;color:var(--sky-light);line-height:1;animation:breathCountNum 0.4s cubic-bezier(0.34,1.56,0.64,1)">${n}</div>
+      <div style="font-family:Fraunces,serif;font-size:80px;font-weight:300;color:var(--sky-light);line-height:1;animation:breathCountNum 0.4s cubic-bezier(0.34,1.56,0.64,1)">${n}</div>
       <div style="font-size:13px;color:var(--text-muted);margin-top:8px;font-style:italic">get ready...</div>
     </div>`;
   if (n > 1) {
@@ -4239,10 +4604,17 @@ function renderBreathPhase() {
     state.wellnessData.breathSessions++;
     saveState();
     celebrate('breath', document.getElementById('breath-card'));
-    ui.innerHTML = `<div class="breath-circle"><span style="font-size:32px">🌿</span></div>
-    <div class="breath-label">Well done</div>
-    <div class="breath-count" style="margin-top:16px;color:var(--text-secondary)">Take a moment to notice how you feel</div>
-    <button class="btn btn-ghost btn-sm" style="margin-top:16px" onclick="renderWellnessTab()">Done</button>`;
+    // Post-cycle prompt — invite them to keep going
+    ui.innerHTML = `
+      <div style="text-align:center;padding:8px 0">
+        <div style="font-size:40px;margin-bottom:10px">🌿</div>
+        <div style="font-family:Fraunces,serif;font-style:italic;font-size:17px;color:var(--sage-light);margin-bottom:6px">Four cycles complete.</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px">Take a moment. How do you feel?</div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="btn btn-sm" style="background:rgba(106,154,176,0.2);border:1px solid rgba(106,154,176,0.35);color:var(--sky-light);border-radius:var(--r-full)" onclick="continueBreathing()">Keep going</button>
+          <button class="btn btn-ghost btn-sm" onclick="stopBreathing()">I'm done</button>
+        </div>
+      </div>`;
     return;
   }
 
@@ -4253,9 +4625,13 @@ function renderBreathPhase() {
   const phaseSounds = ['breath_inhale', 'breath_hold', 'breath_exhale'];
   playSound(phaseSounds[breathPhase] || 'breath_inhale');
 
-  ui.innerHTML = `<div class="breath-circle ${ph.class}"><span style="font-size:24px;color:var(--sage-light);font-family:Fraunces,serif;font-style:italic" id="breath-count-display">${countdown}</span></div>
-  <div class="breath-label">${ph.name}</div>
-  <div class="breath-count">Cycle ${breathCycle + 1} of 4</div>`;
+  ui.innerHTML = `
+    <div class="breath-circle ${ph.class}">
+      <span style="font-size:26px;color:var(--sky-light);font-family:Fraunces,serif;font-style:italic" id="breath-count-display">${countdown}</span>
+    </div>
+    <div class="breath-label" style="color:var(--sky-light)">${ph.name}</div>
+    <div class="breath-count" style="margin-bottom:14px">Cycle ${breathCycle + 1} of 4</div>
+    <button class="btn btn-ghost btn-sm" onclick="stopBreathing()">Finish early</button>`;
 
   if (breathInterval) clearInterval(breathInterval);
   breathInterval = setInterval(() => {
@@ -4269,9 +4645,30 @@ function renderBreathPhase() {
         breathPhase = 0;
         breathCycle++;
       }
-      setTimeout(() => renderBreathPhase(), 200);
+      setTimeout(() => renderBreathPhase(), 300);
     }
   }, 1000);
+}
+
+function stopBreathing() {
+  if (breathInterval) clearInterval(breathInterval);
+  if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
+  state.wellnessData.breathSessions++;
+  saveState();
+  playSound('breath_done');
+  const ui = document.getElementById('breath-ui');
+  if (ui) ui.innerHTML = `
+    <div style="text-align:center;padding:8px 0">
+      <div style="font-size:36px;margin-bottom:8px">🌿</div>
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sage-light);margin-bottom:16px">Well done. Take a moment.</div>
+      <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+    </div>`;
+}
+
+function continueBreathing() {
+  breathCycle = 0;
+  breathPhase = 0;
+  renderBreathPhase();
 }
 
 // ============================================================
@@ -5692,6 +6089,7 @@ function initApp() {
   applySeasonalTheme();
   checkNewWeek();
   checkMonthlyReflection();
+  checkDailyAffirmation();
   renderTodayTab();
   updateStreak();
   checkMilestones();
