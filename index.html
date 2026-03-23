@@ -445,7 +445,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding: 16px 16px 24px;
+  padding: 16px 16px calc(var(--safe-bottom) + 24px);
 }
 .tab-scroll::-webkit-scrollbar { display: none; }
 
@@ -1084,7 +1084,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   transition: max-height 0.3s ease, padding 0.3s ease;
 }
 .settings-body.open {
-  max-height: 600px;
+  max-height: 2000px;
   padding: 12px 16px 16px;
 }
 
@@ -1360,6 +1360,14 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 @keyframes fadeOut {
   from { opacity: 1; }
   to   { opacity: 0; }
+}
+@keyframes sessionRefreshIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes sessionRefreshOut {
+  from { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to   { opacity: 0; transform: translateX(-50%) translateY(-20px); }
 }
 /* ============================================================
    DAILY AFFIRMATION OVERLAY
@@ -1846,6 +1854,11 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
       <div class="tab-scroll" id="today-scroll"></div>
     </div>
 
+    <!-- WEEKLY TAB -->
+    <div class="tab-panel" id="tab-weekly">
+      <div class="tab-scroll" id="weekly-scroll"></div>
+    </div>
+
     <!-- WELLNESS TAB -->
     <div class="tab-panel" id="tab-wellness">
       <div class="tab-scroll" id="wellness-scroll"></div>
@@ -1854,11 +1867,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
     <!-- PROGRESS TAB -->
     <div class="tab-panel" id="tab-progress">
       <div class="tab-scroll" id="progress-scroll"></div>
-    </div>
-
-    <!-- HISTORY TAB -->
-    <div class="tab-panel" id="tab-history">
-      <div class="tab-scroll" id="history-scroll"></div>
     </div>
 
     <!-- SETTINGS TAB -->
@@ -1871,7 +1879,11 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   <nav id="bottom-nav">
     <button class="nav-btn active" id="nav-today" onclick="switchTab('today')">
       <span class="nav-icon" id="nav-today-icon"></span>
-      <span class="nav-label">Today</span>
+      <span class="nav-label">Daily</span>
+    </button>
+    <button class="nav-btn" id="nav-weekly" onclick="switchTab('weekly')">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Weekly</span>
     </button>
     <button class="nav-btn" id="nav-wellness" onclick="switchTab('wellness')">
       <span class="nav-icon">🫧</span>
@@ -1880,10 +1892,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
     <button class="nav-btn" id="nav-progress" onclick="switchTab('progress')">
       <span class="nav-icon">✨</span>
       <span class="nav-label">Progress</span>
-    </button>
-    <button class="nav-btn" id="nav-history" onclick="switchTab('history')">
-      <span class="nav-icon">📅</span>
-      <span class="nav-label">History</span>
     </button>
     <button class="nav-btn" id="nav-settings" onclick="switchTab('settings')">
       <span class="nav-icon">⚙️</span>
@@ -1957,48 +1965,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 <!-- Medication timing sheet -->
 <div class="bottom-sheet" id="medication-sheet">
   <div class="sheet-handle"></div>
-  <div style="padding:0 20px 24px">
-    <div class="sheet-title">💊 Medication reminder</div>
-    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">
-      A private, judgment-free nudge. Choose which times of day are relevant to you — you can change this any time.
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
-      ${['morning','afternoon','evening'].map(time => `
-        <div onclick="toggleMedTime('${time}')" id="med-time-${time}" style="
-          display:flex;align-items:center;justify-content:space-between;
-          padding:14px 16px;border-radius:var(--r-lg);cursor:pointer;
-          background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.15);
-          transition:all 0.15s">
-          <div style="display:flex;align-items:center;gap:12px">
-            <span style="font-size:20px">${time === 'morning' ? '🌅' : time === 'afternoon' ? '☀️' : '🌙'}</span>
-            <div>
-              <div style="font-size:14px;color:var(--sky-light);font-weight:500;text-transform:capitalize">${time}</div>
-              <div style="font-size:12px;color:var(--text-muted)">${time === 'morning' ? 'Start of day' : time === 'afternoon' ? 'Midday' : 'End of day'}</div>
-            </div>
-          </div>
-          <div id="med-check-${time}" style="font-size:18px;color:var(--sky-light);opacity:0.3">○</div>
-        </div>`).join('')}
-      <div style="height:1px;background:rgba(255,255,255,0.06);margin:4px 0"></div>
-      <div onclick="toggleMedTime('once')" id="med-time-once" style="
-        display:flex;align-items:center;justify-content:space-between;
-        padding:14px 16px;border-radius:var(--r-lg);cursor:pointer;
-        background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.15);
-        transition:all 0.15s">
-        <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:20px">💊</span>
-          <div>
-            <div style="font-size:14px;color:var(--sky-light);font-weight:500">Once a day</div>
-            <div style="font-size:12px;color:var(--text-muted)">Single daily reminder</div>
-          </div>
-        </div>
-        <div id="med-check-once" style="font-size:18px;color:var(--sky-light);opacity:0.3">○</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-primary" style="flex:1" onclick="saveMedicationTiming()">Save</button>
-      <button class="btn btn-ghost" onclick="closeAllSheets()">Cancel</button>
-    </div>
-  </div>
+  <div id="medication-sheet-body" style="padding:0 20px 24px"></div>
 </div>
 
 <!-- Re-intro sheet for existing users -->
@@ -2128,18 +2095,18 @@ function bloomIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '1.5.0';
+const VERSION = '2.0.0';
 
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'Color themes — choose your palette in Settings or onboarding', spotlight: '#sh-appearance', tab: 'settings' },
-  { text: 'What\'s New now includes a guided tour of key changes', spotlight: null },
-  { text: 'Meals tracking — opt-in Breakfast, Lunch & Dinner daily habits', spotlight: null },
-  { text: 'Weekly insight now covers emotional + self-care in one', spotlight: null },
-  { text: 'Rolling week visual in Progress shows habits as they happen', spotlight: '#tab-progress', tab: 'progress' },
-  { text: 'Hard day card hides once you\'ve logged your mood', spotlight: null },
-  { text: '"What\'s on your heart?" — open journal space from hard day and low mood', spotlight: null },
+  { text: 'Daily & Weekly are now separate tabs — cleaner, less clutter', spotlight: '#nav-weekly', tab: 'today' },
+  { text: 'Morning & evening routines — assign self-care tasks to AM or PM', spotlight: '#sh-selfcare', tab: 'settings' },
+  { text: 'Habit reminders — teeth brushing at 8am, medication, water at noon', spotlight: '#sh-notifications', tab: 'settings' },
+  { text: 'Medication settings now work — pick morning, afternoon, evening, or once daily', spotlight: null },
+  { text: 'Streak fixes — streaks now properly update and show after completing any task', spotlight: null },
+  { text: 'Session refresh — bloom refreshes after 30 min away with a gentle indicator', spotlight: null },
+  { text: 'History is now in the Weekly tab — everything in one place', spotlight: null },
 ];
 
 // ============================================================
@@ -2818,62 +2785,13 @@ function updateStreak() {
   const td = state.todayData;
   const t = today();
 
-  if (xp.lastStreakDate === t) return; // already updated today
-
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
-
-  // ANY single action counts — habit, mood, journal, water, food
-  const anyAction = (
-    td.m_teeth || td.e_teeth ||
-    td.mood !== undefined ||
-    td.sleep !== undefined ||
-    (td.water && td.water > 0) ||
-    (td.food && Object.values(td.food).some(Boolean)) ||
-    td.journalXPGiven ||
-    state.wellnessData?.journal?.[t]
-  );
-
-  // Mood grace on rough days
-  const moodGrace = td.mood !== undefined && td.mood <= 2;
-
-  if (anyAction || moodGrace) {
-    if (xp.lastStreakDate === yStr || !xp.lastStreakDate) {
-      xp.streak = (xp.streak || 0) + 1;
-      xp.lastStreakDate = t;
-      if ([7,14,30].includes(xp.streak) || (xp.streak > 30 && xp.streak % 30 === 0)) {
-        if ((xp.freezeTokens || 0) < 5) xp.freezeTokens = (xp.freezeTokens || 0) + 1;
-      }
-    }
-  } else {
-    if ((xp.freezeTokens || 0) > 0) {
-      xp.freezeTokens--;
-      xp.lastStreakDate = t;
-    } else {
-      if (xp.lastStreakDate && xp.lastStreakDate !== yStr) {
-        xp.streak = 0;
-      }
-      xp.lastStreakDate = t;
-    }
-  }
-  saveState();
-}
-
-// ============================================================
-//  STREAK SYSTEM
-// ============================================================
-function updateStreak() {
-  const xp = state.xpData;
-  const td = state.todayData;
-  const t = today();
-
   if (xp.lastStreakDate === t) return;
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
 
+  const anySelfCare = td.selfCare && Object.values(td.selfCare).some(Boolean);
   const anyAction = (
     td.m_teeth || td.e_teeth ||
     td.mood !== undefined ||
@@ -2881,6 +2799,7 @@ function updateStreak() {
     (td.water && td.water > 0) ||
     (td.food && Object.values(td.food).some(Boolean)) ||
     td.journalXPGiven ||
+    anySelfCare ||
     state.wellnessData?.journal?.[t]
   );
 
@@ -2919,6 +2838,7 @@ function updateStreak() {
   // Update individual habit streaks
   updateHabitStreaks();
   saveState();
+  updateProgressTab();
 }
 
 // ── Individual habit streaks ─────────────────────────────────
@@ -3405,27 +3325,51 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 function handleVisibilityChange() {
   if (document.visibilityState === 'hidden') {
-    // Record when we went to background
     save('bloom_last_active', Date.now());
   } else {
-    // Coming back to foreground — check how long we were gone
     const lastActive = load('bloom_last_active', null);
     if (lastActive && (Date.now() - lastActive) >= SESSION_TIMEOUT_MS) {
-      // Been away long enough — treat as fresh open
-      // Clear today's date cache so archiving works correctly
+      // Been away 30+ min — full refresh
+      loadState();
       const t = today();
-      // Re-check daily affirmation
       const lastAffirmation = load('bloom_affirmation_date', null);
-      if (lastAffirmation !== t) {
-        checkDailyAffirmation();
-      }
-      // Re-run new week check in case day rolled over
+      if (lastAffirmation !== t) checkDailyAffirmation();
       checkNewWeek();
-      // Re-render today tab in case date changed
+      renderDailyQuote();
       renderTodayTab();
+      updateStreak();
+      updateProgressTab();
+      // Scroll today tab to top
+      const scroll = document.getElementById('today-scroll');
+      if (scroll) scroll.scrollTop = 0;
+      // Switch back to today tab
+      switchTab('today');
+      // Show session refresh indicator
+      showSessionRefreshIndicator();
     }
     save('bloom_last_active', Date.now());
   }
+}
+
+function showSessionRefreshIndicator() {
+  const existing = document.getElementById('session-refresh-banner');
+  if (existing) existing.remove();
+  const banner = document.createElement('div');
+  banner.id = 'session-refresh-banner';
+  banner.style.cssText = `
+    position:fixed;top:0;left:50%;transform:translateX(-50%);
+    max-width:430px;width:100%;z-index:800;
+    padding:calc(env(safe-area-inset-top, 0px) + 8px) 20px 10px;
+    background:linear-gradient(180deg,rgba(122,158,126,0.18),transparent);
+    text-align:center;pointer-events:none;
+    animation:sessionRefreshIn 0.4s ease forwards;
+  `;
+  banner.innerHTML = `<div style="font-family:Fraunces,serif;font-style:italic;font-size:13px;color:var(--sage-light);opacity:0.9">Welcome back — session refreshed 🌿</div>`;
+  document.body.appendChild(banner);
+  setTimeout(() => {
+    banner.style.animation = 'sessionRefreshOut 0.6s ease forwards';
+    setTimeout(() => banner.remove(), 600);
+  }, 3000);
 }
 
 document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -3445,6 +3389,43 @@ async function sendLocalNotification(title, body, tag) {
     });
   } catch(e) {}
 }
+
+// ── Scheduled habit reminders ────────────────────────────────
+const HABIT_REMINDERS = [
+  { id: 'm_teeth', hour: 8,  title: 'Morning reminder 🦷', body: 'Have you brushed your teeth yet? A small act of care to start the day.', check: () => state.todayData.m_teeth },
+  { id: 'e_teeth', hour: 21, title: 'Evening reminder 🦷', body: 'Time to brush your teeth before bed. You\'ve got this.', check: () => state.todayData.e_teeth },
+  { id: 'water',   hour: 12, title: 'Hydration check 💧',  body: 'Have you had some water today? Your body will thank you.', check: () => (state.todayData.water || 0) >= 2 },
+  { id: 'medication_morning',   hour: 9,  title: 'Medication reminder 💊', body: 'A gentle nudge — have you taken your morning medication?', check: () => state.todayData.selfCare?.sc_medication_morning || state.todayData.selfCare?.sc_medication },
+  { id: 'medication_evening',   hour: 20, title: 'Medication reminder 💊', body: 'Evening medication reminder — taking care of yourself in every way.', check: () => state.todayData.selfCare?.sc_medication_evening },
+];
+
+function checkScheduledReminders() {
+  if (!state.prefs?.notifications?.habitReminders) return;
+  const now = new Date();
+  const hour = now.getHours();
+  const t = today();
+  const sentKey = `bloom_reminders_${t}`;
+  const sent = load(sentKey, {});
+
+  HABIT_REMINDERS.forEach(r => {
+    if (hour >= r.hour && !sent[r.id] && !r.check()) {
+      // Check if this reminder is relevant (e.g., medication only if enabled)
+      if (r.id.startsWith('medication')) {
+        const medTiming = state.prefs?.medicationTiming || [];
+        const hasMed = state.prefs?.selfCareTasks?.includes('sc_medication');
+        if (!hasMed) return;
+        if (r.id === 'medication_morning' && !medTiming.includes('morning') && !medTiming.includes('once')) return;
+        if (r.id === 'medication_evening' && !medTiming.includes('evening')) return;
+      }
+      sent[r.id] = true;
+      save(sentKey, sent);
+      sendLocalNotification(r.title, r.body, `reminder-${r.id}`);
+    }
+  });
+}
+
+// Check reminders every 15 minutes
+setInterval(checkScheduledReminders, 15 * 60 * 1000);
 
 // ── Weekly reflection availability check ─────────────────────
 function checkWeeklyReflectionAvailable() {
@@ -3552,11 +3533,11 @@ function saveNewWeekGoals() {
 const SELF_CARE_CATEGORIES = [
   {
     id: 'body',
-    icon: '🪥',
+    icon: '🪞',
     label: 'Body care',
     sub: 'Small acts of physical care',
     tasks: [
-      { id: 'sc_brush_hair',  icon: '🪥', label: 'Brush hair' },
+      { id: 'sc_brush_hair',  icon: '💇', label: 'Brush hair' },
       { id: 'sc_wash_face',   icon: '🧴', label: 'Wash face' },
       { id: 'sc_get_dressed', icon: '👕', label: 'Get dressed' },
       { id: 'sc_floss',       icon: '🦷', label: 'Floss' },
@@ -3952,7 +3933,7 @@ function toggleWeeklyHabit(habitId, action, el) {
     }
   }
   saveState();
-  renderTodayTab();
+  renderWeeklyTab();
 }
 
 function toggleHouseholdTask(taskId, el) {
@@ -3971,7 +3952,7 @@ function toggleHouseholdTask(taskId, el) {
     updateProgressTab();
   }
   saveState();
-  renderTodayTab();
+  renderWeeklyTab();
 }
 
 // ============================================================
@@ -4154,9 +4135,9 @@ function switchTab(tab) {
   // Haptic
   haptic('light');
   if (tab === 'today') renderTodayTab();
+  if (tab === 'weekly') renderWeeklyTab();
   if (tab === 'wellness') renderWellnessTab();
   if (tab === 'progress') { renderProgressTab(); setTimeout(() => generateRollingInsight(), 800); }
-  if (tab === 'history') renderHistoryTab();
   if (tab === 'settings') renderSettingsTab();
   // Stagger cards
   setTimeout(() => staggerCards(panel), 50);
@@ -4428,9 +4409,7 @@ function renderTodayTab() {
 
   const prefs = state.prefs;
   const td = state.todayData;
-  const wd = state.weekData;
   const t = today();
-  const dowNow = dayOfWeek();
 
   let html = '<div id="today-top"></div>';
 
@@ -4470,69 +4449,16 @@ function renderTodayTab() {
   </div>`;
 
   // --- MORNING ---
-  if (prefs?.habits?.m_teeth !== false || true) {
-    html += `<div class="section-label">🌅 Morning</div>
-    <div class="card mb-0">`;
-    html += habitRow('m_teeth', '🦷', 'Brush teeth', 'morning', td.m_teeth, prefs?.habits?.m_teeth !== false, 15);
-    html += `</div>`;
-  }
+  html += `<div class="section-label">🌅 Morning</div>
+  <div class="card mb-0">`;
+  html += habitRow('m_teeth', '🦷', 'Brush teeth', 'morning', td.m_teeth, prefs?.habits?.m_teeth !== false, 15);
+  html += `</div>`;
 
   // --- EVENING ---
   html += `<div class="section-label">🌙 Evening</div>
   <div class="card mb-0">`;
   html += habitRow('e_teeth', '🦷', 'Brush teeth', 'evening', td.e_teeth, prefs?.habits?.e_teeth !== false, 15);
   html += `</div>`;
-
-  // --- WEEKLY GOALS ---
-  const weeklyHabits = [
-    { id: 'w_shower',   icon: '🚿', name: 'Shower' },
-    { id: 'w_exercise', icon: '💪', name: 'Exercise' },
-    { id: 'w_outside',  icon: '🌿', name: 'Go outside' },
-  ].filter(h => prefs?.habits?.[h.id] !== false);
-
-  if (weeklyHabits.length > 0) {
-    html += `<div class="section-label">🎯 Weekly goals</div><div class="card mb-0">`;
-    weeklyHabits.forEach(h => {
-      const goal = prefs?.goals?.[h.id] || 3;
-      const done = wd[h.id] || 0;
-      const atGoal = done >= goal;
-      const pips = Array.from({length: goal}, (_,i) =>
-        `<div class="week-pip${i < done ? ' done' : ''}"></div>`).join('');
-      html += `<div class="habit-row" style="cursor:default">
-        <div class="habit-check${atGoal ? ' done' : ''}" style="cursor:default">${atGoal ? '✓' : h.icon}</div>
-        <div class="habit-info">
-          <div class="habit-name">${h.name}</div>
-          <div class="habit-sub">${done}/${goal} this week</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="week-badge">${pips}</div>
-          <div style="display:flex;gap:4px">
-            ${done > 0 ? `<div onclick="tapWeeklyHabit('${h.id}','dec',this)" style="width:26px;height:26px;border-radius:50%;background:var(--bg-elevated);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-secondary)">−</div>` : `<div style="width:26px"></div>`}
-            ${!atGoal ? `<div onclick="tapWeeklyHabit('${h.id}','inc',this)" style="width:26px;height:26px;border-radius:50%;background:rgba(122,158,126,0.15);border:1px solid rgba(122,158,126,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--sage-light)">+</div>` : `<div style="width:26px"></div>`}
-          </div>
-        </div>
-      </div>`;
-    });
-    html += `</div>`;
-  }
-
-  // --- HOUSEHOLD ---
-  const tasks = prefs?.householdTasks || [];
-  if (tasks.length > 0) {
-    html += `<div class="section-label">🏠 This week</div><div class="card mb-0">`;
-    tasks.forEach(t2 => {
-      const done2 = wd.household?.[t2.id];
-      html += `<div class="habit-row" onclick="tapHouseholdTask('${t2.id}', this)">
-        <div class="habit-check${done2 ? ' done' : ''}">${done2 ? '✓' : t2.icon || '🏠'}</div>
-        <div class="habit-info">
-          <div class="habit-name">${t2.name}</div>
-          ${done2 ? '<div class="habit-sub" style="color:var(--sage)">Done this week ✓</div>' : '<div class="habit-sub">Tap when done</div>'}
-        </div>
-        ${!done2 ? '<div class="habit-xp">+15</div>' : ''}
-      </div>`;
-    });
-    html += `</div>`;
-  }
 
   // --- NOURISHMENT ---
   const waterCount = td.water || 0;
@@ -4594,42 +4520,59 @@ function renderTodayTab() {
     ${mainDone >= 2 ? '<div style="font-size:12px;color:var(--sage);margin-top:10px">+10 XP earned 🌿</div>' : '<div style="font-size:12px;color:var(--text-muted);margin-top:10px">Check off 2 or more for +10 XP</div>'}
   </div>`;
 
-  // --- SELF-CARE TASKS ---
+  // --- SELF-CARE TASKS (grouped by morning/evening/anytime routines) ---
   const selectedSCTasks = state.prefs?.selfCareTasks || [];
-  const medTiming = state.prefs?.medicationTiming || []; // array of 'morning','afternoon','evening', or ['once']
+  const medTiming = state.prefs?.medicationTiming || [];
   const hasMedication = selectedSCTasks.includes('sc_medication') ||
     medTiming.some(t2 => ['morning','afternoon','evening','once'].includes(t2));
-
-  // Separate medication IDs from regular tasks
   const regularSCTasks = selectedSCTasks.filter(id => !id.startsWith('sc_medication'));
+  const routines = state.prefs?.selfCareRoutines || {};
 
   if (regularSCTasks.length > 0 || hasMedication) {
     const scDone = td.selfCare || {};
-    html += `<div class="section-label">💚 Self-care</div>`;
 
-    if (regularSCTasks.length > 0) {
-      html += `<div class="card">`;
-      regularSCTasks.forEach(id => {
+    // Group tasks by routine
+    const morningTasks = regularSCTasks.filter(id => routines[id] === 'morning');
+    const eveningTasks = regularSCTasks.filter(id => routines[id] === 'evening');
+    const anytimeTasks = regularSCTasks.filter(id => !routines[id] || routines[id] === 'anytime');
+
+    function renderSCTaskRows(taskIds) {
+      let out = '';
+      taskIds.forEach(id => {
         const task = SELF_CARE_TASKS.find(t2 => t2.id === id);
         if (!task) return;
         const done = scDone[id];
-        html += `<div class="habit-row" onclick="tapSelfCare('${id}', this)">
+        out += `<div class="habit-row" onclick="tapSelfCare('${id}', this)">
           <div class="habit-check${done ? ' done' : ''}">${done ? '✓' : task.icon}</div>
           <div class="habit-info"><div class="habit-name">${task.label}</div></div>
           ${!done ? '<div class="habit-xp">+10</div>' : ''}
         </div>`;
       });
-      html += `</div>`;
+      return out;
     }
 
-    // Medication — its own quiet card with timing-based rows
+    // Morning routine
+    if (morningTasks.length > 0) {
+      html += `<div class="section-label">☀️ Morning routine</div><div class="card">${renderSCTaskRows(morningTasks)}</div>`;
+    }
+
+    // Evening routine
+    if (eveningTasks.length > 0) {
+      html += `<div class="section-label">🌙 Evening routine</div><div class="card">${renderSCTaskRows(eveningTasks)}</div>`;
+    }
+
+    // Anytime / ungrouped self-care
+    if (anytimeTasks.length > 0) {
+      html += `<div class="section-label">💚 Self-care</div><div class="card">${renderSCTaskRows(anytimeTasks)}</div>`;
+    }
+
+    // Medication card
     if (hasMedication) {
       const activeMedTasks = medTiming.length > 0
         ? MEDICATION_TIMES.filter(m => medTiming.includes(m.time))
-        : [MEDICATION_TASK]; // fallback to single
+        : [MEDICATION_TASK];
 
       html += `<div class="card" style="background:rgba(106,154,176,0.06);border-color:rgba(106,154,176,0.15)">`;
-
       activeMedTasks.forEach((med, i) => {
         const done = scDone[med.id];
         const isLast = i === activeMedTasks.length - 1;
@@ -4642,7 +4585,6 @@ function renderTodayTab() {
           ${!done ? '<div class="habit-xp" style="background:rgba(106,154,176,0.15);border-color:rgba(106,154,176,0.3);color:var(--sky-light)">+10</div>' : ''}
         </div>`;
       });
-
       html += `</div>`;
     }
   }
@@ -4827,6 +4769,135 @@ function activateHabit(id) {
   state.prefs.habits[id] = true;
   save('bloom_prefs', state.prefs);
   renderTodayTab();
+}
+
+// ============================================================
+//  WEEKLY TAB
+// ============================================================
+function renderWeeklyTab() {
+  const scroll = document.getElementById('weekly-scroll');
+  if (!scroll) return;
+
+  const prefs = state.prefs;
+  const wd = state.weekData;
+  let html = '';
+
+  // --- WEEKLY GOALS ---
+  const weeklyHabits = [
+    { id: 'w_shower',   icon: '🚿', name: 'Shower' },
+    { id: 'w_exercise', icon: '💪', name: 'Exercise' },
+    { id: 'w_outside',  icon: '🌿', name: 'Go outside' },
+  ].filter(h => prefs?.habits?.[h.id] !== false);
+
+  if (weeklyHabits.length > 0) {
+    html += `<div class="section-label">🎯 Weekly goals</div><div class="card mb-0">`;
+    weeklyHabits.forEach(h => {
+      const goal = prefs?.goals?.[h.id] || 3;
+      const done = wd[h.id] || 0;
+      const atGoal = done >= goal;
+      const pips = Array.from({length: goal}, (_,i) =>
+        `<div class="week-pip${i < done ? ' done' : ''}"></div>`).join('');
+      html += `<div class="habit-row" style="cursor:default">
+        <div class="habit-check${atGoal ? ' done' : ''}" style="cursor:default">${atGoal ? '✓' : h.icon}</div>
+        <div class="habit-info">
+          <div class="habit-name">${h.name}</div>
+          <div class="habit-sub">${done}/${goal} this week</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="week-badge">${pips}</div>
+          <div style="display:flex;gap:4px">
+            ${done > 0 ? `<div onclick="tapWeeklyHabit('${h.id}','dec',this)" style="width:26px;height:26px;border-radius:50%;background:var(--bg-elevated);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-secondary)">−</div>` : `<div style="width:26px"></div>`}
+            ${!atGoal ? `<div onclick="tapWeeklyHabit('${h.id}','inc',this)" style="width:26px;height:26px;border-radius:50%;background:rgba(122,158,126,0.15);border:1px solid rgba(122,158,126,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--sage-light)">+</div>` : `<div style="width:26px"></div>`}
+          </div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // --- HOUSEHOLD TASKS ---
+  const tasks = prefs?.householdTasks || [];
+  if (tasks.length > 0) {
+    html += `<div class="section-label">🏠 Household</div><div class="card mb-0">`;
+    tasks.forEach(t2 => {
+      const done2 = wd.household?.[t2.id];
+      html += `<div class="habit-row" onclick="tapHouseholdTask('${t2.id}', this)">
+        <div class="habit-check${done2 ? ' done' : ''}">${done2 ? '✓' : t2.icon || '🏠'}</div>
+        <div class="habit-info">
+          <div class="habit-name">${t2.name}</div>
+          ${done2 ? '<div class="habit-sub" style="color:var(--sage)">Done this week ✓</div>' : '<div class="habit-sub">Tap when done</div>'}
+        </div>
+        ${!done2 ? '<div class="habit-xp">+15</div>' : ''}
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // --- WEEKLY PROGRESS SNAPSHOT ---
+  const weekDates = getWeekDates();
+  const todayStr = today();
+  const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  html += `<div class="section-label">📊 This week</div>`;
+  html += `<div class="card" style="padding:16px">
+    <div class="week-bar">`;
+  weekDates.forEach((d, i) => {
+    const hist = state.historyData[d] || {};
+    const isToday = d === todayStr;
+    const moodEmoji = hist.mood !== undefined ? ['😔','😕','😐','🙂','😊'][hist.mood] : '';
+    let dotClass = '';
+    if (hist.habits) {
+      const done = Object.values(hist.habits).filter(Boolean).length;
+      const total = Object.keys(hist.habits).length;
+      if (done === total && total > 0) dotClass = 'full';
+      else if (done > 0) dotClass = 'partial';
+      else dotClass = 'missed';
+    }
+    if (isToday) dotClass += ' today';
+    html += `<div class="week-day-dot">
+      <div class="week-dot ${dotClass}">${moodEmoji || (isToday ? '○' : '')}</div>
+      <div class="week-day-label">${dayLabels[i]}</div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  // --- HISTORY (previously its own tab) ---
+  const history = state.historyData;
+  const moodEmojis = ['😔','😕','😐','🙂','😊'];
+  const dates = Object.keys(history)
+    .filter(d => d !== todayStr)
+    .sort((a,b) => b.localeCompare(a))
+    .slice(0, 14); // show last 2 weeks
+
+  if (dates.length > 0) {
+    html += `<div class="section-label">📅 Recent history</div>`;
+    let currentMonth = '';
+    dates.forEach(d => {
+      const dt = new Date(d + 'T00:00:00');
+      const month = dt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      if (month !== currentMonth) {
+        currentMonth = month;
+        html += `<div style="font-size:12px;color:var(--text-muted);margin:12px 0 6px;font-weight:500">${month}</div>`;
+      }
+      const day = history[d];
+      const moodE = day.mood !== undefined ? moodEmojis[day.mood] : '·';
+      const habitsArr = day.habits ? Object.entries(day.habits).filter(([_,v]) => v) : [];
+      const habitsStr = habitsArr.length > 0 ? `${habitsArr.length} habits` : '';
+      const journal = day.journal ? '📝' : '';
+
+      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:22px;width:30px;text-align:center">${moodE}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;color:var(--cream)">${dt.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'})}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${[habitsStr, journal].filter(Boolean).join(' · ') || 'No data'}</div>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  scroll.innerHTML = html;
 }
 
 // ============================================================
@@ -5758,6 +5829,7 @@ function renderSettingsTab() {
       Small daily acts that matter. Pick what feels possible — you can always change these.
     </div>`;
 
+  const scRoutines = prefs.selfCareRoutines || {};
   SELF_CARE_CATEGORIES.forEach(cat => {
     scHtml += `<div style="margin-bottom:14px">
       <div style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">${cat.icon} ${cat.label}</div>
@@ -5768,6 +5840,23 @@ function renderSettingsTab() {
           return `<div onclick="toggleSelfCareTask('${t2.id}')" id="sc-pill-${t2.id}" style="${ps}"><span>${t2.icon}</span>${t2.label}</div>`;
         }).join('')}
       </div>
+      ${cat.tasks.filter(t2 => selectedSC.includes(t2.id)).map(t2 => {
+        const r = scRoutines[t2.id] || 'anytime';
+        return `<div style="display:flex;align-items:center;gap:6px;margin-top:6px;margin-left:4px">
+          <span style="font-size:11px;color:var(--text-muted);width:90px">${t2.icon} ${t2.label}</span>
+          <div style="display:flex;gap:4px">
+            ${['morning','evening','anytime'].map(opt => {
+              const sel = r === opt;
+              const labels = {morning:'☀️ AM', evening:'🌙 PM', anytime:'Any'};
+              return `<div onclick="setSCRoutine('${t2.id}','${opt}')" style="
+                padding:3px 8px;border-radius:99px;cursor:pointer;font-size:10px;
+                background:${sel ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)'};
+                border:1px solid ${sel ? 'rgba(122,158,126,0.4)' : 'rgba(255,255,255,0.08)'};
+                color:${sel ? 'var(--sage-light)' : 'var(--text-muted)'}">${labels[opt]}</div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('')}
     </div>`;
   });
 
@@ -5798,6 +5887,11 @@ function renderSettingsTab() {
         <div class="radio-dot"></div>
         <div class="radio-label">${m === 'smart' ? 'Smart — only if under goal' : m === 'hourly' ? 'Every hour' : 'Off'}</div>
       </div>`).join('')}
+    </div>
+    <div class="divider"></div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">Habit reminders</div><div class="toggle-sub">Teeth brushing at 8am & 9pm, water at noon, medication at scheduled times</div></div>
+      <div class="toggle${notifs.habitReminders ? ' on' : ''}" onclick="toggleNotif('habitReminders')"></div>
     </div>
     <div class="divider"></div>
     <div class="toggle-row">
@@ -5890,18 +5984,61 @@ function goalStepper(name, key, val, compact = false) {
 }
 
 function openMedicationSheet() {
-  // Pre-fill current selections
+  const body = document.getElementById('medication-sheet-body');
+  if (!body) return;
   const current = state.prefs?.medicationTiming || ['once'];
-  ['morning','afternoon','evening','once'].forEach(t2 => {
-    const check = document.getElementById('med-check-' + t2);
-    const row = document.getElementById('med-time-' + t2);
-    if (!check || !row) return;
-    const on = current.includes(t2);
-    check.textContent = on ? '✓' : '○';
-    check.style.opacity = on ? '1' : '0.3';
-    row.style.background = on ? 'rgba(106,154,176,0.14)' : 'rgba(106,154,176,0.06)';
-    row.style.borderColor = on ? 'rgba(106,154,176,0.4)' : 'rgba(106,154,176,0.15)';
+  const times = [
+    { id: 'morning',   icon: '🌅', label: 'Morning',    sub: 'Start of day' },
+    { id: 'afternoon', icon: '☀️', label: 'Afternoon',  sub: 'Midday' },
+    { id: 'evening',   icon: '🌙', label: 'Evening',    sub: 'End of day' },
+  ];
+  let html = `
+    <div class="sheet-title">💊 Medication reminder</div>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">
+      A private, judgment-free nudge. Choose which times of day are relevant to you — you can change this any time.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">`;
+  times.forEach(t => {
+    const on = current.includes(t.id);
+    html += `<div onclick="toggleMedTime('${t.id}')" id="med-time-${t.id}" style="
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 16px;border-radius:var(--r-lg);cursor:pointer;
+      background:${on ? 'rgba(106,154,176,0.14)' : 'rgba(106,154,176,0.06)'};
+      border:1px solid ${on ? 'rgba(106,154,176,0.4)' : 'rgba(106,154,176,0.15)'};
+      transition:all 0.15s">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:20px">${t.icon}</span>
+        <div>
+          <div style="font-size:14px;color:var(--sky-light);font-weight:500">${t.label}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${t.sub}</div>
+        </div>
+      </div>
+      <div id="med-check-${t.id}" style="font-size:18px;color:var(--sky-light);opacity:${on ? '1' : '0.3'}">${on ? '✓' : '○'}</div>
+    </div>`;
   });
+  const onceOn = current.includes('once');
+  html += `<div style="height:1px;background:rgba(255,255,255,0.06);margin:4px 0"></div>
+    <div onclick="toggleMedTime('once')" id="med-time-once" style="
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 16px;border-radius:var(--r-lg);cursor:pointer;
+      background:${onceOn ? 'rgba(106,154,176,0.14)' : 'rgba(106,154,176,0.06)'};
+      border:1px solid ${onceOn ? 'rgba(106,154,176,0.4)' : 'rgba(106,154,176,0.15)'};
+      transition:all 0.15s">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:20px">💊</span>
+        <div>
+          <div style="font-size:14px;color:var(--sky-light);font-weight:500">Once a day</div>
+          <div style="font-size:12px;color:var(--text-muted)">Single daily reminder</div>
+        </div>
+      </div>
+      <div id="med-check-once" style="font-size:18px;color:var(--sky-light);opacity:${onceOn ? '1' : '0.3'}">${onceOn ? '✓' : '○'}</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button class="btn btn-primary" style="flex:1" onclick="saveMedicationTiming()">Save</button>
+    <button class="btn btn-ghost" onclick="closeAllSheets()">Cancel</button>
+  </div>`;
+  body.innerHTML = html;
   openSheet('medication-sheet');
 }
 
@@ -5952,20 +6089,34 @@ function saveMedicationTiming() {
 function toggleSelfCareTask(id) {
   if (!state.prefs.selfCareTasks) state.prefs.selfCareTasks = [];
   const idx = state.prefs.selfCareTasks.indexOf(id);
-  if (idx > -1) state.prefs.selfCareTasks.splice(idx, 1);
-  else state.prefs.selfCareTasks.push(id);
-  save('bloom_prefs', state.prefs);
-
-  // Update pill in place without full re-render
-  const el = document.getElementById('sc-pill-' + id);
-  if (el) {
-    const on = state.prefs.selfCareTasks.includes(id);
-    const isMed = id === 'sc_medication';
-    el.style.background = on ? (isMed ? 'rgba(106,154,176,0.2)' : 'rgba(122,158,126,0.18)') : 'rgba(255,255,255,0.04)';
-    el.style.borderColor = on ? (isMed ? 'rgba(106,154,176,0.4)' : 'rgba(122,158,126,0.45)') : 'rgba(255,255,255,0.08)';
-    el.style.color = on ? (isMed ? 'var(--sky-light)' : 'var(--sage-light)') : 'var(--text-secondary)';
+  if (idx > -1) {
+    state.prefs.selfCareTasks.splice(idx, 1);
+    // Also remove routine assignment
+    if (state.prefs.selfCareRoutines) delete state.prefs.selfCareRoutines[id];
+  } else {
+    state.prefs.selfCareTasks.push(id);
   }
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
   renderTodayTab();
+  setTimeout(() => {
+    const sh = document.getElementById('sh-selfcare');
+    const sb = document.getElementById('sb-selfcare');
+    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
+  }, 50);
+}
+
+function setSCRoutine(taskId, routine) {
+  if (!state.prefs.selfCareRoutines) state.prefs.selfCareRoutines = {};
+  state.prefs.selfCareRoutines[taskId] = routine;
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
+  renderTodayTab();
+  setTimeout(() => {
+    const sh = document.getElementById('sh-selfcare');
+    const sb = document.getElementById('sb-selfcare');
+    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
+  }, 50);
 }
 
 function toggleHabitPref(id) {
@@ -7301,11 +7452,11 @@ const TUTORIAL_STEPS = [
   },
   {
     tab: 'today',
-    spotlight: '#nav-history',
+    spotlight: '#nav-weekly',
     cardPos: 'bottom',
     pulse: true,
-    title: '📅 History',
-    text: 'Every day is saved here — mood, habits, and your journal entries. Tap any day to read it back.',
+    title: '📋 Weekly',
+    text: 'Your weekly goals, household tasks, and recent history live here. Separate from your daily habits.',
   },
   {
     tab: 'today',
@@ -7491,6 +7642,7 @@ function initApp() {
   showWhatsNew();
   checkBackupReminder();
   checkShowTutorial();
+  checkScheduledReminders();
   const headerIcon = document.getElementById('header-bloom-icon');
   if (headerIcon) headerIcon.innerHTML = bloomIcon(26);
   const navIcon = document.getElementById('nav-today-icon');
