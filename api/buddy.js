@@ -27,46 +27,39 @@ function moderateMessage(text) {
   return { ok: true };
 }
 
-// ── Upstash Redis REST helpers ──────────────────────────────
+// ── Redis client helpers ────────────────────────────────────
+import { createClient } from 'redis';
+
+let _redisClient = null;
+async function getRedis() {
+  if (!_redisClient) {
+    _redisClient = createClient({ url: process.env.REDIS_URL });
+    _redisClient.on('error', () => {});
+    await _redisClient.connect();
+  }
+  return _redisClient;
+}
+
 async function kvGet(key) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
-  if (!url || !token) return null;
   try {
-    const res = await fetch(`${url}/get/${key}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    if (data.result === null) return null;
-    return JSON.parse(data.result);
+    const client = await getRedis();
+    const val = await client.get(key);
+    if (val === null) return null;
+    return JSON.parse(val);
   } catch(e) { return null; }
 }
 
 async function kvSet(key, value) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
-  if (!url || !token) return;
   try {
-    await fetch(`${url}/set/${key}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(JSON.stringify(value)),
-    });
+    const client = await getRedis();
+    await client.set(key, JSON.stringify(value));
   } catch(e) {}
 }
 
 async function kvDel(key) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
-  if (!url || !token) return;
   try {
-    await fetch(`${url}/del/${key}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const client = await getRedis();
+    await client.del(key);
   } catch(e) {}
 }
 
@@ -159,7 +152,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+  if (!process.env.REDIS_URL) {
     return res.status(503).json({ error: 'Storage not configured' });
   }
 

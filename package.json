@@ -1,0 +1,19 @@
+{
+  "name": "bloom",
+  "version": "1.0.0",
+  "description": "",
+  "main": "OneSignalSDKWorker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:40295/git/nicholashinz1-afk/Bloom"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "redis": "^5.11.0"
+  }
+}
