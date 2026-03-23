@@ -561,12 +561,12 @@ export default async function handler(req, res) {
     if (!buddyId || !nudgeType) return res.status(400).json({ error: 'Missing buddyId or nudgeType' });
 
     const NUDGES = {
-      'thinking': 'Thinking of you',
-      'gotthis': 'You\'ve got this',
-      'proud': 'Proud of you',
-      'easytoday': 'Take it easy today',
-      'checkin': 'Just checking in',
-      'youmatter': 'You matter',
+      'thinking': 'Thinking of you 💭',
+      'gotthis': 'You\'ve got this 💪',
+      'proud': 'Proud of you 🌟',
+      'easytoday': 'Take it easy 🤗',
+      'checkin': 'Just checking in 👋',
+      'youmatter': 'You matter 💛',
     };
 
     const nudgeText = NUDGES[nudgeType];
