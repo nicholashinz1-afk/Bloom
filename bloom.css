@@ -1900,6 +1900,8 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   margin-bottom: 12px;
 }
 .buddy-nudge-btn {
+  -webkit-appearance: none;
+  appearance: none;
   padding: 6px 12px;
   border-radius: var(--r-full);
   border: 1px solid rgba(255,255,255,0.1);
@@ -2011,6 +2013,8 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 
 /* Preference picker */
 .buddy-pref-option {
+  -webkit-appearance: none;
+  appearance: none;
   padding: 10px 16px;
   border-radius: var(--r-full);
   border: 1px solid rgba(255,255,255,0.1);
