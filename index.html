@@ -4027,6 +4027,9 @@ function renderSettingsTab() {
       <div><div class="toggle-label">Sunday goal reminder</div><div class="toggle-sub">Weekly nudge to set household tasks</div></div>
       <div class="toggle${notifs.sundayReminder?' on':''}" onclick="toggleNotif('sundayReminder')"></div>
     </div>
+    <div class="divider"></div>
+    <button class="btn btn-ghost btn-sm" onclick="testNotification()">🔔 Test notification</button>
+    <div id="notif-test-status" style="font-size:12px;color:var(--text-muted);margin-top:8px"></div>
   `);
 
   // Streak & protection
@@ -4151,6 +4154,41 @@ function removeCustomTask(id) {
   state.prefs.householdTasks = (state.prefs.householdTasks || []).filter(t => t.id !== id);
   save('bloom_prefs', state.prefs);
   renderSettingsTab();
+}
+
+function testNotification() {
+  const status = document.getElementById('notif-test-status');
+  const update = (msg) => { if (status) status.textContent = msg; };
+
+  // Check native permission first
+  if (!('Notification' in window)) {
+    update('Notifications not supported on this browser.');
+    return;
+  }
+
+  if (Notification.permission === 'denied') {
+    update('Notifications are blocked. Enable them in your browser settings.');
+    return;
+  }
+
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') testNotification();
+      else update('Permission denied.');
+    });
+    return;
+  }
+
+  // Permission granted — send a test
+  try {
+    new Notification('bloom 🌿', {
+      body: 'Notifications are working! You\'re all set.',
+      icon: '/icon.svg',
+    });
+    update('✓ Test sent — check your notifications.');
+  } catch(e) {
+    update('Could not send: ' + e.message);
+  }
 }
 
 function setWaterMode(mode) {
@@ -4692,6 +4730,17 @@ function initOneSignal() {
       notifyButton: { enable: false },
       allowLocalhostAsSecureOrigin: true,
     });
+
+    // Explicitly request permission after a short delay
+    // Only prompt if not already granted or denied
+    setTimeout(async () => {
+      try {
+        const permission = await OneSignal.Notifications.permission;
+        if (!permission) {
+          await OneSignal.Notifications.requestPermission();
+        }
+      } catch(e) {}
+    }, 3000);
   });
   const script = document.createElement('script');
   script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
