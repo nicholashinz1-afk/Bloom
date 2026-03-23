@@ -105,6 +105,49 @@ function genInviteCode() {
   return code;
 }
 
+// ── Admin: can have multiple buddies ────────────────────────
+// Set ADMIN_BUDDY_ID env var in Vercel to your bloom_buddy_id from localStorage
+const ADMIN_BUDDY_ID = process.env.ADMIN_BUDDY_ID || null;
+
+function isAdmin(buddyId) {
+  return ADMIN_BUDDY_ID && buddyId === ADMIN_BUDDY_ID;
+}
+
+// ── Lookup helpers (supports multi-buddy for admin) ─────────
+// Lookup stores: { pairs: [{ pairId, partnerId }] }
+async function getLookup(buddyId) {
+  const raw = await kvGet(`bloom_buddy_lookup:${buddyId}`);
+  if (!raw) return { pairs: [] };
+  // Migrate old format: { pairId, partnerId } → { pairs: [...] }
+  if (raw.pairId && !raw.pairs) return { pairs: [{ pairId: raw.pairId, partnerId: raw.partnerId }] };
+  return raw;
+}
+
+async function addPairToLookup(buddyId, pairId, partnerId) {
+  const lookup = await getLookup(buddyId);
+  lookup.pairs.push({ pairId, partnerId });
+  await kvSet(`bloom_buddy_lookup:${buddyId}`, lookup);
+}
+
+async function removePairFromLookup(buddyId, pairId) {
+  const lookup = await getLookup(buddyId);
+  lookup.pairs = lookup.pairs.filter(p => p.pairId !== pairId);
+  await kvSet(`bloom_buddy_lookup:${buddyId}`, lookup);
+}
+
+function hasPair(lookup) {
+  return lookup.pairs.length > 0;
+}
+
+function getFirstPair(lookup) {
+  return lookup.pairs[0] || null;
+}
+
+function canAddBuddy(buddyId, lookup) {
+  // Everyone can have multiple buddies (capped at 10 to prevent abuse)
+  return lookup.pairs.length < 10;
+}
+
 // ── Milestone streaks ───────────────────────────────────────
 const MILESTONES = [7, 14, 30, 60, 100];
 
@@ -163,57 +206,56 @@ export default async function handler(req, res) {
 
     await kvSet(`bloom_buddy:${buddyId}`, profile);
 
-    // Check if paired → trigger notifications
-    const lookup = await kvGet(`bloom_buddy_lookup:${buddyId}`);
-    if (lookup?.partnerId) {
-      const partner = await kvGet(`bloom_buddy:${lookup.partnerId}`);
-      if (partner?.oneSignalId) {
-        // 1. Low/rough mood notification (rate-limited to 1 per 12h)
-        if (mood !== undefined && mood <= 1) {
-          const twelveHoursAgo = Date.now() - 43200000;
-          if (!profile.lastMoodNotifTs || profile.lastMoodNotifTs < twelveHoursAgo) {
-            profile.lastMoodNotifTs = Date.now();
-            await kvSet(`bloom_buddy:${buddyId}`, profile);
-            const name = profile.name || 'Your Bloom Buddy';
+    // Check if paired → trigger notifications for all partners
+    const lookup = await getLookup(buddyId);
+    for (const pair of lookup.pairs) {
+      const partner = await kvGet(`bloom_buddy:${pair.partnerId}`);
+      if (!partner?.oneSignalId) continue;
+
+      // 1. Low/rough mood notification (rate-limited to 1 per 12h)
+      if (mood !== undefined && mood <= 1) {
+        const twelveHoursAgo = Date.now() - 43200000;
+        if (!profile.lastMoodNotifTs || profile.lastMoodNotifTs < twelveHoursAgo) {
+          profile.lastMoodNotifTs = Date.now();
+          await kvSet(`bloom_buddy:${buddyId}`, profile);
+          await sendPush(
+            partner.oneSignalId,
+            'Bloom Buddy',
+            `${profile.name || 'Your Bloom Buddy'} is having a rough day \u2014 a kind word could mean a lot`
+          );
+        }
+      }
+
+      // 2. Inactivity nudge: if partner hasn't been active in 24h+
+      if (partner.lastActive) {
+        const dayAgo = Date.now() - 86400000;
+        const twoDaysAgo = Date.now() - 172800000;
+        if (partner.lastActive < dayAgo) {
+          if (!partner.lastInactivityNotifTs || partner.lastInactivityNotifTs < twoDaysAgo) {
+            partner.lastInactivityNotifTs = Date.now();
+            await kvSet(`bloom_buddy:${pair.partnerId}`, partner);
             await sendPush(
               partner.oneSignalId,
               'Bloom Buddy',
-              `${name} is having a rough day \u2014 a kind word could mean a lot`
+              'Your Bloom Buddy is thinking of you \u2014 it\'s a new day to check in'
             );
           }
         }
+      }
 
-        // 2. Inactivity nudge: if partner hasn't been active in 24h+
-        if (partner.lastActive) {
-          const dayAgo = Date.now() - 86400000;
-          const twoDaysAgo = Date.now() - 172800000;
-          if (partner.lastActive < dayAgo) {
-            if (!partner.lastInactivityNotifTs || partner.lastInactivityNotifTs < twoDaysAgo) {
-              partner.lastInactivityNotifTs = Date.now();
-              await kvSet(`bloom_buddy:${lookup.partnerId}`, partner);
+      // 3. Milestone celebration
+      if (streak !== undefined && streak > prevStreak) {
+        for (const m of MILESTONES) {
+          if (streak >= m && prevStreak < m) {
+            const lastMilestone = profile.lastMilestoneNotified || 0;
+            if (lastMilestone < m) {
+              profile.lastMilestoneNotified = m;
+              await kvSet(`bloom_buddy:${buddyId}`, profile);
               await sendPush(
                 partner.oneSignalId,
                 'Bloom Buddy',
-                'Your Bloom Buddy is thinking of you \u2014 it\'s a new day to check in'
+                `${profile.name || 'Your Bloom Buddy'} just hit a ${m}-day streak!`
               );
-            }
-          }
-        }
-
-        // 3. Milestone celebration
-        if (streak !== undefined && streak > prevStreak) {
-          for (const m of MILESTONES) {
-            if (streak >= m && prevStreak < m) {
-              const lastMilestone = profile.lastMilestoneNotified || 0;
-              if (lastMilestone < m) {
-                profile.lastMilestoneNotified = m;
-                await kvSet(`bloom_buddy:${buddyId}`, profile);
-                await sendPush(
-                  partner.oneSignalId,
-                  'Bloom Buddy',
-                  `${profile.name || 'Your Bloom Buddy'} just hit a ${m}-day streak!`
-                );
-              }
             }
           }
         }
@@ -230,9 +272,9 @@ export default async function handler(req, res) {
     const profile = await kvGet(`bloom_buddy:${buddyId}`);
     if (!profile) return res.status(400).json({ error: 'Register first' });
 
-    // Check existing pairing
-    const lookup = await kvGet(`bloom_buddy_lookup:${buddyId}`);
-    if (lookup?.pairId) return res.json({ ok: false, reason: 'already-paired' });
+    // Check if at buddy limit
+    const lookup = await getLookup(buddyId);
+    if (!canAddBuddy(buddyId, lookup)) return res.json({ ok: false, reason: 'max-buddies' });
 
     const code = genInviteCode();
     await kvSet(`bloom_buddy_invite:${code}`, {
@@ -278,11 +320,14 @@ export default async function handler(req, res) {
     // Can't pair with yourself
     if (invite.buddyId === buddyId) return res.json({ ok: false, reason: 'self-pair' });
 
-    // Check neither is already paired
-    const myLookup = await kvGet(`bloom_buddy_lookup:${buddyId}`);
-    if (myLookup?.pairId) return res.json({ ok: false, reason: 'already-paired' });
-    const theirLookup = await kvGet(`bloom_buddy_lookup:${invite.buddyId}`);
-    if (theirLookup?.pairId) return res.json({ ok: false, reason: 'inviter-paired' });
+    // Check buddy limits
+    const myLookup = await getLookup(buddyId);
+    if (!canAddBuddy(buddyId, myLookup)) return res.json({ ok: false, reason: 'max-buddies' });
+    const theirLookup = await getLookup(invite.buddyId);
+    if (!canAddBuddy(invite.buddyId, theirLookup)) return res.json({ ok: false, reason: 'inviter-max-buddies' });
+
+    // Check not already paired with this person
+    if (myLookup.pairs.some(p => p.partnerId === invite.buddyId)) return res.json({ ok: false, reason: 'already-buddies' });
 
     // Create pair
     const pairId = genId();
@@ -292,9 +337,9 @@ export default async function handler(req, res) {
       createdAt: Date.now(),
     });
 
-    // Set lookup entries
-    await kvSet(`bloom_buddy_lookup:${buddyId}`, { pairId, partnerId: invite.buddyId });
-    await kvSet(`bloom_buddy_lookup:${invite.buddyId}`, { pairId, partnerId: buddyId });
+    // Add to lookup entries
+    await addPairToLookup(buddyId, pairId, invite.buddyId);
+    await addPairToLookup(invite.buddyId, pairId, buddyId);
 
     // Initialize empty message thread
     await kvSet(`bloom_buddy_msgs:${pairId}`, []);
@@ -327,9 +372,9 @@ export default async function handler(req, res) {
     const { prefs } = body;
     if (!buddyId) return res.status(400).json({ error: 'Missing buddyId' });
 
-    // Check not already paired
-    const lookup = await kvGet(`bloom_buddy_lookup:${buddyId}`);
-    if (lookup?.pairId) return res.json({ ok: false, reason: 'already-paired' });
+    // Check buddy limit
+    const myLookup = await getLookup(buddyId);
+    if (!canAddBuddy(buddyId, myLookup)) return res.json({ ok: false, reason: 'max-buddies' });
 
     const profile = await kvGet(`bloom_buddy:${buddyId}`);
     if (!profile) return res.status(400).json({ error: 'Register first' });
@@ -346,23 +391,35 @@ export default async function handler(req, res) {
     let bestScore = -1;
 
     for (const candidate of fresh) {
-      // Check they're not already paired
-      const cLookup = await kvGet(`bloom_buddy_lookup:${candidate.buddyId}`);
-      if (cLookup?.pairId) continue;
+      // Check they can accept another buddy and aren't already my buddy
+      const cLookup = await getLookup(candidate.buddyId);
+      if (!canAddBuddy(candidate.buddyId, cLookup)) continue;
+      if (myLookup.pairs.some(p => p.partnerId === candidate.buddyId)) continue;
 
       let score = 0;
       const cp = candidate.prefs || {};
       if (myPrefs.frequency && cp.frequency && myPrefs.frequency === cp.frequency) score += 2;
       if (myPrefs.focus && cp.focus && myPrefs.focus === cp.focus) score += 1;
-      // Any valid candidate is a match; prefer higher scores
       if (score > bestScore) {
         bestScore = score;
         bestMatch = candidate;
       }
     }
 
+    // Admin fallback: if no match found and admin exists, auto-pair with admin
+    if (!bestMatch && ADMIN_BUDDY_ID && buddyId !== ADMIN_BUDDY_ID) {
+      const adminLookup = await getLookup(ADMIN_BUDDY_ID);
+      const alreadyBuddies = myLookup.pairs.some(p => p.partnerId === ADMIN_BUDDY_ID);
+      if (!alreadyBuddies && canAddBuddy(ADMIN_BUDDY_ID, adminLookup)) {
+        const adminProfile = await kvGet(`bloom_buddy:${ADMIN_BUDDY_ID}`);
+        if (adminProfile) {
+          bestMatch = { buddyId: ADMIN_BUDDY_ID, name: adminProfile.name };
+        }
+      }
+    }
+
     if (bestMatch) {
-      // Remove matched user from queue
+      // Remove matched user from queue if they were in it
       const updatedQueue = fresh.filter(q => q.buddyId !== bestMatch.buddyId);
       await kvSet('bloom_buddy_queue', updatedQueue);
 
@@ -373,8 +430,8 @@ export default async function handler(req, res) {
         user2: buddyId,
         createdAt: Date.now(),
       });
-      await kvSet(`bloom_buddy_lookup:${buddyId}`, { pairId, partnerId: bestMatch.buddyId });
-      await kvSet(`bloom_buddy_lookup:${bestMatch.buddyId}`, { pairId, partnerId: buddyId });
+      await addPairToLookup(buddyId, pairId, bestMatch.buddyId);
+      await addPairToLookup(bestMatch.buddyId, pairId, buddyId);
       await kvSet(`bloom_buddy_msgs:${pairId}`, []);
 
       const partnerProfile = await kvGet(`bloom_buddy:${bestMatch.buddyId}`) || {};
@@ -411,55 +468,73 @@ export default async function handler(req, res) {
     return res.json({ ok: true });
   }
 
-  // ── GET-BUDDY: fetch partner's shared data ──────────────
+  // ── GET-BUDDY: fetch all partners' shared data ───────────
   if (action === 'get-buddy') {
     if (!buddyId) return res.status(400).json({ error: 'Missing buddyId' });
 
-    const lookup = await kvGet(`bloom_buddy_lookup:${buddyId}`);
-    if (!lookup?.partnerId) return res.json({ ok: true, paired: false });
+    const lookup = await getLookup(buddyId);
+    if (!hasPair(lookup)) return res.json({ ok: true, paired: false, buddies: [] });
 
-    const partner = await kvGet(`bloom_buddy:${lookup.partnerId}`);
-    if (!partner) return res.json({ ok: true, paired: false });
-
-    return res.json({
-      ok: true,
-      paired: true,
-      pairId: lookup.pairId,
-      partnerId: lookup.partnerId,
-      partner: {
+    const buddies = [];
+    for (const pair of lookup.pairs) {
+      const partner = await kvGet(`bloom_buddy:${pair.partnerId}`);
+      if (!partner) continue;
+      buddies.push({
+        pairId: pair.pairId,
+        partnerId: pair.partnerId,
         name: partner.name || 'Bloom Buddy',
         mood: partner.mood,
         moodTs: partner.moodTs,
         streak: partner.streak || 0,
         habitPct: partner.habitPct || 0,
         lastActive: partner.lastActive,
-      },
+      });
+    }
+
+    // Backward compat: also include first buddy as "partner" for existing clients
+    const first = buddies[0] || null;
+    return res.json({
+      ok: true,
+      paired: buddies.length > 0,
+      pairId: first?.pairId,
+      partnerId: first?.partnerId,
+      partner: first ? { name: first.name, mood: first.mood, moodTs: first.moodTs, streak: first.streak, habitPct: first.habitPct, lastActive: first.lastActive } : null,
+      buddies,
     });
   }
 
   // ── GET-MESSAGES: fetch message thread ──────────────────
   if (action === 'get-messages') {
+    const { pairId } = body;
     if (!buddyId) return res.status(400).json({ error: 'Missing buddyId' });
 
-    const lookup = await kvGet(`bloom_buddy_lookup:${buddyId}`);
-    if (!lookup?.pairId) return res.json({ ok: true, messages: [] });
+    const lookup = await getLookup(buddyId);
+    // Use provided pairId or fall back to first pair
+    const targetPairId = pairId || getFirstPair(lookup)?.pairId;
+    if (!targetPairId) return res.json({ ok: true, messages: [] });
 
-    const messages = await kvGet(`bloom_buddy_msgs:${lookup.pairId}`) || [];
+    // Verify this user is part of this pair
+    if (!lookup.pairs.some(p => p.pairId === targetPairId)) return res.json({ ok: true, messages: [] });
+
+    const messages = await kvGet(`bloom_buddy_msgs:${targetPairId}`) || [];
     return res.json({ ok: true, messages });
   }
 
   // ── SEND-MESSAGE: send a custom message ─────────────────
   if (action === 'send-message') {
-    const { text } = body;
+    const { text, pairId } = body;
     if (!buddyId || !text) return res.status(400).json({ error: 'Missing buddyId or text' });
 
     const check = moderateMessage(text);
     if (!check.ok) return res.json({ ok: false, reason: check.reason });
 
-    const lookup = await kvGet(`bloom_buddy_lookup:${buddyId}`);
-    if (!lookup?.pairId) return res.json({ ok: false, reason: 'not-paired' });
+    const lookup = await getLookup(buddyId);
+    const targetPair = pairId
+      ? lookup.pairs.find(p => p.pairId === pairId)
+      : getFirstPair(lookup);
+    if (!targetPair) return res.json({ ok: false, reason: 'not-paired' });
 
-    const messages = await kvGet(`bloom_buddy_msgs:${lookup.pairId}`) || [];
+    const messages = await kvGet(`bloom_buddy_msgs:${targetPair.pairId}`) || [];
 
     // Rate limit: 10 messages per hour
     const oneHourAgo = Date.now() - 3600000;
@@ -474,12 +549,11 @@ export default async function handler(req, res) {
       type: 'msg',
     };
     messages.push(msg);
-    // Cap at 50 messages
     const trimmed = messages.slice(-50);
-    await kvSet(`bloom_buddy_msgs:${lookup.pairId}`, trimmed);
+    await kvSet(`bloom_buddy_msgs:${targetPair.pairId}`, trimmed);
 
     // Notify partner
-    const partner = await kvGet(`bloom_buddy:${lookup.partnerId}`);
+    const partner = await kvGet(`bloom_buddy:${targetPair.partnerId}`);
     const myProfile = await kvGet(`bloom_buddy:${buddyId}`);
     if (partner?.oneSignalId) {
       await sendPush(partner.oneSignalId, 'Bloom Buddy', `${myProfile?.name || 'Your buddy'}: ${text.slice(0, 80)}`);
@@ -490,7 +564,7 @@ export default async function handler(req, res) {
 
   // ── NUDGE: send a pre-written encouragement ─────────────
   if (action === 'nudge') {
-    const { nudgeType } = body;
+    const { nudgeType, pairId } = body;
     if (!buddyId || !nudgeType) return res.status(400).json({ error: 'Missing buddyId or nudgeType' });
 
     const NUDGES = {
@@ -505,10 +579,13 @@ export default async function handler(req, res) {
     const nudgeText = NUDGES[nudgeType];
     if (!nudgeText) return res.status(400).json({ error: 'Invalid nudge type' });
 
-    const lookup = await kvGet(`bloom_buddy_lookup:${buddyId}`);
-    if (!lookup?.pairId) return res.json({ ok: false, reason: 'not-paired' });
+    const lookup = await getLookup(buddyId);
+    const targetPair = pairId
+      ? lookup.pairs.find(p => p.pairId === pairId)
+      : getFirstPair(lookup);
+    if (!targetPair) return res.json({ ok: false, reason: 'not-paired' });
 
-    const messages = await kvGet(`bloom_buddy_msgs:${lookup.pairId}`) || [];
+    const messages = await kvGet(`bloom_buddy_msgs:${targetPair.pairId}`) || [];
 
     // Rate limit: 5 nudges per hour
     const oneHourAgo = Date.now() - 3600000;
@@ -524,10 +601,10 @@ export default async function handler(req, res) {
     };
     messages.push(msg);
     const trimmed = messages.slice(-50);
-    await kvSet(`bloom_buddy_msgs:${lookup.pairId}`, trimmed);
+    await kvSet(`bloom_buddy_msgs:${targetPair.pairId}`, trimmed);
 
     // Notify partner
-    const partner = await kvGet(`bloom_buddy:${lookup.partnerId}`);
+    const partner = await kvGet(`bloom_buddy:${targetPair.partnerId}`);
     const myProfile = await kvGet(`bloom_buddy:${buddyId}`);
     if (partner?.oneSignalId) {
       await sendPush(partner.oneSignalId, 'Bloom Buddy', `${myProfile?.name || 'Your Bloom Buddy'} says: ${nudgeText}`);
@@ -536,24 +613,28 @@ export default async function handler(req, res) {
     return res.json({ ok: true, message: msg });
   }
 
-  // ── UNPAIR: disconnect from buddy ───────────────────────
+  // ── UNPAIR: disconnect from a specific buddy ─────────────
   if (action === 'unpair') {
+    const { pairId } = body;
     if (!buddyId) return res.status(400).json({ error: 'Missing buddyId' });
 
-    const lookup = await kvGet(`bloom_buddy_lookup:${buddyId}`);
-    if (!lookup?.pairId) return res.json({ ok: true });
+    const lookup = await getLookup(buddyId);
+    const targetPair = pairId
+      ? lookup.pairs.find(p => p.pairId === pairId)
+      : getFirstPair(lookup);
+    if (!targetPair) return res.json({ ok: true });
 
     // Notify partner before deleting
-    const partner = await kvGet(`bloom_buddy:${lookup.partnerId}`);
+    const partner = await kvGet(`bloom_buddy:${targetPair.partnerId}`);
     if (partner?.oneSignalId) {
       await sendPush(partner.oneSignalId, 'Bloom Buddy', 'Your Bloom Buddy has moved on. You can find a new buddy anytime.');
     }
 
-    // Clean up pair data
-    await kvDel(`bloom_buddy_pair:${lookup.pairId}`);
-    await kvDel(`bloom_buddy_msgs:${lookup.pairId}`);
-    await kvDel(`bloom_buddy_lookup:${buddyId}`);
-    await kvDel(`bloom_buddy_lookup:${lookup.partnerId}`);
+    // Clean up pair data and remove from both lookups
+    await kvDel(`bloom_buddy_pair:${targetPair.pairId}`);
+    await kvDel(`bloom_buddy_msgs:${targetPair.pairId}`);
+    await removePairFromLookup(buddyId, targetPair.pairId);
+    await removePairFromLookup(targetPair.partnerId, targetPair.pairId);
 
     return res.json({ ok: true });
   }
