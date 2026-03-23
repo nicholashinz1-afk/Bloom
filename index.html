@@ -4160,50 +4160,41 @@ function testNotification() {
   const status = document.getElementById('notif-test-status');
   const update = (msg) => { if (status) status.textContent = msg; };
 
-  if (!('Notification' in window)) {
-    update('Notifications not supported on this browser.');
+  const debug = [
+    'Notification API: ' + ('Notification' in window ? '✓' : '✗'),
+    'Permission: ' + (window.Notification?.permission || 'unknown'),
+    'ServiceWorker: ' + ('serviceWorker' in navigator ? '✓' : '✗'),
+    'OneSignal loaded: ' + (window.OneSignal ? '✓' : '✗'),
+    'OneSignalDeferred: ' + (window.OneSignalDeferred ? '✓' : '✗'),
+  ];
+  update(debug.join('\n'));
+
+  if (!('Notification' in window)) return;
+
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(p => {
+      update(debug.join('\n') + '\nPermission result: ' + p);
+    });
     return;
   }
 
   if (Notification.permission === 'denied') {
-    update('Notifications are blocked. Go to your browser/app settings to enable them.');
+    update(debug.join('\n') + '\n✗ Blocked — enable in Android Settings → Apps → Chrome → Notifications');
     return;
   }
 
-  const doSend = () => {
-    // Try via OneSignal first
-    if (window.OneSignal) {
-      try {
-        window.OneSignal.Notifications.requestPermission().then(() => {
-          update('✓ OneSignal permission granted. You should receive notifications.');
-        }).catch(() => {
-          update('OneSignal permission request failed.');
-        });
-        return;
-      } catch(e) {}
-    }
-    // Fall back to service worker notification
-    navigator.serviceWorker.ready.then(reg => {
-      return reg.showNotification('bloom 🌿', {
-        body: "Notifications are working! You're all set.",
-        icon: '/icon.svg',
-        badge: '/icon.svg',
-      });
-    }).then(() => {
-      update('✓ Test sent — check your notifications.');
-    }).catch(e => {
-      update('Could not send: ' + e.message);
+  // Permission granted — try service worker
+  navigator.serviceWorker.ready.then(reg => {
+    update(debug.join('\n') + '\nSW scope: ' + reg.scope);
+    return reg.showNotification('bloom 🌿', {
+      body: "Test notification from bloom.",
+      icon: '/icon.svg',
     });
-  };
-
-  if (Notification.permission === 'granted') {
-    doSend();
-  } else {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') doSend();
-      else update('Permission denied.');
-    });
-  }
+  }).then(() => {
+    update(debug.join('\n') + '\n✓ Notification sent!');
+  }).catch(e => {
+    update(debug.join('\n') + '\nError: ' + e.message);
+  });
 }
 
 function setWaterMode(mode) {
