@@ -9208,7 +9208,6 @@ let buddyCachedMessages = load('bloom_buddy_messages', []);
 let buddyLoading = false;
 let buddyPollTimer = null;
 let buddySyncDebounce = null;
-let communityView = 'buddy'; // 'buddy' or 'wall'
 
 function ensureBuddyId() {
   if (!bloomBuddyId) {
@@ -9782,19 +9781,6 @@ function renderCommunityTab() {
 
   let html = '';
 
-  // Segmented toggle
-  html += `<div class="community-toggle">
-    <button class="community-toggle-btn ${communityView === 'buddy' ? 'active' : ''}" onclick="communityView='buddy';renderCommunityTab()">🤝 Bloom Buddy</button>
-    <button class="community-toggle-btn ${communityView === 'wall' ? 'active' : ''}" onclick="communityView='wall';renderCommunityTab()">💛 Wall</button>
-  </div>`;
-
-  if (communityView === 'buddy') {
-    html += `<div id="buddy-section"></div>`;
-    scroll.innerHTML = html;
-    renderBuddyContent();
-    return;
-  }
-
   // Wall header
   html += `<div style="text-align:center;padding:8px 0 16px">
     <div style="font-size:32px;margin-bottom:8px">💛</div>
@@ -9856,13 +9842,21 @@ function renderCommunityTab() {
     </div>
   </div>`;
 
+  // Bloom Buddy section (below wall)
+  html += `<div style="margin-top:24px;border-top:1px solid rgba(255,255,255,0.06);padding-top:20px">
+    <div id="buddy-section"></div>
+  </div>`;
+
   scroll.innerHTML = html;
 
-  // Auto-fetch if not loaded — only update messages area, not entire tab
+  // Auto-fetch wall if not loaded
   if (!wallLoading && wallMessages.length === 0 && !state._wallFetched) {
     state._wallFetched = true;
     fetchWallMessages().then(() => renderWallMessages());
   }
+
+  // Render buddy section
+  renderBuddyContent();
 }
 
 function renderWallMessages() {
