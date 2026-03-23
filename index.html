@@ -663,6 +663,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   border-style: solid !important;
   opacity: 1;
 }
+.food-chips {
   display: flex;
   gap: 6px;
   flex-wrap: nowrap;
@@ -1087,6 +1088,55 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   max-height: 2000px;
   padding: 12px 16px 16px;
 }
+
+/* ============================================================
+   QUICK ACTION FAB
+   ============================================================ */
+.fab-container {
+  position: fixed;
+  bottom: calc(var(--nav-height) + var(--safe-bottom) + 20px);
+  right: max(calc((100vw - 430px) / 2 + 16px), 16px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 8px;
+}
+.fab-btn {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--sage);
+  border: none;
+  color: var(--text-on-sage);
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s, background 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.fab-btn:active { transform: scale(0.92); }
+.fab-btn.open { background: var(--bg-elevated); color: var(--text-primary); }
+.fab-menu {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+.fab-menu.show { display: flex; animation: tabFadeIn 0.2s ease; }
+.fab-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--r-full);
+  padding: 8px 16px 8px 12px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.fab-menu-item:active { background: var(--bg-elevated); }
+.fab-menu-item span:first-child { font-size: 16px; }
+.fab-menu-item span:last-child { font-size: 13px; color: var(--text-secondary); }
 
 /* ============================================================
    ONBOARDING
@@ -1898,6 +1948,17 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
       <span class="nav-label">Settings</span>
     </button>
   </nav>
+
+  <!-- Quick Action FAB -->
+  <div class="fab-container" id="fab-container">
+    <button class="fab-btn" id="fab-toggle" onclick="toggleFAB()">⚡</button>
+    <div class="fab-menu" id="fab-menu">
+      <div class="fab-menu-item" onclick="fabAction('mood')"><span>💚</span><span>Log mood</span></div>
+      <div class="fab-menu-item" onclick="fabAction('water')"><span>💧</span><span>Add water</span></div>
+      <div class="fab-menu-item" onclick="fabAction('journal')"><span>📓</span><span>Quick journal</span></div>
+      <div class="fab-menu-item" onclick="fabAction('breathe')"><span>🌬</span><span>Breathe</span></div>
+    </div>
+  </div>
 </div>
 
 <!-- ============================================================
@@ -2095,34 +2156,64 @@ function bloomIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.1.0';
+const VERSION = '2.2.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
 // Runs on app open and when returning from background.
 async function checkForUpdate() {
   try {
-    const res = await fetch(window.location.href, { cache: 'no-store' });
+    // Bypass service worker cache with cache-busting query param
+    const url = window.location.href.split('?')[0] + '?_v=' + Date.now();
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return;
     const html = await res.text();
     const match = html.match(/const VERSION\s*=\s*'([^']+)'/);
     if (match && match[1] !== VERSION) {
-      // New version available — reload transparently
-      window.location.reload();
+      // Clear service worker caches before reloading
+      if ('caches' in window) {
+        const names = await caches.keys();
+        await Promise.all(names.map(n => caches.delete(n)));
+      }
+      // Force service worker to update
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.update()));
+      }
+      // Hard reload — bypass cache
+      window.location.reload(true);
     }
   } catch(e) { /* offline or network error — skip silently */ }
+}
+
+// ── Force refresh on service worker update ──────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    // New service worker took over — reload to get fresh content
+    if (!window._swReloading) {
+      window._swReloading = true;
+      window.location.reload();
+    }
+  });
 }
 
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'Daily & Weekly are now separate tabs — cleaner, less clutter', spotlight: '#nav-weekly', tab: 'today' },
-  { text: 'Morning & evening routines — assign self-care tasks to AM or PM', spotlight: '#sh-selfcare', tab: 'settings' },
-  { text: 'Habit reminders — teeth brushing at 8am, medication, water at noon', spotlight: '#sh-notifications', tab: 'settings' },
-  { text: 'Medication settings now work — pick morning, afternoon, evening, or once daily', spotlight: null },
-  { text: 'Streak fixes — streaks now properly update and show after completing any task', spotlight: null },
-  { text: 'Session refresh — bloom refreshes after 30 min away with a gentle indicator', spotlight: null },
-  { text: 'History is now in the Weekly tab — everything in one place', spotlight: null },
+  { text: 'Quick journal — write a thought right from the Daily tab, no navigation needed', spotlight: '#quick-journal-card', tab: 'today' },
+  { text: 'Quick-action button — tap ⚡ to log mood, water, journal, or breathe instantly', spotlight: '#fab-toggle', tab: 'today' },
+  { text: 'Progress celebrations — bloom cheers you at 50% and 75% completion, not just 100%', spotlight: null },
+  { text: 'Undo protection — accidentally unchecked a habit? 5-second undo button appears', spotlight: null },
+  { text: 'Habit triggers — set "when/after" cues for each habit in Settings for 2-3x follow-through', spotlight: '#sh-triggers', tab: 'settings' },
+  { text: '30-day heatmap — see your consistency pattern on the Progress tab', spotlight: null, tab: 'progress' },
+  { text: 'Mood insights — bloom now shows how habits and sleep affect your mood', spotlight: null, tab: 'progress' },
+  { text: 'Sleep-mood overlay — see sleep quality alongside mood on the weekly chart', spotlight: null, tab: 'progress' },
+  { text: 'Share your week — generate a beautiful image card from Progress tab', spotlight: null, tab: 'progress' },
+  { text: 'Hard day mode — on low-mood days, bloom shows only your top 2 habits', spotlight: null },
+  { text: 'Welcome back — after time away, bloom greets you warmly with +25 XP', spotlight: null },
+  { text: 'Smarter nudges — evening notifications now remind you of specific remaining habits', spotlight: null },
+  { text: 'More celebration variety — 6-8 messages per habit plus rare golden messages', spotlight: null },
+  { text: 'Auto data cleanup — history older than 90 days is trimmed to keep things fast', spotlight: null },
 ];
 
 // ============================================================
@@ -2325,8 +2416,71 @@ async function dbGetAll() {
 
 function save(key, value) {
   const str = JSON.stringify(value);
-  try { localStorage.setItem(key, str); } catch(e) {}
+  try { localStorage.setItem(key, str); } catch(e) {
+    // Quota exceeded — show warning
+    if (e.name === 'QuotaExceededError' || e.code === 22) {
+      if (!state._storageWarningShown) {
+        state._storageWarningShown = true;
+        setTimeout(() => showStorageWarning(), 500);
+      }
+    }
+  }
   dbSet(key, str);
+}
+
+function showStorageWarning() {
+  const existing = document.getElementById('storage-warning');
+  if (existing) return;
+  const div = document.createElement('div');
+  div.id = 'storage-warning';
+  div.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;max-width:360px;padding:16px 20px;background:rgba(201,149,74,0.15);border:1px solid rgba(201,149,74,0.4);border-radius:var(--r-lg);backdrop-filter:blur(10px)';
+  div.innerHTML = `
+    <div style="font-size:14px;font-weight:500;color:var(--amber-light);margin-bottom:6px">Storage almost full</div>
+    <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">Your data is getting close to the storage limit. Consider creating a backup in Settings.</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" onclick="trimHistory();this.parentElement.parentElement.remove()" style="background:rgba(201,149,74,0.2);border:1px solid rgba(201,149,74,0.4);color:var(--amber-light)">Auto-trim old data</button>
+      <button class="btn btn-ghost btn-sm" onclick="this.parentElement.parentElement.remove()">Dismiss</button>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+function trimHistory() {
+  const history = state.historyData;
+  const dates = Object.keys(history).sort();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 90);
+  const cutoffStr = cutoff.toISOString().slice(0, 10);
+  let trimmed = 0;
+  dates.forEach(d => {
+    if (d < cutoffStr) { delete history[d]; trimmed++; }
+  });
+  if (trimmed > 0) {
+    save('bloom_history', history);
+    haptic('medium');
+  }
+}
+
+function checkStorageQuota() {
+  if (navigator.storage && navigator.storage.estimate) {
+    navigator.storage.estimate().then(({ usage, quota }) => {
+      if (quota && usage / quota > 0.8) {
+        showStorageWarning();
+      }
+    });
+  }
+  // Also auto-trim history beyond 90 days on every boot
+  const history = state.historyData;
+  if (history) {
+    const dates = Object.keys(history).sort();
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 90);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    let trimmed = 0;
+    dates.forEach(d => {
+      if (d < cutoffStr) { delete history[d]; trimmed++; }
+    });
+    if (trimmed > 0) save('bloom_history', history);
+  }
 }
 
 function load(key, def = null) {
@@ -2957,6 +3111,36 @@ function checkStreakMilestone(streak) {
   }, 500);
 }
 
+// ── Welcome-back re-engagement after 2+ missed days ──────────
+function checkWelcomeBack() {
+  const xp = state.xpData;
+  if (!xp.lastStreakDate) return;
+  if (state._welcomeBackShown) return;
+
+  const lastDate = new Date(xp.lastStreakDate + 'T00:00:00');
+  const now = new Date();
+  const diffDays = Math.floor((now - lastDate) / 86400000);
+
+  if (diffDays >= 2) {
+    state._welcomeBackShown = true;
+    state.showWelcomeBack = true;
+    state.daysAway = diffDays;
+  }
+}
+
+function dismissWelcomeBack(reason) {
+  state.showWelcomeBack = false;
+  if (reason) {
+    if (!state.wellnessData._comebackReasons) state.wellnessData._comebackReasons = [];
+    state.wellnessData._comebackReasons.push({ date: today(), reason });
+    saveState();
+  }
+  // Give comeback XP bonus
+  addXP(25, null);
+  haptic('success');
+  renderTodayTop();
+}
+
 // ── General milestone checks ─────────────────────────────────
 function checkMilestones() {
   const wellness = state.wellnessData;
@@ -3040,6 +3224,189 @@ function getMoodPattern() {
   return patterns.length > 0 ? patterns[0] : null;
 }
 
+// ── Mood-habit correlation insights ──────────────────────────
+function getMoodHabitCorrelation() {
+  const history = state.historyData;
+  const dates = Object.keys(history).sort().slice(-30);
+  if (dates.length < 7) return [];
+  const insights = [];
+
+  // Average mood on high-completion days vs low-completion days
+  const highDays = [], lowDays = [];
+  dates.forEach(d => {
+    const h = history[d];
+    if (h?.mood === undefined) return;
+    const habits = h.habits || {};
+    const boolVals = Object.values(habits).filter(v => typeof v === 'boolean');
+    const pct = boolVals.length > 0 ? boolVals.filter(Boolean).length / boolVals.length : 0;
+    if (pct >= 0.5) highDays.push(h.mood);
+    else lowDays.push(h.mood);
+  });
+  if (highDays.length >= 3 && lowDays.length >= 3) {
+    const avgHigh = (highDays.reduce((a,b) => a+b, 0) / highDays.length).toFixed(1);
+    const avgLow = (lowDays.reduce((a,b) => a+b, 0) / lowDays.length).toFixed(1);
+    if (avgHigh - avgLow >= 0.5) {
+      insights.push({
+        emoji: '📊',
+        title: 'Habits boost your mood',
+        text: `Your mood averages ${avgHigh} on days you complete 50%+ of habits, vs ${avgLow} when you don't.`,
+      });
+    }
+  }
+
+  // Sleep quality vs next-day mood
+  const sortedDates = dates.sort();
+  const sleepMoodPairs = [];
+  for (let i = 0; i < sortedDates.length - 1; i++) {
+    const today2 = history[sortedDates[i]];
+    const tomorrow = history[sortedDates[i + 1]];
+    if (today2?.sleep !== undefined && tomorrow?.mood !== undefined) {
+      sleepMoodPairs.push({ sleep: today2.sleep, mood: tomorrow.mood });
+    }
+  }
+  if (sleepMoodPairs.length >= 5) {
+    const goodSleep = sleepMoodPairs.filter(p => p.sleep >= 3);
+    const poorSleep = sleepMoodPairs.filter(p => p.sleep <= 1);
+    if (goodSleep.length >= 2 && poorSleep.length >= 2) {
+      const avgGoodSleep = (goodSleep.reduce((a,p) => a + p.mood, 0) / goodSleep.length).toFixed(1);
+      const avgPoorSleep = (poorSleep.reduce((a,p) => a + p.mood, 0) / poorSleep.length).toFixed(1);
+      if (avgGoodSleep - avgPoorSleep >= 0.5) {
+        insights.push({
+          emoji: '😴',
+          title: 'Sleep shapes your mood',
+          text: `After good sleep, your mood averages ${avgGoodSleep}. After poor sleep, it's ${avgPoorSleep}.`,
+        });
+      }
+    }
+  }
+
+  // Best habits for mood
+  const habitMoods = {};
+  dates.forEach(d => {
+    const h = history[d];
+    if (h?.mood === undefined || !h.habits) return;
+    Object.keys(h.habits).forEach(k => {
+      if (typeof h.habits[k] !== 'boolean') return;
+      if (!habitMoods[k]) habitMoods[k] = { with: [], without: [] };
+      if (h.habits[k]) habitMoods[k].with.push(h.mood);
+      else habitMoods[k].without.push(h.mood);
+    });
+  });
+  const bestHabits = [];
+  Object.entries(habitMoods).forEach(([k, v]) => {
+    if (v.with.length >= 3 && v.without.length >= 3) {
+      const avgWith = v.with.reduce((a,b) => a+b, 0) / v.with.length;
+      const avgWithout = v.without.reduce((a,b) => a+b, 0) / v.without.length;
+      if (avgWith - avgWithout >= 0.7) bestHabits.push(k.replace(/_am|_pm|_any/, '').replace(/_/g, ' '));
+    }
+  });
+  if (bestHabits.length > 0) {
+    const unique = [...new Set(bestHabits)].slice(0, 3);
+    insights.push({
+      emoji: '✨',
+      title: 'Your best-mood habits',
+      text: `Your best days tend to include: ${unique.join(', ')}.`,
+    });
+  }
+
+  return insights.slice(0, 3);
+}
+
+// ── Share week in review ─────────────────────────────────────
+async function shareWeekInReview() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 400;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#0d1610';
+  ctx.fillRect(0, 0, 600, 400);
+
+  // Border
+  ctx.strokeStyle = 'rgba(122,158,126,0.3)';
+  ctx.lineWidth = 2;
+  ctx.roundRect(10, 10, 580, 380, 20);
+  ctx.stroke();
+
+  // Title
+  ctx.fillStyle = '#e8e0d0';
+  ctx.font = '300 28px Fraunces, serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('My Week in Bloom', 300, 55);
+
+  // Streak
+  const streak = state.xpData.streak || 0;
+  ctx.fillStyle = '#c9954a';
+  ctx.font = '500 16px "Instrument Sans", sans-serif';
+  ctx.fillText(`🔥 ${streak}-day streak`, 300, 85);
+
+  // Mood bars
+  const weekDates = getWeekDates();
+  const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const moodColors2 = ['#b07878','#c9954a','#9a9080','#7a9e7e','#a8c5ab'];
+  const barWidth = 50;
+  const barGap = 18;
+  const startX = 300 - (7 * (barWidth + barGap) - barGap) / 2;
+
+  weekDates.forEach((d, i) => {
+    const hist = state.historyData[d] || {};
+    const mood = hist.mood;
+    const barH = mood !== undefined ? ((mood+1)/5 * 120) : 6;
+    const color = mood !== undefined ? moodColors2[mood] : 'rgba(255,255,255,0.05)';
+    const x = startX + i * (barWidth + barGap);
+    const y = 240 - barH;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barWidth, barH, 4);
+    ctx.fill();
+    // Day label
+    ctx.fillStyle = '#4a5e4c';
+    ctx.font = '12px "Instrument Sans", sans-serif';
+    ctx.fillText(dayLabels[i], x + barWidth / 2, 260);
+  });
+
+  // Completion rate
+  const { done, total } = getCompletionRate();
+  ctx.fillStyle = '#a8c5ab';
+  ctx.font = '300 20px Fraunces, serif';
+  ctx.fillText(`${done}/${total} habits today`, 300, 300);
+
+  // XP
+  const xp = state.xpData.total || 0;
+  const level = getLevel(xp);
+  ctx.fillStyle = '#8a9e8c';
+  ctx.font = '14px "Instrument Sans", sans-serif';
+  ctx.fillText(`${level.emoji} ${level.name} · ${xp} XP`, 300, 330);
+
+  // Watermark
+  ctx.fillStyle = '#4a5e4c';
+  ctx.font = 'italic 12px Fraunces, serif';
+  ctx.fillText('bloom · grow gently', 300, 375);
+
+  try {
+    canvas.toBlob(async (blob) => {
+      if (navigator.share && blob) {
+        const file = new File([blob], 'bloom-week.png', { type: 'image/png' });
+        try {
+          await navigator.share({ files: [file], title: 'My Week in Bloom', text: 'Growing gently, one day at a time 🌿' });
+        } catch(e) { downloadCanvasImage(canvas); }
+      } else {
+        downloadCanvasImage(canvas);
+      }
+    }, 'image/png');
+  } catch(e) {
+    downloadCanvasImage(canvas);
+  }
+}
+
+function downloadCanvasImage(canvas) {
+  const a = document.createElement('a');
+  a.download = 'bloom-week.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+
 // ── Hard day mode ────────────────────────────────────────────
 function openOpenJournal() {
   closeAllSheets();
@@ -3102,6 +3469,46 @@ async function saveOpenJournal() {
     addXP(10, null);
     saveState();
     checkMilestones();
+  }
+}
+
+async function saveQuickJournal() {
+  const ta = document.getElementById('quick-journal-input');
+  if (!ta || !ta.value.trim()) return;
+  const text = ta.value.trim();
+  const t = today();
+
+  if (!state.wellnessData.journal) state.wellnessData.journal = {};
+  const existing = state.wellnessData.journal[t];
+  if (existing) {
+    existing.text = existing.text + '\n\n' + text;
+    existing.ai = null;
+  } else {
+    state.wellnessData.journal[t] = { text, ai: null };
+  }
+  saveState();
+  archiveToday();
+  playSound('journal');
+  celebrate('journal', document.getElementById('quick-journal-card'));
+
+  if (!state.todayData.journalXPGiven) {
+    state.todayData.journalXPGiven = true;
+    addXP(10, null);
+    saveState();
+    checkMilestones();
+  }
+
+  renderTodayTab();
+
+  // Get AI response in background
+  const ai = await callClaude(
+    `Someone wrote in their journal: "${text}". Respond with 1-2 sentences of warm, human presence. No advice unless asked. Just witness what they said.`,
+    'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity.'
+  );
+  if (ai) {
+    state.wellnessData.journal[t].ai = ai;
+    saveState();
+    archiveToday();
   }
 }
 
@@ -3605,11 +4012,25 @@ function checkEveningNudge() {
     state.wellnessData?.journal?.[t]
   );
 
+  sent.evening_nudge = true;
+  save(sentKey, sent);
+
   if (!anyActivity) {
-    sent.evening_nudge = true;
-    save(sentKey, sent);
     const msg = EVENING_NUDGE_MESSAGES[Math.floor(Math.random() * EVENING_NUDGE_MESSAGES.length)];
     sendLocalNotification(msg.title, msg.body, 'reminder-evening-nudge');
+  } else {
+    // Partial completer nudge — find remaining habits and nudge
+    const { done, total, pct } = getCompletionRate();
+    if (pct < 1 && pct > 0) {
+      const remaining = total - done;
+      const nudgeMsgs = [
+        { title: `Almost there — ${remaining} left`, body: `You completed ${done}/${total} habits today. A few quick ones and you're done!` },
+        { title: `${Math.round(pct * 100)}% done today`, body: `You've been showing up. ${remaining} habit${remaining > 1 ? 's' : ''} left if you want a perfect day.` },
+        { title: 'So close to a perfect day', body: `${done} of ${total} done. You've got this — the finish line is right there.` },
+      ];
+      const msg = nudgeMsgs[Math.floor(Math.random() * nudgeMsgs.length)];
+      sendLocalNotification(msg.title, msg.body, 'reminder-evening-partial');
+    }
   }
 }
 
@@ -3861,6 +4282,11 @@ const CELEBRATIONS = {
       { title: 'Morning routine — done.', sub: 'The day starts with you.' },
       { title: 'Clean teeth, clear mind.', sub: 'Something small, something real.' },
       { title: 'You started the day.', sub: 'That counts more than you know.' },
+      { title: 'Fresh start.', sub: 'Two minutes of pure self-care.' },
+      { title: 'Morning: handled.', sub: 'One thing done, everything easier.' },
+      { title: 'Look at you go.', sub: 'Starting strong today.' },
+      { title: 'First step taken.', sub: 'The rest follows from here.' },
+      { title: 'Your morning self says thanks.', sub: 'Consistency is quiet power.' },
     ],
   },
   e_teeth: {
@@ -3869,6 +4295,11 @@ const CELEBRATIONS = {
       { title: 'Evening done.', sub: 'Rest easy tonight.' },
       { title: 'You took care of yourself.', sub: 'Small act, real love.' },
       { title: 'Day complete.', sub: 'Well done.' },
+      { title: 'The day is closing gently.', sub: 'You ended it right.' },
+      { title: 'Night routine locked in.', sub: 'Sleep peacefully.' },
+      { title: 'One more day of showing up.', sub: 'That\'s your superpower.' },
+      { title: 'Before you rest.', sub: 'You cared for yourself. Again.' },
+      { title: 'Goodnight ritual — done.', sub: 'Tomorrow you\'ll be glad you did this.' },
     ],
   },
   w_shower: {
@@ -3877,6 +4308,11 @@ const CELEBRATIONS = {
       { title: 'Fresh start.', sub: 'A clean slate changes everything.' },
       { title: 'That took real courage.', sub: 'Some days this is the hardest thing.' },
       { title: 'Clean and grounded.', sub: 'You showed up for yourself.' },
+      { title: 'Reset complete.', sub: 'Sometimes the simplest things matter most.' },
+      { title: 'You did a hard thing.', sub: 'Respect.' },
+      { title: 'Fresh and present.', sub: 'You chose yourself today.' },
+      { title: 'One of those quiet victories.', sub: 'Not everyone understands how big this is.' },
+      { title: 'Renewed.', sub: 'Body and spirit, a little lighter.' },
     ],
   },
   w_exercise: {
@@ -3885,6 +4321,11 @@ const CELEBRATIONS = {
       { title: 'Movement done!', sub: 'Every rep is a vote for yourself.' },
       { title: 'Your body says thank you.', sub: 'Stronger than yesterday.' },
       { title: 'You showed up for your body.', sub: 'This is what growth looks like.' },
+      { title: 'Endorphins unlocked.', sub: 'You earned every single one.' },
+      { title: 'That was all you.', sub: 'Your body is grateful.' },
+      { title: 'Movement is medicine.', sub: 'And you just took yours.' },
+      { title: 'You chose the hard thing.', sub: 'That\'s character.' },
+      { title: 'Energy: invested.', sub: 'Watch it come back to you tenfold.' },
     ],
   },
   w_outside: {
@@ -3893,6 +4334,11 @@ const CELEBRATIONS = {
       { title: 'Fresh air — got it.', sub: 'Even a few minutes matters.' },
       { title: 'Outside, done.', sub: 'The world needed you in it today.' },
       { title: 'You stepped out.', sub: 'Nature noticed.' },
+      { title: 'Sunshine on your skin.', sub: 'The simplest reset there is.' },
+      { title: 'The outside world welcomed you.', sub: 'You belong out there.' },
+      { title: 'Sky seen. Air breathed.', sub: 'Sometimes that\'s the whole thing.' },
+      { title: 'You left the house.', sub: 'On some days, that\'s heroic.' },
+      { title: 'Green therapy.', sub: 'Your nervous system thanks you.' },
     ],
   },
   household: {
@@ -4005,6 +4451,11 @@ const CELEBRATIONS = {
       { title: 'Clean teeth, clear mind.', sub: 'Something small, something real.' },
       { title: 'You showed up for you.', sub: 'That counts more than you know.' },
       { title: 'Done.', sub: 'The little things add up.' },
+      { title: 'Sparkle.', sub: 'Two minutes, real results.' },
+      { title: 'A tiny act of love.', sub: 'For future you.' },
+      { title: 'Checked off.', sub: 'One more brick in the wall of consistency.' },
+      { title: 'Your teeth approve.', sub: 'And so does your future self.' },
+      { title: 'Building the habit.', sub: 'Every day it gets a little more automatic.' },
     ],
   },
   brush_hair: {
@@ -4012,6 +4463,10 @@ const CELEBRATIONS = {
     messages: [
       { title: 'Looking after yourself.', sub: 'That\'s not small. That matters.' },
       { title: 'A small act of care.', sub: 'You showed up for you.' },
+      { title: 'Tangle-free.', sub: 'Inside and out, a little smoother.' },
+      { title: 'You took the time.', sub: 'For yourself. That\'s everything.' },
+      { title: 'Groomed and grounded.', sub: 'The little rituals matter.' },
+      { title: 'Self-care in motion.', sub: 'Keep going.' },
     ],
   },
   wash_face: {
@@ -4019,6 +4474,10 @@ const CELEBRATIONS = {
     messages: [
       { title: 'Fresh face, fresh start.', sub: 'A kind thing for yourself.' },
       { title: 'You took care of yourself.', sub: 'One gentle act at a time.' },
+      { title: 'Clean slate.', sub: 'Your skin thanks you.' },
+      { title: 'A moment of care.', sub: 'These moments build lives.' },
+      { title: 'Refreshed.', sub: 'Ready for whatever comes next.' },
+      { title: 'Gentle routine.', sub: 'The foundation of a good day.' },
     ],
   },
   get_dressed: {
@@ -4026,6 +4485,10 @@ const CELEBRATIONS = {
     messages: [
       { title: 'Dressed and showing up.', sub: 'Some days that\'s everything.' },
       { title: 'You got ready.', sub: 'That took something. Good.' },
+      { title: 'Ready for the world.', sub: 'Or just ready. That\'s enough.' },
+      { title: 'You put yourself together.', sub: 'Literally and figuratively.' },
+      { title: 'Outfit: on.', sub: 'Confidence: building.' },
+      { title: 'This step is bigger than it looks.', sub: 'You know that. We know that.' },
     ],
   },
   floss: {
@@ -4033,6 +4496,10 @@ const CELEBRATIONS = {
     messages: [
       { title: 'Extra care.', sub: 'The details matter too.' },
       { title: 'You went the extra step.', sub: 'That\'s real self-care.' },
+      { title: 'Above and beyond.', sub: 'Your dentist would be proud.' },
+      { title: 'The full routine.', sub: 'Thoroughness is a form of love.' },
+      { title: 'Commitment level: serious.', sub: 'You don\'t cut corners on yourself.' },
+      { title: 'Deep clean.', sub: 'The little things you do for future you.' },
     ],
   },
   skincare: {
@@ -4040,6 +4507,10 @@ const CELEBRATIONS = {
     messages: [
       { title: 'Skincare — done.', sub: 'You\'re investing in yourself.' },
       { title: 'A little glow-up.', sub: 'Kind acts for your body.' },
+      { title: 'Glowing from the inside out.', sub: 'Self-care looks good on you.' },
+      { title: 'Your skin is grateful.', sub: 'These routines add up.' },
+      { title: 'Ritual complete.', sub: 'You honored yourself today.' },
+      { title: 'Layer by layer.', sub: 'Building better days.' },
     ],
   },
   medication: {
@@ -4048,6 +4519,11 @@ const CELEBRATIONS = {
       { title: 'Medication taken.', sub: 'Taking care of yourself in every way.' },
       { title: 'Done.', sub: 'One quiet act of self-care.' },
       { title: 'You remembered.', sub: 'That counts.' },
+      { title: 'On track.', sub: 'Consistency is its own reward.' },
+      { title: 'An important step.', sub: 'You\'re looking after yourself properly.' },
+      { title: 'Taken care of.', sub: 'Your body and mind thank you.' },
+      { title: 'Daily commitment — kept.', sub: 'That\'s strength.' },
+      { title: 'Health first.', sub: 'You made the right choice.' },
     ],
   },
   // Self-care task celebrations
@@ -4101,6 +4577,57 @@ const CELEBRATIONS = {
   },
 };
 
+// ── Undo toast for accidental habit unchecking ───────────────
+let undoTimeout = null;
+let undoData = null;
+
+function showUndoToast(habitKey, xpVal) {
+  undoData = { key: habitKey, xp: xpVal };
+  const existing = document.getElementById('undo-toast');
+  if (existing) existing.remove();
+  if (undoTimeout) clearTimeout(undoTimeout);
+
+  const toast = document.createElement('div');
+  toast.id = 'undo-toast';
+  toast.className = 'celebrate-toast';
+  toast.style.background = 'rgba(176,120,120,0.15)';
+  toast.style.borderColor = 'rgba(176,120,120,0.3)';
+  const appEl = document.getElementById('app');
+  const navEl = document.getElementById('bottom-nav');
+  const appRect = appEl ? appEl.getBoundingClientRect() : { bottom: window.innerHeight };
+  const navRect = navEl ? navEl.getBoundingClientRect() : null;
+  toast.style.bottom = (navRect ? (appRect.bottom - navRect.top) + 12 : 80) + 'px';
+  toast.innerHTML = `
+    <div class="celebrate-toast-emoji">↩️</div>
+    <div class="celebrate-toast-body">
+      <div class="celebrate-toast-title">Habit unchecked</div>
+      <div class="celebrate-toast-sub">-${xpVal} XP</div>
+    </div>
+    <div onclick="undoHabitUncheck()" style="padding:6px 14px;background:rgba(176,120,120,0.25);border:1px solid rgba(176,120,120,0.4);border-radius:var(--r-full);font-size:12px;font-weight:600;color:var(--rose-light);cursor:pointer">Undo</div>
+  `;
+  (appEl || document.body).appendChild(toast);
+  undoTimeout = setTimeout(() => {
+    undoData = null;
+    toast.classList.add('hide');
+    setTimeout(() => toast.remove(), 350);
+  }, 5000);
+}
+
+function undoHabitUncheck() {
+  if (!undoData) return;
+  const { key, xp } = undoData;
+  state.todayData[key] = true;
+  addXP(xp, null);
+  saveState();
+  archiveToday();
+  renderTodayTab();
+  checkAllDone();
+  undoData = null;
+  if (undoTimeout) clearTimeout(undoTimeout);
+  const toast = document.getElementById('undo-toast');
+  if (toast) { toast.classList.add('hide'); setTimeout(() => toast.remove(), 350); }
+}
+
 // ── Core celebration function ────────────────────────────────
 let celebrateTimeout = null;
 function celebrate(type, sourceEl) {
@@ -4127,7 +4654,20 @@ function celebrate(type, sourceEl) {
   const sound = audioMap.hasOwnProperty(type) ? audioMap[type] : 'habit';
   if (sound) playSound(sound);
 
-  const msg = data.messages[Math.floor(Math.random() * data.messages.length)];
+  // Variable reward: 1-in-20 chance of a golden message
+  const isGolden = Math.random() < 0.05;
+  const userName = state.prefs?.name;
+  let msg;
+  if (isGolden && userName && data.messages.length > 0) {
+    const goldenMsgs = [
+      { title: `${userName}, you're incredible.`, sub: 'Seriously. Don\'t ever forget that.' },
+      { title: `This one\'s for you, ${userName}.`, sub: 'You\'re building something beautiful, one day at a time.' },
+      { title: `${userName}, look how far you\'ve come.`, sub: 'Every single step has mattered.' },
+    ];
+    msg = goldenMsgs[Math.floor(Math.random() * goldenMsgs.length)];
+  } else {
+    msg = data.messages[Math.floor(Math.random() * data.messages.length)];
+  }
 
   // Particle burst from source
   if (sourceEl) burstParticles(sourceEl);
@@ -4206,9 +4746,11 @@ function toggleHabit(habitId, el) {
     checkFirstTaskStreak();
     celebrate(habitId, el);
   } else {
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - (XP_VALUES[habitId] || 10));
+    const xpVal = XP_VALUES[habitId] || 10;
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
     saveState();
     updateProgressTab();
+    showUndoToast(habitId, xpVal);
   }
 
   saveState();
@@ -4359,6 +4901,30 @@ function showAffirmation(habitId) {
   renderTodayTop();
 }
 
+function getCompletionRate() {
+  const prefs = state.prefs;
+  const td = state.todayData;
+  const dhPrefs2 = prefs?.dailyHabits || {};
+  const htPrefs2 = prefs?.habitTimes || {};
+  let totalHabits = 0, doneHabits = 0;
+
+  const activeNewHabits = DAILY_HABITS.filter(h => dhPrefs2[h.id]);
+  if (activeNewHabits.length > 0 || dhPrefs2.medication) {
+    [...activeNewHabits, ...(dhPrefs2.medication ? [MEDICATION_HABIT] : [])].forEach(h => {
+      const time = htPrefs2[h.id] || h.defaultTime || 'any';
+      if (time === 'am' || time === 'both') { totalHabits++; if (td[h.id + '_am']) doneHabits++; }
+      if (time === 'pm' || time === 'both') { totalHabits++; if (td[h.id + '_pm']) doneHabits++; }
+      if (time === 'any') { totalHabits++; if (td[h.id + '_any']) doneHabits++; }
+    });
+  } else {
+    if (prefs?.habits?.m_teeth !== false) { totalHabits++; if (td.m_teeth) doneHabits++; }
+    if (prefs?.habits?.e_teeth !== false) { totalHabits++; if (td.e_teeth) doneHabits++; }
+  }
+  if (td.mood !== undefined) doneHabits++;
+  totalHabits++; // mood counts
+  return totalHabits > 0 ? { done: doneHabits, total: totalHabits, pct: doneHabits / totalHabits } : { done: 0, total: 0, pct: 0 };
+}
+
 function checkAllDone() {
   const prefs = state.prefs;
   const td = state.todayData;
@@ -4388,7 +4954,54 @@ function checkAllDone() {
   if (state.allDone && !wasAllDone) {
     setTimeout(() => celebrate('all_done', document.getElementById('today-scroll')), 300);
   }
+
+  // Partial completion celebrations
+  const { pct } = getCompletionRate();
+  if (pct >= 0.75 && !state._celebrated75) {
+    state._celebrated75 = true;
+    if (!state.allDone) {
+      setTimeout(() => showPartialCompletionToast('strong_day'), 400);
+    }
+  } else if (pct >= 0.5 && !state._celebrated50) {
+    state._celebrated50 = true;
+    setTimeout(() => showPartialCompletionToast('halfway'), 400);
+  }
+
   renderTodayTop();
+}
+
+function showPartialCompletionToast(type) {
+  const msgs = type === 'strong_day' ? [
+    { title: 'Strong day!', sub: '75% done. You\'re really showing up.' },
+    { title: 'Almost there.', sub: 'Most of your habits are checked off.' },
+    { title: 'Look at you go.', sub: 'Three quarters done and counting.' },
+  ] : [
+    { title: 'Halfway there!', sub: '50% done. Every check matters.' },
+    { title: 'You\'re building momentum.', sub: 'Half your habits are done.' },
+    { title: 'Keep it up.', sub: 'You\'re doing great today.' },
+  ];
+  const msg = msgs[Math.floor(Math.random() * msgs.length)];
+  const emoji = type === 'strong_day' ? '💪' : '🌿';
+  haptic('medium');
+  const existing = document.getElementById('celebrate-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.id = 'celebrate-toast';
+  toast.className = 'celebrate-toast';
+  const appEl = document.getElementById('app');
+  const navEl = document.getElementById('bottom-nav');
+  const appRect = appEl ? appEl.getBoundingClientRect() : { bottom: window.innerHeight };
+  const navRect = navEl ? navEl.getBoundingClientRect() : null;
+  toast.style.bottom = (navRect ? (appRect.bottom - navRect.top) + 12 : 80) + 'px';
+  toast.innerHTML = `
+    <div class="celebrate-toast-emoji">${emoji}</div>
+    <div class="celebrate-toast-body">
+      <div class="celebrate-toast-title">${msg.title}</div>
+      <div class="celebrate-toast-sub">${msg.sub}</div>
+    </div>
+  `;
+  (appEl || document.body).appendChild(toast);
+  setTimeout(() => { toast.classList.add('hide'); setTimeout(() => toast.remove(), 350); }, 2800);
 }
 
 // ============================================================
@@ -4494,6 +5107,28 @@ function renderTodayTop() {
         <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Tap for support — your streak is protected</div>
       </div>
       <div style="font-size:18px;color:var(--text-muted)">›</div>
+    </div>`;
+  }
+
+  // Welcome-back re-engagement
+  if (state.showWelcomeBack) {
+    const daysAway = state.daysAway || 2;
+    const name = state.prefs?.name ? `, ${state.prefs.name}` : '';
+    html += `<div class="banner" style="background:rgba(122,158,126,0.1);border:1px solid rgba(122,158,126,0.25)">
+      <div class="banner-icon" style="font-size:36px">🌱</div>
+      <div class="banner-body">
+        <div class="banner-title" style="color:var(--sage-light);font-size:16px">Welcome back${name}!</div>
+        <div class="banner-text" style="line-height:1.7">Life happens. You're here now, and that's what counts. <span style="color:var(--amber-light)">+25 XP comeback bonus</span></div>
+        <div style="font-size:12px;color:var(--text-muted);margin:8px 0">What happened? (optional, one-tap)</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+          ${['Life got busy', 'Wasn\\'t feeling it', 'Was doing okay', 'Forgot'].map(r =>
+            `<div onclick="dismissWelcomeBack('${r}')" style="padding:5px 12px;border-radius:99px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:12px;color:var(--text-secondary);cursor:pointer">${r}</div>`
+          ).join('')}
+        </div>
+        <div class="banner-actions">
+          <div class="banner-action" onclick="dismissWelcomeBack(null)">Let's go</div>
+        </div>
+      </div>
     </div>`;
   }
 
@@ -4777,8 +5412,20 @@ function renderTodayTab() {
   // --- DAILY HABITS (grouped by time: AM / PM / Any) ---
   const dhPrefs = prefs?.dailyHabits || {};
   const htPrefs = prefs?.habitTimes || {};
-  const allDailyHabits = DAILY_HABITS.filter(h => dhPrefs[h.id]);
+  let allDailyHabits = DAILY_HABITS.filter(h => dhPrefs[h.id]);
   const medEnabled = !!dhPrefs.medication;
+
+  // Adaptive difficulty: if mood is low (0 or 1), show reduced list
+  const isLowMoodDay = td.mood !== undefined && td.mood <= 1;
+  const showAllHabits = state._showAllHabitsOnHardDay;
+  if (isLowMoodDay && !showAllHabits && allDailyHabits.length > 2) {
+    html += `<div style="background:rgba(176,120,120,0.06);border:1px solid rgba(176,120,120,0.15);border-radius:var(--r-md);padding:12px 16px;margin-bottom:12px">
+      <div style="font-size:13px;color:var(--rose-light);font-weight:500;margin-bottom:4px">Easy does it today</div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:8px">Showing your top priorities. The rest can wait.</div>
+      <div onclick="state._showAllHabitsOnHardDay=true;renderTodayTab()" style="font-size:12px;color:var(--text-secondary);cursor:pointer;text-decoration:underline">Show all habits</div>
+    </div>`;
+    allDailyHabits = allDailyHabits.slice(0, 2);
+  }
 
   // Collect AM habits
   const amHabits = allDailyHabits.filter(h => {
@@ -4807,9 +5454,11 @@ function renderTodayTab() {
     const xp = h.xp || 15;
     const habitStreak = getHabitStreak(key);
     const streakBadge = habitStreak >= 2 ? `<div style="font-size:11px;color:var(--amber);background:rgba(201,149,74,0.1);padding:2px 7px;border-radius:99px;margin-right:6px">🔥${habitStreak}</div>` : '';
+    const trigger = state.prefs?.habitTriggers?.[h.id] || '';
+    const triggerHtml = trigger ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px;font-style:italic">${trigger}</div>` : '';
     return `<div class="habit-row" onclick="tapDailyHabit('${h.id}', '${timeSlot}', this)">
       <div class="habit-check${done ? ' done' : ''}">${done ? '✓' : h.icon}</div>
-      <div class="habit-info"><div class="habit-name">${h.label}</div></div>
+      <div class="habit-info"><div class="habit-name">${h.label}</div>${triggerHtml}</div>
       ${streakBadge}
       ${!done ? `<div class="habit-xp">+${xp}</div>` : ''}
     </div>`;
@@ -4966,19 +5615,33 @@ function renderTodayTab() {
     }
   }
 
-  // --- WELLNESS / JOURNAL ---
+  // --- WELLNESS / JOURNAL with inline quick-entry ---
   const journalToday = state.wellnessData?.journal?.[t];
-  html += `<div class="section-label">📓 Wellness</div>
-  <div class="card" onclick="switchTab('wellness')" style="cursor:pointer">
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-size:15px;font-weight:500">Journal</div>
-        <div class="text-sm text-muted" style="margin-top:3px">${journalToday ? '✓ Entry saved today' : 'Tap to write today\'s entry'}</div>
+  html += `<div class="section-label">📓 Wellness</div>`;
+
+  if (journalToday) {
+    html += `<div class="card" onclick="switchTab('wellness')" style="cursor:pointer">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:15px;font-weight:500">Journal</div>
+          <div class="text-sm text-muted" style="margin-top:3px">✓ Entry saved today</div>
+        </div>
+        <div style="font-size:20px">📝</div>
       </div>
-      <div style="font-size:20px">${journalToday ? '📝' : '📓'}</div>
-    </div>
-    ${!journalToday ? '<div class="habit-xp" style="margin-top:8px;display:inline-flex">+10 XP</div>' : ''}
-  </div>`;
+    </div>`;
+  } else {
+    html += `<div class="card" id="quick-journal-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:15px;font-weight:500">Quick thought</div>
+        <div class="habit-xp" style="display:inline-flex">+10 XP</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <textarea id="quick-journal-input" rows="1" placeholder="What's on your mind..." style="flex:1;font-size:13px;min-height:36px;resize:vertical" onfocus="this.rows=3"></textarea>
+        <button class="btn btn-primary btn-sm" onclick="saveQuickJournal()" style="flex-shrink:0;margin-top:1px">Save</button>
+      </div>
+      <div style="font-size:11px;color:var(--sky);margin-top:6px;display:flex;align-items:center;gap:4px"><span>✦</span> bloom will respond</div>
+    </div>`;
+  }
 
   // Subtle share nudge at bottom of Today
   html += `<div style="text-align:center;padding:12px 0 20px">
@@ -5907,6 +6570,71 @@ function renderProgressTab() {
   weekDates.forEach((_,i) => { html += `<div class="mood-chart-label">${dayLabels[i]}</div>`; });
   html += `</div></div>`;
 
+  // Sleep-mood overlay on the mood chart
+  html += `<div style="margin-top:-8px;padding:0 4px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="width:10px;height:3px;background:var(--sky);border-radius:2px"></div>
+      <span style="font-size:10px;color:var(--text-muted)">Sleep quality</span>
+    </div>
+    <div style="display:flex;gap:4px;justify-content:space-between">`;
+  weekDates.forEach(d => {
+    const hist = state.historyData[d] || {};
+    const sleep = hist.sleep;
+    const h2 = sleep !== undefined ? ((sleep+1)/5*100) : 0;
+    html += `<div style="flex:1;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden">
+      <div style="height:100%;width:${h2}%;background:var(--sky);border-radius:2px;transition:width 0.3s"></div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  // 30-day streak heatmap
+  html += `<div class="card">
+    <div class="card-title">Last 30 days</div>
+    <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px">`;
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const hist = state.historyData[dStr] || {};
+    let pctDone = 0;
+    if (hist.habits) {
+      const vals = Object.values(hist.habits).filter(v => typeof v === 'boolean');
+      const doneCount = vals.filter(Boolean).length;
+      pctDone = vals.length > 0 ? doneCount / vals.length : 0;
+    }
+    const opacity = pctDone === 0 ? 0.06 : pctDone < 0.5 ? 0.25 : pctDone < 0.75 ? 0.5 : pctDone < 1 ? 0.75 : 1;
+    const isToday2 = i === 0;
+    html += `<div title="${dStr}" style="aspect-ratio:1;border-radius:3px;background:rgba(122,158,126,${opacity});${isToday2 ? 'border:1px solid var(--sage);' : ''}"></div>`;
+  }
+  html += `</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+      <span style="font-size:10px;color:var(--text-muted)">30 days ago</span>
+      <div style="display:flex;align-items:center;gap:3px">
+        <span style="font-size:10px;color:var(--text-muted)">Less</span>
+        ${[0.06, 0.25, 0.5, 0.75, 1].map(o => `<div style="width:10px;height:10px;border-radius:2px;background:rgba(122,158,126,${o})"></div>`).join('')}
+        <span style="font-size:10px;color:var(--text-muted)">More</span>
+      </div>
+      <span style="font-size:10px;color:var(--text-muted)">Today</span>
+    </div>
+  </div>`;
+
+  // Mood-habit correlation insights
+  const insightData = getMoodHabitCorrelation();
+  if (insightData && insightData.length > 0) {
+    html += `<div class="card">
+      <div class="card-title">Insights</div>`;
+    insightData.forEach(ins => {
+      html += `<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:10px;background:rgba(106,154,176,0.06);border-radius:var(--r-md)">
+        <div style="font-size:18px;flex-shrink:0">${ins.emoji}</div>
+        <div>
+          <div style="font-size:13px;color:var(--cream);font-weight:500">${ins.title}</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:2px">${ins.text}</div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
   // Wellness stats
   const journalCount = Object.keys(state.wellnessData?.journal || {}).filter(d => weekDates.includes(d)).length;
   const reflectCount = Object.keys(state.wellnessData?.reflections?.[weekStart()] || {}).length;
@@ -5921,6 +6649,13 @@ function renderProgressTab() {
       <div class="stat-cell"><div class="stat-val">${breathCount}</div><div class="stat-name">Breath sessions</div></div>
       <div class="stat-cell"><div class="stat-val">${exerciseCount}</div><div class="stat-name">Workouts</div></div>
     </div>
+  </div>`;
+
+  // Share week in review button
+  html += `<div style="text-align:center;padding:8px 0 20px">
+    <button onclick="shareWeekInReview()" style="background:rgba(122,158,126,0.12);border:1px solid rgba(122,158,126,0.25);border-radius:var(--r-full);padding:10px 20px;color:var(--sage-light);font-size:13px;font-weight:500;cursor:pointer">
+      Share my week 🌿
+    </button>
   </div>`;
 
   scroll.innerHTML = html;
@@ -6223,6 +6958,22 @@ function renderSettingsTab() {
     </div>`;
 
   html += settingsSection('daily', '☀️ Daily habits', dailyHtml);
+
+  // ── IMPLEMENTATION INTENTIONS (Habit Triggers) ─────────────
+  const activeHabits = DAILY_HABITS.filter(h => dh[h.id]);
+  if (activeHabits.length > 0) {
+    const triggers = prefs.habitTriggers || {};
+    let triggerHtml = `<div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:14px">
+      Set a trigger for each habit — "I will [habit] when [trigger]." Research shows this 2-3x your follow-through.
+    </div>`;
+    activeHabits.forEach(h => {
+      triggerHtml += `<div style="margin-bottom:10px">
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">${h.icon} ${h.label}</div>
+        <input type="text" id="trigger-${h.id}" value="${triggers[h.id] || ''}" placeholder="e.g. After morning coffee..." style="width:100%;font-size:13px;padding:8px 12px" onchange="saveHabitTrigger('${h.id}')">
+      </div>`;
+    });
+    html += settingsSection('triggers', '🎯 Habit triggers', triggerHtml);
+  }
 
   // ── WEEKLY HABITS & TASKS ────────────────────────────────────
   const tasks = prefs.householdTasks || [];
@@ -6689,6 +7440,7 @@ function tapDailyHabit(id, timeSlot, el) {
     haptic('light');
     saveState();
     updateProgressTab();
+    showUndoToast(key, xpVal);
   }
 
   saveState();
@@ -6723,6 +7475,14 @@ function toggleMealTracking() {
 function saveSettingsName() {
   const input = document.getElementById('settings-name');
   if (input) { state.prefs.name = input.value; save('bloom_prefs', state.prefs); }
+}
+
+function saveHabitTrigger(habitId) {
+  const input = document.getElementById('trigger-' + habitId);
+  if (!input) return;
+  if (!state.prefs.habitTriggers) state.prefs.habitTriggers = {};
+  state.prefs.habitTriggers[habitId] = input.value.trim();
+  save('bloom_prefs', state.prefs);
 }
 
 function toggleHouseholdPref(id, name, icon) {
@@ -7318,7 +8078,13 @@ function showTourSpotlight(el, text, total, onNext) {
 function renderDailyQuote() {
   const el = document.getElementById('daily-quote');
   if (!el) return;
-  const idx = getDayIndex() % DAILY_QUOTES.length;
+  // Use a seeded shuffle so same day = same quote, but distribution covers all quotes before repeating
+  const dayIdx = getDayIndex();
+  const cycle = Math.floor(dayIdx / DAILY_QUOTES.length);
+  const posInCycle = dayIdx % DAILY_QUOTES.length;
+  // Simple hash-based permutation per cycle
+  const seed = cycle * 7 + 3;
+  const idx = (posInCycle * 17 + seed) % DAILY_QUOTES.length;
   el.textContent = DAILY_QUOTES[idx];
 }
 
@@ -8294,6 +9060,41 @@ function migrateToNewDailyHabits() {
   save('bloom_prefs', p);
 }
 
+// ── Quick Action FAB ─────────────────────────────────────────
+function toggleFAB() {
+  const menu = document.getElementById('fab-menu');
+  const btn = document.getElementById('fab-toggle');
+  if (!menu || !btn) return;
+  const isOpen = menu.classList.contains('show');
+  menu.classList.toggle('show');
+  btn.classList.toggle('open');
+  btn.textContent = isOpen ? '⚡' : '✕';
+  haptic('light');
+}
+
+function fabAction(action) {
+  toggleFAB(); // close the menu
+  if (action === 'mood') {
+    switchTab('today');
+    setTimeout(() => {
+      const moodRow = document.getElementById('mood-row');
+      if (moodRow) moodRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 200);
+  } else if (action === 'water') {
+    switchTab('today');
+    setTimeout(() => tapWater(state.todayData.water || 0), 200);
+  } else if (action === 'journal') {
+    switchTab('today');
+    setTimeout(() => {
+      const el = document.getElementById('quick-journal-input') || document.getElementById('journal-card');
+      if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); if (el.focus) el.focus(); }
+    }, 200);
+  } else if (action === 'breathe') {
+    switchTab('wellness');
+    setTimeout(() => scrollToBreath(), 300);
+  }
+}
+
 function initApp() {
   loadState();
   migrateToNewDailyHabits();
@@ -8305,6 +9106,8 @@ function initApp() {
   checkMonthlyReflection();
   checkDailyAffirmation();
   checkAutoGenerateInsight();
+  checkStorageQuota();
+  checkWelcomeBack();
   renderTodayTab();
   updateStreak();
   checkMilestones();
