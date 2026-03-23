@@ -2133,7 +2133,7 @@ function bloomIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.3.0';
+const VERSION = '2.4.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -2179,6 +2179,8 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
+  { text: 'Bloom Buddy — pair up with someone for mutual encouragement and accountability. See their mood, streak, and progress. Send nudges and messages. Find yours on the Community tab!', spotlight: '#nav-community', tab: 'community', featured: true },
+  { text: 'Multiple buddies — you can now have more than one Bloom Buddy. Toggle this in Settings under Bloom Buddy.', spotlight: null },
   { text: 'Encouragement wall — a shared, anonymous space to leave kind words for strangers. Tap the 💛 Wall tab to see it.', spotlight: '#nav-community', tab: 'today', featured: true },
   { text: 'Seasonal mood awareness — bloom now notices monthly and seasonal patterns in your mood over time', spotlight: null, tab: 'progress' },
   { text: 'Weekly summary notification — a gentle Sunday evening recap of your mood, streaks, and journal activity', spotlight: null },
@@ -6970,6 +6972,26 @@ function renderSettingsTab() {
     </div>
   `);
 
+  // ── BLOOM BUDDY ────────────────────────────────────────────
+  const multiBuddyOn = prefs.multiBuddy || false;
+  const myBuddyId = load('bloom_buddy_id', 'Not yet generated');
+  html += settingsSection('buddy', '🤝 Bloom Buddy', `
+    <div class="toggle-row" style="padding:12px 0">
+      <div>
+        <div class="toggle-label">Allow multiple buddies</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let more than one person pair with you</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" ${multiBuddyOn ? 'checked' : ''} onchange="state.prefs.multiBuddy=this.checked;save('bloom_prefs',state.prefs)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div style="padding:8px 0;border-top:1px solid rgba(255,255,255,0.05)">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Your Buddy ID</div>
+      <div style="font-size:11px;color:var(--text-secondary);font-family:monospace;word-break:break-all;background:var(--bg-mid);padding:8px 10px;border-radius:var(--r-md)">${escapeHtml(myBuddyId)}</div>
+    </div>
+  `);
+
   // ── DAILY HABITS ─────────────────────────────────────────────
   const dh = prefs.dailyHabits || {};
   const ht = prefs.habitTimes || {};
@@ -8246,9 +8268,10 @@ let obData = {
   audio: true,
   theme: 'forest',
   selfCareTasks: [],
+  multiBuddy: false,
 };
 
-const OB_STEPS = 11;
+const OB_STEPS = 12;
 
 function renderOnboarding() {
   const progress = document.getElementById('ob-progress');
@@ -8270,7 +8293,8 @@ function renderOnboarding() {
     case 7:  renderOBAppearance(body, footer); break;
     case 8:  renderOBSelfCare(body, footer); break;
     case 9:  renderOBInstall(body, footer); break;
-    case 10: renderOBReady(body, footer); break;
+    case 10: renderOBBuddyIntro(body, footer); break;
+    case 11: renderOBReady(body, footer); break;
   }
 }
 
@@ -8729,6 +8753,48 @@ function renderOBInstall(body, footer) {
     <div style="background:rgba(201,149,74,0.07);border:1px solid rgba(201,149,74,0.2);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px">
       <span style="font-size:20px">💡</span>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.5">Once installed, bloom opens fullscreen with no browser bar — just like a native app.</div>
+    </div>
+  `;
+  footer.innerHTML = `
+    <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
+    <button class="btn btn-primary" id="ob-btn-next" style="flex:1">Continue</button>
+  `;
+  document.getElementById('ob-btn-back').addEventListener('click', obBack);
+  document.getElementById('ob-btn-next').addEventListener('click', obNext);
+}
+
+function renderOBBuddyIntro(body, footer) {
+  const multiOn = obData.multiBuddy;
+  body.innerHTML = `
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:64px;line-height:1;margin-bottom:16px">🤝</div>
+      <div class="ob-title" style="text-align:center">Bloom Buddy</div>
+      <div class="ob-sub" style="text-align:center">Partner with someone for mutual encouragement. Your buddy can see your mood, streak, and habit progress — but not your journal or specific habits.</div>
+    </div>
+
+    <div style="background:var(--bg-card);border-radius:16px;padding:16px;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--cream);font-weight:500;margin-bottom:12px">What your buddy sees:</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+        Your mood (Low / Rough / Okay / Good / Great)<br>
+        Your streak count<br>
+        Your habit completion % (not which habits)<br>
+        Your display name & when you were last active
+      </div>
+    </div>
+
+    <div class="toggle-row" style="padding:14px 0;border-bottom:none">
+      <div>
+        <div class="toggle-label">Allow multiple buddies</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let more than one person pair with you</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="ob-multi-buddy" ${multiOn ? 'checked' : ''} onchange="obData.multiBuddy=this.checked">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:8px;line-height:1.6">
+      You can find a buddy from the Community tab anytime.<br>You can change this setting later.
     </div>
   `;
   footer.innerHTML = `
