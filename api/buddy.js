@@ -67,9 +67,12 @@ async function kvDel(key) {
 async function sendPush(playerId, title, message) {
   const appId = process.env.ONESIGNAL_APP_ID;
   const apiKey = process.env.ONESIGNAL_REST_API_KEY;
-  if (!appId || !apiKey || !playerId) return;
+  if (!appId || !apiKey || !playerId) {
+    console.log('[buddy] sendPush skipped — missing', !appId ? 'appId' : !apiKey ? 'apiKey' : 'playerId');
+    return;
+  }
   try {
-    await fetch('https://onesignal.com/api/v1/notifications', {
+    const resp = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -83,7 +86,11 @@ async function sendPush(playerId, title, message) {
         url: 'https://bloomhabits.app',
       }),
     });
-  } catch(e) {}
+    const result = await resp.json();
+    if (result.errors) console.log('[buddy] sendPush error:', JSON.stringify(result.errors));
+  } catch(e) {
+    console.log('[buddy] sendPush failed:', e.message);
+  }
 }
 
 // ── ID generation ───────────────────────────────────────────
@@ -184,7 +191,7 @@ export default async function handler(req, res) {
 
   // ── SYNC: update mood/streak/habitPct + trigger notifications ──
   if (action === 'sync') {
-    const { mood, streak, habitPct } = body;
+    const { mood, streak, habitPct, oneSignalId } = body;
     if (!buddyId) return res.status(400).json({ error: 'Missing buddyId' });
 
     const profile = await kvGet(`bloom_buddy:${buddyId}`) || {};
@@ -195,6 +202,7 @@ export default async function handler(req, res) {
     profile.moodTs = mood !== undefined ? Date.now() : profile.moodTs;
     profile.streak = streak !== undefined ? streak : profile.streak;
     profile.habitPct = habitPct !== undefined ? habitPct : profile.habitPct;
+    if (oneSignalId) profile.oneSignalId = oneSignalId;
     profile.lastActive = Date.now();
 
     await kvSet(`bloom_buddy:${buddyId}`, profile);

@@ -9120,7 +9120,12 @@ function initOneSignal() {
     // Capture player ID for buddy notifications
     try {
       OneSignal.User.PushSubscription.addEventListener('change', (e) => {
-        if (e.current?.id) save('bloom_onesignal_pid', e.current.id);
+        if (e.current?.id) {
+          const prev = load('bloom_onesignal_pid', null);
+          save('bloom_onesignal_pid', e.current.id);
+          // If player ID just became available, re-register with server
+          if (!prev && e.current.id) buddyRegisterAndSync();
+        }
       });
       const pid = OneSignal.User.PushSubscription.id;
       if (pid) save('bloom_onesignal_pid', pid);
@@ -9579,6 +9584,7 @@ async function syncBuddyStatus() {
     mood: state.todayData?.mood,
     streak: state.xpData?.streak || 0,
     habitPct: getHabitPct(),
+    oneSignalId: playerId,
   });
   // Also keep register up to date with name/playerId
   await buddyApi({
