@@ -624,6 +624,10 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   padding: 2px 7px;
   border-radius: var(--r-full);
 }
+.habit-xp::after {
+  content: ' ☀️';
+  font-size: 10px;
+}
 
 /* ============================================================
    SECTION HEADERS
@@ -5991,7 +5995,7 @@ function renderTodayTab() {
 
   // --- ANYTIME SECTION ---
   if (anyHabits.length > 0 || medInAny) {
-    html += `<div class="section-label">✦ Anytime</div><div class="card mb-0">`;
+    html += `<div class="section-label">✦ Anytime today</div><div class="card mb-0">`;
     anyHabits.forEach(h => { html += dailyHabitRow(h, 'any'); });
     if (medInAny) html += medHabitRow('any');
     html += `</div>`;
@@ -6090,7 +6094,7 @@ function renderTodayTab() {
         out += `<div class="habit-row" onclick="tapSelfCare('${id}', this)">
           <div class="habit-check${done ? ' done' : ''}">${done ? '✓' : task.icon}</div>
           <div class="habit-info"><div class="habit-name">${task.label}</div></div>
-          ${!done ? '<div class="habit-xp">+10 ☀️</div>' : ''}
+          ${!done ? '<div class="habit-xp">+10</div>' : ''}
         </div>`;
       });
       return out;
@@ -6130,7 +6134,7 @@ function renderTodayTab() {
     html += `<div class="card" id="quick-journal-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:15px;font-weight:500">Quick thought</div>
-        <div class="habit-xp" style="display:inline-flex">+10 ☀️</div>
+        <div class="habit-xp" style="display:inline-flex">+10</div>
       </div>
       <div style="display:flex;gap:8px;align-items:flex-start">
         <textarea id="quick-journal-input" rows="1" placeholder="What's on your mind..." style="flex:1;font-size:13px;min-height:36px;resize:vertical" onfocus="this.rows=3"></textarea>
