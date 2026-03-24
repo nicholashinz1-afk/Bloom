@@ -703,11 +703,8 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
 .food-chips {
   display: flex;
   gap: 6px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
+  flex-wrap: wrap;
 }
-.food-chips::-webkit-scrollbar { display: none; }
 .food-chip {
   padding: 6px 10px;
   border-radius: var(--r-full);
@@ -718,7 +715,6 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 .food-chip.selected {
   background: rgba(122,158,126,0.15);
@@ -4879,7 +4875,7 @@ const CELEBRATIONS = {
     confetti: true,
   },
   food: {
-    emoji: '🍽', xp: 15,
+    emoji: '🍽', xp: 0,
     messages: [
       { title: 'Nourishment — checked ✓', sub: 'Feeding yourself is an act of love.' },
       { title: 'You fed yourself today.', sub: 'That matters more than you know.' },
