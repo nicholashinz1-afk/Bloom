@@ -10977,6 +10977,24 @@ function renderOBCustomize(body, footer) {
     <div class="toggle${obData.notifications.waterMode !== 'off' ? ' on' : ''}" onclick="obData.notifications.waterMode=obData.notifications.waterMode==='off'?'smart':'off';renderOnboarding()"></div>
   </div>`;
 
+  // Pace setting
+  html += `<div style="padding:12px 0;border-top:1px solid rgba(255,255,255,0.06)">
+    <div style="font-size:14px;font-weight:500;margin-bottom:6px;color:var(--cream)">🌱 Your pace</div>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:10px">
+      Introduce features gradually, or start with everything.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div id="ob-pace-gradual" onclick="obSetPace(true)" style="padding:10px 12px;border-radius:var(--r-md);cursor:pointer;border:2px solid rgba(122,158,126,0.4);background:rgba(122,158,126,0.08);transition:all 0.2s">
+        <div style="font-size:13px;font-weight:500;color:var(--sage-light)">Ease me in</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Start simple, unlock more each week</div>
+      </div>
+      <div id="ob-pace-all" onclick="obSetPace(false)" style="padding:10px 12px;border-radius:var(--r-md);cursor:pointer;border:2px solid rgba(255,255,255,0.08);background:transparent;transition:all 0.2s">
+        <div style="font-size:13px;font-weight:500;color:var(--cream)">Show me everything</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">I'm ready for all features from day one</div>
+      </div>
+    </div>
+  </div>`;
+
   html += `<div style="font-size:11px;color:var(--text-muted);margin-top:12px;text-align:center">All settings can be changed anytime.</div>`;
 
   body.innerHTML = html;
@@ -11607,22 +11625,6 @@ function renderOBReady(body, footer) {
           <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
             bloom is a self-care companion — not a therapist, counselor, or medical provider. If you're struggling with your mental health, please reach out to a licensed professional. The crisis heart (🤍) in the header is always available for immediate support resources.
           </div>
-        </div>
-      </div>
-    </div>
-    <div class="card" style="margin-bottom:12px">
-      <div style="font-size:14px;font-weight:500;margin-bottom:10px">🌱 Your pace</div>
-      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">
-        Bloom can introduce features gradually — habits first, then self-care, then journaling — so your first week isn't overwhelming. Or you can start with everything. You can always change this in Settings.
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div id="ob-pace-gradual" onclick="obSetPace(true)" style="padding:12px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid rgba(122,158,126,0.4);background:rgba(122,158,126,0.08);transition:all 0.2s">
-          <div style="font-size:13px;font-weight:500;color:var(--sage-light)">Ease me in</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Start simple, unlock more each week</div>
-        </div>
-        <div id="ob-pace-all" onclick="obSetPace(false)" style="padding:12px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid rgba(255,255,255,0.08);background:transparent;transition:all 0.2s">
-          <div style="font-size:13px;font-weight:500;color:var(--cream)">Show me everything</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">I'm ready for all features from day one</div>
         </div>
       </div>
     </div>
