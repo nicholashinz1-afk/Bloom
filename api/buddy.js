@@ -437,6 +437,10 @@ export default async function handler(req, res) {
       if (!canAddBuddy(candidate.buddyId, cLookup)) continue;
       if (myLookup.pairs.some(p => p.partnerId === candidate.buddyId)) continue;
 
+      // Skip blocked users (3+ reports)
+      const cProfile = await kvGet(`bloom_buddy:${candidate.buddyId}`);
+      if (cProfile?.blocked) continue;
+
       let score = 0;
       const cp = candidate.prefs || {};
       if (myPrefs.frequency && cp.frequency && myPrefs.frequency === cp.frequency) score += 2;
@@ -683,6 +687,31 @@ export default async function handler(req, res) {
     await kvDel(`bloom_buddy_msgs:${targetPair.pairId}`);
     await removePairFromLookup(buddyId, targetPair.pairId);
     await removePairFromLookup(targetPair.partnerId, targetPair.pairId);
+
+    return res.json({ ok: true });
+  }
+
+  if (action === 'report-buddy') {
+    const { pairId } = body;
+    if (!buddyId || !pairId) return res.status(400).json({ error: 'Missing buddyId or pairId' });
+
+    const lookup = await getLookup(buddyId);
+    const targetPair = lookup.pairs.find(p => p.pairId === pairId);
+    if (!targetPair) return res.json({ ok: true });
+
+    // Increment report count on the partner's profile
+    const partner = await kvGet(`bloom_buddy:${targetPair.partnerId}`);
+    if (partner) {
+      partner.reports = (partner.reports || 0) + 1;
+      partner.lastReportTs = Date.now();
+      await kvSet(`bloom_buddy:${targetPair.partnerId}`, partner);
+
+      // If 3+ reports from different users, block from auto-matching
+      if (partner.reports >= 3) {
+        partner.blocked = true;
+        await kvSet(`bloom_buddy:${targetPair.partnerId}`, partner);
+      }
+    }
 
     return res.json({ ok: true });
   }
