@@ -3955,46 +3955,6 @@ async function saveOpenJournal() {
   }
 }
 
-async function saveQuickJournal() {
-  const ta = document.getElementById('quick-journal-input');
-  if (!ta || !ta.value.trim()) return;
-  const text = ta.value.trim();
-  const t = today();
-
-  if (!state.wellnessData.journal) state.wellnessData.journal = {};
-  const existing = state.wellnessData.journal[t];
-  if (existing) {
-    existing.text = existing.text + '\n\n' + text;
-    existing.ai = null;
-  } else {
-    state.wellnessData.journal[t] = { text, ai: null };
-  }
-  saveState();
-  archiveToday();
-  playSound('journal');
-  celebrate('journal', document.getElementById('quick-journal-card'));
-
-  if (!state.todayData.journalXPGiven) {
-    state.todayData.journalXPGiven = true;
-    addXP(10, null);
-    saveState();
-    checkMilestones();
-  }
-
-  renderTodayTab();
-
-  // Get AI response in background
-  const ai = await callClaude(
-    `Someone wrote in their journal: "${text}". Respond with 1-2 sentences of warm, human presence. No advice unless asked. Just witness what they said.`,
-    'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity.'
-  );
-  if (ai) {
-    state.wellnessData.journal[t].ai = ai;
-    saveState();
-    archiveToday();
-  }
-}
-
 function activateHardDayMode() {
   state.hardDayMode = true;
   state.todayData.mood = state.todayData.mood ?? 1;
@@ -6116,33 +6076,25 @@ function renderTodayTab() {
     }
   }
 
-  // --- WELLNESS / JOURNAL with inline quick-entry ---
+  // --- WELLNESS GATEWAY CARD ---
   const journalToday = state.wellnessData?.journal?.[t];
-  html += `<div class="section-label">📓 Wellness</div>`;
+  const winsToday = (state.wellnessData?.wins?.[t] || []).length > 0;
+  const affirmationsExist = (state.wellnessData?.affirmations || []).length > 0;
+  const wellnessDone = [journalToday, winsToday, affirmationsExist].filter(Boolean).length;
 
-  if (journalToday) {
-    html += `<div class="card" onclick="switchTab('wellness')" style="cursor:pointer">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-size:15px;font-weight:500">Journal</div>
-          <div class="text-sm text-muted" style="margin-top:3px">✓ Entry saved today</div>
-        </div>
-        <div style="font-size:20px">📝</div>
-      </div>
-    </div>`;
-  } else {
-    html += `<div class="card" id="quick-journal-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:15px;font-weight:500">Quick thought</div>
-        <div class="habit-xp" style="display:inline-flex">+10</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:flex-start">
-        <textarea id="quick-journal-input" rows="1" placeholder="What's on your mind..." style="flex:1;font-size:13px;min-height:36px;resize:vertical" onfocus="this.rows=3"></textarea>
-        <button class="btn btn-primary btn-sm" onclick="saveQuickJournal()" style="flex-shrink:0;margin-top:1px">Save</button>
-      </div>
-      <div style="font-size:11px;color:var(--sky);margin-top:6px;display:flex;align-items:center;gap:4px"><span>✦</span> bloom will respond</div>
-    </div>`;
-  }
+  html += `<div class="section-label">📓 Wellness</div>`;
+  html += `<div class="card" onclick="switchTab('wellness')" style="cursor:pointer">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:15px;font-weight:500">Wellness</div>
+      <div style="font-size:11px;color:${wellnessDone === 3 ? 'var(--sage)' : 'var(--text-muted)'};background:${wellnessDone === 3 ? 'rgba(122,158,126,0.15)' : 'rgba(255,255,255,0.06)'};padding:2px 10px;border-radius:99px">${wellnessDone} of 3</div>
+    </div>
+    <div style="font-size:13px;color:var(--text-secondary);font-style:italic;line-height:1.5;margin-bottom:6px">${getJournalPrompt()}</div>
+    <div style="font-size:11px;color:var(--text-muted);display:flex;gap:12px;flex-wrap:wrap">
+      <span>${journalToday ? '✓' : '○'} Journal</span>
+      <span>${winsToday ? '✓' : '○'} Small wins</span>
+      <span>${affirmationsExist ? '✓' : '○'} Affirmations</span>
+    </div>
+  </div>`;
 
   // Quick breathe section at bottom of Today
   html += `<div class="section-label">🌬 Take a breath</div>
@@ -6203,16 +6155,6 @@ function renderTodayTab() {
     });
     html += `</div>`;
   }
-
-  // Just write — open journal anytime
-  html += `<div style="margin-top:10px;background:linear-gradient(135deg,rgba(186,156,124,0.12),rgba(186,156,124,0.05));border:1px solid rgba(186,156,124,0.25);border-radius:var(--r-lg);padding:18px 16px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <span style="font-size:18px">📓</span>
-      <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--amber-light)">Just write</div>
-    </div>
-    <div style="font-size:13px;color:rgba(186,156,124,0.7);margin-bottom:14px;font-style:italic">No prompt, no structure — just get it out</div>
-    <div style="text-align:center"><button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button></div>
-  </div>`;
 
   // Subtle share nudge at bottom of Today
   html += `<div style="text-align:center;padding:12px 0 20px">
