@@ -7084,7 +7084,7 @@ function renderWellnessTab() {
     <div style="background:linear-gradient(135deg,rgba(122,158,126,0.12),rgba(122,158,126,0.05));border:1px solid rgba(122,158,126,0.25);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:10px" id="grounding-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
         <span style="font-size:18px">🌿</span>
-        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sage-light)">5-4-3-2-1 Grounding</div>
+        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sage-light)">5-4-3-2-1 Grounding${infoIcon('grounding')}</div>
         <div style="margin-left:auto;font-size:11px;color:var(--sage);background:rgba(122,158,126,0.15);padding:2px 8px;border-radius:99px">senses</div>
       </div>
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;font-style:italic">Gently bring yourself back to the present moment</div>
@@ -7097,7 +7097,7 @@ function renderWellnessTab() {
     <div style="background:linear-gradient(135deg,rgba(176,120,120,0.12),rgba(176,120,120,0.05));border:1px solid rgba(176,120,120,0.25);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:10px" id="bodyscan-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
         <span style="font-size:18px">🫧</span>
-        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--rose-light)">Body scan</div>
+        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--rose-light)">Body scan${infoIcon('bodyscan')}</div>
         <div style="margin-left:auto;font-size:11px;color:var(--rose);background:rgba(176,120,120,0.15);padding:2px 8px;border-radius:99px">~3 min</div>
       </div>
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;font-style:italic">Notice where you're holding tension — no need to fix it</div>
@@ -7110,7 +7110,7 @@ function renderWellnessTab() {
     <div style="background:linear-gradient(135deg,rgba(201,149,74,0.12),rgba(201,149,74,0.05));border:1px solid rgba(201,149,74,0.25);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:10px" id="reframe-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
         <span style="font-size:18px">💡</span>
-        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--amber-light)">Gentle reframe</div>
+        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--amber-light)">Gentle reframe${infoIcon('reframe')}</div>
         <div style="margin-left:auto;font-size:11px;color:var(--amber);background:rgba(201,149,74,0.15);padding:2px 8px;border-radius:99px">thought tool</div>
       </div>
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;font-style:italic">A kinder way to look at a difficult thought</div>
@@ -9465,6 +9465,42 @@ const SCIENCE_SECTIONS = {
       'Dunn, E. W., et al. (2008). Spending money on others promotes happiness. <em>Science</em>, 319(5870), 1687–1688.',
       'Lyubomirsky, S., et al. (2005). Pursuing happiness: The architecture of sustainable change. <em>Review of General Psychology</em>, 9(2), 111–131.',
       'Neff, K. D. (2003). Self-compassion: An alternative conceptualization of a healthy attitude toward oneself. <em>Self and Identity</em>, 2(2), 85–101.',
+    ],
+  },
+  grounding: {
+    title: '5-4-3-2-1 Grounding',
+    tip: 'Naming what your senses notice pulls your brain out of anxious thought loops and back into the present moment.',
+    full: `<p>The <strong>5-4-3-2-1 grounding technique</strong> is one of the most widely recommended interventions for acute anxiety, panic, and dissociation. It works by redirecting attention from internal distress to <strong>sensory input</strong>, engaging the prefrontal cortex and interrupting the amygdala-driven fight-or-flight response.</p>
+    <p>A 2015 review in <em>Journal of EMDR Practice and Research</em> found that grounding techniques significantly reduced distress in trauma survivors. The mechanism is simple: when you force your brain to count and categorize sensory details, it can't simultaneously sustain a panic spiral. Research on <strong>attentional deployment</strong> (a core emotion regulation strategy identified by James Gross) confirms that deliberately shifting attention to neutral or positive stimuli reduces negative emotional intensity.</p>`,
+    sources: [
+      'Najavits, L. M. (2002). Seeking Safety: A treatment manual for PTSD and substance abuse. <em>Guilford Press</em>.',
+      'Gross, J. J. (1998). The emerging field of emotion regulation: An integrative review. <em>Review of General Psychology</em>, 2(3), 271–299.',
+      'Brom, D., et al. (2017). A randomized controlled trial of EMDR and grounding exercises. <em>Journal of EMDR Practice and Research</em>, 11(4), 170–184.',
+    ],
+  },
+  bodyscan: {
+    title: 'Body scan',
+    tip: 'Noticing your body without trying to fix it builds interoceptive awareness — a skill linked to better emotional regulation.',
+    full: `<p>The <strong>body scan</strong> is a core component of Mindfulness-Based Stress Reduction (MBSR), developed by Jon Kabat-Zinn at UMass Medical School. It trains <strong>interoceptive awareness</strong> — the ability to sense internal body signals — which research has linked to improved emotional regulation, reduced anxiety, and greater self-awareness.</p>
+    <p>A 2019 study in <em>Frontiers in Psychology</em> found that body scan meditation reduced cortisol reactivity and improved participants' ability to identify and tolerate difficult emotions. Critically, the technique asks you to <strong>notice without fixing</strong> — this non-judgmental observation is itself therapeutic, teaching the brain that discomfort can be acknowledged without requiring an immediate response.</p>
+    <p>Bloom's body scan is intentionally brief (~3 minutes) to keep the barrier low. Research suggests that even short mindfulness practices produce measurable benefits when done consistently.</p>`,
+    sources: [
+      'Kabat-Zinn, J. (1990). Full catastrophe living: Using the wisdom of your body and mind to face stress, pain, and illness. <em>Delacorte Press</em>.',
+      'Bornemann, B., et al. (2015). Differential changes in self-reported aspects of interoceptive awareness through 3 months of contemplative training. <em>Frontiers in Psychology</em>, 5, 1504.',
+      'Creswell, J. D. (2017). Mindfulness interventions. <em>Annual Review of Psychology</em>, 68, 491–516.',
+    ],
+  },
+  reframe: {
+    title: 'Cognitive reframing',
+    tip: 'You can\'t always control what happens, but reframing how you interpret it changes how it affects you.',
+    full: `<p><strong>Cognitive reframing</strong> (or cognitive restructuring) is one of the most evidence-backed techniques in psychology, forming the foundation of Cognitive Behavioral Therapy (CBT). The core principle: emotions are driven not by events themselves, but by our <strong>interpretation</strong> of those events. Changing the interpretation changes the emotional response.</p>
+    <p>A 2012 meta-analysis in <em>Clinical Psychology Review</em> found that cognitive reappraisal was associated with lower depression, lower anxiety, and greater wellbeing across 306 samples. Research by Ochsner et al. using fMRI showed that when people consciously reframed negative stimuli, activity in the prefrontal cortex increased while amygdala activity decreased — literally dampening the brain's threat response.</p>
+    <p>Bloom's "gentle reframe" is designed to be <strong>warm, not clinical</strong>. It validates the original feeling first, then offers a kinder perspective — mirroring the compassion-focused approach recommended by Paul Gilbert's research on compassionate mind training.</p>`,
+    sources: [
+      'Beck, A. T. (1979). Cognitive therapy and the emotional disorders. <em>Penguin Books</em>.',
+      'Ochsner, K. N., et al. (2004). Reflecting upon feelings: An fMRI study of neural systems supporting the attribution of emotion to self and other. <em>Journal of Cognitive Neuroscience</em>, 16(10), 1746–1772.',
+      'Aldao, A., et al. (2010). Emotion-regulation strategies across psychopathology: A meta-analytic review. <em>Clinical Psychology Review</em>, 30(2), 217–237.',
+      'Gilbert, P. (2009). Introducing compassion-focused therapy. <em>Advances in Psychiatric Treatment</em>, 15(3), 199–208.',
     ],
   },
   hardday: {
