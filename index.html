@@ -1088,6 +1088,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 .settings-body.open {
   max-height: 2000px;
   padding: 12px 16px 16px;
+  overflow: visible;
 }
 
 
@@ -2377,6 +2378,21 @@ function bloomIcon(size = 24) {
   </svg>`;
 }
 
+function buddyIcon(size = 24) {
+  const s = size;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 100 100" style="display:inline-block;vertical-align:middle;flex-shrink:0" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="35" cy="78" rx="16" ry="8" fill="#3a5a3e" opacity="0.4"/>
+    <ellipse cx="65" cy="78" rx="16" ry="8" fill="#3a5a3e" opacity="0.4"/>
+    <path d="M35 75 C35 55 20 45 20 30 Q20 12 35 12 Q50 12 50 30" fill="#7a9e7e" opacity="0.9"/>
+    <path d="M35 75 C35 55 50 45 50 30 Q50 12 35 12 Q20 12 20 30" fill="#a8c5ab" opacity="0.6"/>
+    <path d="M65 75 C65 55 50 45 50 30 Q50 12 65 12 Q80 12 80 30" fill="#7a9e7e" opacity="0.9"/>
+    <path d="M65 75 C65 55 80 45 80 30 Q80 12 65 12 Q50 12 50 30" fill="#a8c5ab" opacity="0.6"/>
+    <circle cx="35" cy="22" r="3" fill="#d4e8d6" opacity="0.7"/>
+    <circle cx="65" cy="22" r="3" fill="#d4e8d6" opacity="0.7"/>
+    <path d="M42 60 Q50 50 58 60" stroke="#a8c5ab" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6"/>
+  </svg>`;
+}
+
 const VERSION = '2.4.0';
 
 // ── Auto-update check ────────────────────────────────────────
@@ -2439,7 +2455,7 @@ const WHATS_NEW = [
   { text: 'Sleep-mood overlay — see sleep quality alongside mood on the weekly chart', spotlight: null, tab: 'progress' },
   { text: 'Share your week — generate a beautiful image card from Progress tab', spotlight: null, tab: 'progress' },
   { text: 'Hard day mode — on low-mood days, bloom shows only your top 2 habits', spotlight: null },
-  { text: 'Welcome back — after time away, bloom greets you warmly with +25 XP', spotlight: null },
+  { text: 'Welcome back — after time away, bloom greets you warmly with +25 sunlight', spotlight: null },
   { text: 'Smarter nudges — evening notifications now remind you of specific remaining habits', spotlight: null },
   { text: 'More celebration variety — 6-8 messages per habit plus rare golden messages', spotlight: null },
   { text: 'Auto data cleanup — history older than 90 days is trimmed to keep things fast', spotlight: null },
@@ -2829,7 +2845,7 @@ function showXPFloat(amount, el) {
   const rect = el.getBoundingClientRect();
   const div = document.createElement('div');
   div.className = 'xp-float';
-  div.textContent = `+${amount} XP`;
+  div.textContent = `+${amount} ☀️`;
   div.style.left = (rect.left + rect.width/2 - 30) + 'px';
   div.style.top = (rect.top - 10) + 'px';
   document.body.appendChild(div);
@@ -3607,7 +3623,7 @@ async function shareWeekInReview() {
   const level = getLevel(xp);
   ctx.fillStyle = '#8a9e8c';
   ctx.font = '14px "Instrument Sans", sans-serif';
-  ctx.fillText(`${level.emoji} ${level.name} · ${xp} XP`, 300, 330);
+  ctx.fillText(`${level.emoji} ${level.name} · ${xp} sunlight`, 300, 330);
 
   // Watermark
   ctx.fillStyle = '#4a5e4c';
@@ -4841,7 +4857,7 @@ function showUndoToast(habitKey, xpVal) {
     <div class="celebrate-toast-emoji">↩️</div>
     <div class="celebrate-toast-body">
       <div class="celebrate-toast-title">Habit unchecked</div>
-      <div class="celebrate-toast-sub">-${xpVal} XP</div>
+      <div class="celebrate-toast-sub">-${xpVal} ☀️</div>
     </div>
     <div onclick="undoHabitUncheck()" style="padding:6px 14px;background:rgba(176,120,120,0.25);border:1px solid rgba(176,120,120,0.4);border-radius:var(--r-full);font-size:12px;font-weight:600;color:var(--rose-light);cursor:pointer">Undo</div>
   `;
@@ -4946,7 +4962,7 @@ function celebrate(type, sourceEl) {
       <div class="celebrate-toast-title">${msg.title}</div>
       <div class="celebrate-toast-sub">${msg.sub}</div>
     </div>
-    ${data.xp ? `<div class="celebrate-toast-xp">+${data.xp} XP</div>` : ''}
+    ${data.xp ? `<div class="celebrate-toast-xp">+${data.xp} ☀️</div>` : ''}
   `;
   (appEl || document.body).appendChild(toast);
 
@@ -5364,7 +5380,7 @@ function renderTodayTop() {
       <div class="banner-icon" style="font-size:36px">🌱</div>
       <div class="banner-body">
         <div class="banner-title" style="color:var(--sage-light);font-size:16px">Welcome back${name}!</div>
-        <div class="banner-text" style="line-height:1.7">Life happens. You're here now, and that's what counts. <span style="color:var(--amber-light)">+25 XP comeback bonus</span></div>
+        <div class="banner-text" style="line-height:1.7">Life happens. You're here now, and that's what counts. <span style="color:var(--amber-light)">+25 ☀️ comeback bonus</span></div>
         <div style="font-size:12px;color:var(--text-muted);margin:8px 0">What happened? (optional, one-tap)</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
           ${['Life got busy', 'Not feeling it', 'Was doing okay', 'Forgot'].map(r =>
@@ -5796,7 +5812,7 @@ function renderTodayTab() {
         </svg>
       </div>`).join('')}
     </div>
-    ${waterCount >= 3 ? '<div style="font-size:12px;color:var(--sage);margin-top:10px;text-align:center">Goal reached! +10 XP 💧</div>' : `<div style="font-size:12px;color:var(--text-muted);margin-top:10px;text-align:center">Tap each bottle as you drink</div>`}
+    ${waterCount >= 3 ? '<div style="font-size:12px;color:var(--sage);margin-top:10px;text-align:center">Goal reached! +10 ☀️ 💧</div>' : `<div style="font-size:12px;color:var(--text-muted);margin-top:10px;text-align:center">Tap each bottle as you drink</div>`}
   </div>`;
 
   // Food card
@@ -5815,7 +5831,7 @@ function renderTodayTab() {
         return `<div class="food-chip${foodDone[f.id] ? ' selected' : ''}${isFelt ? ' food-chip-felt' : ''}" onclick="tapFood('${f.id}')">${f.label}</div>`;
       }).join('')}
     </div>
-    ${mainDone >= 2 ? '<div style="font-size:12px;color:var(--sage);margin-top:10px">+10 XP earned 🌿</div>' : '<div style="font-size:12px;color:var(--text-muted);margin-top:10px">Check off 2 or more for +10 XP</div>'}
+    ${mainDone >= 2 ? '<div style="font-size:12px;color:var(--sage);margin-top:10px">+10 ☀️ earned 🌿</div>' : '<div style="font-size:12px;color:var(--text-muted);margin-top:10px">Check off 2 or more for +10 ☀️</div>'}
   </div>`;
 
   // --- SELF-CARE TASKS (grouped by morning/evening/anytime routines) ---
@@ -5879,7 +5895,7 @@ function renderTodayTab() {
     html += `<div class="card" id="quick-journal-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:15px;font-weight:500">Quick thought</div>
-        <div class="habit-xp" style="display:inline-flex">+10 XP</div>
+        <div class="habit-xp" style="display:inline-flex">+10 ☀️</div>
       </div>
       <div style="display:flex;gap:8px;align-items:flex-start">
         <textarea id="quick-journal-input" rows="1" placeholder="What's on your mind..." style="flex:1;font-size:13px;min-height:36px;resize:vertical" onfocus="this.rows=3"></textarea>
@@ -5988,11 +6004,14 @@ function habitRow(id, icon, name, sub, done, optedIn, xp) {
   }
   const habitStreak = getHabitStreak(id);
   const streakBadge = habitStreak >= 2 ? `<div style="font-size:11px;color:var(--amber);background:rgba(201,149,74,0.1);padding:2px 7px;border-radius:99px;margin-right:6px">🔥${habitStreak}</div>` : '';
+  const trigger = state.prefs?.habitTriggers?.[id] || '';
+  const triggerHtml = trigger ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px;font-style:italic">${trigger}</div>` : '';
   return `<div class="habit-row" onclick="tapHabit('${id}', this)">
     <div class="habit-check${done ? ' done' : ''}">${done ? '✓' : icon}</div>
     <div class="habit-info">
       <div class="habit-name">${name}</div>
       <div class="habit-sub">${sub}${done ? ' · Done ✓' : ''}</div>
+      ${triggerHtml}
     </div>
     ${streakBadge}
     ${!done ? `<div class="habit-xp">+${xp}</div>` : ''}
@@ -6761,12 +6780,12 @@ function renderProgressTab() {
       <div style="font-size:40px">${level.emoji}</div>
       <div style="flex:1">
         <div style="font-family:Fraunces,serif;font-size:22px;font-weight:300;color:var(--cream)">${level.name}</div>
-        <div style="font-size:13px;color:var(--text-secondary);margin-top:2px">${total} XP total</div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-top:2px">${total} sunlight total</div>
       </div>
     </div>
     <div class="xp-bar-track"><div class="xp-bar-fill" style="width:${pct}%"></div></div>
     ${nextLevel ? `<div style="display:flex;justify-content:space-between;margin-top:6px">
-      <div style="font-size:11px;color:var(--text-muted)">${total - level.min} / ${nextLevel.min - level.min} XP</div>
+      <div style="font-size:11px;color:var(--text-muted)">${total - level.min} / ${nextLevel.min - level.min} sunlight</div>
       <div style="font-size:11px;color:var(--text-muted)">Next: ${nextLevel.name} ${nextLevel.emoji}</div>
     </div>` : `<div style="font-size:12px;color:var(--sage);text-align:center;margin-top:6px">Maximum level reached 🌟</div>`}
   </div>`;
@@ -6777,6 +6796,7 @@ function renderProgressTab() {
       <div style="font-size:26px">🔥</div>
       <div style="font-family:Fraunces,serif;font-size:28px;font-weight:300;color:var(--cream);margin:4px 0">${streak}</div>
       <div style="font-size:11px;color:var(--text-secondary)">Day streak</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Log your mood to keep it going</div>
     </div>
     <div class="card mb-0" style="flex:1;text-align:center;padding:14px 10px">
       <div style="font-size:26px">❄️</div>
@@ -7200,7 +7220,7 @@ function renderSettingsTab() {
       <div style="font-size:32px">${level.emoji}</div>
       <div>
         <div style="font-size:15px;font-weight:500;color:var(--cream)">${level.name}</div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">${xp.total || 0} XP total</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">${xp.total || 0} sunlight total</div>
       </div>
     </div>
     <div class="divider"></div>
@@ -7219,7 +7239,7 @@ function renderSettingsTab() {
   // ── BLOOM BUDDY ────────────────────────────────────────────
   const multiBuddyOn = prefs.multiBuddy || false;
   const myBuddyId = load('bloom_buddy_id', 'Not yet generated');
-  html += settingsSection('buddy', '🤝 bloom buddy', `
+  html += settingsSection('buddy', buddyIcon(18) + ' bloom buddy', `
     <div class="toggle-row" style="padding:12px 0">
       <div>
         <div class="toggle-label">Allow multiple buddies</div>
@@ -7309,19 +7329,29 @@ function renderSettingsTab() {
   html += settingsSection('daily', '☀️ Daily habits', dailyHtml);
 
   // ── IMPLEMENTATION INTENTIONS (Habit Triggers) ─────────────
-  const activeHabits = DAILY_HABITS.filter(h => dh[h.id]);
-  if (activeHabits.length > 0) {
+  {
     const triggers = prefs.habitTriggers || {};
-    let triggerHtml = `<div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:14px">
-      Set a trigger for each habit — "I will [habit] when [trigger]." Research shows this 2-3x your follow-through.
-    </div>`;
-    activeHabits.forEach(h => {
-      triggerHtml += `<div style="margin-bottom:10px">
-        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">${h.icon} ${h.label}</div>
-        <input type="text" id="trigger-${h.id}" value="${triggers[h.id] || ''}" placeholder="e.g. After morning coffee..." style="width:100%;font-size:13px;padding:8px 12px" onchange="saveHabitTrigger('${h.id}')">
+    const allTriggerHabits = [];
+    // Built-in teeth habits
+    if (prefs?.habits?.m_teeth !== false) allTriggerHabits.push({ id: 'm_teeth', icon: '🦷', label: 'Brush teeth (morning)' });
+    if (prefs?.habits?.e_teeth !== false) allTriggerHabits.push({ id: 'e_teeth', icon: '🦷', label: 'Brush teeth (evening)' });
+    // Configurable daily habits
+    DAILY_HABITS.filter(h => dh[h.id]).forEach(h => allTriggerHabits.push(h));
+    // Medication
+    if (dh.medication) allTriggerHabits.push(MEDICATION_HABIT);
+
+    if (allTriggerHabits.length > 0) {
+      let triggerHtml = `<div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+        Set a trigger for each habit — "I will [habit] when [trigger]." Research shows this 2-3x your follow-through.
       </div>`;
-    });
-    html += settingsSection('triggers', '🎯 Habit triggers', triggerHtml);
+      allTriggerHabits.forEach(h => {
+        triggerHtml += `<div style="margin-bottom:16px">
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px">${h.icon} ${h.label}</div>
+          <input type="text" id="trigger-${h.id}" value="${escapeHtml(triggers[h.id] || '')}" placeholder="e.g. After morning coffee..." style="box-sizing:border-box" onchange="saveHabitTrigger('${h.id}')" onfocus="setTimeout(()=>this.scrollIntoView({block:'center',behavior:'smooth'}),300)">
+        </div>`;
+      });
+      html += settingsSection('triggers', '🎯 Habit triggers', triggerHtml);
+    }
   }
 
   // ── WEEKLY HABITS & TASKS ────────────────────────────────────
@@ -8619,7 +8649,7 @@ function renderOBHabits(body, footer) {
         <span style="font-size:20px">${h.icon}</span>
         <div>
           <div class="toggle-label">${h.name}</div>
-          <div class="toggle-sub">${h.type === 'daily' ? 'Daily +15 XP' : 'Weekly goal'}</div>
+          <div class="toggle-sub">${h.type === 'daily' ? 'Daily +15 ☀️' : 'Weekly goal'}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
@@ -9233,7 +9263,7 @@ const TUTORIAL_STEPS = [
     spotlight: '#breath-card',
     cardPos: 'top',
     title: '🌬 4-7-8 breathing',
-    text: 'This lives at the bottom of Wellness and also appears inline when you\'re having a hard day. No streaks, no XP — just a tool that\'s here whenever you need it.',
+    text: 'This lives at the bottom of Wellness and also appears inline when you\'re having a hard day. No streaks, no sunlight — just a tool that\'s here whenever you need it.',
     scrollToBottom: true,
   },
   {
@@ -9242,13 +9272,13 @@ const TUTORIAL_STEPS = [
     cardPos: 'bottom',
     pulse: true,
     title: '✨ Progress',
-    text: 'Track your XP, streak, and mood chart here. Earn freeze tokens at 7, 14, and 30-day milestones — they protect your streak automatically on days you miss.',
+    text: 'Track your sunlight, streak, and mood chart here. Just logging your mood each day is enough to keep your streak alive. Freeze tokens protect you on days you miss entirely.',
   },
   {
     tab: 'progress',
     spotlight: '#tab-progress .tab-scroll',
     cardPos: 'top',
-    title: 'Your streak & XP',
+    title: 'Your streak & sunlight',
     text: 'Logging a rough or low mood gives your streak automatic grace that day — no token needed. bloom looks out for you.',
     scrollToTop: true,
   },
@@ -9849,6 +9879,7 @@ function renderBuddyContent() {
 
   // Info header (always shown)
   html += `<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 0 4px">
+    ${buddyIcon(24)}
     <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">bloom buddy</div>
     <button onclick="openSheet('buddy-info-sheet')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted);padding:4px" title="What is bloom buddy?">&#9432;</button>
   </div>`;
@@ -9881,7 +9912,7 @@ function renderBuddyContent() {
 function renderBuddySetup() {
   return `
     <div style="text-align:center;padding:8px 0 16px">
-      <div style="font-size:32px;margin-bottom:8px">🤝</div>
+      <div style="margin-bottom:8px">${buddyIcon(48)}</div>
       <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">bloom buddy</div>
       <div style="font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6">Partner with someone for mutual encouragement<br>and accountability. Share moods, trade nudges,<br>and keep each other going.</div>
     </div>
