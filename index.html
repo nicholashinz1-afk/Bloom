@@ -8875,7 +8875,9 @@ function runWhatsNewTourStep(items) {
     // Tour done
     const div = document.createElement('div');
     div.id = 'tour-done-toast';
-    div.style.cssText = `position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+    const doneAppRect = document.getElementById('app')?.getBoundingClientRect() || { left: 0, width: window.innerWidth };
+    const doneCx = doneAppRect.left + doneAppRect.width / 2;
+    div.style.cssText = `position:fixed;bottom:100px;left:${doneCx}px;transform:translateX(-50%);
       background:#1e3022;border:2px solid #5a9e60;border-radius:99px;
       padding:12px 24px;font-size:14px;color:var(--cream);z-index:600;
       font-family:Fraunces,serif;font-style:italic;white-space:nowrap;
@@ -8914,41 +8916,55 @@ function showTourSpotlight(el, text, total, onNext) {
   // Remove any existing spotlight
   document.getElementById('tour-spotlight')?.remove();
 
-  const rect = el.getBoundingClientRect();
+  const appEl = document.getElementById('app');
+  const appRect = appEl.getBoundingClientRect();
+  const elRect = el.getBoundingClientRect();
   const pad = 8;
+
+  // Positions relative to the app container
+  const relLeft = elRect.left - appRect.left;
+  const relTop = elRect.top - appRect.top;
+  const appW = appRect.width;
+  const appH = appRect.height;
 
   const overlay = document.createElement('div');
   overlay.id = 'tour-spotlight';
-  overlay.style.cssText = `position:fixed;inset:0;z-index:700;pointer-events:none`;
+  overlay.style.cssText = `position:fixed;top:${appRect.top}px;left:${appRect.left}px;width:${appW}px;height:${appH}px;z-index:700;pointer-events:none;overflow:hidden`;
 
-  // Dark overlay with hole
+  // Whether info card should go above or below the target
+  const elMid = elRect.top - appRect.top + elRect.height / 2;
+  const showAbove = elMid > appH / 2;
+  const cardPos = showAbove
+    ? `bottom:${appH - relTop + 16}px`
+    : `top:${relTop + elRect.height + pad + 12}px`;
+
   overlay.innerHTML = `
-    <svg width="100%" height="100%" style="position:absolute;inset:0">
+    <svg width="${appW}" height="${appH}" style="position:absolute;top:0;left:0">
       <defs>
         <mask id="tour-mask">
-          <rect width="100%" height="100%" fill="white"/>
-          <rect x="${rect.left - pad}" y="${rect.top - pad}"
-            width="${rect.width + pad*2}" height="${rect.height + pad*2}"
+          <rect width="${appW}" height="${appH}" fill="white"/>
+          <rect x="${relLeft - pad}" y="${relTop - pad}"
+            width="${elRect.width + pad*2}" height="${elRect.height + pad*2}"
             rx="12" fill="black"/>
         </mask>
       </defs>
-      <rect width="100%" height="100%" fill="rgba(0,0,0,0.7)" mask="url(#tour-mask)"/>
-      <rect x="${rect.left - pad}" y="${rect.top - pad}"
-        width="${rect.width + pad*2}" height="${rect.height + pad*2}"
+      <rect width="${appW}" height="${appH}" fill="rgba(0,0,0,0.7)" mask="url(#tour-mask)"/>
+      <rect x="${relLeft - pad}" y="${relTop - pad}"
+        width="${elRect.width + pad*2}" height="${elRect.height + pad*2}"
         rx="12" fill="none" stroke="#5a9e60" stroke-width="2"
         style="animation:pulse 1.5s ease-in-out infinite"/>
     </svg>
     <div style="
       position:absolute;
       left:16px;right:16px;
-      ${rect.top > window.innerHeight / 2 ? `bottom:${window.innerHeight - rect.top + 16}px` : `top:${rect.bottom + pad + 12}px`};
+      ${cardPos};
       background:#1e3022;border:2px solid #5a9e60;border-radius:20px;
       padding:16px 18px;pointer-events:all;
       box-shadow:0 8px 32px rgba(0,0,0,0.8)">
       <div style="font-size:11px;color:var(--sage-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">
         What's new — ${whatsNewTourStep + 1} of ${total}
       </div>
-      <div style="font-size:15px;color:var(--cream);line-height:1.5;margin-bottom:14px;font-family:Fraunces,serif;font-style:italic">
+      <div style="font-size:14px;color:var(--cream);line-height:1.5;margin-bottom:14px;font-family:Fraunces,serif;font-style:italic">
         ${text}
       </div>
       <div style="display:flex;gap:10px">
