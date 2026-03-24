@@ -5995,7 +5995,7 @@ function renderTodayTab() {
 
   // --- ANYTIME SECTION ---
   if (anyHabits.length > 0 || medInAny) {
-    html += `<div class="section-label">✦ Anytime today</div><div class="card mb-0">`;
+    html += `<div class="section-label"><span style="color:#f0c040">☀️</span> Anytime today</div><div class="card mb-0">`;
     anyHabits.forEach(h => { html += dailyHabitRow(h, 'any'); });
     if (medInAny) html += medHabitRow('any');
     html += `</div>`;
@@ -9792,6 +9792,38 @@ function migrateToNewDailyHabits() {
   p._migratedDailyHabits = true;
   save('bloom_prefs', p);
 }
+
+// Migration: reset old AM/PM/Both defaults to 'any' for existing users
+(function migrateHabitTimesToAny() {
+  const p = state.prefs;
+  if (p._migratedTimesToAny) return;
+  if (!p.habitTimes) { p._migratedTimesToAny = true; save('bloom_prefs', p); return; }
+
+  // Old defaults that were auto-assigned — reset to 'any'
+  const oldDefaults = {
+    brush_teeth: 'both', brush_hair: 'am', wash_face: 'both',
+    get_dressed: 'am', floss: 'pm', skincare: 'both', medication: 'am'
+  };
+  const td = state.todayData;
+  Object.entries(oldDefaults).forEach(([id, oldTime]) => {
+    if (p.habitTimes[id] === oldTime) {
+      // Migrate today's completion data to 'any' slot
+      if (td) {
+        const oldSlots = oldTime === 'both' ? ['am','pm'] : [oldTime];
+        oldSlots.forEach(s => {
+          if (td[id + '_' + s]) {
+            td[id + '_any'] = true;
+            delete td[id + '_' + s];
+          }
+        });
+      }
+      p.habitTimes[id] = 'any';
+    }
+  });
+  if (td) save('bloom_today_' + today(), td);
+  p._migratedTimesToAny = true;
+  save('bloom_prefs', p);
+})();
 
 // ============================================================
 //  BLOOM BUDDY
