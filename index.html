@@ -2450,7 +2450,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.4.1';
+const VERSION = '2.5.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -2497,10 +2497,9 @@ function listenForSWUpdate() {
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
   { text: 'Your habits have moved to "Anytime today." To set Morning or Evening times, go to Settings → Daily Habits and tap AM, PM, or Both on each habit.', spotlight: '#sh-daily', tab: 'settings', featured: true },
-  { text: 'bloom buddy — pair up with someone for mutual encouragement and accountability. Find yours on the Community tab!', spotlight: '#nav-community', tab: 'community', featured: true },
-  { text: 'Encouragement wall — a shared, anonymous space to leave kind words for strangers', spotlight: '#nav-community', tab: 'today' },
-  { text: 'Custom check-ins — track anything that matters to you, your way. Add your own daily questions in Settings.', spotlight: '#sh-checkins', tab: 'settings' },
-  { text: 'Hard day mode — on low-mood days, bloom shows only your top 2 habits so nothing feels overwhelming', spotlight: null },
+  { text: 'Habit cues — link each habit to a moment in your day (like "after morning coffee") to build follow-through. Set yours in Settings.', spotlight: '#sh-triggers', tab: 'settings', featured: true },
+  { text: 'Science behind bloom — tap the ⓘ icons throughout the app to learn why each feature works, backed by peer-reviewed research. Or explore it all in Settings.', spotlight: '#sh-science', tab: 'settings', featured: true },
+  { text: 'Wellness tab on your Daily page — see today\'s journal prompt, track your progress across journal, small wins, and affirmations, all in one card.', spotlight: null, tab: 'today' },
 ];
 
 // ============================================================
