@@ -2356,7 +2356,10 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   <div class="sheet-handle"></div>
   <div style="padding:0 20px 20px">
     <div class="sheet-title">Save your backup link</div>
-    <p class="text-sm text-muted" style="line-height:1.6;margin-bottom:16px">Bookmark this link or copy it somewhere safe. It contains all your Bloom data and can restore everything if you switch devices or clear your browser.</p>
+    <p class="text-sm text-muted" style="line-height:1.6;margin-bottom:12px">Bookmark this link or copy it somewhere safe. It contains all your Bloom data and can restore everything if you switch devices or clear your browser.</p>
+    <div style="background:rgba(255,180,80,0.08);border:1px solid rgba(255,180,80,0.15);border-radius:var(--r-lg);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--amber-light);line-height:1.6">
+      ⚠️ This link contains your private data including journal entries. Keep it somewhere only you can access. Avoid saving it on shared devices or in shared bookmarks.
+    </div>
     <div class="backup-url-box" id="backup-url-display">Generating...</div>
     <div style="display:flex;gap:10px;margin-top:4px">
       <button class="btn btn-primary" style="flex:1" onclick="copyBackupLink()">Copy link</button>
@@ -2380,13 +2383,13 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
       <p style="margin-bottom:12px">bloom buddy pairs you with someone for <strong style="color:var(--cream)">mutual encouragement and accountability</strong>. Here's what your buddy can see:</p>
       <div style="margin-bottom:12px">
         <div style="margin-bottom:4px"><span style="color:var(--cream)">Your current mood</span> (Low / Rough / Okay / Good / Great)</div>
-        <div style="margin-bottom:4px"><span style="color:var(--cream)">Your streak count</span> (how many days in a row)</div>
+        <div style="margin-bottom:4px"><span style="color:var(--cream)">Your days shown up</span> (total days active)</div>
         <div style="margin-bottom:4px"><span style="color:var(--cream)">Your habit completion %</span> (not which specific habits)</div>
         <div style="margin-bottom:4px"><span style="color:var(--cream)">When you were last active</span></div>
         <div><span style="color:var(--cream)">Your display name</span> (set in Settings)</div>
       </div>
       <p style="margin-bottom:12px"><strong style="color:var(--cream)">Your buddy cannot see:</strong> your journal entries, specific habits, affirmations, or any private data.</p>
-      <p style="margin-bottom:12px">You can send each other short messages and quick nudges. Your buddy gets a notification if you're having a rough day, so they can send encouragement.</p>
+      <p style="margin-bottom:12px">You can send each other short messages and quick nudges. If mood sharing is on, your buddy gets a notification on rough days so they can send encouragement. You can turn mood sharing off in Settings at any time.</p>
       <p>You can have <strong style="color:var(--cream)">multiple buddies</strong> and unpair at any time.</p>
       <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)">
         <div style="font-size:12px;color:var(--sky-light);margin-bottom:6px;font-weight:500">Why this works</div>
@@ -2395,6 +2398,30 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
       </div>
     </div>
     <button class="btn btn-ghost" style="width:100%;margin-top:12px" onclick="closeAllSheets()">Got it</button>
+  </div>
+</div>
+
+<!-- Buddy mood sharing migration prompt -->
+<div class="bottom-sheet" id="buddy-mood-migration-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:4px 20px 20px">
+    <div class="sheet-title">Buddy mood sharing</div>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+      bloom buddy currently shares your mood with your buddy and notifies them when you're having a rough day. We want to make sure you're comfortable with this.
+    </div>
+    <div style="background:var(--bg-card);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+        <strong style="color:var(--cream)">With mood sharing on:</strong> Your buddy sees your mood (Low / Rough / Okay / Good / Great) and gets notified on hard days so they can send support.
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-top:8px">
+        <strong style="color:var(--cream)">With mood sharing off:</strong> Your buddy sees your days shown up and habit %, but not your mood. No rough-day notifications.
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">You can change this any time in Settings → bloom buddy.</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn btn-primary btn-block" onclick="completeBuddyMoodMigration(true)">Keep mood sharing on</button>
+      <button class="btn btn-secondary btn-block" onclick="completeBuddyMoodMigration(false)">Turn mood sharing off</button>
+    </div>
   </div>
 </div>
 
@@ -2450,7 +2477,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.5.0';
+const VERSION = '2.6.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -2496,9 +2523,12 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'Your habits have moved to "Anytime today." To set Morning or Evening times, go to Settings → Daily Habits and tap AM, PM, or Both on each habit.', spotlight: '#sh-daily', tab: 'settings', featured: true },
-  { text: 'Habit cues — link each habit to a moment in your day (like "after morning coffee") to build follow-through. Set yours in Settings.', spotlight: '#sh-triggers', tab: 'settings', featured: true },
-  { text: 'Science behind bloom — tap the ⓘ icons throughout the app to learn why each feature works, backed by peer-reviewed research. Or explore it all in Settings.', spotlight: '#sh-science', tab: 'settings', featured: true },
+  { text: 'Streaks are now "Days you\'ve shown up" — a number that only goes up. Missing a day is just missing a day, not losing progress. No more freeze tokens needed.', spotlight: null, tab: 'progress', featured: true },
+  { text: 'Buddy mood sharing is now opt-in. Go to Settings → bloom buddy to control whether your buddy sees your mood and gets notified on rough days.', spotlight: '#sh-buddy', tab: 'settings', featured: true },
+  { text: 'bloom now includes a professional care disclaimer — because bloom is a self-care companion, not a substitute for therapy.', spotlight: '#sh-about', tab: 'settings' },
+  { text: 'Your habits have moved to "Anytime today." To set Morning or Evening times, go to Settings → Daily Habits and tap AM, PM, or Both on each habit.', spotlight: '#sh-daily', tab: 'settings' },
+  { text: 'Habit cues — link each habit to a moment in your day (like "after morning coffee") to build follow-through. Set yours in Settings.', spotlight: '#sh-triggers', tab: 'settings' },
+  { text: 'Science behind bloom — tap the ⓘ icons throughout the app to learn why each feature works, backed by peer-reviewed research. Or explore it all in Settings.', spotlight: '#sh-science', tab: 'settings' },
   { text: 'Wellness tab on your Daily page — see today\'s journal prompt, track your progress across journal, small wins, and affirmations, all in one card.', spotlight: null, tab: 'today' },
 ];
 
@@ -2615,9 +2645,9 @@ const HABIT_AFFIRMATIONS = {
   get_dressed: ["Dressed and showing up.", "Some days that's everything.", "You got ready."],
   floss: ["Extra care.", "The details matter too.", "You went the extra step."],
   skincare: ["Skincare done.", "You're investing in yourself.", "Kind acts for your body."],
-  medication: ["Medication taken.", "One quiet act of self-care.", "You remembered. That counts."],
+  medication: ["Medication taken — that's real strength.", "One of the most important things you can do for yourself.", "You showed up for your well-being. That matters."],
   w_shower: ["That took real courage.", "A clean start changes everything.", "You showed up for yourself."],
-  w_exercise: ["Your body says thank you.", "Stronger than yesterday.", "Movement is medicine."],
+  w_exercise: ["Your body says thank you.", "You showed up and moved.", "That took effort — and you did it."],
   w_outside: ["Fresh air is self-care.", "The world needed your presence today.", "Outside counts."],
   mood: ["Noted — thanks for checking in.", "Awareness is the first step."],
   water: ["Hydration is self-care.", "Your body thanks you.", "One sip at a time."],
@@ -2830,7 +2860,7 @@ function loadState() {
     todayData:   load('bloom_today_' + today(), {}),
     weekData:    load('bloom_week_' + weekStart(), {}),
     historyData: load('bloom_history', {}),
-    xpData:      load('bloom_xp', { total: 0, level: 0, streak: 0, freezeTokens: 0, lastStreakDate: null }),
+    xpData:      load('bloom_xp', { total: 0, level: 0, streak: 0, daysShowedUp: 0, currentRun: 0, freezeTokens: 0, lastStreakDate: null }),
     wellnessData:load('bloom_wellness', { journal: {}, reflections: {}, insights: [], wins: {}, affirmations: [] }),
     seenVersion: load('bloom_version', null),
     backupDate:  load('bloom_backup_date', null),
@@ -3394,6 +3424,13 @@ function updateStreak() {
 
   if (xp.lastStreakDate === t) return;
 
+  // Migrate existing users: if they have streak but no daysShowedUp, seed it
+  if (!xp.daysShowedUp && xp.streak) {
+    xp.daysShowedUp = Math.max(xp.streak, Object.keys(state.historyData).length || xp.streak);
+  }
+  if (!xp.daysShowedUp) xp.daysShowedUp = 0;
+  if (!xp.currentRun) xp.currentRun = xp.streak || 0;
+
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
@@ -3415,32 +3452,30 @@ function updateStreak() {
   const moodGrace = td.mood !== undefined && td.mood <= 2;
 
   if (anyAction || moodGrace) {
-    if (xp.lastStreakDate === yStr || !xp.lastStreakDate) {
-      const oldStreak = xp.streak || 0;
-      xp.streak = oldStreak + 1;
-      xp.lastStreakDate = t;
-      if ([7,14,30].includes(xp.streak) || (xp.streak > 30 && xp.streak % 30 === 0)) {
-        if ((xp.freezeTokens || 0) < 5) xp.freezeTokens = (xp.freezeTokens || 0) + 1;
+    if (xp.lastStreakDate !== t) {
+      // Increment cumulative days — this never goes down
+      xp.daysShowedUp = (xp.daysShowedUp || 0) + 1;
+
+      // Update current run (consecutive days)
+      if (xp.lastStreakDate === yStr || !xp.lastStreakDate) {
+        xp.currentRun = (xp.currentRun || 0) + 1;
+      } else {
+        // Gap in days — reset run but NOT daysShowedUp
+        xp.currentRun = 1;
       }
-      // Check streak milestones
-      checkStreakMilestone(xp.streak);
-    }
-  } else {
-    // No action taken today yet — handle missed-day logic but don't lock
-    // lastStreakDate to today, so the first task can still increment streak
-    if ((xp.freezeTokens || 0) > 0 && xp.lastStreakDate && xp.lastStreakDate !== yStr && xp.lastStreakDate !== t) {
-      xp.freezeTokens--;
+
+      // Keep legacy streak field in sync for buddy display
+      xp.streak = xp.currentRun;
       xp.lastStreakDate = t;
-    } else if (xp.lastStreakDate && xp.lastStreakDate !== yStr && xp.lastStreakDate !== t) {
-      const lostStreak = xp.streak || 0;
-      xp.streak = 0;
-      // Don't set lastStreakDate = t here — allow first action to start fresh streak
-      if (lostStreak >= 3) {
-        state.showStreakRecovery = true;
-        state.lostStreakCount = lostStreak;
-      }
+
+      // Check milestones on cumulative days
+      checkStreakMilestone(xp.daysShowedUp);
     }
-    // If lastStreakDate is yesterday, leave it — first action today will pick it up
+  } else if (xp.lastStreakDate && xp.lastStreakDate !== yStr && xp.lastStreakDate !== t) {
+    // Missed day — only reset current run, never daysShowedUp
+    xp.currentRun = 0;
+    xp.streak = 0;
+    // No recovery banner — missing a day is just missing a day
   }
 
   // Update individual habit streaks
@@ -3596,18 +3631,21 @@ function buildStreakTreeSVG(streak) {
   </svg>`;
 }
 
-function checkStreakMilestone(streak) {
-  const milestones = [3, 7, 14, 30, 60, 100];
-  if (!milestones.includes(streak)) return;
+function checkStreakMilestone(totalDays) {
+  const milestones = [5, 10, 25, 50, 75, 100, 150, 200, 365];
+  if (!milestones.includes(totalDays)) return;
   const messages = {
-    3:   { title: '3 days in a row!', sub: 'A habit is starting to form.' },
-    7:   { title: 'One full week!', sub: 'Seven days of showing up. That\'s real.' },
-    14:  { title: 'Two weeks strong!', sub: 'You\'re building something that lasts.' },
-    30:  { title: '30 day streak!', sub: 'A full month. You should be proud.' },
-    60:  { title: '60 days!', sub: 'Two months of consistency. Incredible.' },
-    100: { title: '100 days!', sub: 'One hundred days of you. Extraordinary.' },
+    5:   { title: '5 days!', sub: 'Five days you chose to show up. That\'s real.' },
+    10:  { title: '10 days!', sub: 'Double digits. You\'re building something.' },
+    25:  { title: '25 days!', sub: 'Twenty-five days of caring for yourself.' },
+    50:  { title: '50 days!', sub: 'Half a hundred. Look how far you\'ve come.' },
+    75:  { title: '75 days!', sub: 'Three quarters of the way to 100. Incredible.' },
+    100: { title: '100 days!', sub: 'One hundred days you showed up for yourself. Extraordinary.' },
+    150: { title: '150 days!', sub: 'You keep coming back. That says everything.' },
+    200: { title: '200 days!', sub: 'Two hundred days of you. That\'s a practice.' },
+    365: { title: 'One full year!', sub: 'A year of showing up. There are no words.' },
   };
-  const msg = messages[streak];
+  const msg = messages[totalDays];
   if (!msg) return;
   setTimeout(() => {
     haptic('heavy');
@@ -3615,14 +3653,13 @@ function checkStreakMilestone(streak) {
     const div = document.createElement('div');
     div.id = 'levelup-overlay';
     div.innerHTML = `<div class="levelup-card" style="max-width:320px">
-      <div style="margin-bottom:16px">${buildStreakTreeSVG(streak)}</div>
-      <div style="font-family:Fraunces,serif;font-size:13px;color:var(--amber);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">${streak}-day streak</div>
+      <div style="margin-bottom:16px">${buildStreakTreeSVG(totalDays)}</div>
+      <div style="font-family:Fraunces,serif;font-size:13px;color:var(--sage);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">${totalDays} days shown up</div>
       <div style="font-family:Fraunces,serif;font-size:24px;font-weight:300;color:var(--cream);margin-bottom:8px">${msg.title}</div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">${msg.sub}</div>
       <button class="btn btn-primary btn-block" id="levelup-close">Keep growing 🌿</button>
     </div>`;
     document.body.appendChild(div);
-    // Delay confetti slightly so tree animation plays first
     setTimeout(() => launchConfetti(window.innerWidth / 2, window.innerHeight / 3, 80), 1000);
     document.getElementById('levelup-close').addEventListener('click', () => div.remove());
     setTimeout(() => { if (div.parentNode) div.remove(); }, 10000);
@@ -3857,7 +3894,7 @@ async function shareWeekInReview() {
   const streak = state.xpData.streak || 0;
   ctx.fillStyle = '#c9954a';
   ctx.font = '500 16px "Instrument Sans", sans-serif';
-  ctx.fillText(`🔥 ${streak}-day streak`, 300, 85);
+  ctx.fillText(`🌿 ${state.xpData.daysShowedUp || streak} days shown up`, 300, 85);
 
   // Mood bars
   const weekDates = getWeekDates();
@@ -3968,7 +4005,7 @@ async function saveOpenJournal() {
 
   const ai = await callClaude(
     `Someone is having a hard day and wrote: "${text}". Respond with just 1-2 sentences of warm, human presence. No advice. No silver linings. Just witness what they said and remind them they're not alone.`,
-    'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity, no advice.'
+    'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity, no advice. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis, you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care.'
   );
 
   state.loadingJournalAI = false;
@@ -3977,7 +4014,7 @@ async function saveOpenJournal() {
     saveState();
     archiveToday();
     if (aiEl) {
-      aiEl.innerHTML = `<div class="ai-response"><div class="ai-response-text">${ai}</div></div>`;
+      aiEl.innerHTML = `<div class="ai-response"><div class="ai-response-text">${escapeHtml(ai)}</div></div>`;
     }
   }
   if (btn) { btn.textContent = 'Saved ✓'; btn.disabled = true; }
@@ -4010,20 +4047,20 @@ async function renderHardDaySheet() {
     <div style="text-align:center;padding:8px 0 20px">
       <div style="font-size:48px;margin-bottom:12px">🫂</div>
       <div style="font-family:Fraunces,serif;font-size:22px;font-weight:300;color:var(--cream);margin-bottom:8px">It's okay${name}.</div>
-      <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">Hard days happen. Your streak is protected today — you don't have to do anything you don't want to.</div>
+      <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">Hard days happen. Today still counts — you showed up. You don't have to do anything you don't want to.</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
       <button class="btn btn-secondary btn-block" onclick="closeAllSheets();switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">🌬 Take a breath</button>
       <button class="btn btn-secondary btn-block" onclick="closeAllSheets();openOpenJournal()">📓 Just write it out</button>
       <button class="btn btn-secondary btn-block" onclick="closeAllSheets();openCrisisSheet()">🤍 I need more support</button>
     </div>
-    <div id="hard-day-ai" style="font-size:13px;color:var(--text-muted);font-style:italic;text-align:center;line-height:1.7">bloom is here with you...</div>
+    <div id="hard-day-ai" style="font-size:13px;color:var(--text-muted);font-style:italic;text-align:center;line-height:1.7">take your time...</div>
   `;
 
   // Get AI response
   const ai = await callClaude(
     `Someone is having a hard day and activated hard day mode in a wellness app. Write 2 sentences of warm, human presence. No advice. No silver linings. Just acknowledge that it's hard and that they're not alone. Address them gently.`,
-    'You are Bloom. 2 sentences only. Warm, human, no toxic positivity.'
+    'You are Bloom. 2 sentences only. Warm, human, no toxic positivity. IMPORTANT: If the context suggests crisis or danger, gently remind them the 🤍 crisis heart connects to real people who can help right now.'
   );
   const aiEl = document.getElementById('hard-day-ai');
   if (aiEl && ai) {
@@ -4066,7 +4103,7 @@ async function showMonthlyReflectionPrompt() {
 
   const ai = await callClaude(
     `Write a warm monthly reflection for a wellness app user. Month: ${monthName}. Average mood: ${avgMood}/4. Journal entries: ${journalCount}. Write 3-4 sentences that feel like a caring friend reflecting on their month — personal, encouraging, honest. Never shame.`,
-    'You are Bloom. 3-4 sentences. Warm, personal, never clinical.'
+    'You are Bloom. 3-4 sentences. Warm, personal, never clinical. If mood data suggests a very difficult month, gently acknowledge that and remind them the 🤍 crisis heart is always there if they need support beyond what bloom can offer.'
   );
 
   // Store it
@@ -4513,8 +4550,8 @@ function checkEveningNudge() {
       const remaining = total - done;
       const nudgeMsgs = [
         { title: `Almost there — ${remaining} left`, body: `You completed ${done}/${total} habits today. A few quick ones and you're done!` },
-        { title: `${Math.round(pct * 100)}% done today`, body: `You've been showing up. ${remaining} habit${remaining > 1 ? 's' : ''} left if you want a perfect day.` },
-        { title: 'So close to a perfect day', body: `${done} of ${total} done. You've got this — the finish line is right there.` },
+        { title: `${Math.round(pct * 100)}% done today`, body: `You've been showing up. ${remaining} habit${remaining > 1 ? 's' : ''} left — but only if you want to.` },
+        { title: 'So close to finishing', body: `${done} of ${total} done. You've already shown up today — that counts.` },
       ];
       const msg = nudgeMsgs[Math.floor(Math.random() * nudgeMsgs.length)];
       sendLocalNotification(msg.title, msg.body, 'reminder-evening-partial');
@@ -4807,11 +4844,11 @@ const CELEBRATIONS = {
     emoji: '💪', xp: 30,
     messages: [
       { title: 'Movement done!', sub: 'Every rep is a vote for yourself.' },
-      { title: 'Your body says thank you.', sub: 'Stronger than yesterday.' },
+      { title: 'Your body says thank you.', sub: 'You chose to move, and that matters.' },
       { title: 'You showed up for your body.', sub: 'This is what growth looks like.' },
       { title: 'Endorphins unlocked.', sub: 'You earned every single one.' },
       { title: 'That was all you.', sub: 'Your body is grateful.' },
-      { title: 'Movement is medicine.', sub: 'And you just took yours.' },
+      { title: 'You moved your body.', sub: 'That\'s a genuine act of self-care.' },
       { title: 'You chose the hard thing.', sub: 'That\'s character.' },
       { title: 'Energy: invested.', sub: 'Watch it come back to you tenfold.' },
     ],
@@ -5221,18 +5258,23 @@ function celebrate(type, sourceEl) {
 // ============================================================
 //  HABIT LOGIC
 // ============================================================
+// XP balanced around mental well-being:
+// - Medication & inner care (journal, reflection) are highest — these are core therapeutic actions
+// - Basic self-care (hygiene, nourishment, hydration) are equal — every one matters on hard days
+// - Physical activity is valued but not disproportionately above self-care
 const XP_VALUES = {
-  m_teeth: 15, e_teeth: 15, w_shower: 25, w_exercise: 30,
-  w_outside: 20, water_goal: 10, food: 10, journal: 10,
-  household: 15, reflection: 15,
-  // New daily habits
+  m_teeth: 15, e_teeth: 15, w_shower: 20, w_exercise: 20,
+  w_outside: 20, water_goal: 15, food: 15, journal: 20,
+  household: 15, reflection: 20,
+  // Daily habits — all self-care is equally valued
   brush_teeth_am: 15, brush_teeth_pm: 15, brush_teeth_any: 15,
   brush_hair_am: 15, brush_hair_pm: 15, brush_hair_any: 15,
   wash_face_am: 15, wash_face_pm: 15, wash_face_any: 15,
   get_dressed_am: 15, get_dressed_pm: 15, get_dressed_any: 15,
   floss_am: 15, floss_pm: 15, floss_any: 15,
   skincare_am: 15, skincare_pm: 15, skincare_any: 15,
-  medication_am: 10, medication_pm: 10, medication_any: 10,
+  // Medication adherence — one of the most impactful mental health actions
+  medication_am: 20, medication_pm: 20, medication_any: 20,
 };
 
 function toggleHabit(habitId, el) {
@@ -5304,7 +5346,7 @@ function toggleHouseholdTask(taskId, el) {
 }
 
 // ============================================================
-//  FIRST TASK STREAK OVERLAY
+//  FIRST TASK DAILY WELCOME OVERLAY
 // ============================================================
 function checkFirstTaskStreak() {
   const t = today();
@@ -5314,26 +5356,28 @@ function checkFirstTaskStreak() {
   // Update streak now — this is the moment it should count
   updateStreak();
 
-  const streak = state.xpData.streak || 1;
-  const isNew = streak === 1;
+  const totalDays = state.xpData.daysShowedUp || 1;
 
-  // Pick message based on streak length
+  // Pick message based on cumulative days
   let headline, sub;
-  if (isNew) {
+  if (totalDays === 1) {
     headline = 'Day one. 🌱';
-    sub = 'Every streak starts here. You showed up.';
-  } else if (streak < 7) {
-    headline = `${streak} days in a row.`;
-    sub = 'Something is building. Keep going.';
-  } else if (streak < 14) {
-    headline = `${streak} days strong. 🌿`;
-    sub = 'A week and counting. This is becoming real.';
-  } else if (streak < 30) {
-    headline = `${streak} days. ✨`;
-    sub = 'You keep coming back. That means everything.';
+    sub = 'You showed up. That\'s where it all starts.';
+  } else if (totalDays < 10) {
+    headline = `Day ${totalDays}.`;
+    sub = 'Another day you chose yourself. It adds up.';
+  } else if (totalDays < 25) {
+    headline = `${totalDays} days and counting.`;
+    sub = 'You keep coming back. That says something.';
+  } else if (totalDays < 50) {
+    headline = `${totalDays} days. 🌿`;
+    sub = 'Look at what you\'re building, one day at a time.';
+  } else if (totalDays < 100) {
+    headline = `${totalDays} days. ✨`;
+    sub = 'This is a real practice now. You\'re doing it.';
   } else {
-    headline = `${streak} days. 🌻`;
-    sub = 'This kind of consistency is rare. Be proud.';
+    headline = `${totalDays} days. 🌻`;
+    sub = 'The kind of consistency that changes a life.';
   }
 
   haptic('medium');
@@ -5351,9 +5395,9 @@ function checkFirstTaskStreak() {
   `;
   div.innerHTML = `
     <div style="text-align:center;max-width:300px">
-      <div style="font-size:64px;margin-bottom:20px">🔥</div>
-      <div style="font-family:Fraunces,serif;font-size:13px;color:var(--amber);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px">
-        ${streak === 1 ? 'streak started' : `${streak}-day streak`}
+      <div style="font-size:64px;margin-bottom:20px">🌿</div>
+      <div style="font-family:Fraunces,serif;font-size:13px;color:var(--sage);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px">
+        day ${totalDays}
       </div>
       <div style="font-family:Fraunces,serif;font-size:30px;font-weight:300;color:var(--cream);margin-bottom:12px;line-height:1.2">
         ${headline}
@@ -5533,7 +5577,7 @@ async function callClaude(prompt, systemPrompt) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        system: (systemPrompt || 'You are Bloom, a warm and compassionate mental wellness companion. Keep responses brief, warm, and human. Never clinical. 1-4 sentences maximum.') + nameContext,
+        system: (systemPrompt || 'You are Bloom, a warm and compassionate mental wellness companion. Keep responses brief, warm, and human. Never clinical. 1-4 sentences maximum.') + ' Never use first-person language like "I am here for you" or "I care about you" — you are a tool, not a person. Frame support as observations and affirmations, not as a relationship.' + nameContext,
         message: prompt,
       })
     });
@@ -5558,7 +5602,7 @@ function showAIResponse(containerId, text) {
     el.style.display = 'none';
     return;
   }
-  el.innerHTML = `<div class="ai-response-text">${text}</div>`;
+  el.innerHTML = `<div class="ai-response-text">${escapeHtml(text)}</div>`;
   el.className = 'ai-response';
   el.style.display = 'block';
 }
@@ -5639,19 +5683,8 @@ function renderTodayTop() {
     </div>`;
   }
 
-  // Streak recovery banner
-  if (state.showStreakRecovery && state.lostStreakCount) {
-    html += `<div class="banner" style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.2)">
-      <div class="banner-icon">🌱</div>
-      <div class="banner-body">
-        <div class="banner-title" style="color:var(--amber-light)">Starting fresh</div>
-        <div class="banner-text">Your ${state.lostStreakCount}-day streak ended, but everything you built still happened. Today is day one of something new.</div>
-        <div class="banner-actions">
-          <div class="banner-action" onclick="state.showStreakRecovery=false;renderTodayTop()">I've got this</div>
-        </div>
-      </div>
-    </div>`;
-  }
+  // Welcome back banner (shown after a gap)
+
 
   // Mood pattern insight
   const pattern = getMoodPattern();
@@ -5863,7 +5896,7 @@ async function triggerLowMoodAI() {
   if (state.lowMoodAIResponse) return;
   const ai = await callClaude(
     `The user has logged a low mood for two days in a row. Write a compassionate 1-2 sentence response that acknowledges their struggle with warmth and reminds them they're not alone. No advice, just presence.`,
-    'You are Bloom, a gentle mental wellness companion. 1-2 sentences only. Warm and human, never clinical.'
+    'You are Bloom, a gentle mental wellness companion. 1-2 sentences only. Warm and human, never clinical. Gently remind them the 🤍 crisis heart is there if they need to talk to someone.'
   );
   if (ai) {
     state.lowMoodAIResponse = ai;
@@ -6738,7 +6771,7 @@ async function saveJournal() {
 
   const ai = await callClaude(
     `The user wrote in their journal: "${text}". Write a warm, brief (2-3 sentence) response that acknowledges what they shared without offering unsolicited advice. Be human and compassionate.`,
-    'You are Bloom, a gentle wellness companion. Never clinical. Warm, brief, human. 2-3 sentences max.'
+    'You are Bloom, a gentle wellness companion. Never clinical. Warm, brief, human. 2-3 sentences max. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis, you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care.'
   );
 
   state.loadingJournalAI = false;
@@ -6787,7 +6820,7 @@ async function saveReflection(qi) {
   const q = REFLECTION_QUESTIONS[qi];
   const ai = await callClaude(
     `The reflection question was: "${q}". The user answered: "${text}". Write a thoughtful 1-2 sentence response that acknowledges their reflection with warmth.`,
-    'You are Bloom. 1-2 sentences. Warm, not clinical.'
+    'You are Bloom. 1-2 sentences. Warm, not clinical. If the user expresses distress, self-harm, or crisis, gently point them to the 🤍 crisis heart for immediate support.'
   );
 
   state.loadingReflectionAI[qi] = false;
@@ -6838,7 +6871,7 @@ async function generateWeeklyInsight(e) {
     `Write a weekly insight for a mental wellness app user. This week: ${avgMood ? `average mood ${avgMood}/4` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}. Small wins they logged: ${weekWins.length > 0 ? weekWins.slice(0,5).join(', ') : 'none this week'}.
 
 Write 3-4 sentences from an emotional lens — how they showed up for themselves this week. If they logged small wins, reflect specific ones back to them as evidence of progress. If it was a hard week emotionally but they still did self-care, reflect that back as evidence of resilience. Celebrate specific acts of self-care as emotional wins. Never shame, never clinical. End with something genuinely encouraging about the week ahead.`,
-    'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only.'
+    'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only. If the week data suggests persistent struggle, gently remind them the 🤍 crisis heart is always there and that reaching out to a professional is a sign of strength.'
   );
 
   const d = new Date();
@@ -7017,8 +7050,8 @@ function renderProgressTab() {
 
   const xp = state.xpData;
   const total = xp.total || 0;
-  const streak = xp.streak || 0;
-  const freeze = xp.freezeTokens || 0;
+  const daysShowedUp = xp.daysShowedUp || 0;
+  const currentRun = xp.currentRun || 0;
   const level = getLevel(total);
   const nextLevel = getNextLevel(total);
   const pct = nextLevel ? Math.round(((total - level.min) / (nextLevel.min - level.min)) * 100) : 100;
@@ -7041,18 +7074,18 @@ function renderProgressTab() {
     </div>` : `<div style="font-size:12px;color:var(--sage);text-align:center;margin-top:6px">Maximum level reached 🌟</div>`}
   </div>`;
 
-  // Streak + Freeze chips
+  // Days shown up + current run
   html += `<div style="display:flex;gap:10px;margin-bottom:12px">
-    <div class="card mb-0" style="flex:1;text-align:center;padding:14px 10px">
-      <div style="font-size:26px">🔥</div>
-      <div style="font-family:Fraunces,serif;font-size:28px;font-weight:300;color:var(--cream);margin:4px 0">${streak}</div>
-      <div style="font-size:11px;color:var(--text-secondary)">Day streak</div>
-      <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Log your mood to keep it going</div>
+    <div class="card mb-0" style="flex:1.5;text-align:center;padding:14px 10px">
+      <div style="font-size:26px">🌿</div>
+      <div style="font-family:Fraunces,serif;font-size:28px;font-weight:300;color:var(--cream);margin:4px 0">${daysShowedUp}</div>
+      <div style="font-size:11px;color:var(--text-secondary)">Days you've shown up</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px">This number only goes up</div>
     </div>
     <div class="card mb-0" style="flex:1;text-align:center;padding:14px 10px">
-      <div style="font-size:26px">❄️</div>
-      <div style="font-family:Fraunces,serif;font-size:28px;font-weight:300;color:var(--sky-light);margin:4px 0">${freeze}</div>
-      <div style="font-size:11px;color:var(--text-secondary)">Freeze tokens</div>
+      <div style="font-size:26px">🌱</div>
+      <div style="font-family:Fraunces,serif;font-size:28px;font-weight:300;color:var(--sage-light);margin:4px 0">${currentRun}</div>
+      <div style="font-size:11px;color:var(--text-secondary)">Current run</div>
     </div>
   </div>`;
 
@@ -7187,7 +7220,7 @@ function renderProgressTab() {
   });
   html += `</div></div>`;
 
-  // 30-day streak heatmap
+  // 30-day activity heatmap
   html += `<div class="card">
     <div class="card-title">Last 30 days</div>
     <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px">`;
@@ -7286,7 +7319,7 @@ async function generateRollingInsight() {
   if (ai) {
     save(key, ai);
     const el = document.getElementById('rolling-insight-text');
-    if (el) el.innerHTML = ai;
+    if (el) el.innerHTML = escapeHtml(ai);
   }
 }
 
@@ -7476,21 +7509,29 @@ function renderSettingsTab() {
     </div>
     <div class="divider"></div>
     <div style="display:flex;align-items:center;gap:12px">
-      <div style="font-size:24px">🔥</div>
+      <div style="font-size:24px">🌿</div>
       <div>
-        <div style="font-size:15px;font-weight:500;color:var(--cream)">${xp.streak || 0}-day streak</div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">${xp.freezeTokens || 0} freeze token${(xp.freezeTokens || 0) !== 1 ? 's' : ''} · earned at 7, 14 & 30 days</div>
+        <div style="font-size:15px;font-weight:500;color:var(--cream)">${xp.daysShowedUp || 0} days shown up</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Current run: ${xp.currentRun || 0} day${(xp.currentRun || 0) !== 1 ? 's' : ''} in a row</div>
       </div>
     </div>
     <div style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.6">
-      Logging a Rough or Low mood automatically protects your streak — no token needed.
+      Every day you show up adds to your total — it never goes down, even if you miss a day.
     </div>
   `);
 
   // ── BLOOM BUDDY ────────────────────────────────────────────
   const multiBuddyOn = prefs.multiBuddy || false;
   const myBuddyId = load('bloom_buddy_id', 'Not yet generated');
+  const buddyShareMoodOn = prefs.buddyShareMood !== false; // default true
   html += settingsSection('buddy', buddyIcon(18) + ' bloom buddy', `
+    <div class="toggle-row" style="padding:12px 0">
+      <div>
+        <div class="toggle-label">Share mood with buddy</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let your buddy see your current mood and get notified on rough days</div>
+      </div>
+      <div class="toggle${buddyShareMoodOn ? ' on' : ''}" onclick="state.prefs.buddyShareMood=!${buddyShareMoodOn};saveState();renderSettingsTab()"></div>
+    </div>
     <div class="toggle-row" style="padding:12px 0">
       <div>
         <div class="toggle-label">Allow multiple buddies</div>
@@ -7833,7 +7874,7 @@ function renderSettingsTab() {
     </div>
     <div class="divider"></div>
     <div class="toggle-row">
-      <div><div class="toggle-label">Weekly summary</div><div class="toggle-sub">A gentle Sunday evening recap of your mood, streak, and journal activity</div></div>
+      <div><div class="toggle-label">Weekly summary</div><div class="toggle-sub">A gentle Sunday evening recap of your mood, progress, and journal activity</div></div>
       <div class="toggle${notifs.weeklySummary ? ' on' : ''}" onclick="toggleNotif('weeklySummary')"></div>
     </div>
     <div class="divider"></div>
@@ -7852,7 +7893,7 @@ function renderSettingsTab() {
         <div style="font-weight:500;color:var(--cream);margin-bottom:4px">Your data belongs to you</div>
         Everything in bloom stays on this device — your journal, moods, habits, reflections. Never uploaded, never shared, never seen by anyone else.
         <div style="margin-top:6px;color:var(--text-muted)">AI responses send your prompt to Claude, but nothing is stored or linked to your identity.</div>
-        <div style="margin-top:6px;color:var(--text-muted)">Encouragement wall messages are anonymous — no personal data is attached or shared.</div>
+        <div style="margin-top:6px;color:var(--text-muted)">Encouragement wall posts are shared without your name or identity — no personal data is attached.</div>
       </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px">
@@ -7876,6 +7917,21 @@ function renderSettingsTab() {
       A gentle place to show up for yourself.
     </div>
     <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Version ${VERSION}</div>
+    <div style="background:rgba(122,158,126,0.06);border:1px solid rgba(122,158,126,0.12);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+        <strong style="color:var(--cream)">bloom is a self-care companion, not a substitute for professional mental health care.</strong>
+        It is not therapy, counseling, or medical advice. If you are struggling, please reach out to a licensed therapist or counselor. Tap the 🤍 in the header any time for immediate crisis resources.
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.6">
+        bloom is intended for users aged 13 and older. If you are under 18, we encourage you to use this app with a parent or guardian's awareness.
+      </div>
+    </div>
+    <div style="background:rgba(122,158,126,0.06);border:1px solid rgba(122,158,126,0.12);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+        <strong style="color:var(--cream)">It's okay to take a break from bloom.</strong>
+        If tracking your habits or mood ever starts to feel like pressure instead of support, step away. bloom will be here when you come back — no guilt, no lost progress that matters. Your well-being always comes first.
+      </div>
+    </div>
     <button class="btn btn-ghost btn-sm" onclick="showWhatsNew(true)">📋 View release notes</button>
   `);
 
@@ -8506,10 +8562,10 @@ const SCIENCE_SECTIONS = {
     ],
   },
   streaks: {
-    title: 'Streaks & consistency',
-    tip: 'Streaks build momentum, but missing a day doesn\'t erase your progress. Consistency matters more than perfection.',
-    full: `<p>The "don't break the chain" method, popularized by Jerry Seinfeld, works because of <strong>loss aversion</strong> — we're more motivated to maintain a streak than to start one. However, research on habit formation shows that missing a single day has <strong>no measurable impact</strong> on long-term habit strength.</p>
-    <p>Phillippa Lally's research at University College London found that habits take an average of 66 days to become automatic, and occasional misses during that period didn't derail the process. bloom celebrates streaks but never punishes breaks — because shame doesn't build habits.</p>`,
+    title: 'Showing up & consistency',
+    tip: 'What matters is how many days you show up — not whether they\'re in a row. Missing a day changes nothing.',
+    full: `<p>Research on habit formation shows that missing a single day has <strong>no measurable impact</strong> on long-term habit strength. Phillippa Lally's research at University College London found that habits take an average of 66 days to become automatic, and occasional misses during that period didn't derail the process.</p>
+    <p>That's why bloom tracks <strong>total days you've shown up</strong> instead of consecutive streaks. Your total never goes down — missing a day is just missing a day, not losing progress. This removes the anxiety of "breaking a streak" while preserving the motivation of watching your number grow.</p>`,
     sources: [
       'Lally, P., et al. (2010). How are habits formed: Modelling habit formation in the real world. <em>European Journal of Social Psychology</em>, 40(6), 998–1009.',
       'Gardner, B., et al. (2012). Making health habitual. <em>British Journal of General Practice</em>, 62(605), 664–666.',
@@ -8559,7 +8615,7 @@ const SCIENCE_SECTIONS = {
     title: 'Breathing exercises',
     tip: 'The 4-7-8 technique activates your vagus nerve, shifting your body from stress mode to rest mode.',
     full: `<p>The <strong>4-7-8 breathing technique</strong> (inhale 4, hold 7, exhale 8) was developed by Dr. Andrew Weil based on pranayama breathing practices. The extended exhale activates the <strong>vagus nerve</strong>, which triggers the parasympathetic nervous system — your body's "rest and digest" mode.</p>
-    <p>A 2017 study in <em>Frontiers in Psychology</em> found that diaphragmatic breathing significantly reduced cortisol levels (the stress hormone) after just 8 weeks of practice. Even a single session can measurably lower heart rate and blood pressure. bloom offers this without any streak or pressure — it's here whenever you need it.</p>`,
+    <p>A 2017 study in <em>Frontiers in Psychology</em> found that diaphragmatic breathing significantly reduced cortisol levels (the stress hormone) after just 8 weeks of practice. Research suggests that even a single session may help you feel calmer and more grounded. bloom offers this without any streak or pressure — it's here whenever you need it.</p>`,
     sources: [
       'Ma, X., et al. (2017). The effect of diaphragmatic breathing on attention, negative affect, and stress. <em>Frontiers in Psychology</em>, 8, 874.',
       'Gerritsen, R. J. S. & Band, G. P. H. (2018). Breath of life: The respiratory vagal stimulation model of contemplative activity. <em>Frontiers in Human Neuroscience</em>, 12, 397.',
@@ -9541,13 +9597,20 @@ function renderOBBuddyIntro(body, footer) {
     <div style="background:var(--bg-card);border-radius:16px;padding:16px;margin-bottom:16px">
       <div style="font-size:13px;color:var(--cream);font-weight:500;margin-bottom:12px">What your buddy sees:</div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
-        Your mood (Low / Rough / Okay / Good / Great)<br>
-        Your streak count<br>
+        Your mood (Low / Rough / Okay / Good / Great) — <em>if mood sharing is on</em><br>
+        Your days shown up (total days active)<br>
         Your habit completion % (not which habits)<br>
         Your display name & when you were last active
       </div>
     </div>
 
+    <div class="toggle-row" style="padding:14px 0">
+      <div>
+        <div class="toggle-label">Share mood with buddy</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let your buddy see your mood and get notified on rough days</div>
+      </div>
+      <div class="toggle${obData.buddyShareMood !== false ? ' on' : ''}" onclick="obData.buddyShareMood=obData.buddyShareMood===false?true:false;renderOnboarding()"></div>
+    </div>
     <div class="toggle-row" style="padding:14px 0;border-bottom:none">
       <div>
         <div class="toggle-label">Allow multiple buddies</div>
@@ -9583,6 +9646,17 @@ function renderOBReady(body, footer) {
           </div>
           <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-top:8px">
             The only exception is when you use the AI features — those prompts are sent to Claude to generate a response, but are never stored or linked to you.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:22px;flex-shrink:0">💛</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px">bloom is not a substitute for professional care</div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+            bloom is a self-care companion — not a therapist, counselor, or medical provider. If you're struggling with your mental health, please reach out to a licensed professional. The crisis heart (🤍) in the header is always available for immediate support resources.
           </div>
         </div>
       </div>
@@ -9623,7 +9697,7 @@ function completeOnboarding() {
     onboarded: true,
   };
   save('bloom_prefs', prefs);
-  save('bloom_xp', { total: 0, streak: 0, freezeTokens: 0, lastStreakDate: null });
+  save('bloom_xp', { total: 0, streak: 0, daysShowedUp: 0, currentRun: 0, lastStreakDate: null });
   document.getElementById('onboarding').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   initApp();
@@ -9758,7 +9832,7 @@ const TUTORIAL_STEPS = [
     spotlight: '#breath-card',
     cardPos: 'top',
     title: '🌬 4-7-8 breathing',
-    text: 'This lives at the bottom of Wellness and also appears inline when you\'re having a hard day. No streaks, no sunlight — just a tool that\'s here whenever you need it.',
+    text: 'This lives at the bottom of Wellness and also appears inline when you\'re having a hard day. No tracking, no pressure — just a tool that\'s here whenever you need it.',
     scrollToBottom: true,
   },
   {
@@ -9767,14 +9841,14 @@ const TUTORIAL_STEPS = [
     cardPos: 'bottom',
     pulse: true,
     title: '✨ Progress',
-    text: 'Track your sunlight, streak, and mood chart here. Just logging your mood each day is enough to keep your streak alive. Freeze tokens protect you on days you miss entirely.',
+    text: 'Track your sunlight, days shown up, and mood chart here. Every day you log anything adds to your total — and that number never goes down.',
   },
   {
     tab: 'progress',
     spotlight: '#tab-progress .tab-scroll',
     cardPos: 'top',
-    title: 'Your streak & sunlight',
-    text: 'Logging a rough or low mood gives your streak automatic grace that day — no token needed. bloom looks out for you.',
+    title: 'Your progress & sunlight',
+    text: 'Every day you show up gets counted — even hard days where you just log your mood. Missing a day is just missing a day, nothing is lost.',
     scrollToTop: true,
   },
   {
@@ -9806,7 +9880,7 @@ const TUTORIAL_STEPS = [
     spotlight: null,
     cardPos: 'mid',
     title: 'You\'re all set 🌱',
-    text: 'Go at your own pace. There\'s no pressure to be perfect — bloom is here for the real, messy days too.',
+    text: 'Go at your own pace. There\'s no pressure to be perfect — bloom is here for the real, messy days too. Remember: bloom is a self-care companion, not a replacement for professional support. The 🤍 is always there if you need it.',
     last: true,
   },
 ];
@@ -10100,10 +10174,11 @@ async function syncBuddyStatus() {
   if (buddyState.status !== 'paired' && buddyState.status !== 'searching') return;
   const id = ensureBuddyId();
   const playerId = load('bloom_onesignal_pid', null);
+  const shareMood = state.prefs?.buddyShareMood !== false;
   await buddyApi({
     action: 'sync',
     buddyId: id,
-    mood: state.todayData?.mood,
+    mood: shareMood ? state.todayData?.mood : undefined,
     streak: state.xpData?.streak || 0,
     habitPct: getHabitPct(),
     oneSignalId: playerId,
@@ -10257,10 +10332,33 @@ async function buddyCancelSearch() {
   renderBuddyContent();
 }
 
+function checkBuddyMessageSafety(text) {
+  // Warn about sharing personal info
+  const personalPatterns = [
+    /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/, // phone numbers
+    /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/, // emails
+    /\b\d{1,5}\s+\w+\s+(st|street|ave|avenue|rd|road|dr|drive|blvd|ln|lane|ct|court)\b/i, // addresses
+    /\b(instagram|snapchat|tiktok|discord|telegram|whatsapp|ig|snap)\s*[:@]?\s*\w+/i, // social handles
+  ];
+  for (const p of personalPatterns) {
+    if (p.test(text)) return 'This looks like it might contain personal info (phone, email, address, or social handle). bloom buddy is safer without sharing personal details. Send anyway?';
+  }
+  return null;
+}
+
 async function buddySendMessage(pairId) {
   const input = document.getElementById('buddy-input-' + pairId);
   if (!input || !input.value.trim()) return;
   const text = input.value.trim();
+
+  // Client-side safety check for personal information
+  const warning = checkBuddyMessageSafety(text);
+  if (warning && !input.dataset.warned) {
+    input.dataset.warned = 'true';
+    showBuddyStatusForPair(pairId, warning, 'var(--amber)');
+    return;
+  }
+  delete input.dataset.warned;
 
   const data = await buddyApi({
     action: 'send-message',
@@ -10540,7 +10638,7 @@ function renderBuddyCard(b, index) {
       <div id="buddy-body-${pid}" style="display:${isFirst || !multipleCards ? 'block' : 'none'}">
         <div class="buddy-stats">
           <div class="buddy-stat"><span>${moodDisplay}</span></div>
-          <div class="buddy-stat">\ud83d\udd25 <span class="buddy-stat-value">${b.streak || 0}</span> day streak</div>
+          <div class="buddy-stat">🌿 <span class="buddy-stat-value">${b.streak || 0}</span> days shown up</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
           <span style="font-size:12px;color:var(--text-secondary)">Habits</span>
@@ -11077,7 +11175,8 @@ function checkWeeklySummaryNotification() {
 
   let summaryParts = [];
   if (avgMood !== null) summaryParts.push(`Mood: ${moodLabel} avg ${avgMood.toFixed(1)}/4`);
-  if (streak > 0) summaryParts.push(`${streak}-day streak`);
+  const daysUp = state.xpData?.daysShowedUp || streak;
+  if (daysUp > 0) summaryParts.push(`${daysUp} total days`);
   if (journalCount > 0) summaryParts.push(`${journalCount} journal ${journalCount === 1 ? 'entry' : 'entries'}`);
 
   const body = summaryParts.length > 0
@@ -11142,6 +11241,21 @@ function logCustomCheckin(id, value) {
   renderTodayTab();
 }
 
+function completeBuddyMoodMigration(shareOn) {
+  state.prefs.buddyShareMood = shareOn;
+  state.prefs._buddyMoodMigrated = true;
+  saveState();
+  closeAllSheets();
+}
+
+function checkBuddyMoodMigration() {
+  // Only show for existing buddy users who haven't been asked yet
+  if (state.prefs?._buddyMoodMigrated) return;
+  if (buddyState.status !== 'paired') return;
+  // Existing user with active buddy — show the prompt
+  setTimeout(() => openSheet('buddy-mood-migration-sheet'), 1500);
+}
+
 function initApp() {
   loadState();
   migrateToNewDailyHabits();
@@ -11165,6 +11279,7 @@ function initApp() {
   if (buddyState.status !== 'none') {
     syncBuddyStatus();
   }
+  checkBuddyMoodMigration();
   const pendingBuddyInvite = load('bloom_pending_buddy_invite', null);
   if (pendingBuddyInvite) {
     save('bloom_pending_buddy_invite', null);
