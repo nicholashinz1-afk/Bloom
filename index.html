@@ -6461,7 +6461,8 @@ function renderTodayTab() {
   const prefs = state.prefs;
   const td = state.todayData;
   const t = today();
-  const userWeek = getUserWeekNumber();
+  // Progressive disclosure — can be disabled in Settings
+  const userWeek = (prefs?.progressiveDisclosure === false) ? 99 : getUserWeekNumber();
 
   let html = '<div id="today-top"></div>';
 
@@ -6708,6 +6709,7 @@ function renderTodayTab() {
       <div style="font-size:24px;margin-bottom:8px">💚</div>
       <div style="font-size:14px;color:var(--sage-light);font-family:Fraunces,serif;margin-bottom:4px">Self-care tasks coming next week</div>
       <div style="font-size:12px;color:var(--text-muted);line-height:1.6">You picked some great ones during setup. They'll show up here once you've settled into your daily habits.</div>
+      <div onclick="disableProgressiveDisclosure()" style="font-size:12px;color:var(--text-secondary);cursor:pointer;margin-top:8px;text-decoration:underline">Show me everything now</div>
     </div>`;
   }
 
@@ -6768,6 +6770,7 @@ function renderTodayTab() {
       <div style="font-size:24px;margin-bottom:8px">📓</div>
       <div style="font-size:14px;color:var(--sage-light);font-family:Fraunces,serif;margin-bottom:4px">Journaling unlocks soon</div>
       <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Focus on building your daily habits first. Journaling, small wins, and affirmations will appear here when you're ready.</div>
+      <div onclick="disableProgressiveDisclosure()" style="font-size:12px;color:var(--text-secondary);cursor:pointer;margin-top:8px;text-decoration:underline">Show me everything now</div>
     </div>`;
   } else {
 
@@ -8493,6 +8496,29 @@ function renderSettingsTab() {
   // Group divider — Habits
   html += `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:20px 4px 8px">Habits & tracking</div>`;
 
+  // Progressive disclosure toggle — only show if user is still in the gated period
+  const pdActive = prefs.progressiveDisclosure !== false;
+  const pdWeek = getUserWeekNumber();
+  if (pdActive && pdWeek < 4) {
+    html += settingsSection('progressive', '🌱 Easing you in', `
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">
+        Bloom introduces features gradually so your first week isn't overwhelming. You're in <strong style="color:var(--cream)">week ${pdWeek}</strong>.
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:14px">
+        ${pdWeek < 2 ? 'Self-care tasks unlock next week. Journaling and wellness unlock in week 3.' :
+          pdWeek < 3 ? 'Journaling and wellness unlock next week.' :
+          'Almost everything is unlocked!'}
+      </div>
+      <div class="toggle-row" style="padding:8px 0">
+        <div>
+          <div class="toggle-label">Show me everything now</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Skip the gradual introduction and unlock all features</div>
+        </div>
+        <div class="toggle" onclick="disableProgressiveDisclosure()"></div>
+      </div>
+    `);
+  }
+
   // ── DAILY HABITS ─────────────────────────────────────────────
   const dh = prefs.dailyHabits || {};
   const ht = prefs.habitTimes || {};
@@ -9443,6 +9469,14 @@ function toggleHighContrast() {
     const sb = document.getElementById('sb-appearance');
     if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
   }, 50);
+}
+
+function disableProgressiveDisclosure() {
+  if (!state.prefs) state.prefs = {};
+  state.prefs.progressiveDisclosure = false;
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
+  renderTodayTab();
 }
 
 function setCelebrationIntensity(mode) {
