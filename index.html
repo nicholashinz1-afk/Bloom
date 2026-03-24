@@ -11245,7 +11245,11 @@ function completeBuddyMoodMigration(shareOn) {
   state.prefs.buddyShareMood = shareOn;
   state.prefs._buddyMoodMigrated = true;
   saveState();
-  closeAllSheets();
+  // Close only this sheet — don't interfere with What's New or other overlays
+  const sheet = document.getElementById('buddy-mood-migration-sheet');
+  if (sheet) sheet.classList.remove('open');
+  const overlay = document.getElementById('sheet-overlay');
+  if (overlay && !document.querySelector('.bottom-sheet.open')) overlay.classList.remove('visible');
 }
 
 function checkBuddyMoodMigration() {
