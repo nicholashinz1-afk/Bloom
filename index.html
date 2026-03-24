@@ -4721,7 +4721,7 @@ const DAILY_HABITS = [
   { id: 'skincare',     icon: '✨', label: 'Skincare routine',  xp: 15, defaultTime: 'any' },
 ];
 
-const MEDICATION_HABIT = { id: 'medication', icon: '💊', label: 'Medication', xp: 10, defaultTime: 'any' };
+const MEDICATION_HABIT = { id: 'medication', icon: '💊', label: 'Medication', xp: 20, defaultTime: 'any' };
 
 // ============================================================
 //  SELF-CARE TASKS
@@ -5997,7 +5997,7 @@ function renderTodayTab() {
         <div class="habit-name" style="color:var(--sky-light)">Medication</div>
         ${triggerHtml}
       </div>
-      ${!done ? '<div class="habit-xp" style="background:rgba(106,154,176,0.15);border-color:rgba(106,154,176,0.3);color:var(--sky-light)">+10</div>' : ''}
+      ${!done ? '<div class="habit-xp" style="background:rgba(106,154,176,0.15);border-color:rgba(106,154,176,0.3);color:var(--sky-light)">+20</div>' : ''}
     </div>`;
   }
 
