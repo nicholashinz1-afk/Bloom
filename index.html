@@ -2466,26 +2466,11 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'bloom buddy — pair up with someone for mutual encouragement and accountability. See their mood, streak, and progress. Send nudges and messages. Find yours on the Community tab!', spotlight: '#nav-community', tab: 'community', featured: true },
-  { text: 'Multiple buddies — you can now have more than one bloom buddy. Toggle this in Settings under bloom buddy.', spotlight: null },
-  { text: 'Encouragement wall — a shared, anonymous space to leave kind words for strangers. Tap the 💛 Wall tab to see it.', spotlight: '#nav-community', tab: 'today', featured: true },
-  { text: 'Seasonal mood awareness — bloom now notices monthly and seasonal patterns in your mood over time', spotlight: null, tab: 'progress' },
-  { text: 'Weekly summary notification — a gentle Sunday evening recap of your mood, streaks, and journal activity', spotlight: null },
+  { text: 'bloom buddy — pair up with someone for mutual encouragement and accountability. Find yours on the Community tab!', spotlight: '#nav-community', tab: 'community', featured: true },
+  { text: 'Encouragement wall — a shared, anonymous space to leave kind words for strangers', spotlight: '#nav-community', tab: 'today', featured: true },
   { text: 'Custom check-ins — track anything that matters to you, your way. Add your own daily questions in Settings.', spotlight: '#sh-checkins', tab: 'settings' },
-  { text: 'Quick journal — write a thought right from the Daily tab, no navigation needed', spotlight: '#quick-journal-card', tab: 'today' },
-  { text: 'Breathe section — quick breathing exercise right on the Daily tab', spotlight: null },
-  { text: 'Progress celebrations — bloom cheers you at 50% and 75% completion, not just 100%', spotlight: null },
-  { text: 'Undo button — accidentally toggled a habit? A 5-second undo button pops up so you can fix it instantly', spotlight: null },
   { text: 'Habit triggers — set "when/after" cues for each habit in Settings for 2-3x follow-through', spotlight: '#sh-triggers', tab: 'settings' },
-  { text: '30-day heatmap — see your consistency pattern on the Progress tab', spotlight: null, tab: 'progress' },
-  { text: 'Mood insights — bloom now shows how habits and sleep affect your mood', spotlight: null, tab: 'progress' },
-  { text: 'Sleep-mood overlay — see sleep quality alongside mood on the weekly chart', spotlight: null, tab: 'progress' },
-  { text: 'Share your week — generate a beautiful image card from Progress tab', spotlight: null, tab: 'progress' },
-  { text: 'Hard day mode — on low-mood days, bloom shows only your top 2 habits', spotlight: null },
-  { text: 'Welcome back — after time away, bloom greets you warmly with +25 sunlight', spotlight: null },
-  { text: 'Smarter nudges — evening notifications now remind you of specific remaining habits', spotlight: null },
-  { text: 'More celebration variety — 6-8 messages per habit plus rare golden messages', spotlight: null },
-  { text: 'Auto data cleanup — history older than 90 days is trimmed to keep things fast', spotlight: null },
+  { text: 'Hard day mode — on low-mood days, bloom shows only your top 2 habits so nothing feels overwhelming', spotlight: null },
 ];
 
 // ============================================================
@@ -6105,7 +6090,7 @@ function renderTodayTab() {
         out += `<div class="habit-row" onclick="tapSelfCare('${id}', this)">
           <div class="habit-check${done ? ' done' : ''}">${done ? '✓' : task.icon}</div>
           <div class="habit-info"><div class="habit-name">${task.label}</div></div>
-          ${!done ? '<div class="habit-xp">+10</div>' : ''}
+          ${!done ? '<div class="habit-xp">+10 ☀️</div>' : ''}
         </div>`;
       });
       return out;
