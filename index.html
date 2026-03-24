@@ -2615,7 +2615,7 @@ const HABIT_AFFIRMATIONS = {
   get_dressed: ["Dressed and showing up.", "Some days that's everything.", "You got ready."],
   floss: ["Extra care.", "The details matter too.", "You went the extra step."],
   skincare: ["Skincare done.", "You're investing in yourself.", "Kind acts for your body."],
-  medication: ["Medication taken.", "One quiet act of self-care.", "You remembered. That counts."],
+  medication: ["Medication taken — that's real strength.", "One of the most important things you can do for yourself.", "You showed up for your well-being. That matters."],
   w_shower: ["That took real courage.", "A clean start changes everything.", "You showed up for yourself."],
   w_exercise: ["Your body says thank you.", "Stronger than yesterday.", "Movement is medicine."],
   w_outside: ["Fresh air is self-care.", "The world needed your presence today.", "Outside counts."],
@@ -3968,7 +3968,7 @@ async function saveOpenJournal() {
 
   const ai = await callClaude(
     `Someone is having a hard day and wrote: "${text}". Respond with just 1-2 sentences of warm, human presence. No advice. No silver linings. Just witness what they said and remind them they're not alone.`,
-    'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity, no advice.'
+    'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity, no advice. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis, you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care.'
   );
 
   state.loadingJournalAI = false;
@@ -4023,7 +4023,7 @@ async function renderHardDaySheet() {
   // Get AI response
   const ai = await callClaude(
     `Someone is having a hard day and activated hard day mode in a wellness app. Write 2 sentences of warm, human presence. No advice. No silver linings. Just acknowledge that it's hard and that they're not alone. Address them gently.`,
-    'You are Bloom. 2 sentences only. Warm, human, no toxic positivity.'
+    'You are Bloom. 2 sentences only. Warm, human, no toxic positivity. IMPORTANT: If the context suggests crisis or danger, gently remind them the 🤍 crisis heart connects to real people who can help right now.'
   );
   const aiEl = document.getElementById('hard-day-ai');
   if (aiEl && ai) {
@@ -4066,7 +4066,7 @@ async function showMonthlyReflectionPrompt() {
 
   const ai = await callClaude(
     `Write a warm monthly reflection for a wellness app user. Month: ${monthName}. Average mood: ${avgMood}/4. Journal entries: ${journalCount}. Write 3-4 sentences that feel like a caring friend reflecting on their month — personal, encouraging, honest. Never shame.`,
-    'You are Bloom. 3-4 sentences. Warm, personal, never clinical.'
+    'You are Bloom. 3-4 sentences. Warm, personal, never clinical. If mood data suggests a very difficult month, gently acknowledge that and remind them the 🤍 crisis heart is always there if they need support beyond what bloom can offer.'
   );
 
   // Store it
@@ -5221,18 +5221,23 @@ function celebrate(type, sourceEl) {
 // ============================================================
 //  HABIT LOGIC
 // ============================================================
+// XP balanced around mental well-being:
+// - Medication & inner care (journal, reflection) are highest — these are core therapeutic actions
+// - Basic self-care (hygiene, nourishment, hydration) are equal — every one matters on hard days
+// - Physical activity is valued but not disproportionately above self-care
 const XP_VALUES = {
-  m_teeth: 15, e_teeth: 15, w_shower: 25, w_exercise: 30,
-  w_outside: 20, water_goal: 10, food: 10, journal: 10,
-  household: 15, reflection: 15,
-  // New daily habits
+  m_teeth: 15, e_teeth: 15, w_shower: 20, w_exercise: 20,
+  w_outside: 20, water_goal: 15, food: 15, journal: 20,
+  household: 15, reflection: 20,
+  // Daily habits — all self-care is equally valued
   brush_teeth_am: 15, brush_teeth_pm: 15, brush_teeth_any: 15,
   brush_hair_am: 15, brush_hair_pm: 15, brush_hair_any: 15,
   wash_face_am: 15, wash_face_pm: 15, wash_face_any: 15,
   get_dressed_am: 15, get_dressed_pm: 15, get_dressed_any: 15,
   floss_am: 15, floss_pm: 15, floss_any: 15,
   skincare_am: 15, skincare_pm: 15, skincare_any: 15,
-  medication_am: 10, medication_pm: 10, medication_any: 10,
+  // Medication adherence — one of the most impactful mental health actions
+  medication_am: 20, medication_pm: 20, medication_any: 20,
 };
 
 function toggleHabit(habitId, el) {
@@ -5863,7 +5868,7 @@ async function triggerLowMoodAI() {
   if (state.lowMoodAIResponse) return;
   const ai = await callClaude(
     `The user has logged a low mood for two days in a row. Write a compassionate 1-2 sentence response that acknowledges their struggle with warmth and reminds them they're not alone. No advice, just presence.`,
-    'You are Bloom, a gentle mental wellness companion. 1-2 sentences only. Warm and human, never clinical.'
+    'You are Bloom, a gentle mental wellness companion. 1-2 sentences only. Warm and human, never clinical. Gently remind them the 🤍 crisis heart is there if they need to talk to someone.'
   );
   if (ai) {
     state.lowMoodAIResponse = ai;
@@ -6738,7 +6743,7 @@ async function saveJournal() {
 
   const ai = await callClaude(
     `The user wrote in their journal: "${text}". Write a warm, brief (2-3 sentence) response that acknowledges what they shared without offering unsolicited advice. Be human and compassionate.`,
-    'You are Bloom, a gentle wellness companion. Never clinical. Warm, brief, human. 2-3 sentences max.'
+    'You are Bloom, a gentle wellness companion. Never clinical. Warm, brief, human. 2-3 sentences max. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis, you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care.'
   );
 
   state.loadingJournalAI = false;
@@ -6787,7 +6792,7 @@ async function saveReflection(qi) {
   const q = REFLECTION_QUESTIONS[qi];
   const ai = await callClaude(
     `The reflection question was: "${q}". The user answered: "${text}". Write a thoughtful 1-2 sentence response that acknowledges their reflection with warmth.`,
-    'You are Bloom. 1-2 sentences. Warm, not clinical.'
+    'You are Bloom. 1-2 sentences. Warm, not clinical. If the user expresses distress, self-harm, or crisis, gently point them to the 🤍 crisis heart for immediate support.'
   );
 
   state.loadingReflectionAI[qi] = false;
@@ -6838,7 +6843,7 @@ async function generateWeeklyInsight(e) {
     `Write a weekly insight for a mental wellness app user. This week: ${avgMood ? `average mood ${avgMood}/4` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}. Small wins they logged: ${weekWins.length > 0 ? weekWins.slice(0,5).join(', ') : 'none this week'}.
 
 Write 3-4 sentences from an emotional lens — how they showed up for themselves this week. If they logged small wins, reflect specific ones back to them as evidence of progress. If it was a hard week emotionally but they still did self-care, reflect that back as evidence of resilience. Celebrate specific acts of self-care as emotional wins. Never shame, never clinical. End with something genuinely encouraging about the week ahead.`,
-    'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only.'
+    'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only. If the week data suggests persistent struggle, gently remind them the 🤍 crisis heart is always there and that reaching out to a professional is a sign of strength.'
   );
 
   const d = new Date();
@@ -7876,6 +7881,12 @@ function renderSettingsTab() {
       A gentle place to show up for yourself.
     </div>
     <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Version ${VERSION}</div>
+    <div style="background:rgba(122,158,126,0.06);border:1px solid rgba(122,158,126,0.12);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+        <strong style="color:var(--cream)">bloom is a self-care companion, not a substitute for professional mental health care.</strong>
+        It is not therapy, counseling, or medical advice. If you are struggling, please reach out to a licensed therapist or counselor. Tap the 🤍 in the header any time for immediate crisis resources.
+      </div>
+    </div>
     <button class="btn btn-ghost btn-sm" onclick="showWhatsNew(true)">📋 View release notes</button>
   `);
 
@@ -9587,6 +9598,17 @@ function renderOBReady(body, footer) {
         </div>
       </div>
     </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:22px;flex-shrink:0">💛</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px">bloom is not a substitute for professional care</div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+            bloom is a self-care companion — not a therapist, counselor, or medical provider. If you're struggling with your mental health, please reach out to a licensed professional. The crisis heart (🤍) in the header is always available for immediate support resources.
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="card">
       <div style="font-size:14px;font-weight:500;margin-bottom:10px">💾 Save a backup link</div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">
@@ -9806,7 +9828,7 @@ const TUTORIAL_STEPS = [
     spotlight: null,
     cardPos: 'mid',
     title: 'You\'re all set 🌱',
-    text: 'Go at your own pace. There\'s no pressure to be perfect — bloom is here for the real, messy days too.',
+    text: 'Go at your own pace. There\'s no pressure to be perfect — bloom is here for the real, messy days too. Remember: bloom is a self-care companion, not a replacement for professional support. The 🤍 is always there if you need it.',
     last: true,
   },
 ];
