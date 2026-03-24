@@ -2171,6 +2171,92 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   0%, 100% { opacity: 0.3; transform: scale(0.8); }
   50% { opacity: 1; transform: scale(1.2); }
 }
+
+/* ── Reduced motion ─────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .confetti-piece,
+  .particle,
+  .xp-float,
+  .celebrate-toast { animation: none !important; }
+  .confetti-piece { display: none !important; }
+  .celebrate-toast {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ── Hard day dimming ───────────────────────────────────── */
+body.hard-day-active {
+  --bg:          #0b120d;
+  --bg-card:     #131b15;
+  --bg-elevated: #182019;
+}
+body.hard-day-active #app {
+  filter: saturate(0.7) brightness(0.92);
+  transition: filter 0.8s ease;
+}
+body.hard-day-active .celebrate-toast {
+  border-color: rgba(106,154,176,0.3);
+  background: #152028;
+}
+
+/* ── High contrast mode ─────────────────────────────────── */
+body.high-contrast {
+  --text-primary:   #ffffff;
+  --text-secondary: #c0c0c0;
+  --text-muted:     #909090;
+  --bg:             #000000;
+  --bg-mid:         #0a0a0a;
+  --bg-card:        #141414;
+  --bg-elevated:    #1e1e1e;
+  --sage:           #90c894;
+  --sage-light:     #b8e0bb;
+  --amber:          #e0a850;
+  --amber-light:    #f0c870;
+  --rose:           #d08080;
+  --rose-light:     #e8b0b0;
+  --sky:            #80b8d0;
+  --sky-light:      #b0d8f0;
+  --cream:          #ffffff;
+}
+
+/* ── Buddy onboarding ───────────────────────────────────── */
+.buddy-onboard-step {
+  text-align: center;
+  padding: 20px 0;
+}
+.buddy-onboard-progress {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.buddy-onboard-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: background 0.3s;
+}
+.buddy-onboard-dot.active {
+  background: var(--sage);
+}
+
+/* ── Evening wind-down flow ─────────────────────────────── */
+.winddown-step {
+  text-align: center;
+  padding: 16px 0;
+  animation: fadeIn 0.5s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 </style>
 </head>
 <body>
@@ -2412,6 +2498,12 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 <div class="bottom-sheet" id="hard-day-sheet">
   <div class="sheet-handle"></div>
   <div style="padding:0 20px 20px" id="hard-day-content"></div>
+</div>
+
+<!-- Evening wind-down sheet -->
+<div class="bottom-sheet" id="winddown-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:0 20px 20px" id="winddown-content"></div>
 </div>
 
 <!-- New week goals sheet -->
@@ -4110,13 +4202,50 @@ function toggleGentleMode() {
 function activateHardDayMode() {
   state.hardDayMode = true;
   state.todayData.mood = state.todayData.mood ?? 1;
+  // Record what actions were completed today (for "what helped last time" recall)
+  state.todayData._hardDayActivated = true;
   saveState();
   archiveToday();
   playSound('hard_day');
   trackEvent('hard_day_activated');
+  // Dim the UI to feel calmer
+  document.body.classList.add('hard-day-active');
   closeAllSheets();
   renderHardDaySheet();
   openSheet('hard-day-sheet');
+}
+
+// "What helped last time" — find the most recent hard day that was followed by mood improvement
+function getWhatHelpedLastTime() {
+  const history = state.historyData || {};
+  const dates = Object.keys(history).sort().reverse();
+  for (let i = 0; i < dates.length - 1; i++) {
+    const dayData = history[dates[i]];
+    const nextDay = history[dates[i + 1]]; // earlier date (sorted desc but we want the day after)
+    // Look for hard days (mood 0-1 or _hardDayActivated)
+    if (dayData && dayData.mood !== undefined && dayData.mood <= 1) {
+      // Check if the next calendar day had better mood
+      const d1 = new Date(dates[i]); d1.setDate(d1.getDate() + 1);
+      const nextDateStr = `${d1.getFullYear()}-${String(d1.getMonth()+1).padStart(2,'0')}-${String(d1.getDate()).padStart(2,'0')}`;
+      const afterDay = history[nextDateStr];
+      if (afterDay && afterDay.mood !== undefined && afterDay.mood > dayData.mood) {
+        // What did they do on the hard day?
+        const habits = dayData.habits || {};
+        const actions = [];
+        if (habits.journal || history[dates[i]]?.journal) actions.push('journaling');
+        if (habits.breath_done || habits._breathSessions) actions.push('breathing');
+        if (habits.w_exercise) actions.push('movement');
+        if (habits.w_outside) actions.push('going outside');
+        // Check self-care
+        const scDone = Object.keys(habits).filter(k => k.startsWith('sc_') && habits[k]);
+        if (scDone.length > 0) actions.push('self-care');
+        if (actions.length > 0) {
+          return { date: dates[i], actions, moodAfter: afterDay.mood };
+        }
+      }
+    }
+  }
+  return null;
 }
 
 async function renderHardDaySheet() {
@@ -4124,12 +4253,23 @@ async function renderHardDaySheet() {
   const sheet = document.getElementById('hard-day-content');
   if (!sheet) return;
 
+  // Check what helped on a previous hard day
+  const helped = getWhatHelpedLastTime();
+  const helpedHtml = helped
+    ? `<div style="background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.15);border-radius:var(--r-md);padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--sage-light);line-height:1.6;text-align:left">
+        <div style="font-weight:500;color:var(--cream);margin-bottom:4px">Last time, this seemed to help:</div>
+        ${helped.actions.map(a => `<span style="display:inline-block;padding:3px 10px;border-radius:99px;background:rgba(122,158,126,0.15);margin:3px 2px;font-size:12px">${a}</span>`).join('')}
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Your mood went up the next day.</div>
+      </div>`
+    : '';
+
   sheet.innerHTML = `
     <div style="text-align:center;padding:8px 0 20px">
       <div style="font-size:48px;margin-bottom:12px">🫂</div>
       <div style="font-family:Fraunces,serif;font-size:22px;font-weight:300;color:var(--cream);margin-bottom:8px">It's okay${name}.</div>
       <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">Hard days happen. Today still counts — you showed up. You don't have to do anything you don't want to.</div>
     </div>
+    ${helpedHtml}
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
       <button class="btn btn-secondary btn-block" onclick="closeAllSheets();switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">🌬 Take a breath</button>
       <button class="btn btn-secondary btn-block" onclick="closeAllSheets();openOpenJournal()">📓 Just write it out</button>
@@ -4197,6 +4337,132 @@ async function showMonthlyReflectionPrompt() {
   // Show in wellness tab
   state.showMonthlyReflectionBadge = true;
   renderWellnessTab();
+}
+
+// ── Evening wind-down flow ─────────────────────────────────
+let winddownStep = 0;
+const WINDDOWN_AFFIRMATIONS = [
+  'You did enough today. Rest now.',
+  'Tomorrow is a fresh page. Let this one close gently.',
+  'Whatever you carried today, you can set it down now.',
+  'Sleep is a kindness you deserve.',
+  'The day is done. You are done. And that is enough.',
+  'You showed up today. That is worth more than you know.',
+];
+
+function openWindDown() {
+  winddownStep = 0;
+  renderWindDownStep();
+  openSheet('winddown-sheet');
+  trackEvent('winddown_started');
+}
+
+function renderWindDownStep() {
+  const sheet = document.getElementById('winddown-content');
+  if (!sheet) return;
+
+  if (winddownStep === 0) {
+    // Step 1: Quick mood check-in
+    const moodEmojis = ['😞','😟','😐','🙂','😊'];
+    sheet.innerHTML = `
+      <div class="winddown-step">
+        <div style="font-size:40px;margin-bottom:14px">🌙</div>
+        <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream);margin-bottom:8px">Evening check-in</div>
+        <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">How are you feeling right now?</div>
+        <div style="display:flex;justify-content:center;gap:16px;margin-bottom:20px">
+          ${moodEmojis.map((e, i) => `<div onclick="winddownSetMood(${i})" style="font-size:32px;cursor:pointer;padding:8px;border-radius:50%;transition:all 0.2s;${state.todayData.mood === i ? 'background:rgba(122,158,126,0.2);transform:scale(1.2)' : ''}">${e}</div>`).join('')}
+        </div>
+        <button class="btn btn-primary" onclick="winddownNext()">Next</button>
+      </div>`;
+  } else if (winddownStep === 1) {
+    // Step 2: Journal prompt
+    sheet.innerHTML = `
+      <div class="winddown-step">
+        <div style="font-size:40px;margin-bottom:14px">📓</div>
+        <div style="font-family:Fraunces,serif;font-size:18px;font-weight:300;color:var(--cream);margin-bottom:8px">One thought before rest</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;font-style:italic">What's one thing — however small — that went okay today?</div>
+        <textarea id="winddown-journal" rows="3" style="width:100%;resize:none;margin-bottom:16px" placeholder="No pressure. Even one word is enough."></textarea>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="btn btn-ghost btn-sm" onclick="winddownNext()">Skip</button>
+          <button class="btn btn-primary" onclick="winddownSaveJournal();winddownNext()">Save & continue</button>
+        </div>
+      </div>`;
+  } else if (winddownStep === 2) {
+    // Step 3: Breathing
+    sheet.innerHTML = `
+      <div class="winddown-step">
+        <div style="font-size:40px;margin-bottom:14px">🌬</div>
+        <div style="font-family:Fraunces,serif;font-size:18px;font-weight:300;color:var(--cream);margin-bottom:8px">A moment of quiet</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">Three slow breaths. Nothing else to do.</div>
+        <div id="winddown-breath-circle" style="width:80px;height:80px;border-radius:50%;background:rgba(106,154,176,0.15);border:2px solid var(--sky);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--sky-light);transition:all 4s ease">breathe</div>
+        <button class="btn btn-primary" id="winddown-breath-btn" onclick="startWinddownBreath()">Start</button>
+      </div>`;
+  } else {
+    // Step 4: Goodnight
+    const affirmation = WINDDOWN_AFFIRMATIONS[Math.floor(Math.random() * WINDDOWN_AFFIRMATIONS.length)];
+    sheet.innerHTML = `
+      <div class="winddown-step">
+        <div style="font-size:48px;margin-bottom:16px">🌿</div>
+        <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream);margin-bottom:12px;line-height:1.5">${affirmation}</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:24px">Goodnight.</div>
+        <button class="btn btn-primary" onclick="closeAllSheets()">Close</button>
+      </div>`;
+    trackEvent('winddown_completed');
+  }
+}
+
+function winddownSetMood(val) {
+  state.todayData.mood = val;
+  saveState();
+  archiveToday();
+  renderWindDownStep();
+}
+
+function winddownNext() {
+  winddownStep++;
+  renderWindDownStep();
+}
+
+function winddownSaveJournal() {
+  const el = document.getElementById('winddown-journal');
+  if (!el || !el.value.trim()) return;
+  const t = today();
+  if (!state.wellnessData.journal) state.wellnessData.journal = {};
+  if (!state.wellnessData.journal[t]) state.wellnessData.journal[t] = {};
+  const existing = state.wellnessData.journal[t].text || '';
+  state.wellnessData.journal[t].text = existing ? existing + '\n\n(evening) ' + el.value.trim() : el.value.trim();
+  saveState();
+}
+
+function startWinddownBreath() {
+  const circle = document.getElementById('winddown-breath-circle');
+  const btn = document.getElementById('winddown-breath-btn');
+  if (!circle || !btn) return;
+  btn.style.display = 'none';
+  let count = 0;
+  const phases = ['inhale', 'hold', 'exhale'];
+
+  function breathPhase() {
+    if (count >= 9) { // 3 full cycles (in, hold, out)
+      winddownNext();
+      return;
+    }
+    const phase = phases[count % 3];
+    circle.textContent = phase;
+    if (phase === 'inhale') {
+      circle.style.transform = 'scale(1.4)';
+      circle.style.background = 'rgba(106,154,176,0.25)';
+    } else if (phase === 'hold') {
+      circle.style.transform = 'scale(1.4)';
+      circle.style.background = 'rgba(122,158,126,0.2)';
+    } else {
+      circle.style.transform = 'scale(1)';
+      circle.style.background = 'rgba(106,154,176,0.1)';
+    }
+    count++;
+    setTimeout(breathPhase, 4000);
+  }
+  breathPhase();
 }
 
 // ── Seasonal theme ───────────────────────────────────────────
@@ -5249,8 +5515,15 @@ function celebrate(type, sourceEl) {
   // Mood-aware celebration intensity
   // 0=quiet (Low/Rough), 1=subtle (Okay), 2=full (Good/Great/unset)
   const currentMood = state.todayData?.mood;
-  const celebLevel = (currentMood !== undefined && currentMood >= 0 && currentMood <= 1) ? 0
-    : (currentMood === 2) ? 1 : 2;
+  const celebPrefSetting = state.prefs?.celebrationIntensity || 'auto';
+  let celebLevel;
+  if (celebPrefSetting === 'quiet') celebLevel = 0;
+  else if (celebPrefSetting === 'subtle') celebLevel = 1;
+  else if (celebPrefSetting === 'full') celebLevel = 2;
+  else { // 'auto' — mood-based
+    celebLevel = (currentMood !== undefined && currentMood >= 0 && currentMood <= 1) ? 0
+      : (currentMood === 2) ? 1 : 2;
+  }
 
   haptic(celebLevel === 0 ? 'light' : (data.confetti ? 'success' : 'medium'));
 
@@ -6171,6 +6444,16 @@ async function triggerLowMoodAI() {
   }
 }
 
+// Progressive disclosure — calculate weeks since user started
+function getUserWeekNumber() {
+  const onboardDate = state.prefs?.onboardDate;
+  if (!onboardDate) return 99; // No date recorded = show everything (existing user)
+  const start = new Date(onboardDate);
+  const now = new Date();
+  const diffDays = Math.floor((now - start) / 86400000);
+  return Math.floor(diffDays / 7) + 1; // Week 1 starts immediately
+}
+
 function renderTodayTab() {
   const scroll = document.getElementById('today-scroll');
   if (!scroll) return;
@@ -6178,6 +6461,7 @@ function renderTodayTab() {
   const prefs = state.prefs;
   const td = state.todayData;
   const t = today();
+  const userWeek = getUserWeekNumber();
 
   let html = '<div id="today-top"></div>';
 
@@ -6414,10 +6698,20 @@ function renderTodayTab() {
   </div>`;
 
   // --- SELF-CARE TASKS (grouped by morning/evening/anytime routines) ---
+  // Progressive disclosure: self-care appears week 2+
   const selectedSCTasks = (state.prefs?.selfCareTasks || []).filter(id => !id.startsWith('sc_medication'));
   const routines = state.prefs?.selfCareRoutines || {};
 
-  if (selectedSCTasks.length > 0) {
+  // Week 1 teaser for self-care
+  if (selectedSCTasks.length > 0 && userWeek < 2) {
+    html += `<div style="background:rgba(122,158,126,0.06);border:1px dashed rgba(122,158,126,0.2);border-radius:var(--r-lg);padding:16px;text-align:center;margin-top:8px">
+      <div style="font-size:24px;margin-bottom:8px">💚</div>
+      <div style="font-size:14px;color:var(--sage-light);font-family:Fraunces,serif;margin-bottom:4px">Self-care tasks coming next week</div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.6">You picked some great ones during setup. They'll show up here once you've settled into your daily habits.</div>
+    </div>`;
+  }
+
+  if (selectedSCTasks.length > 0 && userWeek >= 2) {
     const scDone = td.selfCare || {};
 
     // Group tasks by routine
@@ -6447,7 +6741,13 @@ function renderTodayTab() {
 
     // Evening routine
     if (eveningTasks.length > 0) {
-      html += `<div class="section-label">🌙 Evening routine</div><div class="card">${renderSCTaskRows(eveningTasks)}</div>`;
+      html += `<div class="section-label">🌙 Evening routine</div><div class="card">${renderSCTaskRows(eveningTasks)}
+        <div class="habit-row" onclick="openWindDown()" style="border-top:1px solid rgba(255,255,255,0.05);margin-top:4px;padding-top:8px">
+          <div class="habit-check" style="color:var(--sky)">🌙</div>
+          <div class="habit-info"><div class="habit-name" style="color:var(--sky-light)">Evening wind-down flow</div><div style="font-size:11px;color:var(--text-muted)">Mood, journal, breathe, goodnight</div></div>
+          <div style="font-size:16px;color:var(--text-muted)">›</div>
+        </div>
+      </div>`;
     }
 
     // Anytime / ungrouped self-care
@@ -6456,11 +6756,20 @@ function renderTodayTab() {
     }
   }
 
-  // --- WELLNESS GATEWAY CARD ---
+  // --- WELLNESS GATEWAY CARD (week 3+) ---
   const journalToday = state.wellnessData?.journal?.[t];
   const winsToday = (state.wellnessData?.wins?.[t] || []).length > 0;
   const affirmationsExist = (state.todayData?.affirmations || []).length > 0;
   const wellnessDone = [journalToday, winsToday, affirmationsExist].filter(Boolean).length;
+
+  if (userWeek < 3) {
+    // Week 1-2: Show a gentle teaser instead of the full wellness card
+    html += `<div style="background:rgba(122,158,126,0.06);border:1px dashed rgba(122,158,126,0.2);border-radius:var(--r-lg);padding:16px;text-align:center;margin-top:8px">
+      <div style="font-size:24px;margin-bottom:8px">📓</div>
+      <div style="font-size:14px;color:var(--sage-light);font-family:Fraunces,serif;margin-bottom:4px">Journaling unlocks soon</div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Focus on building your daily habits first. Journaling, small wins, and affirmations will appear here when you're ready.</div>
+    </div>`;
+  } else {
 
   html += `<div class="section-label">📓 Wellness</div>`;
   const wellnessAllDone = wellnessDone === 3;
@@ -6490,6 +6799,8 @@ function renderTodayTab() {
     <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
     <div style="text-align:center"><button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">Begin breathing exercise</button></div>
   </div>`;
+
+  } // end progressive disclosure week 3+ gate
 
   // Custom check-ins
   const customCheckins = getCustomCheckins();
@@ -8096,32 +8407,6 @@ function renderSettingsTab() {
 
   let html = '';
 
-  // ── APPEARANCE ──────────────────────────────────────────────
-  const currentTheme = prefs.theme || 'forest';
-  html += settingsSection('appearance', '🎨 Appearance', `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      ${Object.entries(THEMES).map(([key, t]) => {
-        const dots = t.pride
-          ? ['#e04050','#e87030','#e8c840','#50b868','#4080d0','#9050c8'].map(c =>
-              `<div style="width:12px;height:12px;border-radius:50%;background:${c}"></div>`).join('')
-          : `<div style="width:12px;height:12px;border-radius:50%;background:${t.primary}"></div>
-             <div style="width:12px;height:12px;border-radius:50%;background:${t.primaryLight};opacity:0.7"></div>
-             <div style="width:12px;height:12px;border-radius:50%;background:${t.primary};opacity:0.5"></div>
-             <div style="width:12px;height:12px;border-radius:50%;background:${t.primaryLight};opacity:0.4"></div>`;
-        return `
-        <div onclick="setTheme('${key}')" style="
-          background:${t.bg};border:2px solid ${key === currentTheme ? t.primary : 'rgba(255,255,255,0.08)'};
-          border-radius:var(--r-lg);padding:14px 12px;cursor:pointer;
-          transition:border-color 0.2s;position:relative;overflow:hidden">
-          <div style="display:flex;gap:5px;margin-bottom:8px">${dots}</div>
-          <div style="font-size:13px;font-weight:500;color:${t.primaryLight}">${t.emoji} ${t.name}</div>
-          <div style="font-size:11px;color:${t.textSecondary};margin-top:2px">${t.description}</div>
-          ${key === currentTheme ? `<div style="position:absolute;top:8px;right:8px;font-size:12px;color:${t.primary}">✓</div>` : ''}
-        </div>`;
-      }).join('')}
-    </div>
-  `);
-
   // ── PROFILE ──────────────────────────────────────────────────
   html += settingsSection('profile', '👤 Profile', `
     <div class="toggle-row" style="border-bottom:none;margin-bottom:12px">
@@ -8148,30 +8433,65 @@ function renderSettingsTab() {
     </div>
   `);
 
-  // ── BLOOM BUDDY ────────────────────────────────────────────
-  const multiBuddyOn = prefs.multiBuddy || false;
-  const myBuddyId = load('bloom_buddy_id', 'Not yet generated');
-  const buddyShareMoodOn = prefs.buddyShareMood !== false; // default true
-  html += settingsSection('buddy', buddyIcon(18) + ' bloom buddy', `
+  // ── APPEARANCE ──────────────────────────────────────────────
+  const currentTheme = prefs.theme || 'forest';
+  const celebPref = prefs.celebrationIntensity || 'auto';
+  const highContrastOn = prefs.highContrast || false;
+
+  html += settingsSection('appearance', '🎨 Appearance', `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      ${Object.entries(THEMES).map(([key, t]) => {
+        const dots = t.pride
+          ? ['#e04050','#e87030','#e8c840','#50b868','#4080d0','#9050c8'].map(c =>
+              `<div style="width:12px;height:12px;border-radius:50%;background:${c}"></div>`).join('')
+          : `<div style="width:12px;height:12px;border-radius:50%;background:${t.primary}"></div>
+             <div style="width:12px;height:12px;border-radius:50%;background:${t.primaryLight};opacity:0.7"></div>
+             <div style="width:12px;height:12px;border-radius:50%;background:${t.primary};opacity:0.5"></div>
+             <div style="width:12px;height:12px;border-radius:50%;background:${t.primaryLight};opacity:0.4"></div>`;
+        return `
+        <div onclick="setTheme('${key}')" style="
+          background:${t.bg};border:2px solid ${key === currentTheme ? t.primary : 'rgba(255,255,255,0.08)'};
+          border-radius:var(--r-lg);padding:14px 12px;cursor:pointer;
+          transition:border-color 0.2s;position:relative;overflow:hidden">
+          <div style="display:flex;gap:5px;margin-bottom:8px">${dots}</div>
+          <div style="font-size:13px;font-weight:500;color:${t.primaryLight}">${t.emoji} ${t.name}</div>
+          <div style="font-size:11px;color:${t.textSecondary};margin-top:2px">${t.description}</div>
+          ${key === currentTheme ? `<div style="position:absolute;top:8px;right:8px;font-size:12px;color:${t.primary}">✓</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="divider"></div>
+
     <div class="toggle-row" style="padding:12px 0">
       <div>
-        <div class="toggle-label">Share mood with buddy</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let your buddy see your current mood and get notified on rough days</div>
+        <div class="toggle-label">High contrast mode</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Stronger text contrast and bolder colors for easier reading</div>
       </div>
-      <div class="toggle${buddyShareMoodOn ? ' on' : ''}" onclick="state.prefs.buddyShareMood=!${buddyShareMoodOn};saveState();renderSettingsTab()"></div>
+      <div class="toggle${highContrastOn ? ' on' : ''}" onclick="toggleHighContrast()"></div>
     </div>
-    <div class="toggle-row" style="padding:12px 0">
-      <div>
-        <div class="toggle-label">Allow multiple buddies</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let more than one person pair with you</div>
+
+    <div class="divider"></div>
+
+    <div style="margin-top:8px">
+      <div class="toggle-label" style="margin-bottom:8px">Celebration intensity</div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:10px">How much fanfare when you complete habits</div>
+      <div class="radio-group">
+        ${[
+          { id: 'auto', label: 'Auto — matches your mood (quieter on hard days)' },
+          { id: 'full', label: 'Full — confetti, sounds, and particles every time' },
+          { id: 'subtle', label: 'Subtle — gentle toasts and soft sounds, no confetti' },
+          { id: 'quiet', label: 'Quiet — simple checkmarks, no effects' },
+        ].map(o => `<div class="radio-option${celebPref === o.id ? ' selected' : ''}" onclick="setCelebrationIntensity('${o.id}')">
+          <div class="radio-dot"></div>
+          <div class="radio-label">${o.label}</div>
+        </div>`).join('')}
       </div>
-      <div class="toggle${multiBuddyOn ? ' on' : ''}" onclick="toggleMultiBuddy(!${multiBuddyOn});renderSettingsTab()"></div>
-    </div>
-    <div style="padding:8px 0;border-top:1px solid rgba(255,255,255,0.05)">
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Your Buddy ID</div>
-      <div style="font-size:11px;color:var(--text-secondary);font-family:monospace;word-break:break-all;background:var(--bg-mid);padding:8px 10px;border-radius:var(--r-md)">${escapeHtml(myBuddyId)}</div>
     </div>
   `);
+
+  // Group divider — Habits
+  html += `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:20px 4px 8px">Habits & tracking</div>`;
 
   // ── DAILY HABITS ─────────────────────────────────────────────
   const dh = prefs.dailyHabits || {};
@@ -8435,6 +8755,37 @@ function renderSettingsTab() {
 
   html += settingsSection('checkins', '📝 Custom check-ins', ccHtml);
 
+  // Group divider — Social
+  html += `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:20px 4px 8px">Social</div>`;
+
+  // ── BLOOM BUDDY ────────────────────────────────────────────
+  const multiBuddyOn = prefs.multiBuddy || false;
+  const myBuddyId = load('bloom_buddy_id', 'Not yet generated');
+  const buddyShareMoodOn = prefs.buddyShareMood !== false; // default true
+  html += settingsSection('buddy', buddyIcon(18) + ' bloom buddy', `
+    <div class="toggle-row" style="padding:12px 0">
+      <div>
+        <div class="toggle-label">Share mood with buddy</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let your buddy see your current mood and get notified on rough days</div>
+      </div>
+      <div class="toggle${buddyShareMoodOn ? ' on' : ''}" onclick="state.prefs.buddyShareMood=!${buddyShareMoodOn};saveState();renderSettingsTab()"></div>
+    </div>
+    <div class="toggle-row" style="padding:12px 0">
+      <div>
+        <div class="toggle-label">Allow multiple buddies</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let more than one person pair with you</div>
+      </div>
+      <div class="toggle${multiBuddyOn ? ' on' : ''}" onclick="toggleMultiBuddy(!${multiBuddyOn});renderSettingsTab()"></div>
+    </div>
+    <div style="padding:8px 0;border-top:1px solid rgba(255,255,255,0.05)">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Your Buddy ID</div>
+      <div style="font-size:11px;color:var(--text-secondary);font-family:monospace;word-break:break-all;background:var(--bg-mid);padding:8px 10px;border-radius:var(--r-md)">${escapeHtml(myBuddyId)}</div>
+    </div>
+  `);
+
+  // Group divider — System
+  html += `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:20px 4px 8px">System</div>`;
+
   // ── NOTIFICATIONS & SOUND ────────────────────────────────────
   const medHabitOn = prefs.dailyHabits?.medication;
   const medTimeVal = prefs.habitTimes?.medication || 'am';
@@ -8539,6 +8890,9 @@ function renderSettingsTab() {
     </div>
   `);
 
+  // Group divider — Info
+  html += `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:20px 4px 8px">About & info</div>`;
+
   // ── SCIENCE ──────────────────────────────────────────────────
   html += settingsSection('science', '📚 Science behind bloom', `
     <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:14px">
@@ -8569,6 +8923,32 @@ function renderSettingsTab() {
       </div>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="showWhatsNew(true)">📋 View release notes</button>
+  `);
+
+  // ── MODERATION TRANSPARENCY ──────────────────────────────────
+  html += settingsSection('moderation', '🛡️ How moderation works', `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+      <div style="font-weight:500;color:var(--cream);margin-bottom:8px;font-size:14px">Keeping this space safe</div>
+
+      <p style="margin-bottom:10px">Bloom automatically screens messages on the encouragement wall and in buddy conversations. Here's how it works:</p>
+
+      <div style="background:rgba(176,120,120,0.08);border:1px solid rgba(176,120,120,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
+        <div style="font-weight:500;color:var(--rose-light);margin-bottom:4px">Blocked</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Directed harm toward others and targeted slurs are blocked and cannot be posted. This keeps the community safe.</div>
+      </div>
+
+      <div style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
+        <div style="font-weight:500;color:var(--amber-light);margin-bottom:4px">Flagged (allowed)</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">If we detect language that suggests you might be in crisis, your message is still posted — but we'll gently surface crisis resources. Your feelings are always valid here.</div>
+      </div>
+
+      <div style="background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
+        <div style="font-weight:500;color:var(--sage-light);margin-bottom:4px">Allowed</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Venting, frustration, and honest expression are welcome. This is a mental health app — we don't filter difficult emotions. Words like "hurt," "struggling," and "overwhelmed" belong here.</div>
+      </div>
+
+      <p style="margin-top:12px;font-size:12px;color:var(--text-muted)">Bloom is designed to hold space for hard feelings, not suppress them. If you see something concerning on the wall, use the "flag" button to report it.</p>
+    </div>
   `);
 
   // ── PRIVACY POLICY & TERMS ────────────────────────────────────
@@ -9052,6 +9432,31 @@ function testNotification() {
   }
 }
 
+function toggleHighContrast() {
+  if (!state.prefs) state.prefs = {};
+  state.prefs.highContrast = !state.prefs.highContrast;
+  save('bloom_prefs', state.prefs);
+  document.body.classList.toggle('high-contrast', state.prefs.highContrast);
+  renderSettingsTab();
+  setTimeout(() => {
+    const sh = document.getElementById('sh-appearance');
+    const sb = document.getElementById('sb-appearance');
+    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
+  }, 50);
+}
+
+function setCelebrationIntensity(mode) {
+  if (!state.prefs) state.prefs = {};
+  state.prefs.celebrationIntensity = mode;
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
+  setTimeout(() => {
+    const sh = document.getElementById('sh-appearance');
+    const sb = document.getElementById('sb-appearance');
+    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
+  }, 50);
+}
+
 function toggleAudioPref() {
   state.prefs.audio = state.prefs.audio === false ? true : false;
   save('bloom_prefs', state.prefs);
@@ -9115,9 +9520,9 @@ function resetToday() {
   renderTodayTab();
 }
 
-function showBackupSheet() {
-  generateBackupLink();
+async function showBackupSheet() {
   openSheet('backup-sheet');
+  await generateBackupLink();
   trackEvent('backup_created');
 }
 
@@ -9158,7 +9563,32 @@ async function decryptData(encoded, passphrase) {
   return JSON.parse(new TextDecoder().decode(decrypted));
 }
 
-function generateBackupLink() {
+// Simple compression using built-in CompressionStream API (gzip)
+async function compressString(str) {
+  try {
+    const blob = new Blob([str]);
+    const stream = blob.stream().pipeThrough(new CompressionStream('gzip'));
+    const compressed = await new Response(stream).arrayBuffer();
+    return btoa(String.fromCharCode(...new Uint8Array(compressed)));
+  } catch(e) {
+    // Fallback: uncompressed base64
+    return btoa(encodeURIComponent(str));
+  }
+}
+
+async function decompressString(b64) {
+  try {
+    const raw = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const blob = new Blob([raw]);
+    const stream = blob.stream().pipeThrough(new DecompressionStream('gzip'));
+    return await new Response(stream).text();
+  } catch(e) {
+    // Fallback: try uncompressed base64
+    return decodeURIComponent(atob(b64));
+  }
+}
+
+async function generateBackupLink() {
   try {
     const data = {
       prefs: load('bloom_prefs'),
@@ -9166,14 +9596,21 @@ function generateBackupLink() {
       history: load('bloom_history'),
       wellness: load('bloom_wellness'),
     };
-    const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+    const jsonStr = JSON.stringify(data);
+    const encoded = await compressString(jsonStr);
     const url = `${location.origin}${location.pathname}?restore=${encoded}`;
+    if (url.length > 16000) {
+      // URL too long even after compression — warn user
+      const el = document.getElementById('backup-url-display');
+      if (el) el.textContent = 'Your data is too large for a URL link. Use the encrypted backup export instead.';
+      return;
+    }
     const el = document.getElementById('backup-url-display');
     if (el) el.textContent = url;
     state._backupURL = url;
   } catch(e) {
     const el = document.getElementById('backup-url-display');
-    if (el) el.textContent = 'Could not generate link — data may be too large.';
+    if (el) el.textContent = 'Could not generate link — data may be too large. Use encrypted export instead.';
   }
 }
 
@@ -9298,12 +9735,14 @@ function applyRestoreData(data) {
   if (data.wellness) save('bloom_wellness', data.wellness);
 }
 
-function tryRestoreFromURL() {
+async function tryRestoreFromURL() {
   const params = new URLSearchParams(location.search);
   const encoded = params.get('restore');
   if (!encoded) return false;
   try {
-    const data = JSON.parse(decodeURIComponent(atob(encoded)));
+    // Try compressed format first, fall back to legacy uncompressed
+    const jsonStr = await decompressString(encoded);
+    const data = JSON.parse(jsonStr);
     applyRestoreData(data);
     history.replaceState({}, '', location.pathname);
     return true;
@@ -10617,6 +11056,7 @@ function completeOnboarding() {
   const prefs = {
     ...obData,
     onboarded: true,
+    onboardDate: today(),
   };
   save('bloom_prefs', prefs);
   save('bloom_xp', { total: 0, streak: 0, daysShowedUp: 0, currentRun: 0, lastStreakDate: null });
@@ -11382,8 +11822,16 @@ async function buddySendLove(pairId) {
 }
 
 async function buddyUnpair(pairId) {
-  if (!confirm('Unpair from this bloom buddy? You can find a new one anytime.')) return;
+  // Check cooldown — prevent re-pairing for 24h after unpair
+  const lastUnpair = load('bloom_buddy_last_unpair', 0);
+  const cooldownMs = 24 * 60 * 60 * 1000; // 24 hours
+  if (lastUnpair && (Date.now() - lastUnpair) < cooldownMs) {
+    // Already in cooldown — still allow unpair, cooldown only blocks re-pair
+  }
+  if (!confirm('Unpair from this bloom buddy? You can find a new one after a 24-hour cool-down period.')) return;
   await buddyApi({ action: 'unpair', buddyId: ensureBuddyId(), pairId });
+  // Set cooldown timestamp
+  save('bloom_buddy_last_unpair', Date.now());
   // Remove from local cache
   buddyCachedBuddies = buddyCachedBuddies.filter(b => b.pairId !== pairId);
   delete buddyCachedMessages[pairId];
@@ -11394,6 +11842,21 @@ async function buddyUnpair(pairId) {
   save('bloom_buddy_state', buddyState);
   save('bloom_buddy_list', buddyCachedBuddies);
   renderBuddyContent();
+}
+
+function checkBuddyCooldown() {
+  const lastUnpair = load('bloom_buddy_last_unpair', 0);
+  if (!lastUnpair) return false;
+  const cooldownMs = 24 * 60 * 60 * 1000;
+  return (Date.now() - lastUnpair) < cooldownMs;
+}
+
+function getBuddyCooldownRemaining() {
+  const lastUnpair = load('bloom_buddy_last_unpair', 0);
+  if (!lastUnpair) return 0;
+  const cooldownMs = 24 * 60 * 60 * 1000;
+  const remaining = cooldownMs - (Date.now() - lastUnpair);
+  return Math.max(0, remaining);
 }
 
 function buddySafetyAction(pairId) {
@@ -11523,7 +11986,90 @@ function renderBuddyContent() {
   }
 }
 
+// Buddy onboarding state
+let buddyOnboardStep = 0;
+const BUDDY_ONBOARD_SEEN_KEY = 'bloom_buddy_onboard_seen';
+
 function renderBuddySetup() {
+  const hasSeenOnboard = load(BUDDY_ONBOARD_SEEN_KEY, false);
+  if (!hasSeenOnboard) {
+    return renderBuddyOnboarding();
+  }
+  return renderBuddyPairingOptions();
+}
+
+function renderBuddyOnboarding() {
+  const steps = [
+    {
+      emoji: '🤝',
+      title: 'What is bloom buddy?',
+      text: 'Bloom buddy pairs you with someone for mutual encouragement. You can share moods, send nudges, and support each other — anonymously and safely.',
+    },
+    {
+      emoji: '🚫',
+      title: 'What buddies are not',
+      text: 'Buddies are not therapists, counselors, or crisis responders. If you need real support, tap the 🤍 in the header anytime for crisis resources.',
+    },
+    {
+      emoji: '🛡️',
+      title: 'Staying safe',
+      text: 'Never share personal info (phone, address, socials) with a buddy you don\'t know. If anything feels wrong, use the safety button on any buddy card to get help or unpair instantly.',
+    },
+  ];
+
+  const step = steps[buddyOnboardStep] || steps[0];
+  const isLast = buddyOnboardStep >= steps.length - 1;
+
+  return `
+    <div class="buddy-onboard-step">
+      <div class="buddy-onboard-progress">
+        ${steps.map((_, i) => `<div class="buddy-onboard-dot${i <= buddyOnboardStep ? ' active' : ''}"></div>`).join('')}
+      </div>
+      <div style="font-size:48px;margin-bottom:16px">${step.emoji}</div>
+      <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream);margin-bottom:10px">${step.title}</div>
+      <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:24px;padding:0 8px">${step.text}</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        ${buddyOnboardStep > 0 ? `<button class="btn btn-ghost btn-sm" onclick="buddyOnboardPrev()">Back</button>` : ''}
+        <button class="btn btn-primary" onclick="${isLast ? 'completeBuddyOnboard()' : 'buddyOnboardNext()'}">${isLast ? 'I understand — let\'s go' : 'Next'}</button>
+      </div>
+    </div>
+  `;
+}
+
+function buddyOnboardNext() {
+  buddyOnboardStep++;
+  renderBuddyContent();
+}
+
+function buddyOnboardPrev() {
+  buddyOnboardStep = Math.max(0, buddyOnboardStep - 1);
+  renderBuddyContent();
+}
+
+function completeBuddyOnboard() {
+  save(BUDDY_ONBOARD_SEEN_KEY, true);
+  buddyOnboardStep = 0;
+  renderBuddyContent();
+}
+
+function renderBuddyPairingOptions() {
+  // Check cooldown after unpair
+  if (checkBuddyCooldown()) {
+    const remaining = getBuddyCooldownRemaining();
+    const hours = Math.ceil(remaining / 3600000);
+    return `
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:40px;margin-bottom:12px">🌿</div>
+        <div style="font-family:Fraunces,serif;font-size:18px;font-weight:300;color:var(--cream);margin-bottom:10px">Taking a breather</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+          After unpairing, there's a 24-hour cool-down before you can pair with someone new. This gives you space to reset.
+        </div>
+        <div style="font-size:14px;color:var(--amber-light);margin-bottom:8px">~${hours} hour${hours !== 1 ? 's' : ''} remaining</div>
+        <div style="font-size:12px;color:var(--text-muted)">You can still use all other bloom features.</div>
+      </div>
+    `;
+  }
+
   return `
     <div style="text-align:center;padding:8px 0 16px">
       <div style="margin-bottom:8px">${buddyIcon(48)}</div>
@@ -12282,6 +12828,14 @@ function initApp() {
   loadState();
   migrateToNewDailyHabits();
   initTheme();
+  // Restore hard day dimming if active
+  if (state.hardDayMode || (state.todayData?.mood !== undefined && state.todayData.mood <= 1 && state.todayData._hardDayActivated)) {
+    document.body.classList.add('hard-day-active');
+  }
+  // Restore high contrast mode
+  if (state.prefs?.highContrast) {
+    document.body.classList.add('high-contrast');
+  }
   checkForUpdate();
   trackEvent('session_start');
   renderDailyQuote();
@@ -12333,7 +12887,7 @@ async function main() {
   await restoreFromDB();
 
   // Try restore from URL
-  const restored = tryRestoreFromURL();
+  const restored = await tryRestoreFromURL();
   if (restored) {
     loadState();
   }
