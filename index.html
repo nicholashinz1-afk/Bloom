@@ -267,6 +267,38 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   from { transform: scale(0.5) rotate(-10deg); opacity: 0; }
   to   { transform: scale(1) rotate(0deg); opacity: 1; }
 }
+.flower-grow {
+  animation: flowerGrow 1.2s cubic-bezier(0.34,1.56,0.64,1) both;
+  transform-origin: 100px 160px;
+}
+@keyframes flowerGrow {
+  0%   { transform: scaleY(0.3) scaleX(0.7); opacity: 0.5; }
+  50%  { transform: scaleY(1.1) scaleX(1.05); }
+  100% { transform: scaleY(1) scaleX(1); opacity: 1; }
+}
+.sparkle {
+  animation: sparkleFloat 2s ease-in-out infinite;
+}
+@keyframes sparkleFloat {
+  0%, 100% { opacity: 0.3; transform: translateY(0); }
+  50%      { opacity: 1; transform: translateY(-3px); }
+}
+.glow-pulse {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%, 100% { r: 22; opacity: 0.15; }
+  50%      { r: 28; opacity: 0.3; }
+}
+.streak-grow {
+  animation: streakGrow 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+  transform-origin: 100px 175px;
+}
+@keyframes streakGrow {
+  0%   { transform: scaleY(0) scaleX(0.5); opacity: 0; }
+  60%  { transform: scaleY(1.05) scaleX(1.02); }
+  100% { transform: scaleY(1) scaleX(1); opacity: 1; }
+}
 
 /* ============================================================
    MOOD BUTTON BOUNCE
@@ -3156,29 +3188,148 @@ function checkLevelUp(oldXP, newXP) {
   const oldLv = getLevel(oldXP);
   const newLv = getLevel(newXP);
   if (newLv.name !== oldLv.name) {
-    showLevelUp(newLv);
+    showLevelUp(oldLv, newLv);
   }
 }
 
-function showLevelUp(level) {
+function getLevelIndex(level) {
+  return LEVELS.findIndex(l => l.name === level.name);
+}
+
+function buildFlowerSVG(levelIdx, animated = false) {
+  // Stages: 0=Seedling, 1=Sprout, 2=Blooming, 3=Thriving, 4=Radiant, 5=Glowing
+  const i = Math.min(levelIdx, 5);
+  const potColor = '#6b5a4a';
+  const potLight = '#8a7560';
+  const soilColor = '#4a3d30';
+  const stemColor = '#5a8a5e';
+  const leafColor = '#7a9e7e';
+  const leafLight = '#a8c5ab';
+
+  // Height of stem grows with level
+  const stemH = [15, 35, 55, 65, 70, 75][i];
+  const stemTop = 160 - stemH;
+  const anim = animated ? 'class="flower-grow"' : '';
+
+  let plant = '';
+  if (i === 0) {
+    // Seedling — tiny sprout with one unfurling leaf
+    plant = `<g ${anim}>
+      <line x1="100" y1="160" x2="100" y2="${stemTop}" stroke="${stemColor}" stroke-width="3" stroke-linecap="round"/>
+      <ellipse cx="95" cy="${stemTop + 2}" rx="8" ry="5" fill="${leafColor}" transform="rotate(-30 95 ${stemTop + 2})"/>
+    </g>`;
+  } else if (i === 1) {
+    // Sprout — taller stem with two leaves
+    plant = `<g ${anim}>
+      <line x1="100" y1="160" x2="100" y2="${stemTop}" stroke="${stemColor}" stroke-width="3.5" stroke-linecap="round"/>
+      <ellipse cx="88" cy="${stemTop + 20}" rx="12" ry="6" fill="${leafColor}" transform="rotate(-40 88 ${stemTop + 20})"/>
+      <ellipse cx="112" cy="${stemTop + 12}" rx="12" ry="6" fill="${leafLight}" transform="rotate(35 112 ${stemTop + 12})"/>
+      <ellipse cx="96" cy="${stemTop + 2}" rx="6" ry="10" fill="${leafColor}" transform="rotate(-10 96 ${stemTop + 2})"/>
+    </g>`;
+  } else if (i === 2) {
+    // Blooming — flower bud opening
+    plant = `<g ${anim}>
+      <line x1="100" y1="160" x2="100" y2="${stemTop + 15}" stroke="${stemColor}" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="85" cy="${stemTop + 35}" rx="14" ry="7" fill="${leafColor}" transform="rotate(-35 85 ${stemTop + 35})"/>
+      <ellipse cx="115" cy="${stemTop + 28}" rx="14" ry="7" fill="${leafLight}" transform="rotate(35 115 ${stemTop + 28})"/>
+      <circle cx="100" cy="${stemTop + 12}" r="14" fill="#d4a8a8" opacity="0.7"/>
+      <circle cx="92" cy="${stemTop + 8}" r="8" fill="#b07878" opacity="0.8"/>
+      <circle cx="108" cy="${stemTop + 8}" r="8" fill="#c49090" opacity="0.8"/>
+      <circle cx="100" cy="${stemTop + 16}" r="8" fill="#b07878" opacity="0.7"/>
+      <circle cx="100" cy="${stemTop + 10}" r="5" fill="#e0b87a" opacity="0.9"/>
+    </g>`;
+  } else if (i === 3) {
+    // Thriving — full sunflower
+    plant = `<g ${anim}>
+      <line x1="100" y1="160" x2="100" y2="${stemTop + 18}" stroke="${stemColor}" stroke-width="4.5" stroke-linecap="round"/>
+      <ellipse cx="82" cy="${stemTop + 42}" rx="16" ry="7" fill="${leafColor}" transform="rotate(-35 82 ${stemTop + 42})"/>
+      <ellipse cx="118" cy="${stemTop + 35}" rx="16" ry="7" fill="${leafLight}" transform="rotate(35 118 ${stemTop + 35})"/>
+      <ellipse cx="82" cy="${stemTop + 55}" rx="13" ry="6" fill="${leafLight}" transform="rotate(-45 82 ${stemTop + 55})"/>
+      ${[0,45,90,135,180,225,270,315].map(a =>
+        `<ellipse cx="100" cy="${stemTop + 5}" rx="5" ry="12" fill="#e0b87a" opacity="0.8" transform="rotate(${a} 100 ${stemTop + 14})"/>`
+      ).join('')}
+      <circle cx="100" cy="${stemTop + 14}" r="10" fill="#c9954a"/>
+      <circle cx="100" cy="${stemTop + 14}" r="6" fill="#8a6530"/>
+    </g>`;
+  } else if (i === 4) {
+    // Radiant — glowing bloom with sparkles
+    plant = `<g ${anim}>
+      <line x1="100" y1="160" x2="100" y2="${stemTop + 18}" stroke="${stemColor}" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="78" cy="${stemTop + 42}" rx="18" ry="8" fill="${leafColor}" transform="rotate(-30 78 ${stemTop + 42})"/>
+      <ellipse cx="122" cy="${stemTop + 35}" rx="18" ry="8" fill="${leafLight}" transform="rotate(30 122 ${stemTop + 35})"/>
+      <ellipse cx="80" cy="${stemTop + 58}" rx="14" ry="6" fill="${leafLight}" transform="rotate(-45 80 ${stemTop + 58})"/>
+      ${[0,36,72,108,144,180,216,252,288,324].map(a =>
+        `<ellipse cx="100" cy="${stemTop + 2}" rx="6" ry="14" fill="#9ec4d8" opacity="0.7" transform="rotate(${a} 100 ${stemTop + 14})"/>`
+      ).join('')}
+      <circle cx="100" cy="${stemTop + 14}" r="11" fill="#6a9ab0" opacity="0.9"/>
+      <circle cx="100" cy="${stemTop + 14}" r="6" fill="#e8f4f8"/>
+      <circle cx="78" cy="${stemTop}" r="2" fill="#fff" opacity="0.7" class="sparkle"/>
+      <circle cx="124" cy="${stemTop + 6}" r="1.5" fill="#fff" opacity="0.6" class="sparkle" style="animation-delay:0.5s"/>
+      <circle cx="100" cy="${stemTop - 8}" r="2" fill="#fff" opacity="0.8" class="sparkle" style="animation-delay:1s"/>
+    </g>`;
+  } else {
+    // Glowing — magnificent full bloom with golden glow
+    plant = `<g ${anim}>
+      <line x1="100" y1="160" x2="100" y2="${stemTop + 18}" stroke="${stemColor}" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="75" cy="${stemTop + 45}" rx="20" ry="8" fill="${leafColor}" transform="rotate(-30 75 ${stemTop + 45})"/>
+      <ellipse cx="125" cy="${stemTop + 38}" rx="20" ry="8" fill="${leafLight}" transform="rotate(30 125 ${stemTop + 38})"/>
+      <ellipse cx="78" cy="${stemTop + 60}" rx="16" ry="7" fill="${leafLight}" transform="rotate(-45 78 ${stemTop + 60})"/>
+      <ellipse cx="120" cy="${stemTop + 55}" rx="14" ry="6" fill="${leafColor}" transform="rotate(40 120 ${stemTop + 55})"/>
+      <circle cx="100" cy="${stemTop + 14}" r="22" fill="#e0b87a" opacity="0.2" class="glow-pulse"/>
+      ${[0,30,60,90,120,150,180,210,240,270,300,330].map(a =>
+        `<ellipse cx="100" cy="${stemTop}" rx="5" ry="14" fill="#e0b87a" opacity="0.8" transform="rotate(${a} 100 ${stemTop + 14})"/>`
+      ).join('')}
+      <circle cx="100" cy="${stemTop + 14}" r="12" fill="#c9954a"/>
+      <circle cx="100" cy="${stemTop + 14}" r="7" fill="#e0b87a"/>
+      ${[0,1,2,3,4].map(j => {
+        const ax = 70 + j * 15 + (j % 2) * 5;
+        const ay = stemTop - 5 + (j % 3) * 8;
+        return `<circle cx="${ax}" cy="${ay}" r="${1.5 + (j % 2)}" fill="#fff" opacity="${0.5 + j * 0.1}" class="sparkle" style="animation-delay:${j * 0.4}s"/>`;
+      }).join('')}
+    </g>`;
+  }
+
+  return `<svg viewBox="30 40 140 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:200px;height:auto;display:block;margin:0 auto">
+    ${plant}
+    <path d="M72 160 L72 190 Q72 200 82 200 L118 200 Q128 200 128 190 L128 160 Z" fill="${potColor}"/>
+    <path d="M68 155 L132 155 L128 165 L72 165 Z" fill="${potLight}"/>
+    <ellipse cx="100" cy="162" rx="28" ry="5" fill="${soilColor}"/>
+  </svg>`;
+}
+
+function showLevelUp(oldLevel, newLevel) {
   haptic('heavy');
   playSound('milestone');
-  launchConfetti(window.innerWidth/2, window.innerHeight/2, 60);
+
+  const oldIdx = getLevelIndex(oldLevel);
+  const newIdx = getLevelIndex(newLevel);
 
   const div = document.createElement('div');
   div.id = 'levelup-overlay';
   div.innerHTML = `
-    <div class="levelup-card">
-      <div class="levelup-emoji">${level.emoji}</div>
+    <div class="levelup-card" style="max-width:320px">
+      <div id="levelup-flower" style="margin-bottom:16px">
+        ${buildFlowerSVG(oldIdx)}
+      </div>
       <div style="font-family:Fraunces,serif;font-size:13px;color:var(--sage);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Level up!</div>
-      <div style="font-family:Fraunces,serif;font-size:26px;font-weight:300;color:var(--cream);margin-bottom:8px">${level.name}</div>
-      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">You've reached a new level. Keep going — you're building something real.</div>
+      <div style="font-family:Fraunces,serif;font-size:26px;font-weight:300;color:var(--cream);margin-bottom:8px">${newLevel.name} ${newLevel.emoji}</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your bloom is growing. Keep nurturing it.</div>
       <button class="btn btn-primary btn-block" id="levelup-close">Keep blooming 🌿</button>
     </div>
   `;
   document.body.appendChild(div);
+
+  // Animate: show old flower briefly, then grow to new
+  setTimeout(() => {
+    const container = document.getElementById('levelup-flower');
+    if (container) {
+      container.innerHTML = buildFlowerSVG(newIdx, true);
+      launchConfetti(window.innerWidth / 2, window.innerHeight / 2, 60);
+    }
+  }, 800);
+
   document.getElementById('levelup-close').addEventListener('click', () => div.remove());
-  setTimeout(() => { if (div.parentNode) div.remove(); }, 8000);
+  setTimeout(() => { if (div.parentNode) div.remove(); }, 10000);
 }
 
 // ── Enhanced addXP with level-up check ──────────────────────
@@ -3325,33 +3476,135 @@ function getHabitStreak(habitId) {
 }
 
 // ── Streak milestones ────────────────────────────────────────
+function buildStreakTreeSVG(streak) {
+  // Growth stages: 3=sprout, 7=sapling, 14=young tree, 30=full tree, 60=grand tree, 100=ancient tree
+  const trunk = '#6b5a4a';
+  const trunkLight = '#8a7560';
+  const green1 = '#5a8a5e';
+  const green2 = '#7a9e7e';
+  const green3 = '#a8c5ab';
+  const ground = '#3a5a3e';
+
+  let tree = '';
+  if (streak <= 3) {
+    // Tiny sprout breaking through soil
+    tree = `
+      <line x1="100" y1="170" x2="100" y2="145" stroke="${green1}" stroke-width="3" stroke-linecap="round" class="streak-grow"/>
+      <ellipse cx="93" cy="147" rx="10" ry="5" fill="${green2}" transform="rotate(-35 93 147)" class="streak-grow" style="animation-delay:0.3s"/>
+      <ellipse cx="107" cy="142" rx="10" ry="5" fill="${green3}" transform="rotate(35 107 142)" class="streak-grow" style="animation-delay:0.5s"/>
+    `;
+  } else if (streak <= 7) {
+    // Sapling with a few branches
+    tree = `
+      <line x1="100" y1="175" x2="100" y2="110" stroke="${trunk}" stroke-width="4" stroke-linecap="round" class="streak-grow"/>
+      <line x1="100" y1="140" x2="82" y2="125" stroke="${trunk}" stroke-width="2.5" stroke-linecap="round" class="streak-grow" style="animation-delay:0.2s"/>
+      <line x1="100" y1="128" x2="118" y2="115" stroke="${trunk}" stroke-width="2.5" stroke-linecap="round" class="streak-grow" style="animation-delay:0.3s"/>
+      <circle cx="82" cy="122" r="12" fill="${green2}" opacity="0.85" class="streak-grow" style="animation-delay:0.5s"/>
+      <circle cx="118" cy="112" r="12" fill="${green3}" opacity="0.85" class="streak-grow" style="animation-delay:0.6s"/>
+      <circle cx="100" cy="105" r="14" fill="${green1}" opacity="0.85" class="streak-grow" style="animation-delay:0.7s"/>
+    `;
+  } else if (streak <= 14) {
+    // Young tree with canopy forming
+    tree = `
+      <path d="M96 175 Q94 145 90 130 L92 120 Q95 105 100 100" stroke="${trunk}" stroke-width="5" fill="none" stroke-linecap="round" class="streak-grow"/>
+      <path d="M104 175 Q106 145 110 130 L108 120 Q105 105 100 100" stroke="${trunkLight}" stroke-width="3" fill="none" stroke-linecap="round" class="streak-grow"/>
+      <line x1="92" y1="140" x2="74" y2="128" stroke="${trunk}" stroke-width="2.5" stroke-linecap="round" class="streak-grow" style="animation-delay:0.2s"/>
+      <line x1="108" y1="132" x2="126" y2="120" stroke="${trunk}" stroke-width="2.5" stroke-linecap="round" class="streak-grow" style="animation-delay:0.3s"/>
+      <circle cx="74" cy="122" r="15" fill="${green2}" opacity="0.8" class="streak-grow" style="animation-delay:0.4s"/>
+      <circle cx="126" cy="114" r="14" fill="${green3}" opacity="0.8" class="streak-grow" style="animation-delay:0.5s"/>
+      <circle cx="100" cy="92" r="20" fill="${green1}" opacity="0.85" class="streak-grow" style="animation-delay:0.6s"/>
+      <circle cx="86" cy="100" r="16" fill="${green2}" opacity="0.75" class="streak-grow" style="animation-delay:0.7s"/>
+      <circle cx="114" cy="98" r="16" fill="${green3}" opacity="0.75" class="streak-grow" style="animation-delay:0.8s"/>
+    `;
+  } else if (streak <= 30) {
+    // Full tree with thick canopy
+    tree = `
+      <path d="M93 175 Q88 150 86 130 Q84 115 90 105 Q95 95 100 88" stroke="${trunk}" stroke-width="7" fill="none" stroke-linecap="round" class="streak-grow"/>
+      <path d="M107 175 Q112 150 114 130 Q116 115 110 105 Q105 95 100 88" stroke="${trunkLight}" stroke-width="4" fill="none" stroke-linecap="round" class="streak-grow"/>
+      <line x1="88" y1="135" x2="68" y2="122" stroke="${trunk}" stroke-width="3" stroke-linecap="round" class="streak-grow" style="animation-delay:0.2s"/>
+      <line x1="112" y1="128" x2="132" y2="115" stroke="${trunk}" stroke-width="3" stroke-linecap="round" class="streak-grow" style="animation-delay:0.2s"/>
+      <circle cx="66" cy="115" r="18" fill="${green2}" opacity="0.8" class="streak-grow" style="animation-delay:0.4s"/>
+      <circle cx="134" cy="108" r="17" fill="${green3}" opacity="0.8" class="streak-grow" style="animation-delay:0.5s"/>
+      <circle cx="100" cy="78" r="26" fill="${green1}" opacity="0.85" class="streak-grow" style="animation-delay:0.6s"/>
+      <circle cx="80" cy="88" r="20" fill="${green2}" opacity="0.8" class="streak-grow" style="animation-delay:0.7s"/>
+      <circle cx="120" cy="85" r="20" fill="${green3}" opacity="0.8" class="streak-grow" style="animation-delay:0.8s"/>
+      <circle cx="90" cy="72" r="16" fill="${green3}" opacity="0.7" class="streak-grow" style="animation-delay:0.9s"/>
+      <circle cx="112" cy="70" r="16" fill="${green2}" opacity="0.7" class="streak-grow" style="animation-delay:1s"/>
+    `;
+  } else if (streak <= 60) {
+    // Grand tree with flowers
+    tree = `
+      <path d="M90 175 Q82 148 80 125 Q78 108 88 95 Q95 85 100 78" stroke="${trunk}" stroke-width="9" fill="none" stroke-linecap="round" class="streak-grow"/>
+      <path d="M110 175 Q118 148 120 125 Q122 108 112 95 Q105 85 100 78" stroke="${trunkLight}" stroke-width="5" fill="none" stroke-linecap="round" class="streak-grow"/>
+      <line x1="84" y1="130" x2="60" y2="115" stroke="${trunk}" stroke-width="3.5" stroke-linecap="round" class="streak-grow" style="animation-delay:0.2s"/>
+      <line x1="116" y1="122" x2="140" y2="108" stroke="${trunk}" stroke-width="3.5" stroke-linecap="round" class="streak-grow" style="animation-delay:0.2s"/>
+      <circle cx="58" cy="108" r="20" fill="${green2}" opacity="0.8" class="streak-grow" style="animation-delay:0.4s"/>
+      <circle cx="142" cy="102" r="18" fill="${green3}" opacity="0.8" class="streak-grow" style="animation-delay:0.5s"/>
+      <circle cx="100" cy="68" r="30" fill="${green1}" opacity="0.85" class="streak-grow" style="animation-delay:0.6s"/>
+      <circle cx="75" cy="80" r="22" fill="${green2}" opacity="0.8" class="streak-grow" style="animation-delay:0.7s"/>
+      <circle cx="125" cy="76" r="22" fill="${green3}" opacity="0.8" class="streak-grow" style="animation-delay:0.8s"/>
+      <circle cx="100" cy="56" r="18" fill="${green3}" opacity="0.7" class="streak-grow" style="animation-delay:0.9s"/>
+      <circle cx="80" cy="62" r="4" fill="#d4a8a8" opacity="0.9" class="sparkle"/>
+      <circle cx="118" cy="58" r="3.5" fill="#d4a8a8" opacity="0.8" class="sparkle" style="animation-delay:0.6s"/>
+      <circle cx="95" cy="50" r="3" fill="#e0b87a" opacity="0.9" class="sparkle" style="animation-delay:1.2s"/>
+    `;
+  } else {
+    // Ancient tree — majestic with golden leaves and sparkles
+    tree = `
+      <path d="M88 175 Q78 145 76 120 Q74 100 86 88 Q95 78 100 70" stroke="${trunk}" stroke-width="11" fill="none" stroke-linecap="round" class="streak-grow"/>
+      <path d="M112 175 Q122 145 124 120 Q126 100 114 88 Q105 78 100 70" stroke="${trunkLight}" stroke-width="6" fill="none" stroke-linecap="round" class="streak-grow"/>
+      <line x1="80" y1="125" x2="52" y2="108" stroke="${trunk}" stroke-width="4" stroke-linecap="round" class="streak-grow" style="animation-delay:0.2s"/>
+      <line x1="120" y1="118" x2="148" y2="100" stroke="${trunk}" stroke-width="4" stroke-linecap="round" class="streak-grow" style="animation-delay:0.2s"/>
+      <circle cx="50" cy="100" r="22" fill="${green2}" opacity="0.8" class="streak-grow" style="animation-delay:0.4s"/>
+      <circle cx="150" cy="94" r="20" fill="${green3}" opacity="0.8" class="streak-grow" style="animation-delay:0.5s"/>
+      <circle cx="100" cy="58" r="34" fill="${green1}" opacity="0.85" class="streak-grow" style="animation-delay:0.6s"/>
+      <circle cx="70" cy="72" r="24" fill="${green2}" opacity="0.8" class="streak-grow" style="animation-delay:0.7s"/>
+      <circle cx="130" cy="68" r="24" fill="${green3}" opacity="0.8" class="streak-grow" style="animation-delay:0.8s"/>
+      <circle cx="85" cy="48" r="18" fill="${green3}" opacity="0.7" class="streak-grow" style="animation-delay:0.9s"/>
+      <circle cx="115" cy="45" r="18" fill="${green2}" opacity="0.7" class="streak-grow" style="animation-delay:1s"/>
+      <circle cx="100" cy="38" r="15" fill="#e0b87a" opacity="0.15" class="glow-pulse"/>
+      ${[0,1,2,3,4,5].map(j => {
+        const sx = 60 + j * 16 + (j % 2) * 6;
+        const sy = 42 + (j % 3) * 14;
+        return `<circle cx="${sx}" cy="${sy}" r="${2 + (j % 2)}" fill="${j % 2 ? '#e0b87a' : '#fff'}" opacity="${0.5 + j * 0.08}" class="sparkle" style="animation-delay:${j * 0.35}s"/>`;
+      }).join('')}
+    `;
+  }
+
+  return `<svg viewBox="30 30 140 165" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:200px;height:auto;display:block;margin:0 auto">
+    ${tree}
+    <ellipse cx="100" cy="178" rx="45" ry="6" fill="${ground}" opacity="0.5"/>
+  </svg>`;
+}
+
 function checkStreakMilestone(streak) {
   const milestones = [3, 7, 14, 30, 60, 100];
   if (!milestones.includes(streak)) return;
   const messages = {
-    3:   { emoji: '🌱', title: '3 days in a row!', sub: 'A habit is starting to form.' },
-    7:   { emoji: '🌿', title: 'One full week!', sub: 'Seven days of showing up. That\'s real.' },
-    14:  { emoji: '🌸', title: 'Two weeks strong!', sub: 'You\'re building something that lasts.' },
-    30:  { emoji: '🌻', title: '30 day streak!', sub: 'A full month. You should be proud.' },
-    60:  { emoji: '✨', title: '60 days!', sub: 'Two months of consistency. Incredible.' },
-    100: { emoji: '🌟', title: '100 days!', sub: 'One hundred days of you. Extraordinary.' },
+    3:   { title: '3 days in a row!', sub: 'A habit is starting to form.' },
+    7:   { title: 'One full week!', sub: 'Seven days of showing up. That\'s real.' },
+    14:  { title: 'Two weeks strong!', sub: 'You\'re building something that lasts.' },
+    30:  { title: '30 day streak!', sub: 'A full month. You should be proud.' },
+    60:  { title: '60 days!', sub: 'Two months of consistency. Incredible.' },
+    100: { title: '100 days!', sub: 'One hundred days of you. Extraordinary.' },
   };
   const msg = messages[streak];
   if (!msg) return;
   setTimeout(() => {
-    launchConfetti(window.innerWidth/2, window.innerHeight/3, 80);
     haptic('heavy');
     playSound('milestone');
     const div = document.createElement('div');
     div.id = 'levelup-overlay';
-    div.innerHTML = `<div class="levelup-card">
-      <div class="levelup-emoji">${msg.emoji}</div>
+    div.innerHTML = `<div class="levelup-card" style="max-width:320px">
+      <div style="margin-bottom:16px">${buildStreakTreeSVG(streak)}</div>
       <div style="font-family:Fraunces,serif;font-size:13px;color:var(--amber);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">${streak}-day streak</div>
       <div style="font-family:Fraunces,serif;font-size:24px;font-weight:300;color:var(--cream);margin-bottom:8px">${msg.title}</div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">${msg.sub}</div>
-      <button class="btn btn-primary btn-block" id="levelup-close">Keep going 🌿</button>
+      <button class="btn btn-primary btn-block" id="levelup-close">Keep growing 🌿</button>
     </div>`;
     document.body.appendChild(div);
+    // Delay confetti slightly so tree animation plays first
+    setTimeout(() => launchConfetti(window.innerWidth / 2, window.innerHeight / 3, 80), 1000);
     document.getElementById('levelup-close').addEventListener('click', () => div.remove());
     setTimeout(() => { if (div.parentNode) div.remove(); }, 10000);
   }, 500);
@@ -5211,15 +5464,17 @@ function checkAllDone() {
     setTimeout(() => celebrate('all_done', document.getElementById('today-scroll')), 300);
   }
 
-  // Partial completion celebrations
+  // Partial completion celebrations (persisted to todayData so they don't repeat on reload)
   const { pct } = getCompletionRate();
-  if (pct >= 0.75 && !state._celebrated75) {
-    state._celebrated75 = true;
+  if (pct >= 0.75 && !td._celebrated75) {
+    td._celebrated75 = true;
+    saveState();
     if (!state.allDone) {
       setTimeout(() => showPartialCompletionToast('strong_day'), 400);
     }
-  } else if (pct >= 0.5 && !state._celebrated50) {
-    state._celebrated50 = true;
+  } else if (pct >= 0.5 && !td._celebrated50) {
+    td._celebrated50 = true;
+    saveState();
     setTimeout(() => showPartialCompletionToast('halfway'), 400);
   }
 
