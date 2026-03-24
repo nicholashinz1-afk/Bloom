@@ -50,7 +50,7 @@
   /* Text */
   --text-primary:   #e8e0d0;
   --text-secondary: #8a9e8c;
-  --text-muted:     #4a5e4c;
+  --text-muted:     #6b7f6d;
   --text-on-sage:   #0a1a0b;
 
   --seasonal:      #a8c5ab;
@@ -969,6 +969,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   flex-shrink: 0;
   border: 1px solid rgba(255,255,255,0.1);
 }
+.toggle:focus-visible { outline: 2px solid var(--sage-light); outline-offset: 2px; }
 .toggle.on { background: var(--sage); border-color: var(--sage); }
 .toggle::after {
   content: '';
@@ -1114,6 +1115,15 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 /* ============================================================
    SETTINGS COLLAPSIBLE
    ============================================================ */
+.settings-group { margin-bottom: 4px; }
+.settings-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 4px 8px;
+  cursor: pointer;
+}
+.settings-group-header:focus-visible { outline: 2px solid var(--sage-light); outline-offset: 2px; border-radius: 4px; }
 .settings-section { margin-bottom: 8px; }
 .settings-header {
   display: flex;
@@ -2184,6 +2194,10 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   .xp-float,
   .celebrate-toast { animation: none !important; }
   .confetti-piece { display: none !important; }
+  #inline-breath-zone,
+  #winddown-breath-circle { transition-duration: 0.01ms !important; }
+  @keyframes breathCountNum { from, to { transform: none; } }
+  body.hard-day-active #app { transition-duration: 0.01ms !important; }
   .celebrate-toast {
     opacity: 1 !important;
     transform: none !important;
@@ -2241,10 +2255,12 @@ body.high-contrast {
   height: 8px;
   border-radius: 50%;
   background: var(--text-muted);
-  transition: background 0.3s;
+  transition: all 0.3s;
 }
 .buddy-onboard-dot.active {
   background: var(--sage);
+  width: 10px;
+  height: 10px;
 }
 
 /* ── Evening wind-down flow ─────────────────────────────── */
@@ -4902,9 +4918,9 @@ function checkEveningNudge() {
     if (pct < 1 && pct > 0) {
       const remaining = total - done;
       const nudgeMsgs = [
-        { title: `Almost there — ${remaining} left`, body: `You completed ${done}/${total} habits today. A few quick ones and you're done!` },
+        { title: `You've done a lot today`, body: `${done}/${total} habits completed. ${remaining} more whenever you're ready — or not. You've already shown up.` },
         { title: `${Math.round(pct * 100)}% done today`, body: `You've been showing up. ${remaining} habit${remaining > 1 ? 's' : ''} left — but only if you want to.` },
-        { title: 'So close to finishing', body: `${done} of ${total} done. You've already shown up today — that counts.` },
+        { title: 'You showed up today', body: `${done} of ${total} done. That already counts for something.` },
       ];
       const msg = nudgeMsgs[Math.floor(Math.random() * nudgeMsgs.length)];
       sendLocalNotification(msg.title, msg.body, 'reminder-evening-partial');
@@ -5591,6 +5607,8 @@ function celebrate(type, sourceEl) {
   const toast = document.createElement('div');
   toast.id = 'celebrate-toast';
   toast.className = 'celebrate-toast';
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
 
   // Position above nav bar, relative to #app container
   const appEl = document.getElementById('app');
@@ -5899,6 +5917,8 @@ function showPartialCompletionToast(type) {
   const toast = document.createElement('div');
   toast.id = 'celebrate-toast';
   toast.className = 'celebrate-toast';
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
   const appEl = document.getElementById('app');
   const navEl = document.getElementById('bottom-nav');
   const appRect = appEl ? appEl.getBoundingClientRect() : { bottom: window.innerHeight };
@@ -6032,10 +6052,26 @@ async function callClaude(prompt, systemPrompt) {
       })
     });
     const data = await res.json();
-    return data.text || AI_FALLBACK_RESPONSE;
+    return filterAIResponse(data.text || AI_FALLBACK_RESPONSE);
   } catch(e) {
     return AI_FALLBACK_RESPONSE;
   }
+}
+
+// Safety filter for AI-generated text — catches clinical/diagnostic/medication language
+function filterAIResponse(text) {
+  const unsafePatterns = [
+    /\b(diagnos(e[ds]?|ing|is)|disorder|syndrome|patholog)\b/i,
+    /\b(prescri(be|ption)|medica(te|tion)|dosage|mg|milligram|SSRI|SNRI|benzodiazepine|antidepressant|antipsychotic|anxiolytic)\b/i,
+    /\b(bipolar|schizophren|borderline personality|BPD|PTSD|OCD|ADHD|clinical depression|major depressive|generalized anxiety|panic disorder|eating disorder|anorexia|bulimia)\b/i,
+    /\b(you (have|suffer from|are experiencing|may have|might have|seem to have|could have))\b.*\b(depression|anxiety|disorder|condition)\b/i,
+    /\b(seek (immediate|emergency)|call 911|go to (the )?ER|emergency room)\b/i,
+    /\b(therapist recommends|clinical(ly)?|psychiatric|psychologist says)\b/i,
+  ];
+  for (const pat of unsafePatterns) {
+    if (pat.test(text)) return AI_FALLBACK_RESPONSE;
+  }
+  return text;
 }
 
 // Render AI response with disclaimer and feedback buttons
@@ -6168,6 +6204,34 @@ function initAccessibility() {
   // Skip link target
   const main = document.querySelector('main');
   if (main && !main.getAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+
+  // Make all toggles keyboard accessible
+  enhanceToggles();
+  const observer = new MutationObserver(() => enhanceToggles());
+  observer.observe(document.getElementById('app') || document.body, { childList: true, subtree: true });
+}
+
+function enhanceToggles() {
+  document.querySelectorAll('.toggle:not([role])').forEach(toggle => {
+    toggle.setAttribute('role', 'checkbox');
+    toggle.setAttribute('aria-checked', toggle.classList.contains('on') ? 'true' : 'false');
+    toggle.setAttribute('tabindex', '0');
+    toggle.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggle.click();
+        // Update aria-checked after click
+        setTimeout(() => {
+          toggle.setAttribute('aria-checked', toggle.classList.contains('on') ? 'true' : 'false');
+        }, 50);
+      }
+    });
+    // Observe class changes for aria-checked
+    const classObserver = new MutationObserver(() => {
+      toggle.setAttribute('aria-checked', toggle.classList.contains('on') ? 'true' : 'false');
+    });
+    classObserver.observe(toggle, { attributes: true, attributeFilter: ['class'] });
+  });
 }
 
 // ============================================================
@@ -6296,11 +6360,28 @@ function renderTodayTop() {
     const yesterdayLow = checkYesterdayLowMood();
     const breatheExpanded = state.inlineBreatheOpen;
 
+    const consecutiveLowDays = getConsecutiveLowMoodDays();
+    let lowMoodMessage;
+    if (consecutiveLowDays >= 3) {
+      lowMoodMessage = state.lowMoodAIResponse || 'You\'ve been having a hard stretch. That\'s a lot to carry. If you haven\'t already, this might be a good time to talk to someone who can really help.';
+    } else if (yesterdayLow) {
+      lowMoodMessage = state.lowMoodAIResponse || 'Two hard days in a row takes real courage to keep going. You\'re not alone.';
+    } else {
+      lowMoodMessage = 'Hard days happen. You don\'t have to push through anything right now.';
+    }
+
     html += `<div class="banner banner-low-mood" id="low-mood-banner">
       <div class="banner-icon">🫂</div>
       <div class="banner-body" style="width:100%">
         <div class="banner-title" style="color:var(--sky-light)">It's okay not to be okay</div>
-        <div class="banner-text">${yesterdayLow ? (state.lowMoodAIResponse || 'Two hard days in a row takes real courage to keep going. You\'re not alone.') : 'Hard days happen. You don\'t have to push through anything right now.'}</div>
+        <div class="banner-text">${lowMoodMessage}</div>
+        ${consecutiveLowDays >= 3 ? `<div style="background:rgba(106,154,176,0.1);border:1px solid rgba(106,154,176,0.2);border-radius:var(--r-md);padding:10px 12px;margin:10px 0 6px">
+          <div style="font-size:12px;color:var(--sky-light);line-height:1.6">Talking to a professional can make a real difference. A therapist can help in ways an app can't.</div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <a href="https://findahelpline.com/" target="_blank" rel="noopener" class="btn btn-sm" style="background:rgba(106,154,176,0.2);border:1px solid rgba(106,154,176,0.3);color:var(--sky-light);font-size:11px;text-decoration:none">Find support near you</a>
+            <button class="btn btn-ghost btn-sm" onclick="openCrisisSheet()" style="font-size:11px">🤍 Crisis resources</button>
+          </div>
+        </div>` : ''}
         <div class="banner-actions">
           <div class="banner-action" id="inline-breathe-btn" onclick="toggleInlineBreathe()">${breatheExpanded ? '✕ Close' : '🌬 Breathe'}</div>
           <div class="banner-action" onclick="openOpenJournal()">📓 Just write</div>
@@ -6326,6 +6407,26 @@ function checkYesterdayLowMood() {
   const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
   const yData = state.historyData[yStr];
   return yData && yData.mood !== undefined && yData.mood >= 0 && yData.mood <= 2;
+}
+
+function getConsecutiveLowMoodDays() {
+  // Count how many consecutive days (including today) the user has logged low mood (0-1)
+  let count = 0;
+  const d = new Date();
+  // Start from yesterday (today is already shown via low mood banner)
+  for (let i = 1; i <= 14; i++) {
+    const prev = new Date(d);
+    prev.setDate(prev.getDate() - i);
+    const key = `${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,'0')}-${String(prev.getDate()).padStart(2,'0')}`;
+    const data = state.historyData[key];
+    if (data && data.mood !== undefined && data.mood >= 0 && data.mood <= 1) {
+      count++;
+    } else {
+      break;
+    }
+  }
+  // +1 for today (since we're in the low mood banner, today is low)
+  return count + 1;
 }
 
 // Inline breathe (in low mood banner)
@@ -6485,9 +6586,9 @@ function renderTodayTab() {
 
   html += `<div class="card">
     <div class="card-title">🌤 How are you feeling?${infoIcon('mood')}</div>
-    <div class="mood-row" id="mood-row">
-      ${moods.map(m => `<div class="mood-btn${td.mood === m.v ? ' selected' : ''}" onclick="logMood(${m.v})">
-        <div class="mood-emoji">${m.e}</div>
+    <div class="mood-row" id="mood-row" role="radiogroup" aria-label="How are you feeling?">
+      ${moods.map(m => `<div class="mood-btn${td.mood === m.v ? ' selected' : ''}" onclick="logMood(${m.v})" role="radio" aria-checked="${td.mood === m.v}" aria-label="Mood: ${m.l}" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();logMood(${m.v})}">
+        <div class="mood-emoji" aria-hidden="true">${m.e}</div>
         <div class="mood-label">${m.l}</div>
       </div>`).join('')}
     </div>
@@ -6502,8 +6603,8 @@ function renderTodayTab() {
     <div style="margin-top:14px">
       <div class="card-title" style="margin-bottom:8px">🌙 Sleep last night${infoIcon('sleep')}</div>
       <div class="sleep-row">
-        ${sleeps.map(s => `<div class="sleep-btn${td.sleep === s.v ? ' selected' : ''}" onclick="logSleep(${s.v})">
-          <div class="sleep-emoji">${s.e}</div>
+        ${sleeps.map(s => `<div class="sleep-btn${td.sleep === s.v ? ' selected' : ''}" onclick="logSleep(${s.v})" role="radio" aria-checked="${td.sleep === s.v}" aria-label="Sleep: ${s.l}" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();logSleep(${s.v})}">
+          <div class="sleep-emoji" aria-hidden="true">${s.e}</div>
           <span class="sleep-label">${s.l}</span>
         </div>`).join('')}
       </div>
@@ -6522,7 +6623,7 @@ function renderTodayTab() {
       border-radius:var(--r-md);transition:all 0.2s">
       <span style="font-size:16px">${isGentleMode ? '🌿' : '🍃'}</span>
       <div style="flex:1;font-size:13px;color:${isGentleMode ? 'var(--sky-light)' : 'var(--text-muted)'}">
-        ${isGentleMode ? 'Gentle mode — showing less today' : 'Light day? Tap for gentle mode'}
+        ${isGentleMode ? 'Gentle mode — showing less today' : 'Need a gentler day? Tap here'}
       </div>
       <div class="toggle${isGentleMode ? ' on' : ''}" style="pointer-events:none;transform:scale(0.8)"></div>
     </div>`;
@@ -6956,6 +7057,43 @@ function toggleFeeling(word) {
   // Update pill in-place without full re-render
   if (event && event.target) event.target.classList.toggle('selected');
   haptic('light');
+
+  // Clinical safety: if user selects "hopeless" or 3+ low-mood feelings, gently surface crisis resources
+  const f = state.todayData.feelings || [];
+  const heavyWords = ['hopeless', 'numb', 'exhausted', 'grieving'];
+  const selectedHeavy = f.filter(w => heavyWords.includes(w));
+  if (f.includes('hopeless') || selectedHeavy.length >= 3) {
+    if (!state._crisisNudgeShownToday) {
+      state._crisisNudgeShownToday = true;
+      setTimeout(() => {
+        showCrisisFeelingsNudge();
+      }, 600);
+    }
+  }
+}
+
+function showCrisisFeelingsNudge() {
+  // Gentle, non-intrusive nudge — not a modal, just a toast-like message
+  const existing = document.getElementById('crisis-feelings-nudge');
+  if (existing) existing.remove();
+  const nudge = document.createElement('div');
+  nudge.id = 'crisis-feelings-nudge';
+  nudge.setAttribute('role', 'status');
+  nudge.setAttribute('aria-live', 'polite');
+  nudge.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:380px;background:rgba(106,154,176,0.15);border:1px solid rgba(106,154,176,0.3);border-radius:16px;padding:14px 16px;z-index:9999;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:fadeIn 0.3s ease';
+  nudge.innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="font-size:20px;flex-shrink:0">🤍</div>
+      <div style="flex:1">
+        <div style="font-size:13px;color:var(--sky-light);line-height:1.6;margin-bottom:8px">It sounds like you're carrying a lot right now. The 🤍 is always here if you need it.</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="this.closest('#crisis-feelings-nudge').remove();openCrisisSheet()" class="btn btn-sm" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light);font-size:12px">Support resources</button>
+          <button onclick="this.closest('#crisis-feelings-nudge').remove()" class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--text-muted)">I'm okay</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(nudge);
+  setTimeout(() => { const el = document.getElementById('crisis-feelings-nudge'); if (el) el.remove(); }, 15000);
 }
 
 function logMood(val) {
@@ -7283,6 +7421,16 @@ function renderWellnessTab() {
     </div>
     <div style="font-size:13px;color:rgba(186,156,124,0.7);margin-bottom:14px;font-style:italic">No prompt, no structure — just get it out</div>
     <div style="text-align:center"><button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button></div>
+  </div>`;
+
+  // --- EVENING WIND-DOWN (always available, not just from evening routine) ---
+  html += `<div style="margin-top:10px;background:linear-gradient(135deg,rgba(106,154,176,0.12),rgba(106,154,176,0.05));border:1px solid rgba(106,154,176,0.25);border-radius:var(--r-lg);padding:18px 16px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="font-size:18px">🌙</span>
+      <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sky-light)">Wind down</div>
+    </div>
+    <div style="font-size:13px;color:rgba(106,154,176,0.7);margin-bottom:14px;font-style:italic">Evening check-in, journal prompt, and breathing — all in one gentle flow</div>
+    <div style="text-align:center"><button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="openWindDown()">Start wind-down</button></div>
   </div>`;
 
   // ── WEEKLY ─────────────────────────────────────────────────
@@ -8410,6 +8558,14 @@ function renderSettingsTab() {
 
   let html = '';
 
+  // ── GROUP: YOUR SETUP ────────────────────────────────────────
+  html += `<div class="settings-group">
+    <div class="settings-group-header" onclick="toggleSettingsGroup('setup')" role="button" aria-expanded="true" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSettingsGroup('setup')}">
+      <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">Your setup</span>
+      <span class="settings-group-chevron" id="sg-chevron-setup" style="font-size:10px;color:var(--text-muted);transition:transform 0.2s">▾</span>
+    </div>
+    <div class="settings-group-body" id="sg-body-setup">`;
+
   // ── PROFILE ──────────────────────────────────────────────────
   html += settingsSection('profile', '👤 Profile', `
     <div class="toggle-row" style="border-bottom:none;margin-bottom:12px">
@@ -8909,6 +9065,7 @@ function renderSettingsTab() {
       <button class="btn btn-secondary btn-block" onclick="exportEncryptedJSON()">🔐 Export encrypted backup</button>
       <button class="btn btn-secondary btn-block" onclick="exportJSON()">📤 Export my data (unencrypted)</button>
       <button class="btn btn-secondary btn-block" onclick="exportCSV()">📊 Export history as CSV</button>
+      <button class="btn btn-secondary btn-block" onclick="exportTherapistPDF()">📋 Export therapist-friendly report</button>
       <button class="btn btn-ghost btn-block" onclick="resetToday()">↺ Reset today's data</button>
       <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:8px;padding-top:8px">
         <button class="btn btn-ghost btn-block" onclick="exportDiagnostics()">🔧 Export diagnostics (for bug reports)</button>
@@ -8917,7 +9074,15 @@ function renderSettingsTab() {
   `);
 
   // Group divider — Info
-  html += `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:20px 4px 8px">About & info</div>`;
+  html += `</div></div>`; // Close sg-body-setup and settings-group
+
+  // ── GROUP: ABOUT & INFO ──────────────────────────────────────
+  html += `<div class="settings-group">
+    <div class="settings-group-header" onclick="toggleSettingsGroup('about')" role="button" aria-expanded="true" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSettingsGroup('about')}">
+      <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">About & info</span>
+      <span class="settings-group-chevron" id="sg-chevron-about" style="font-size:10px;color:var(--text-muted);transition:transform 0.2s">▾</span>
+    </div>
+    <div class="settings-group-body" id="sg-body-about">`;
 
   // ── SCIENCE ──────────────────────────────────────────────────
   html += settingsSection('science', '📚 Science behind bloom', `
@@ -8939,7 +9104,7 @@ function renderSettingsTab() {
         It is not therapy, counseling, or medical advice. If you are struggling, please reach out to a licensed therapist or counselor. Tap the 🤍 in the header any time for immediate crisis resources.
       </div>
       <div style="font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.6">
-        bloom is intended for users aged 13 and older. If you are under 18, we encourage you to use this app with a parent or guardian's awareness.
+        bloom is intended for users aged 16 and older.
       </div>
     </div>
     <div style="background:rgba(122,158,126,0.06);border:1px solid rgba(122,158,126,0.12);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
@@ -9012,7 +9177,7 @@ function renderSettingsTab() {
         Bloom Buddy connects you with other users for encouragement. We provide content moderation but cannot guarantee the behavior of other users. Never share personal identifying information with buddies you don't know. You can unpair at any time.</p>
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Age requirement:</strong><br>
-        Bloom is intended for users aged 13 and older. If you are under 18, we encourage you to use this app with a parent or guardian's awareness.</p>
+        Bloom is intended for users aged 16 and older.</p>
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Data responsibility:</strong><br>
         Because your data is stored locally on your device, you are responsible for maintaining backups. Bloom is not liable for data loss due to browser clearing, device changes, or Safari's storage policies.</p>
@@ -9021,6 +9186,8 @@ function renderSettingsTab() {
       <div style="font-size:11px;color:var(--text-muted);margin-top:8px">Last updated: March 2026</div>
     </div>
   `);
+
+  html += `</div></div>`; // Close sg-body-about and settings-group
 
   // ── SHARE BLOOM ──────────────────────────────────────────────
   html += `
@@ -9038,23 +9205,35 @@ function renderSettingsTab() {
 
 function settingsSection(id, title, bodyHtml) {
   return `<div class="settings-section" id="section-${id}">
-    <div class="settings-header" id="sh-${id}" onclick="toggleSettingsSection('${id}')">
+    <div class="settings-header" id="sh-${id}" onclick="toggleSettingsSection('${id}')" role="button" aria-expanded="false" aria-controls="sb-${id}" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSettingsSection('${id}')}">
       <div class="settings-header-title">${title}</div>
-      <div class="settings-chevron">▾</div>
+      <div class="settings-chevron" aria-hidden="true">▾</div>
     </div>
-    <div class="settings-body" id="sb-${id}">${bodyHtml}</div>
+    <div class="settings-body" id="sb-${id}" role="region" aria-labelledby="sh-${id}">${bodyHtml}</div>
   </div>`;
+}
+
+function toggleSettingsGroup(groupId) {
+  const body = document.getElementById('sg-body-' + groupId);
+  const chevron = document.getElementById('sg-chevron-' + groupId);
+  const header = body?.previousElementSibling;
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (chevron) chevron.style.transform = isOpen ? 'rotate(-90deg)' : 'rotate(0deg)';
+  if (header) header.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
 }
 
 function toggleSettingsSection(id) {
   const header = document.getElementById('sh-' + id);
   const body = document.getElementById('sb-' + id);
   const isOpen = body.classList.contains('open');
-  // Close all
-  document.querySelectorAll('.settings-header').forEach(h => h.classList.remove('open'));
+  // Close all and reset aria-expanded
+  document.querySelectorAll('.settings-header').forEach(h => { h.classList.remove('open'); h.setAttribute('aria-expanded', 'false'); });
   document.querySelectorAll('.settings-body').forEach(b => b.classList.remove('open'));
   if (!isOpen) {
     header.classList.add('open');
+    header.setAttribute('aria-expanded', 'true');
     body.classList.add('open');
   }
 }
@@ -9737,6 +9916,115 @@ function exportCSV() {
   showToast('CSV exported!');
 }
 
+function exportTherapistPDF() {
+  const history = load('bloom_history') || {};
+  const dates = Object.keys(history).sort();
+  if (dates.length === 0) { showToast('No history data to export yet.'); return; }
+
+  const name = state.prefs?.name || 'User';
+  const last30 = dates.slice(-30);
+  const moodLabels = ['Low', 'Rough', 'Okay', 'Good', 'Great'];
+
+  // Build mood data for chart
+  const moodData = last30.map(d => {
+    const day = history[d] || {};
+    return { date: d, mood: day.mood, sleep: day.sleep };
+  });
+
+  // Calculate summary stats
+  const moodsRecorded = moodData.filter(d => d.mood !== undefined && d.mood >= 0);
+  const avgMood = moodsRecorded.length > 0 ? (moodsRecorded.reduce((s, d) => s + d.mood, 0) / moodsRecorded.length) : null;
+  const lowDays = moodsRecorded.filter(d => d.mood <= 1).length;
+  const journalDays = last30.filter(d => {
+    const wd = state.wellnessData?.journal?.[d];
+    return wd && wd.text;
+  }).length;
+
+  // Build simple text-based mood chart
+  const chartRows = moodData.map(d => {
+    const mStr = d.mood !== undefined && d.mood >= 0 ? moodLabels[d.mood] : '—';
+    const bar = d.mood !== undefined && d.mood >= 0 ? '█'.repeat(d.mood + 1) + '░'.repeat(4 - d.mood) : '     ';
+    return `${d.date}  ${bar}  ${mStr}`;
+  }).join('\n');
+
+  // Collect feeling words frequency
+  const feelingCounts = {};
+  last30.forEach(d => {
+    const day = history[d];
+    if (day?.feelings) day.feelings.forEach(f => { feelingCounts[f] = (feelingCounts[f] || 0) + 1; });
+  });
+  const topFeelings = Object.entries(feelingCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+  // Build report
+  const report = `
+BLOOM — WELLNESS REPORT FOR THERAPIST/COUNSELOR
+Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+Name: ${name}
+Period: ${last30[0] || '—'} to ${last30[last30.length - 1] || '—'} (${last30.length} days)
+
+NOTE: This report was generated by bloom, a self-care companion app.
+bloom is not a clinical tool. This data reflects self-reported mood and
+habit tracking, not clinical assessments. It is provided to support
+conversations with a licensed mental health professional.
+
+═══════════════════════════════════════════════════════
+ MOOD SUMMARY
+═══════════════════════════════════════════════════════
+
+Average mood: ${avgMood !== null ? avgMood.toFixed(1) + '/4 (' + moodLabels[Math.round(avgMood)] + ')' : 'No data'}
+Days recorded: ${moodsRecorded.length} of ${last30.length}
+Low/Rough days: ${lowDays} (${moodsRecorded.length > 0 ? Math.round(lowDays / moodsRecorded.length * 100) : 0}%)
+Journal entries: ${journalDays}
+
+${topFeelings.length > 0 ? `Most reported feelings:\n${topFeelings.map(([f, c]) => `  • ${f} (${c} days)`).join('\n')}` : ''}
+
+═══════════════════════════════════════════════════════
+ DAILY MOOD LOG (Last ${last30.length} days)
+═══════════════════════════════════════════════════════
+Scale: Low(0) → Great(4)
+
+${chartRows}
+
+═══════════════════════════════════════════════════════
+ HABIT COMPLETION
+═══════════════════════════════════════════════════════
+
+${last30.map(d => {
+  const day = history[d] || {};
+  const habits = Object.keys(day).filter(k => (k.startsWith('m_') || k.startsWith('e_') || k.startsWith('w_')) && day[k] === true);
+  return `${d}: ${habits.length} habit${habits.length !== 1 ? 's' : ''} completed`;
+}).join('\n')}
+
+═══════════════════════════════════════════════════════
+ JOURNAL EXCERPTS (Last 30 days)
+═══════════════════════════════════════════════════════
+
+${last30.map(d => {
+  const entry = state.wellnessData?.journal?.[d];
+  if (!entry || !entry.text) return null;
+  return `[${d}]\n${entry.text.slice(0, 300)}${entry.text.length > 300 ? '...' : ''}\n`;
+}).filter(Boolean).join('\n') || 'No journal entries in this period.'}
+
+═══════════════════════════════════════════════════════
+
+This report is for informational purposes only and should be
+interpreted in context of a therapeutic conversation. The mood
+scale is subjective and self-reported.
+
+Generated by bloom (bloomhabits.app)
+`.trim();
+
+  // Download as text file (universally readable, no dependencies)
+  const blob = new Blob([report], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `bloom-therapist-report-${today()}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Therapist report exported!');
+}
+
 async function importJSON(file) {
   const text = await file.text();
   const parsed = JSON.parse(text);
@@ -9790,8 +10078,14 @@ function openSheet(id) {
   document.getElementById('sheet-backdrop').classList.add('open');
   const sheet = document.getElementById(id);
   sheet.classList.add('open');
-  // Focus trap
-  setTimeout(() => trapFocusInSheet(sheet), 100);
+  // Move focus into the sheet for keyboard/screen reader users
+  sheet.setAttribute('tabindex', '-1');
+  setTimeout(() => {
+    const firstFocusable = sheet.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (firstFocusable) firstFocusable.focus();
+    else sheet.focus();
+    trapFocusInSheet(sheet);
+  }, 100);
 }
 
 function closeAllSheets() {
@@ -10413,41 +10707,53 @@ let obData = {
   selfCareTasks: [],
   multiBuddy: false,
   buddyShareMood: true,
+  readiness: null, // 'ready' | 'gentle' | 'exploring'
 };
 
-const OB_STEPS = 12;
+// Adaptive onboarding — path depends on readiness
+function getOBPath() {
+  if (obData.readiness === 'ready') {
+    // Full setup: Welcome+Name → Readiness → Habits+SelfCare → Appearance+Sound+Notifications → Ready
+    return ['welcome', 'readiness', 'routine', 'customize', 'ready'];
+  } else if (obData.readiness === 'gentle') {
+    // Minimal: Welcome+Name → Readiness → Ready (smart defaults, gentle mode)
+    return ['welcome', 'readiness', 'ready'];
+  } else if (obData.readiness === 'exploring') {
+    // Quick: Welcome+Name → Readiness → Appearance → Ready
+    return ['welcome', 'readiness', 'customize', 'ready'];
+  }
+  // Before readiness is chosen
+  return ['welcome', 'readiness'];
+}
 
 function renderOnboarding() {
   const progress = document.getElementById('ob-progress');
   const body = document.getElementById('ob-body');
   const footer = document.getElementById('ob-footer');
+  const path = getOBPath();
+  const totalSteps = path.length;
 
-  progress.innerHTML = Array.from({length: OB_STEPS}, (_, i) =>
-    `<div class="ob-dot${i === obStep ? ' active' : i < obStep ? ' done' : ''}"></div>`
+  progress.innerHTML = Array.from({length: totalSteps}, (_, i) =>
+    `<div class="ob-pip${i === obStep ? ' active' : i < obStep ? ' done' : ''}" role="img" aria-label="Step ${i+1} of ${totalSteps}${i === obStep ? ', current' : i < obStep ? ', completed' : ''}"></div>`
   ).join('');
 
-  switch(obStep) {
-    case 0:  renderOBWelcome(body, footer); break;
-    case 1:  renderOBName(body, footer); break;
-    case 2:  renderOBHabits(body, footer); break;
-    case 3:  renderOBHousehold(body, footer); break;
-    case 4:  renderOBWater(body, footer); break;
-    case 5:  renderOBNotifications(body, footer); break;
-    case 6:  renderOBAudio(body, footer); break;
-    case 7:  renderOBAppearance(body, footer); break;
-    case 8:  renderOBSelfCare(body, footer); break;
-    case 9:  renderOBInstall(body, footer); break;
-    case 10: renderOBBuddyIntro(body, footer); break;
-    case 11: renderOBReady(body, footer); break;
+  const currentStep = path[obStep] || 'welcome';
+  switch(currentStep) {
+    case 'welcome':   renderOBWelcomeAndName(body, footer); break;
+    case 'readiness':  renderOBReadiness(body, footer); break;
+    case 'routine':    renderOBRoutine(body, footer); break;
+    case 'customize':  renderOBCustomize(body, footer); break;
+    case 'ready':      renderOBReady(body, footer); break;
   }
 }
 
 function obNext() {
-  if (obStep === 1) {
-    const inp = document.getElementById('ob-name-input');
-    if (inp && inp.value.trim()) obData.name = inp.value.trim();
-  }
-  obStep = Math.min(OB_STEPS - 1, obStep + 1);
+  // Save name if on welcome step
+  const inp = document.getElementById('ob-name-input');
+  if (inp && inp.value.trim()) obData.name = inp.value.trim();
+
+  const path = getOBPath();
+  obStep = Math.min(path.length - 1, obStep + 1);
   renderOnboarding();
 }
 
@@ -10455,6 +10761,234 @@ function obBack() {
   obStep = Math.max(0, obStep - 1);
   renderOnboarding();
 }
+
+// ── NEW ADAPTIVE ONBOARDING STEPS ──────────────────────────
+
+function renderOBWelcomeAndName(body, footer) {
+  body.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:12px">
+      <div style="margin-bottom:20px;filter:drop-shadow(0 4px 24px rgba(122,158,126,0.35))">${bloomIcon(96)}</div>
+      <div style="font-family:Fraunces,serif;font-size:42px;font-weight:300;color:var(--cream);line-height:1.1;margin-bottom:8px">bloom</div>
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:16px;color:var(--text-secondary);margin-bottom:28px;letter-spacing:0.01em">a gentle self-care companion</div>
+      <div style="width:100%;background:rgba(122,158,126,0.07);border:1px solid rgba(122,158,126,0.18);border-radius:20px;padding:20px 24px;margin-bottom:28px">
+        <div style="font-family:Fraunces,serif;font-style:italic;font-size:17px;color:var(--sage-light);line-height:1.7">No guilt. No pressure.<br>Just you, showing up.</div>
+      </div>
+      <div style="width:100%;text-align:left;margin-bottom:8px">
+        <div class="ob-sub" style="margin-bottom:8px">What should we call you?</div>
+        <input type="text" id="ob-name-input" placeholder="Your name..." value="${obData.name}" style="font-size:18px;padding:16px;width:100%">
+        <div style="font-size:12px;color:var(--text-muted);margin-top:6px">Your name stays only on your device.</div>
+      </div>
+    </div>`;
+  footer.innerHTML = `<button class="btn btn-primary btn-block" id="ob-btn-next" style="background:var(--sage);color:var(--text-on-sage)">Continue</button>`;
+  document.getElementById('ob-btn-next').addEventListener('click', obNext);
+  setTimeout(() => { const i = document.getElementById('ob-name-input'); if(i && !i.value) i.focus(); }, 100);
+}
+
+function renderOBReadiness(body, footer) {
+  const r = obData.readiness;
+  body.innerHTML = `
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:48px;margin-bottom:14px">🌿</div>
+      <div class="ob-title" style="text-align:center">Where are you<br>right now${obData.name ? ', ' + obData.name : ''}?</div>
+      <div class="ob-sub" style="text-align:center;margin-bottom:0">This helps bloom meet you where you are. There's no wrong answer.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div onclick="obSetReadiness('ready')" style="
+        padding:16px;border-radius:var(--r-xl);cursor:pointer;
+        border:2px solid ${r === 'ready' ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};
+        background:${r === 'ready' ? 'rgba(122,158,126,0.1)' : 'var(--bg-card)'};
+        transition:all 0.2s">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <span style="font-size:22px">🌱</span>
+          <div style="font-size:15px;font-weight:500;color:var(--cream)">I'm ready to set things up</div>
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;padding-left:34px">Choose your habits, pick a theme, set up notifications — takes about 3 minutes.</div>
+      </div>
+      <div onclick="obSetReadiness('gentle')" style="
+        padding:16px;border-radius:var(--r-xl);cursor:pointer;
+        border:2px solid ${r === 'gentle' ? 'rgba(106,154,176,0.5)' : 'rgba(255,255,255,0.08)'};
+        background:${r === 'gentle' ? 'rgba(106,154,176,0.1)' : 'var(--bg-card)'};
+        transition:all 0.2s">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <span style="font-size:22px">🫂</span>
+          <div style="font-size:15px;font-weight:500;color:var(--cream)">I just need something gentle today</div>
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;padding-left:34px">Start with smart defaults. bloom will keep things quiet and simple. You can customize anytime.</div>
+      </div>
+      <div onclick="obSetReadiness('exploring')" style="
+        padding:16px;border-radius:var(--r-xl);cursor:pointer;
+        border:2px solid ${r === 'exploring' ? 'rgba(201,149,74,0.5)' : 'rgba(255,255,255,0.08)'};
+        background:${r === 'exploring' ? 'rgba(201,149,74,0.1)' : 'var(--bg-card)'};
+        transition:all 0.2s">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <span style="font-size:22px">👀</span>
+          <div style="font-size:15px;font-weight:500;color:var(--cream)">Just looking around</div>
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;padding-left:34px">Pick a theme and jump in. Everything else is default — tweak it from Settings whenever.</div>
+      </div>
+    </div>`;
+  footer.innerHTML = `
+    <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
+    <button class="btn btn-primary" id="ob-btn-next" style="flex:1;${r ? '' : 'opacity:0.4;pointer-events:none'}">${r ? 'Continue' : 'Choose above'}</button>
+  `;
+  document.getElementById('ob-btn-back').addEventListener('click', obBack);
+  if (r) document.getElementById('ob-btn-next').addEventListener('click', () => {
+    // For gentle path, set smart defaults
+    if (r === 'gentle') {
+      obData._startSmall = true;
+      Object.keys(obData.habits).forEach(k => { obData.habits[k] = false; });
+      obData.habits.m_teeth = true;
+      obData.habits.e_teeth = true;
+      obData.selfCareTasks = ['sc_warm_drink', 'sc_deep_breath'];
+      obData.progressiveDisclosure = true;
+    } else if (r === 'exploring') {
+      obData.progressiveDisclosure = false;
+    }
+    obNext();
+  });
+}
+
+function obSetReadiness(val) {
+  obData.readiness = val;
+  renderOnboarding();
+}
+
+function renderOBRoutine(body, footer) {
+  // Combined habits + self-care on one screen (for "ready" path)
+  const habits = [
+    { id: 'm_teeth', icon: '🦷', name: 'Morning brush', type: 'daily' },
+    { id: 'e_teeth', icon: '🦷', name: 'Evening brush', type: 'daily' },
+    { id: 'w_shower', icon: '🚿', name: 'Shower', type: 'weekly' },
+    { id: 'w_exercise', icon: '💪', name: 'Exercise', type: 'weekly' },
+    { id: 'w_outside', icon: '🌿', name: 'Go outside', type: 'weekly' },
+  ];
+
+  let html = `<div class="ob-title">Your routine</div>
+  <div class="ob-sub">Toggle on what you'd like to track. All of this can change later.</div>`;
+
+  // Start small escape hatch
+  if (!obData._startSmall) {
+    html += `<div onclick="obStartSmall()" style="
+      display:flex;align-items:center;gap:12px;
+      background:rgba(122,158,126,0.07);border:1px solid rgba(122,158,126,0.18);
+      border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px;cursor:pointer">
+      <span style="font-size:20px">🌱</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;color:var(--sage-light)">Feeling overwhelmed? Start small</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;line-height:1.5">Skip habits — just water & nourishment.</div>
+      </div>
+    </div>`;
+  } else {
+    html += `<div style="
+      display:flex;align-items:center;gap:10px;
+      background:rgba(122,158,126,0.07);border:1px solid rgba(122,158,126,0.18);
+      border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px">
+      <span style="font-size:16px">🌱</span>
+      <div style="font-size:13px;color:var(--sage-light);font-style:italic;flex:1">Starting small — just water & nourishment.</div>
+      <div onclick="obUndoStartSmall()" style="font-size:12px;color:var(--text-muted);cursor:pointer;text-decoration:underline">Undo</div>
+    </div>`;
+  }
+
+  if (!obData._startSmall) {
+    html += `<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px">Habits</div>`;
+    habits.forEach(h => {
+      const on = obData.habits[h.id];
+      html += `<div class="toggle-row" style="padding:10px 0">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">${h.icon}</span>
+          <div class="toggle-label">${h.name}</div>
+        </div>
+        <div class="toggle${on?' on':''}" onclick="obToggleHabit('${h.id}','${h.type}')"></div>
+      </div>`;
+    });
+
+    // Meals tracking
+    const mealsOn = obData.habits.track_meals;
+    html += `<div style="height:1px;background:rgba(255,255,255,0.06);margin:4px 0"></div>
+    <div class="toggle-row" style="padding:10px 0">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:18px">🍽</span>
+        <div><div class="toggle-label">Track meals</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">Not calories — just a reminder to eat</div></div>
+      </div>
+      <div class="toggle${mealsOn?' on':''}" onclick="obToggleHabit('track_meals','daily')"></div>
+    </div>`;
+  }
+
+  // Self-care quick picks
+  const selected = obData.selfCareTasks || [];
+  const curatedIds = ['sc_warm_drink', 'sc_deep_breath', 'sc_music'];
+  const curatedTasks = curatedIds.map(id => SELF_CARE_TASKS.find(t => t.id === id)).filter(Boolean);
+  html += `<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin:16px 0 8px">Self-care (optional)</div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px">`;
+  curatedTasks.forEach(t => {
+    const on = selected.includes(t.id);
+    html += `<div onclick="obToggleSelfCare('${t.id}')" id="ob-sc-${t.id}" style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;background:${on ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};font-size:13px;color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s"><span>${t.icon}</span>${t.label}</div>`;
+  });
+  html += `</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px">More options available in Settings.</div>`;
+
+  body.innerHTML = html;
+  footer.innerHTML = `
+    <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
+    <button class="btn btn-primary" id="ob-btn-next" style="flex:1">Continue</button>
+  `;
+  document.getElementById('ob-btn-back').addEventListener('click', obBack);
+  document.getElementById('ob-btn-next').addEventListener('click', obNext);
+}
+
+function renderOBCustomize(body, footer) {
+  // Combined: Theme + Sound + Notifications on one screen
+  const current = obData.theme || 'forest';
+  const soundOn = obData.audio !== false;
+
+  let html = `<div class="ob-title">Make it yours</div>
+  <div class="ob-sub">Choose your look and feel.</div>`;
+
+  // Theme picker
+  html += `<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:10px">Color theme</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px">
+    ${Object.entries(THEMES).map(([key, t]) => `
+      <div onclick="obSetTheme('${key}')" style="
+        background:${t.bg};
+        border:2px solid ${key === current ? t.primary : 'rgba(255,255,255,0.1)'};
+        border-radius:var(--r-lg);padding:12px 10px;cursor:pointer;text-align:center;
+        transition:border-color 0.2s;${key === current ? 'transform:scale(1.03)' : ''}">
+        <div style="font-size:14px;font-weight:500;color:${t.primaryLight}">${t.emoji}</div>
+        <div style="font-size:11px;color:${t.textSecondary};margin-top:2px">${t.name}</div>
+        ${key === current ? '<div style="font-size:10px;color:' + t.primary + ';margin-top:3px">✓</div>' : ''}
+      </div>`).join('')}
+  </div>`;
+
+  // Sound toggle
+  html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid rgba(255,255,255,0.06)">
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--cream)">🔔 Sounds</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Soft chimes on habit completion</div>
+    </div>
+    <div class="toggle${soundOn?' on':''}" onclick="obToggleAudio()"></div>
+  </div>`;
+
+  // Notifications quick toggle
+  html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid rgba(255,255,255,0.06)">
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--cream)">💧 Water reminders</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Gentle nudges to stay hydrated</div>
+    </div>
+    <div class="toggle${obData.notifications.waterMode !== 'off' ? ' on' : ''}" onclick="obData.notifications.waterMode=obData.notifications.waterMode==='off'?'smart':'off';renderOnboarding()"></div>
+  </div>`;
+
+  html += `<div style="font-size:11px;color:var(--text-muted);margin-top:12px;text-align:center">All settings can be changed anytime.</div>`;
+
+  body.innerHTML = html;
+  footer.innerHTML = `
+    <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
+    <button class="btn btn-primary" id="ob-btn-next" style="flex:1">Continue</button>
+  `;
+  document.getElementById('ob-btn-back').addEventListener('click', obBack);
+  document.getElementById('ob-btn-next').addEventListener('click', obNext);
+}
+
+// ── LEGACY ONBOARDING STEPS (kept for compatibility) ──────
 
 function renderOBWelcome(body, footer) {
   body.innerHTML = `
@@ -11032,6 +11566,26 @@ function renderOBReady(body, footer) {
     <div class="ob-sub">bloom is ready whenever you are. No rush — every small step counts.</div>
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:22px;flex-shrink:0">🎂</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px">Age acknowledgment</div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:10px">
+            bloom is designed for users aged 16 and older.
+          </div>
+          <div id="ob-age-gate" style="display:flex;flex-direction:column;gap:8px">
+            <div onclick="obSetAge('16plus')" id="ob-age-16" style="padding:10px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid ${obData.ageGroup === '16plus' ? 'rgba(122,158,126,0.4)' : 'rgba(255,255,255,0.08)'};background:${obData.ageGroup === '16plus' ? 'rgba(122,158,126,0.08)' : 'transparent'};font-size:13px;color:var(--cream);transition:all 0.2s">
+              I'm 16 or older
+            </div>
+            <div onclick="obSetAge('under16')" id="ob-age-u16" style="padding:10px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid ${obData.ageGroup === 'under16' ? 'rgba(176,120,120,0.4)' : 'rgba(255,255,255,0.08)'};background:${obData.ageGroup === 'under16' ? 'rgba(176,120,120,0.08)' : 'transparent'};font-size:13px;color:var(--cream);transition:all 0.2s">
+              I'm under 16
+            </div>
+          </div>
+          ${obData.ageGroup === 'under16' ? '<div style="font-size:12px;color:var(--rose-light);margin-top:8px;line-height:1.6">bloom is designed for users 16 and older. If you\'re looking for mental health support, please talk to a parent, guardian, or school counselor who can help you find age-appropriate resources.</div>' : ''}
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:flex-start;gap:12px">
         <span style="font-size:22px;flex-shrink:0">🔒</span>
         <div>
           <div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px">Your data is completely private</div>
@@ -11081,12 +11635,18 @@ function renderOBReady(body, footer) {
       <div id="ob-backup-url" style="display:none;margin-top:10px" class="backup-url-box"></div>
     </div>
   `;
+  const canFinish = obData.ageGroup === '16plus';
   footer.innerHTML = `
     <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
-    <button class="btn btn-primary" id="ob-btn-finish" style="flex:1">Start blooming 🌿</button>
+    <button class="btn btn-primary" id="ob-btn-finish" style="flex:1;${canFinish ? '' : 'opacity:0.4;pointer-events:none'}">${canFinish ? "I'm ready" : "Select your age above"}</button>
   `;
   document.getElementById('ob-btn-back').addEventListener('click', obBack);
-  document.getElementById('ob-btn-finish').addEventListener('click', completeOnboarding);
+  if (canFinish) document.getElementById('ob-btn-finish').addEventListener('click', completeOnboarding);
+}
+
+function obSetAge(group) {
+  obData.ageGroup = group;
+  renderOnboarding();
 }
 
 function obSetPace(gradual) {
@@ -11121,11 +11681,23 @@ function completeOnboarding() {
     onboardDate: today(),
     progressiveDisclosure: obData.progressiveDisclosure !== false, // default true (gradual)
   };
+
+  // Gentle path: enable gentle mode for first day
+  if (obData.readiness === 'gentle') {
+    prefs.progressiveDisclosure = true;
+  }
+
   save('bloom_prefs', prefs);
   save('bloom_xp', { total: 0, streak: 0, daysShowedUp: 0, currentRun: 0, lastStreakDate: null });
   document.getElementById('onboarding').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   initApp();
+
+  // Gentle path: auto-activate gentle mode on first load
+  if (obData.readiness === 'gentle') {
+    state.todayData.gentleMode = true;
+    saveState();
+  }
 }
 
 // ============================================================
@@ -11794,15 +12366,24 @@ async function buddyCancelSearch() {
 }
 
 function checkBuddyMessageSafety(text) {
-  // Warn about sharing personal info
-  const personalPatterns = [
-    /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/, // phone numbers
-    /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/, // emails
-    /\b\d{1,5}\s+\w+\s+(st|street|ave|avenue|rd|road|dr|drive|blvd|ln|lane|ct|court)\b/i, // addresses
-    /\b(instagram|snapchat|tiktok|discord|telegram|whatsapp|ig|snap)\s*[:@]?\s*\w+/i, // social handles
+  // Warn about sharing personal info — high-confidence matches get a stronger warning
+  const highConfidence = [
+    /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/, // US phone numbers
+    /\+\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{2,4}[-.\s]?\d{2,4}\b/, // international phone numbers
+    /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/, // emails
+    /\b\d{3}[-]?\d{2}[-]?\d{4}\b/, // SSN pattern
   ];
-  for (const p of personalPatterns) {
-    if (p.test(text)) return 'This looks like it might contain personal info (phone, email, address, or social handle). bloom buddy is safer without sharing personal details. Send anyway?';
+  const mediumConfidence = [
+    /\b\d{1,5}\s+\w+\s+(st|street|ave|avenue|rd|road|dr|drive|blvd|ln|lane|ct|court|way|pl|place)\b/i, // addresses
+    /\b(instagram|snapchat|tiktok|discord|telegram|whatsapp|ig|snap|twitter|x\.com|reddit)\s*[:@]?\s*\w+/i, // social handles
+    /\b@\w{2,30}\b/, // generic @handle
+  ];
+
+  for (const p of highConfidence) {
+    if (p.test(text)) return { level: 'high', msg: 'This looks like it contains personal info (phone number, email, or ID). Sharing personal details with someone you don\'t know can be unsafe.' };
+  }
+  for (const p of mediumConfidence) {
+    if (p.test(text)) return { level: 'medium', msg: 'This looks like it might contain personal info (address or social handle). bloom buddy is safer without sharing personal details.' };
   }
   return null;
 }
@@ -11812,10 +12393,16 @@ async function buddySendMessage(pairId) {
   if (!input || !input.value.trim()) return;
   const text = input.value.trim();
 
-  // Client-side safety check for personal information — blocking confirmation
+  // Client-side safety check for personal information
   const warning = checkBuddyMessageSafety(text);
   if (warning) {
-    if (!confirm(warning + '\n\nAre you sure you want to send this?')) return;
+    if (warning.level === 'high') {
+      // Two-step confirmation for high-confidence personal info
+      if (!confirm(warning.msg + '\n\nAre you sure you want to share this?')) return;
+      if (!confirm('Just to be safe — you\'re sharing what looks like personal info with someone you may not know. Confirm one more time to send.')) return;
+    } else {
+      if (!confirm(warning.msg + '\n\nSend anyway?')) return;
+    }
   }
 
   const data = await buddyApi({
@@ -11937,15 +12524,30 @@ function buddySafetyAction(pairId) {
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
         <button class="btn btn-secondary btn-block" onclick="closeAllSheets();openCrisisSheet()">🤍 Crisis & support resources</button>
-        <button class="btn btn-secondary btn-block" onclick="closeAllSheets();buddyUnpair('${pairId}')">Unpair from this buddy</button>
+        <button class="btn btn-secondary btn-block" onclick="closeAllSheets();buddyReportAndUnpair('${pairId}')">Report & unpair from this buddy</button>
+        <button class="btn btn-secondary btn-block" onclick="closeAllSheets();buddyUnpair('${pairId}')">Just unpair (no report)</button>
         <button class="btn btn-ghost btn-block" onclick="closeAllSheets()">Go back</button>
       </div>
       <div style="font-size:11px;color:var(--text-muted);text-align:center;line-height:1.6">
-        Bloom buddies are for encouragement only — not therapy or crisis support. Never share personal info with someone you don't know.
+        Reporting flags this buddy so they can be reviewed. It helps keep the community safe. Bloom buddies are for encouragement only — not therapy or crisis support.
       </div>
     `;
   }
   openSheet('buddy-safety-sheet');
+}
+
+async function buddyReportAndUnpair(pairId) {
+  if (!confirm('Report this buddy for concerning behavior? This will unpair you and flag their account for review.')) return;
+  try {
+    await buddyApi({
+      action: 'report-buddy',
+      buddyId: ensureBuddyId(),
+      pairId,
+    });
+  } catch(e) {}
+  // Also unpair
+  await buddyUnpair(pairId);
+  showBuddyStatus('Buddy reported and unpaired. Thank you for helping keep the community safe.', 'var(--sage)');
 }
 
 function checkBuddyActivityTimeout() {
@@ -12086,7 +12688,7 @@ function renderBuddyOnboarding() {
   return `
     <div class="buddy-onboard-step">
       <div class="buddy-onboard-progress">
-        ${steps.map((_, i) => `<div class="buddy-onboard-dot${i <= buddyOnboardStep ? ' active' : ''}"></div>`).join('')}
+        ${steps.map((_, i) => `<div class="buddy-onboard-dot${i <= buddyOnboardStep ? ' active' : ''}" role="img" aria-label="Step ${i+1}${i <= buddyOnboardStep ? ', completed' : ''}"></div>`).join('')}
       </div>
       <div style="font-size:48px;margin-bottom:16px">${step.emoji}</div>
       <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream);margin-bottom:10px">${step.title}</div>
