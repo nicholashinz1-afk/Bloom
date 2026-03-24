@@ -2397,30 +2397,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   </div>
 </div>
 
-<!-- Buddy mood sharing migration prompt -->
-<div class="bottom-sheet" id="buddy-mood-migration-sheet">
-  <div class="sheet-handle"></div>
-  <div style="padding:4px 20px 20px">
-    <div class="sheet-title">Buddy mood sharing</div>
-    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
-      bloom buddy currently shares your mood with your buddy and notifies them when you're having a rough day. We want to make sure you're comfortable with this.
-    </div>
-    <div style="background:var(--bg-card);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
-      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
-        <strong style="color:var(--cream)">With mood sharing on:</strong> Your buddy sees your mood (Low / Rough / Okay / Good / Great) and gets notified on hard days so they can send support.
-      </div>
-      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-top:8px">
-        <strong style="color:var(--cream)">With mood sharing off:</strong> Your buddy sees your days shown up and habit %, but not your mood. No rough-day notifications.
-      </div>
-    </div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">You can change this any time in Settings → bloom buddy.</div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <button class="btn btn-primary btn-block" onclick="completeBuddyMoodMigration(true)">Keep mood sharing on</button>
-      <button class="btn btn-secondary btn-block" onclick="completeBuddyMoodMigration(false)">Turn mood sharing off</button>
-    </div>
-  </div>
-</div>
-
 <!-- Info tooltip sheet (small, for individual feature explanations) -->
 <div class="bottom-sheet" id="info-tip-sheet">
   <div class="sheet-handle"></div>
@@ -11246,24 +11222,6 @@ function logCustomCheckin(id, value) {
   renderTodayTab();
 }
 
-function completeBuddyMoodMigration(shareOn) {
-  state.prefs.buddyShareMood = shareOn;
-  state.prefs._buddyMoodMigrated = true;
-  saveState();
-  // Close only this sheet — don't interfere with What's New or other overlays
-  const sheet = document.getElementById('buddy-mood-migration-sheet');
-  if (sheet) sheet.classList.remove('open');
-  const overlay = document.getElementById('sheet-overlay');
-  if (overlay && !document.querySelector('.bottom-sheet.open')) overlay.classList.remove('visible');
-}
-
-function checkBuddyMoodMigration() {
-  // Only show for existing buddy users who haven't been asked yet
-  if (state.prefs?._buddyMoodMigrated) return;
-  if (buddyState.status !== 'paired') return;
-  // Existing user with active buddy — show the prompt
-  setTimeout(() => openSheet('buddy-mood-migration-sheet'), 1500);
-}
 
 function initApp() {
   loadState();
@@ -11288,7 +11246,6 @@ function initApp() {
   if (buddyState.status !== 'none') {
     syncBuddyStatus();
   }
-  checkBuddyMoodMigration();
   const pendingBuddyInvite = load('bloom_pending_buddy_invite', null);
   if (pendingBuddyInvite) {
     save('bloom_pending_buddy_invite', null);
