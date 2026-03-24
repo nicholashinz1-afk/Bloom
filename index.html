@@ -77,6 +77,7 @@
   --nav-height:  64px;
   --crisis-height: 44px;
   --header-height: 56px;
+  --pride-active: 0;
 }
 
 /* ============================================================
@@ -123,6 +124,17 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   max-width: 430px;
   margin: 0 auto;
   position: relative;
+}
+
+/* Pride theme rainbow accent bar */
+#app::before {
+  content: '';
+  display: block;
+  height: calc(3px * var(--pride-active));
+  background: linear-gradient(90deg, #e04050, #e87030, #e8c840, #50b868, #4080d0, #9050c8);
+  flex-shrink: 0;
+  opacity: var(--pride-active);
+  transition: height 0.3s, opacity 0.3s;
 }
 
 /* Sticky header */
@@ -2026,6 +2038,11 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   border-color: rgba(122,158,126,0.4);
   transform: scale(0.95);
 }
+.buddy-love-btn:active {
+  background: rgba(176,120,120,0.2);
+  border-color: rgba(176,120,120,0.5);
+  transform: scale(0.93);
+}
 .buddy-messages {
   max-height: 300px;
   overflow-y: auto;
@@ -2157,6 +2174,8 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 </style>
 </head>
 <body>
+
+<a href="#tab-content" class="skip-link" style="position:absolute;top:-40px;left:0;background:var(--sage);color:var(--text-on-sage);padding:8px 16px;z-index:100;font-size:14px;border-radius:0 0 var(--r-md) 0;transition:top 0.2s" onfocus="this.style.top='0'" onblur="this.style.top='-40px'">Skip to content</a>
 
 <!-- ============================================================
      ONBOARDING
@@ -2516,7 +2535,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.7.0';
+const VERSION = '2.8.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -2562,10 +2581,11 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'Gentle mode — tap "Light day?" on your Daily page to reduce habits to your top 2. No mood required, no questions asked.', spotlight: null, tab: 'today', featured: true },
-  { text: 'Softer onboarding — new "Start small" option lets you skip habit setup entirely and begin with just water & nourishment.', spotlight: null, featured: true },
-  { text: 'Self-care setup now starts with 3 curated suggestions instead of 16 options at once. Tap "Explore all" to see everything.', spotlight: null },
-  { text: 'Hard day mode now uses calmer blue tones instead of red — because comfort shouldn\'t look like a warning.', spotlight: null, tab: 'today' },
+  { text: 'Skill-building tools — 5-4-3-2-1 grounding, guided body scan, and gentle cognitive reframing are now in your Wellness tab.', spotlight: null, tab: 'wellness', featured: true },
+  { text: 'Pride theme — a warm, inclusive palette with a rainbow accent. Find it in Settings > Appearance.', spotlight: null, featured: true },
+  { text: 'Send love — tap the bloom button to send a wordless 🌸 to your buddy. Sometimes no words are the right words.', spotlight: null, tab: 'community' },
+  { text: 'CSV export — download your mood and habit history as a spreadsheet from Settings > Data & privacy.', spotlight: null },
+  { text: 'Better accessibility — keyboard navigation, skip-to-content link, and focus trapping in all overlays.', spotlight: null },
 ];
 
 // ============================================================
@@ -4233,6 +4253,14 @@ const THEMES = {
     primary: '#b5a8c8', primaryLight: '#d4c8e8', primaryDim: '#3e3650',
     textSecondary: '#a8a0b8', textMuted: '#585068', seasonal: '#d4c8e8',
   },
+  pride: {
+    name: 'Pride', emoji: '🏳️‍🌈', description: 'Warm, inclusive, radiant',
+    bg: '#12101a', bgMid: '#161420', bgCard: '#1c1a28', bgElevated: '#242232',
+    bgOverlay: 'rgba(18,16,26,0.93)',
+    primary: '#c8a0d8', primaryLight: '#e0c0f0', primaryDim: '#3e2850',
+    textSecondary: '#b8a0c8', textMuted: '#5a4870', seasonal: '#e0c0f0',
+    pride: true,
+  },
 };
 
 function applyTheme(themeKey) {
@@ -4249,6 +4277,7 @@ function applyTheme(themeKey) {
   r.setProperty('--text-secondary', t.textSecondary);
   r.setProperty('--text-muted',     t.textMuted);
   r.setProperty('--seasonal',       t.seasonal);
+  r.setProperty('--pride-active',   t.pride ? '1' : '0');
   document.body.style.background = t.bg;
 }
 
@@ -5809,6 +5838,66 @@ function switchTab(tab) {
 }
 
 // ============================================================
+//  KEYBOARD NAVIGATION & ACCESSIBILITY
+// ============================================================
+const TAB_ORDER = ['today', 'weekly', 'wellness', 'progress', 'community'];
+
+document.addEventListener('keydown', (e) => {
+  // Tab navigation: arrow keys when focus is on a nav button
+  const active = document.activeElement;
+  if (active && active.classList.contains('nav-btn') && active.getAttribute('role') === 'tab') {
+    let idx = TAB_ORDER.indexOf(active.id.replace('nav-', ''));
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      idx = (idx + 1) % TAB_ORDER.length;
+      const next = document.getElementById('nav-' + TAB_ORDER[idx]);
+      if (next) { next.focus(); switchTab(TAB_ORDER[idx]); }
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      idx = (idx - 1 + TAB_ORDER.length) % TAB_ORDER.length;
+      const prev = document.getElementById('nav-' + TAB_ORDER[idx]);
+      if (prev) { prev.focus(); switchTab(TAB_ORDER[idx]); }
+    }
+  }
+  // Escape to close sheets
+  if (e.key === 'Escape') {
+    const openSheet = document.querySelector('.bottom-sheet.open');
+    if (openSheet) { e.preventDefault(); closeAllSheets(); }
+  }
+});
+
+// Focus trapping for bottom sheets
+function trapFocusInSheet(sheet) {
+  const focusable = sheet.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  if (focusable.length === 0) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  first.focus();
+  sheet._focusTrap = (e) => {
+    if (e.key !== 'Tab') return;
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  };
+  sheet.addEventListener('keydown', sheet._focusTrap);
+}
+
+function releaseFocusTrap(sheet) {
+  if (sheet._focusTrap) {
+    sheet.removeEventListener('keydown', sheet._focusTrap);
+    delete sheet._focusTrap;
+  }
+}
+
+function initAccessibility() {
+  // Skip link target
+  const main = document.querySelector('main');
+  if (main && !main.getAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+}
+
+// ============================================================
 //  TODAY TAB RENDER
 // ============================================================
 function renderTodayTop() {
@@ -6987,6 +7076,50 @@ function renderWellnessTab() {
     </div>
   </div>`;
 
+  // --- SKILL-BUILDING MODULES ---
+  html += `<div style="margin-top:16px">
+    <div style="font-family:Fraunces,serif;font-size:16px;font-weight:400;color:var(--cream);margin-bottom:12px;padding:0 2px">Skill-building tools</div>
+
+    <!-- 5-4-3-2-1 Grounding -->
+    <div style="background:linear-gradient(135deg,rgba(122,158,126,0.12),rgba(122,158,126,0.05));border:1px solid rgba(122,158,126,0.25);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:10px" id="grounding-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:18px">🌿</span>
+        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sage-light)">5-4-3-2-1 Grounding${infoIcon('grounding')}</div>
+        <div style="margin-left:auto;font-size:11px;color:var(--sage);background:rgba(122,158,126,0.15);padding:2px 8px;border-radius:99px">senses</div>
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;font-style:italic">Gently bring yourself back to the present moment</div>
+      <div id="grounding-ui" style="text-align:center">
+        <button class="btn" style="background:rgba(122,158,126,0.25);border:1px solid rgba(122,158,126,0.4);color:var(--sage-light)" onclick="startGrounding()">Begin grounding exercise</button>
+      </div>
+    </div>
+
+    <!-- Body Scan -->
+    <div style="background:linear-gradient(135deg,rgba(176,120,120,0.12),rgba(176,120,120,0.05));border:1px solid rgba(176,120,120,0.25);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:10px" id="bodyscan-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:18px">🫧</span>
+        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--rose-light)">Body scan${infoIcon('bodyscan')}</div>
+        <div style="margin-left:auto;font-size:11px;color:var(--rose);background:rgba(176,120,120,0.15);padding:2px 8px;border-radius:99px">~3 min</div>
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;font-style:italic">Notice where you're holding tension — no need to fix it</div>
+      <div id="bodyscan-ui" style="text-align:center">
+        <button class="btn" style="background:rgba(176,120,120,0.25);border:1px solid rgba(176,120,120,0.4);color:var(--rose-light)" onclick="startBodyScan()">Begin body scan</button>
+      </div>
+    </div>
+
+    <!-- Cognitive Reframing -->
+    <div style="background:linear-gradient(135deg,rgba(201,149,74,0.12),rgba(201,149,74,0.05));border:1px solid rgba(201,149,74,0.25);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:10px" id="reframe-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:18px">💡</span>
+        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--amber-light)">Gentle reframe${infoIcon('reframe')}</div>
+        <div style="margin-left:auto;font-size:11px;color:var(--amber);background:rgba(201,149,74,0.15);padding:2px 8px;border-radius:99px">thought tool</div>
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;font-style:italic">A kinder way to look at a difficult thought</div>
+      <div id="reframe-ui" style="text-align:center">
+        <button class="btn" style="background:rgba(201,149,74,0.25);border:1px solid rgba(201,149,74,0.4);color:var(--amber-light)" onclick="startReframe()">Try a gentle reframe</button>
+      </div>
+    </div>
+  </div>`;
+
   scroll.innerHTML = html;
 }
 
@@ -7298,6 +7431,231 @@ function continueBreathing() {
   breathCycle = 0;
   breathPhase = 0;
   renderBreathPhase();
+}
+
+// ============================================================
+//  5-4-3-2-1 GROUNDING EXERCISE
+// ============================================================
+const GROUNDING_STEPS = [
+  { count: 5, sense: 'see',   prompt: 'Look around. Name 5 things you can see.',   emoji: '👁', color: 'var(--sage)' },
+  { count: 4, sense: 'touch', prompt: 'Notice 4 things you can physically feel.',   emoji: '🤲', color: 'var(--sky)' },
+  { count: 3, sense: 'hear',  prompt: 'Listen. Name 3 things you can hear.',        emoji: '👂', color: 'var(--amber)' },
+  { count: 2, sense: 'smell', prompt: 'Notice 2 things you can smell.',             emoji: '🌸', color: 'var(--rose)' },
+  { count: 1, sense: 'taste', prompt: 'Name 1 thing you can taste right now.',      emoji: '👅', color: 'var(--seasonal)' },
+];
+let groundingStep = 0;
+
+function startGrounding() {
+  groundingStep = 0;
+  trackFeature('grounding');
+  renderGroundingStep();
+}
+
+function renderGroundingStep() {
+  const ui = document.getElementById('grounding-ui');
+  if (!ui) return;
+  if (groundingStep >= GROUNDING_STEPS.length) {
+    if (!state.wellnessData.groundingSessions) state.wellnessData.groundingSessions = 0;
+    state.wellnessData.groundingSessions++;
+    saveState();
+    ui.innerHTML = `
+      <div style="text-align:center;padding:8px 0">
+        <div style="font-size:36px;margin-bottom:8px">🌿</div>
+        <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sage-light);margin-bottom:6px">You're here. You're grounded.</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Take a moment before moving on.</div>
+        <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+      </div>`;
+    return;
+  }
+  const s = GROUNDING_STEPS[groundingStep];
+  ui.innerHTML = `
+    <div style="text-align:center;padding:12px 0">
+      <div style="font-size:40px;margin-bottom:10px">${s.emoji}</div>
+      <div style="font-size:28px;font-weight:600;color:${s.color};margin-bottom:6px">${s.count}</div>
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--cream);margin-bottom:4px;line-height:1.5">${s.prompt}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:18px">Step ${groundingStep + 1} of 5</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-ghost btn-sm" onclick="stopGrounding()">End early</button>
+        <button class="btn" style="background:rgba(122,158,126,0.25);border:1px solid rgba(122,158,126,0.4);color:var(--sage-light)" onclick="groundingStep++;renderGroundingStep()">
+          ${groundingStep < 4 ? 'Next' : 'Finish'}
+        </button>
+      </div>
+    </div>`;
+}
+
+function stopGrounding() {
+  if (!state.wellnessData.groundingSessions) state.wellnessData.groundingSessions = 0;
+  state.wellnessData.groundingSessions++;
+  saveState();
+  const ui = document.getElementById('grounding-ui');
+  if (ui) ui.innerHTML = `
+    <div style="text-align:center;padding:8px 0">
+      <div style="font-size:36px;margin-bottom:8px">🌿</div>
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--sage-light);margin-bottom:16px">Any amount counts. Well done.</div>
+      <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+    </div>`;
+}
+
+// ============================================================
+//  BODY SCAN EXERCISE
+// ============================================================
+const BODY_SCAN_REGIONS = [
+  { name: 'Feet & toes',    prompt: 'Bring your attention to your feet. Notice any warmth, coolness, or pressure.',         emoji: '🦶' },
+  { name: 'Legs',           prompt: 'Move up to your legs. Are they heavy? Light? Just notice — no need to change anything.', emoji: '🦵' },
+  { name: 'Belly & chest',  prompt: 'Notice your belly and chest. Feel the gentle rise and fall of your breath.',             emoji: '💚' },
+  { name: 'Hands & arms',   prompt: 'Bring awareness to your hands and arms. Relax your fingers if they feel tight.',         emoji: '🤲' },
+  { name: 'Shoulders & neck', prompt: 'Notice your shoulders and neck. Let them soften if you can.',                          emoji: '🫧' },
+  { name: 'Face & head',    prompt: 'Finally, your face and head. Unclench your jaw. Let your brow smooth out.',              emoji: '😌' },
+];
+let bodyScanStep = 0;
+let bodyScanTimer = null;
+
+function startBodyScan() {
+  bodyScanStep = 0;
+  trackFeature('bodyscan');
+  renderBodyScanStep();
+}
+
+function renderBodyScanStep() {
+  const ui = document.getElementById('bodyscan-ui');
+  if (!ui) return;
+  if (bodyScanTimer) clearTimeout(bodyScanTimer);
+  if (bodyScanStep >= BODY_SCAN_REGIONS.length) {
+    if (!state.wellnessData.bodyScanSessions) state.wellnessData.bodyScanSessions = 0;
+    state.wellnessData.bodyScanSessions++;
+    saveState();
+    ui.innerHTML = `
+      <div style="text-align:center;padding:8px 0">
+        <div style="font-size:36px;margin-bottom:8px">🫧</div>
+        <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--rose-light);margin-bottom:6px">Scan complete. How does your body feel now?</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">There's no right answer.</div>
+        <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+      </div>`;
+    return;
+  }
+  const r = BODY_SCAN_REGIONS[bodyScanStep];
+  ui.innerHTML = `
+    <div style="text-align:center;padding:12px 0">
+      <div style="font-size:40px;margin-bottom:10px">${r.emoji}</div>
+      <div style="font-size:16px;font-weight:500;color:var(--rose-light);margin-bottom:8px">${r.name}</div>
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--cream);margin-bottom:4px;line-height:1.6;max-width:300px;margin-left:auto;margin-right:auto">${r.prompt}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Region ${bodyScanStep + 1} of 6</div>
+      <div style="width:40px;height:40px;margin:8px auto 14px;border-radius:50%;border:2px solid rgba(176,120,120,0.4);display:flex;align-items:center;justify-content:center">
+        <div id="bodyscan-countdown" style="font-size:16px;color:var(--rose-light);font-family:Fraunces,serif">20</div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-ghost btn-sm" onclick="stopBodyScan()">End early</button>
+        <button class="btn" style="background:rgba(176,120,120,0.25);border:1px solid rgba(176,120,120,0.4);color:var(--rose-light)" onclick="bodyScanStep++;renderBodyScanStep()">
+          ${bodyScanStep < 5 ? 'Next region' : 'Finish'}
+        </button>
+      </div>
+    </div>`;
+  // Auto-advance countdown
+  let countdown = 20;
+  const countEl = () => document.getElementById('bodyscan-countdown');
+  bodyScanTimer = setInterval(() => {
+    countdown--;
+    const el = countEl();
+    if (el) el.textContent = countdown;
+    if (countdown <= 0) {
+      clearInterval(bodyScanTimer);
+      bodyScanStep++;
+      renderBodyScanStep();
+    }
+  }, 1000);
+}
+
+function stopBodyScan() {
+  if (bodyScanTimer) clearInterval(bodyScanTimer);
+  if (!state.wellnessData.bodyScanSessions) state.wellnessData.bodyScanSessions = 0;
+  state.wellnessData.bodyScanSessions++;
+  saveState();
+  const ui = document.getElementById('bodyscan-ui');
+  if (ui) ui.innerHTML = `
+    <div style="text-align:center;padding:8px 0">
+      <div style="font-size:36px;margin-bottom:8px">🫧</div>
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--rose-light);margin-bottom:16px">Every bit of awareness matters.</div>
+      <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+    </div>`;
+}
+
+// ============================================================
+//  COGNITIVE REFRAMING (GENTLE REFRAME)
+// ============================================================
+function startReframe() {
+  trackFeature('reframe');
+  const ui = document.getElementById('reframe-ui');
+  if (!ui) return;
+  ui.innerHTML = `
+    <div style="text-align:left;padding:4px 0">
+      <div style="font-family:Fraunces,serif;font-size:14px;color:var(--amber-light);margin-bottom:12px">What thought is weighing on you?</div>
+      <textarea id="reframe-input" placeholder="e.g. I'm not doing enough..." rows="2" maxlength="300" style="width:100%;resize:none;margin-bottom:12px;font-size:13px"></textarea>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Cancel</button>
+        <button class="btn" style="background:rgba(201,149,74,0.25);border:1px solid rgba(201,149,74,0.4);color:var(--amber-light)" onclick="processReframe()">Reframe this</button>
+      </div>
+    </div>`;
+  setTimeout(() => { const i = document.getElementById('reframe-input'); if (i) i.focus(); }, 100);
+}
+
+function processReframe() {
+  const input = document.getElementById('reframe-input');
+  if (!input || !input.value.trim()) return;
+  const thought = input.value.trim();
+  const ui = document.getElementById('reframe-ui');
+  if (!ui) return;
+
+  // Show loading
+  ui.innerHTML = `
+    <div style="text-align:center;padding:12px 0">
+      <div class="ai-thinking" style="justify-content:center;margin:12px 0"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
+      <div style="font-size:13px;color:var(--text-muted)">Finding a gentler perspective...</div>
+    </div>`;
+
+  // Use the Claude API for a warm reframe
+  fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [{
+        role: 'user',
+        content: `You are a warm, compassionate inner voice — not a therapist, not clinical. Someone shared this thought that's weighing on them: "${thought}"
+
+Give a gentle cognitive reframe in 2-3 sentences. Validate their feeling first, then offer a kinder perspective. Use "you" language, be warm and human. No bullet points, no labels, no jargon. Just a soft, honest reframe like a kind friend would offer.`
+      }],
+      max_tokens: 200,
+    }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    const reframe = data.content || data.text || (data.choices && data.choices[0]?.message?.content) || '';
+    if (!reframe) throw new Error('No response');
+
+    if (!state.wellnessData.reframeSessions) state.wellnessData.reframeSessions = 0;
+    state.wellnessData.reframeSessions++;
+    saveState();
+
+    ui.innerHTML = `
+      <div style="padding:4px 0">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Your thought:</div>
+        <div style="font-size:13px;color:var(--text-secondary);font-style:italic;margin-bottom:14px;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:var(--r-md)">"${escapeHtml(thought)}"</div>
+        <div style="font-size:12px;color:var(--amber);margin-bottom:8px">A gentler way to see it:</div>
+        <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--cream);line-height:1.7;padding:10px 14px;background:rgba(201,149,74,0.08);border-radius:var(--r-md);border:1px solid rgba(201,149,74,0.15)">${escapeHtml(reframe)}</div>
+        <div class="ai-disclaimer" style="margin-top:10px">This is a reflection tool, not professional advice.</div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:14px">
+          <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+          <button class="btn" style="background:rgba(201,149,74,0.25);border:1px solid rgba(201,149,74,0.4);color:var(--amber-light)" onclick="startReframe()">Try another</button>
+        </div>
+      </div>`;
+  })
+  .catch(() => {
+    ui.innerHTML = `
+      <div style="text-align:center;padding:12px 0">
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Couldn't connect right now. Here's a thought to hold:</div>
+        <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--cream);line-height:1.7;margin-bottom:16px">"The fact that you noticed this thought means you're already being kinder to yourself than you think."</div>
+        <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+      </div>`;
+  });
 }
 
 // ============================================================
@@ -7742,21 +8100,25 @@ function renderSettingsTab() {
   const currentTheme = prefs.theme || 'forest';
   html += settingsSection('appearance', '🎨 Appearance', `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      ${Object.entries(THEMES).map(([key, t]) => `
+      ${Object.entries(THEMES).map(([key, t]) => {
+        const dots = t.pride
+          ? ['#e04050','#e87030','#e8c840','#50b868','#4080d0','#9050c8'].map(c =>
+              `<div style="width:12px;height:12px;border-radius:50%;background:${c}"></div>`).join('')
+          : `<div style="width:12px;height:12px;border-radius:50%;background:${t.primary}"></div>
+             <div style="width:12px;height:12px;border-radius:50%;background:${t.primaryLight};opacity:0.7"></div>
+             <div style="width:12px;height:12px;border-radius:50%;background:${t.primary};opacity:0.5"></div>
+             <div style="width:12px;height:12px;border-radius:50%;background:${t.primaryLight};opacity:0.4"></div>`;
+        return `
         <div onclick="setTheme('${key}')" style="
           background:${t.bg};border:2px solid ${key === currentTheme ? t.primary : 'rgba(255,255,255,0.08)'};
           border-radius:var(--r-lg);padding:14px 12px;cursor:pointer;
           transition:border-color 0.2s;position:relative;overflow:hidden">
-          <div style="display:flex;gap:5px;margin-bottom:8px">
-            <div style="width:12px;height:12px;border-radius:50%;background:${t.primary}"></div>
-            <div style="width:12px;height:12px;border-radius:50%;background:${t.primaryLight};opacity:0.7"></div>
-            <div style="width:12px;height:12px;border-radius:50%;background:${t.primary};opacity:0.5"></div>
-            <div style="width:12px;height:12px;border-radius:50%;background:${t.primaryLight};opacity:0.4"></div>
-          </div>
+          <div style="display:flex;gap:5px;margin-bottom:8px">${dots}</div>
           <div style="font-size:13px;font-weight:500;color:${t.primaryLight}">${t.emoji} ${t.name}</div>
           <div style="font-size:11px;color:${t.textSecondary};margin-top:2px">${t.description}</div>
           ${key === currentTheme ? `<div style="position:absolute;top:8px;right:8px;font-size:12px;color:${t.primary}">✓</div>` : ''}
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
     </div>
   `);
 
@@ -8169,6 +8531,7 @@ function renderSettingsTab() {
       <button class="btn btn-secondary btn-block" onclick="showBackupSheet()">💾 Save restore link</button>
       <button class="btn btn-secondary btn-block" onclick="exportEncryptedJSON()">🔐 Export encrypted backup</button>
       <button class="btn btn-secondary btn-block" onclick="exportJSON()">📤 Export my data (unencrypted)</button>
+      <button class="btn btn-secondary btn-block" onclick="exportCSV()">📊 Export history as CSV</button>
       <button class="btn btn-ghost btn-block" onclick="resetToday()">↺ Reset today's data</button>
       <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:8px;padding-top:8px">
         <button class="btn btn-ghost btn-block" onclick="exportDiagnostics()">🔧 Export diagnostics (for bug reports)</button>
@@ -8874,6 +9237,35 @@ function exportJSON() {
   URL.revokeObjectURL(url);
 }
 
+function exportCSV() {
+  const history = load('bloom_history') || {};
+  const dates = Object.keys(history).sort();
+  if (dates.length === 0) { showToast('No history data to export yet.'); return; }
+
+  // Build CSV rows
+  const rows = [['Date', 'Mood', 'Water (glasses)', 'Meals', 'Habits Completed', 'Total Habits', 'Journal Entry']];
+  dates.forEach(date => {
+    const day = history[date] || {};
+    const mood = day.mood || '';
+    const water = day.water || 0;
+    const meals = day.meals || 0;
+    const habitsCompleted = day.habitsCompleted || 0;
+    const totalHabits = day.totalHabits || 0;
+    const journal = (day.journal || '').replace(/"/g, '""').replace(/\n/g, ' ');
+    rows.push([date, mood, water, meals, habitsCompleted, totalHabits, `"${journal}"`]);
+  });
+
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `bloom-history-${today()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV exported!');
+}
+
 async function importJSON(file) {
   const text = await file.text();
   const parsed = JSON.parse(text);
@@ -8923,10 +9315,14 @@ function tryRestoreFromURL() {
 // ============================================================
 function openSheet(id) {
   document.getElementById('sheet-backdrop').classList.add('open');
-  document.getElementById(id).classList.add('open');
+  const sheet = document.getElementById(id);
+  sheet.classList.add('open');
+  // Focus trap
+  setTimeout(() => trapFocusInSheet(sheet), 100);
 }
 
 function closeAllSheets() {
+  document.querySelectorAll('.bottom-sheet.open').forEach(s => releaseFocusTrap(s));
   document.getElementById('sheet-backdrop').classList.remove('open');
   document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('open'));
 }
@@ -9069,6 +9465,42 @@ const SCIENCE_SECTIONS = {
       'Dunn, E. W., et al. (2008). Spending money on others promotes happiness. <em>Science</em>, 319(5870), 1687–1688.',
       'Lyubomirsky, S., et al. (2005). Pursuing happiness: The architecture of sustainable change. <em>Review of General Psychology</em>, 9(2), 111–131.',
       'Neff, K. D. (2003). Self-compassion: An alternative conceptualization of a healthy attitude toward oneself. <em>Self and Identity</em>, 2(2), 85–101.',
+    ],
+  },
+  grounding: {
+    title: '5-4-3-2-1 Grounding',
+    tip: 'Naming what your senses notice pulls your brain out of anxious thought loops and back into the present moment.',
+    full: `<p>The <strong>5-4-3-2-1 grounding technique</strong> is one of the most widely recommended interventions for acute anxiety, panic, and dissociation. It works by redirecting attention from internal distress to <strong>sensory input</strong>, engaging the prefrontal cortex and interrupting the amygdala-driven fight-or-flight response.</p>
+    <p>A 2015 review in <em>Journal of EMDR Practice and Research</em> found that grounding techniques significantly reduced distress in trauma survivors. The mechanism is simple: when you force your brain to count and categorize sensory details, it can't simultaneously sustain a panic spiral. Research on <strong>attentional deployment</strong> (a core emotion regulation strategy identified by James Gross) confirms that deliberately shifting attention to neutral or positive stimuli reduces negative emotional intensity.</p>`,
+    sources: [
+      'Najavits, L. M. (2002). Seeking Safety: A treatment manual for PTSD and substance abuse. <em>Guilford Press</em>.',
+      'Gross, J. J. (1998). The emerging field of emotion regulation: An integrative review. <em>Review of General Psychology</em>, 2(3), 271–299.',
+      'Brom, D., et al. (2017). A randomized controlled trial of EMDR and grounding exercises. <em>Journal of EMDR Practice and Research</em>, 11(4), 170–184.',
+    ],
+  },
+  bodyscan: {
+    title: 'Body scan',
+    tip: 'Noticing your body without trying to fix it builds interoceptive awareness — a skill linked to better emotional regulation.',
+    full: `<p>The <strong>body scan</strong> is a core component of Mindfulness-Based Stress Reduction (MBSR), developed by Jon Kabat-Zinn at UMass Medical School. It trains <strong>interoceptive awareness</strong> — the ability to sense internal body signals — which research has linked to improved emotional regulation, reduced anxiety, and greater self-awareness.</p>
+    <p>A 2019 study in <em>Frontiers in Psychology</em> found that body scan meditation reduced cortisol reactivity and improved participants' ability to identify and tolerate difficult emotions. Critically, the technique asks you to <strong>notice without fixing</strong> — this non-judgmental observation is itself therapeutic, teaching the brain that discomfort can be acknowledged without requiring an immediate response.</p>
+    <p>Bloom's body scan is intentionally brief (~3 minutes) to keep the barrier low. Research suggests that even short mindfulness practices produce measurable benefits when done consistently.</p>`,
+    sources: [
+      'Kabat-Zinn, J. (1990). Full catastrophe living: Using the wisdom of your body and mind to face stress, pain, and illness. <em>Delacorte Press</em>.',
+      'Bornemann, B., et al. (2015). Differential changes in self-reported aspects of interoceptive awareness through 3 months of contemplative training. <em>Frontiers in Psychology</em>, 5, 1504.',
+      'Creswell, J. D. (2017). Mindfulness interventions. <em>Annual Review of Psychology</em>, 68, 491–516.',
+    ],
+  },
+  reframe: {
+    title: 'Cognitive reframing',
+    tip: 'You can\'t always control what happens, but reframing how you interpret it changes how it affects you.',
+    full: `<p><strong>Cognitive reframing</strong> (or cognitive restructuring) is one of the most evidence-backed techniques in psychology, forming the foundation of Cognitive Behavioral Therapy (CBT). The core principle: emotions are driven not by events themselves, but by our <strong>interpretation</strong> of those events. Changing the interpretation changes the emotional response.</p>
+    <p>A 2012 meta-analysis in <em>Clinical Psychology Review</em> found that cognitive reappraisal was associated with lower depression, lower anxiety, and greater wellbeing across 306 samples. Research by Ochsner et al. using fMRI showed that when people consciously reframed negative stimuli, activity in the prefrontal cortex increased while amygdala activity decreased — literally dampening the brain's threat response.</p>
+    <p>Bloom's "gentle reframe" is designed to be <strong>warm, not clinical</strong>. It validates the original feeling first, then offers a kinder perspective — mirroring the compassion-focused approach recommended by Paul Gilbert's research on compassionate mind training.</p>`,
+    sources: [
+      'Beck, A. T. (1979). Cognitive therapy and the emotional disorders. <em>Penguin Books</em>.',
+      'Ochsner, K. N., et al. (2004). Reflecting upon feelings: An fMRI study of neural systems supporting the attribution of emotion to self and other. <em>Journal of Cognitive Neuroscience</em>, 16(10), 1746–1772.',
+      'Aldao, A., et al. (2010). Emotion-regulation strategies across psychopathology: A meta-analytic review. <em>Clinical Psychology Review</em>, 30(2), 217–237.',
+      'Gilbert, P. (2009). Introducing compassion-focused therapy. <em>Advances in Psychiatric Treatment</em>, 15(3), 199–208.',
     ],
   },
   hardday: {
@@ -10929,6 +11361,26 @@ async function buddySendNudge(nudgeType, pairId) {
   }
 }
 
+async function buddySendLove(pairId) {
+  // Send a non-verbal bloom — just a 🌸, no words needed
+  const data = await buddyApi({
+    action: 'nudge',
+    buddyId: ensureBuddyId(),
+    nudgeType: 'love',
+    pairId,
+  });
+  if (data.ok) {
+    if (!buddyCachedMessages[pairId]) buddyCachedMessages[pairId] = [];
+    buddyCachedMessages[pairId].push(data.message);
+    if (buddyCachedMessages[pairId].length > 50) buddyCachedMessages[pairId] = buddyCachedMessages[pairId].slice(-50);
+    renderBuddyMessagesForPair(pairId);
+    haptic('medium');
+    showBuddyStatusForPair(pairId, '🌸', 'var(--rose-light)');
+  } else if (data.reason === 'rate-limit') {
+    showBuddyStatusForPair(pairId, 'Try again in a bit.', 'var(--amber)');
+  }
+}
+
 async function buddyUnpair(pairId) {
   if (!confirm('Unpair from this bloom buddy? You can find a new one anytime.')) return;
   await buddyApi({ action: 'unpair', buddyId: ensureBuddyId(), pairId });
@@ -11221,7 +11673,12 @@ function renderBuddyCard(b, index) {
         <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Last active ${buddyTimeAgo(b.lastActive)}</div>
 
         <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
-          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">Quick nudge</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:12px;color:var(--text-secondary)">Quick nudge</div>
+            <button class="buddy-love-btn" onclick="buddySendLove('${pid}')" title="Send a bloom — no words needed" style="background:none;border:1px solid rgba(176,120,120,0.3);border-radius:99px;padding:5px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.25s;color:var(--rose-light);font-size:12px;font-family:'Instrument Sans',sans-serif">
+              <span style="font-size:14px" class="buddy-love-icon">🌸</span> Send love
+            </button>
+          </div>
           <div class="buddy-nudge-row">
             <div class="buddy-nudge-btn" onclick="buddySendNudge('thinking','${pid}')">Thinking of you 💭</div>
             <div class="buddy-nudge-btn" onclick="buddySendNudge('gotthis','${pid}')">You got this 💪</div>
@@ -11868,6 +12325,7 @@ function initApp() {
   const navIcon = document.getElementById('nav-today-icon');
   if (navIcon) navIcon.innerHTML = bloomIcon(20);
   listenForSWUpdate();
+  initAccessibility();
 }
 
 async function main() {

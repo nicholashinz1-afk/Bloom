@@ -621,6 +621,7 @@ export default async function handler(req, res) {
       'easytoday': 'Take it easy 🤗',
       'checkin': 'Just checking in 👋',
       'youmatter': 'You matter 💛',
+      'love': '🌸',
     };
 
     const nudgeText = NUDGES[nudgeType];
