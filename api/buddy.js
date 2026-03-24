@@ -254,7 +254,7 @@ export default async function handler(req, res) {
       if (!partner?.oneSignalId) continue;
 
       // 1. Low/rough mood notification (rate-limited to 1 per 12h)
-      if (mood !== undefined && mood <= 1) {
+      if (mood !== undefined && mood >= 0 && mood <= 1) {
         const twelveHoursAgo = Date.now() - 43200000;
         if (!profile.lastMoodNotifTs || profile.lastMoodNotifTs < twelveHoursAgo) {
           profile.lastMoodNotifTs = Date.now();
