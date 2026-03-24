@@ -2424,7 +2424,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.4.0';
+const VERSION = '2.4.1';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -2470,10 +2470,10 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
+  { text: 'Your habits have moved to "Anytime today." To set Morning or Evening times, go to Settings → Daily Habits and tap AM, PM, or Both on each habit.', spotlight: '#sh-daily', tab: 'settings', featured: true },
   { text: 'bloom buddy — pair up with someone for mutual encouragement and accountability. Find yours on the Community tab!', spotlight: '#nav-community', tab: 'community', featured: true },
-  { text: 'Encouragement wall — a shared, anonymous space to leave kind words for strangers', spotlight: '#nav-community', tab: 'today', featured: true },
+  { text: 'Encouragement wall — a shared, anonymous space to leave kind words for strangers', spotlight: '#nav-community', tab: 'today' },
   { text: 'Custom check-ins — track anything that matters to you, your way. Add your own daily questions in Settings.', spotlight: '#sh-checkins', tab: 'settings' },
-  { text: 'Habit triggers — set "when/after" cues for each habit in Settings for 2-3x follow-through', spotlight: '#sh-triggers', tab: 'settings' },
   { text: 'Hard day mode — on low-mood days, bloom shows only your top 2 habits so nothing feels overwhelming', spotlight: null },
 ];
 
@@ -9793,38 +9793,6 @@ function migrateToNewDailyHabits() {
   save('bloom_prefs', p);
 }
 
-// Migration: reset old AM/PM/Both defaults to 'any' for existing users
-function migrateHabitTimesToAny() {
-  const p = state.prefs;
-  if (!p || p._migratedTimesToAny) return;
-  if (!p.habitTimes) { p._migratedTimesToAny = true; save('bloom_prefs', p); return; }
-
-  // Old defaults that were auto-assigned — reset to 'any'
-  const oldDefaults = {
-    brush_teeth: 'both', brush_hair: 'am', wash_face: 'both',
-    get_dressed: 'am', floss: 'pm', skincare: 'both', medication: 'am'
-  };
-  const td = state.todayData;
-  Object.entries(oldDefaults).forEach(([id, oldTime]) => {
-    if (p.habitTimes[id] === oldTime) {
-      // Migrate today's completion data to 'any' slot
-      if (td) {
-        const oldSlots = oldTime === 'both' ? ['am','pm'] : [oldTime];
-        oldSlots.forEach(s => {
-          if (td[id + '_' + s]) {
-            td[id + '_any'] = true;
-            delete td[id + '_' + s];
-          }
-        });
-      }
-      p.habitTimes[id] = 'any';
-    }
-  });
-  if (td) save('bloom_today_' + today(), td);
-  p._migratedTimesToAny = true;
-  save('bloom_prefs', p);
-}
-
 // ============================================================
 //  BLOOM BUDDY
 // ============================================================
@@ -10920,7 +10888,6 @@ function logCustomCheckin(id, value) {
 function initApp() {
   loadState();
   migrateToNewDailyHabits();
-  migrateHabitTimesToAny();
   initTheme();
   checkForUpdate();
   renderDailyQuote();
