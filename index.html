@@ -6698,10 +6698,20 @@ function renderTodayTab() {
   </div>`;
 
   // --- SELF-CARE TASKS (grouped by morning/evening/anytime routines) ---
+  // Progressive disclosure: self-care appears week 2+
   const selectedSCTasks = (state.prefs?.selfCareTasks || []).filter(id => !id.startsWith('sc_medication'));
   const routines = state.prefs?.selfCareRoutines || {};
 
-  if (selectedSCTasks.length > 0) {
+  // Week 1 teaser for self-care
+  if (selectedSCTasks.length > 0 && userWeek < 2) {
+    html += `<div style="background:rgba(122,158,126,0.06);border:1px dashed rgba(122,158,126,0.2);border-radius:var(--r-lg);padding:16px;text-align:center;margin-top:8px">
+      <div style="font-size:24px;margin-bottom:8px">💚</div>
+      <div style="font-size:14px;color:var(--sage-light);font-family:Fraunces,serif;margin-bottom:4px">Self-care tasks coming next week</div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.6">You picked some great ones during setup. They'll show up here once you've settled into your daily habits.</div>
+    </div>`;
+  }
+
+  if (selectedSCTasks.length > 0 && userWeek >= 2) {
     const scDone = td.selfCare || {};
 
     // Group tasks by routine
@@ -6746,11 +6756,20 @@ function renderTodayTab() {
     }
   }
 
-  // --- WELLNESS GATEWAY CARD ---
+  // --- WELLNESS GATEWAY CARD (week 3+) ---
   const journalToday = state.wellnessData?.journal?.[t];
   const winsToday = (state.wellnessData?.wins?.[t] || []).length > 0;
   const affirmationsExist = (state.todayData?.affirmations || []).length > 0;
   const wellnessDone = [journalToday, winsToday, affirmationsExist].filter(Boolean).length;
+
+  if (userWeek < 3) {
+    // Week 1-2: Show a gentle teaser instead of the full wellness card
+    html += `<div style="background:rgba(122,158,126,0.06);border:1px dashed rgba(122,158,126,0.2);border-radius:var(--r-lg);padding:16px;text-align:center;margin-top:8px">
+      <div style="font-size:24px;margin-bottom:8px">📓</div>
+      <div style="font-size:14px;color:var(--sage-light);font-family:Fraunces,serif;margin-bottom:4px">Journaling unlocks soon</div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Focus on building your daily habits first. Journaling, small wins, and affirmations will appear here when you're ready.</div>
+    </div>`;
+  } else {
 
   html += `<div class="section-label">📓 Wellness</div>`;
   const wellnessAllDone = wellnessDone === 3;
@@ -6780,6 +6799,8 @@ function renderTodayTab() {
     <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
     <div style="text-align:center"><button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">Begin breathing exercise</button></div>
   </div>`;
+
+  } // end progressive disclosure week 3+ gate
 
   // Custom check-ins
   const customCheckins = getCustomCheckins();
@@ -8386,6 +8407,32 @@ function renderSettingsTab() {
 
   let html = '';
 
+  // ── PROFILE ──────────────────────────────────────────────────
+  html += settingsSection('profile', '👤 Profile', `
+    <div class="toggle-row" style="border-bottom:none;margin-bottom:12px">
+      <div><div class="toggle-label">Your name</div></div>
+      <input type="text" id="settings-name" value="${prefs.name || ''}" style="width:140px;padding:6px 10px;font-size:13px" onchange="saveSettingsName()">
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05)">
+      <div style="font-size:32px">${level.emoji}</div>
+      <div>
+        <div style="font-size:15px;font-weight:500;color:var(--cream)">${level.name}</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">${xp.total || 0} sunlight total</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:24px">🌿</div>
+      <div>
+        <div style="font-size:15px;font-weight:500;color:var(--cream)">${xp.daysShowedUp || 0} days shown up</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Current run: ${xp.currentRun || 0} day${(xp.currentRun || 0) !== 1 ? 's' : ''} in a row</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.6">
+      Every day you show up adds to your total — it never goes down, even if you miss a day.
+    </div>
+  `);
+
   // ── APPEARANCE ──────────────────────────────────────────────
   const currentTheme = prefs.theme || 'forest';
   const celebPref = prefs.celebrationIntensity || 'auto';
@@ -8443,56 +8490,8 @@ function renderSettingsTab() {
     </div>
   `);
 
-  // ── PROFILE ──────────────────────────────────────────────────
-  html += settingsSection('profile', '👤 Profile', `
-    <div class="toggle-row" style="border-bottom:none;margin-bottom:12px">
-      <div><div class="toggle-label">Your name</div></div>
-      <input type="text" id="settings-name" value="${prefs.name || ''}" style="width:140px;padding:6px 10px;font-size:13px" onchange="saveSettingsName()">
-    </div>
-    <div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05)">
-      <div style="font-size:32px">${level.emoji}</div>
-      <div>
-        <div style="font-size:15px;font-weight:500;color:var(--cream)">${level.name}</div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">${xp.total || 0} sunlight total</div>
-      </div>
-    </div>
-    <div class="divider"></div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="font-size:24px">🌿</div>
-      <div>
-        <div style="font-size:15px;font-weight:500;color:var(--cream)">${xp.daysShowedUp || 0} days shown up</div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Current run: ${xp.currentRun || 0} day${(xp.currentRun || 0) !== 1 ? 's' : ''} in a row</div>
-      </div>
-    </div>
-    <div style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.6">
-      Every day you show up adds to your total — it never goes down, even if you miss a day.
-    </div>
-  `);
-
-  // ── BLOOM BUDDY ────────────────────────────────────────────
-  const multiBuddyOn = prefs.multiBuddy || false;
-  const myBuddyId = load('bloom_buddy_id', 'Not yet generated');
-  const buddyShareMoodOn = prefs.buddyShareMood !== false; // default true
-  html += settingsSection('buddy', buddyIcon(18) + ' bloom buddy', `
-    <div class="toggle-row" style="padding:12px 0">
-      <div>
-        <div class="toggle-label">Share mood with buddy</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let your buddy see your current mood and get notified on rough days</div>
-      </div>
-      <div class="toggle${buddyShareMoodOn ? ' on' : ''}" onclick="state.prefs.buddyShareMood=!${buddyShareMoodOn};saveState();renderSettingsTab()"></div>
-    </div>
-    <div class="toggle-row" style="padding:12px 0">
-      <div>
-        <div class="toggle-label">Allow multiple buddies</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let more than one person pair with you</div>
-      </div>
-      <div class="toggle${multiBuddyOn ? ' on' : ''}" onclick="toggleMultiBuddy(!${multiBuddyOn});renderSettingsTab()"></div>
-    </div>
-    <div style="padding:8px 0;border-top:1px solid rgba(255,255,255,0.05)">
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Your Buddy ID</div>
-      <div style="font-size:11px;color:var(--text-secondary);font-family:monospace;word-break:break-all;background:var(--bg-mid);padding:8px 10px;border-radius:var(--r-md)">${escapeHtml(myBuddyId)}</div>
-    </div>
-  `);
+  // Group divider — Habits
+  html += `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:20px 4px 8px">Habits & tracking</div>`;
 
   // ── DAILY HABITS ─────────────────────────────────────────────
   const dh = prefs.dailyHabits || {};
@@ -8756,6 +8755,37 @@ function renderSettingsTab() {
 
   html += settingsSection('checkins', '📝 Custom check-ins', ccHtml);
 
+  // Group divider — Social
+  html += `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:20px 4px 8px">Social</div>`;
+
+  // ── BLOOM BUDDY ────────────────────────────────────────────
+  const multiBuddyOn = prefs.multiBuddy || false;
+  const myBuddyId = load('bloom_buddy_id', 'Not yet generated');
+  const buddyShareMoodOn = prefs.buddyShareMood !== false; // default true
+  html += settingsSection('buddy', buddyIcon(18) + ' bloom buddy', `
+    <div class="toggle-row" style="padding:12px 0">
+      <div>
+        <div class="toggle-label">Share mood with buddy</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let your buddy see your current mood and get notified on rough days</div>
+      </div>
+      <div class="toggle${buddyShareMoodOn ? ' on' : ''}" onclick="state.prefs.buddyShareMood=!${buddyShareMoodOn};saveState();renderSettingsTab()"></div>
+    </div>
+    <div class="toggle-row" style="padding:12px 0">
+      <div>
+        <div class="toggle-label">Allow multiple buddies</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let more than one person pair with you</div>
+      </div>
+      <div class="toggle${multiBuddyOn ? ' on' : ''}" onclick="toggleMultiBuddy(!${multiBuddyOn});renderSettingsTab()"></div>
+    </div>
+    <div style="padding:8px 0;border-top:1px solid rgba(255,255,255,0.05)">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Your Buddy ID</div>
+      <div style="font-size:11px;color:var(--text-secondary);font-family:monospace;word-break:break-all;background:var(--bg-mid);padding:8px 10px;border-radius:var(--r-md)">${escapeHtml(myBuddyId)}</div>
+    </div>
+  `);
+
+  // Group divider — System
+  html += `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:20px 4px 8px">System</div>`;
+
   // ── NOTIFICATIONS & SOUND ────────────────────────────────────
   const medHabitOn = prefs.dailyHabits?.medication;
   const medTimeVal = prefs.habitTimes?.medication || 'am';
@@ -8859,6 +8889,9 @@ function renderSettingsTab() {
       </div>
     </div>
   `);
+
+  // Group divider — Info
+  html += `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:20px 4px 8px">About & info</div>`;
 
   // ── SCIENCE ──────────────────────────────────────────────────
   html += settingsSection('science', '📚 Science behind bloom', `
