@@ -11056,6 +11056,22 @@ function renderOBReady(body, footer) {
         </div>
       </div>
     </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:14px;font-weight:500;margin-bottom:10px">🌱 Your pace</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">
+        Bloom can introduce features gradually — habits first, then self-care, then journaling — so your first week isn't overwhelming. Or you can start with everything. You can always change this in Settings.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div id="ob-pace-gradual" onclick="obSetPace(true)" style="padding:12px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid rgba(122,158,126,0.4);background:rgba(122,158,126,0.08);transition:all 0.2s">
+          <div style="font-size:13px;font-weight:500;color:var(--sage-light)">Ease me in</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Start simple, unlock more each week</div>
+        </div>
+        <div id="ob-pace-all" onclick="obSetPace(false)" style="padding:12px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid rgba(255,255,255,0.08);background:transparent;transition:all 0.2s">
+          <div style="font-size:13px;font-weight:500;color:var(--cream)">Show me everything</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">I'm ready for all features from day one</div>
+        </div>
+      </div>
+    </div>
     <div class="card">
       <div style="font-size:14px;font-weight:500;margin-bottom:10px">💾 Save a backup link</div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">
@@ -11071,6 +11087,18 @@ function renderOBReady(body, footer) {
   `;
   document.getElementById('ob-btn-back').addEventListener('click', obBack);
   document.getElementById('ob-btn-finish').addEventListener('click', completeOnboarding);
+}
+
+function obSetPace(gradual) {
+  obData.progressiveDisclosure = gradual;
+  const gradualEl = document.getElementById('ob-pace-gradual');
+  const allEl = document.getElementById('ob-pace-all');
+  if (gradualEl && allEl) {
+    gradualEl.style.borderColor = gradual ? 'rgba(122,158,126,0.4)' : 'rgba(255,255,255,0.08)';
+    gradualEl.style.background = gradual ? 'rgba(122,158,126,0.08)' : 'transparent';
+    allEl.style.borderColor = gradual ? 'rgba(255,255,255,0.08)' : 'rgba(122,158,126,0.4)';
+    allEl.style.background = gradual ? 'transparent' : 'rgba(122,158,126,0.08)';
+  }
 }
 
 function obShowBackup() {
@@ -11091,6 +11119,7 @@ function completeOnboarding() {
     ...obData,
     onboarded: true,
     onboardDate: today(),
+    progressiveDisclosure: obData.progressiveDisclosure !== false, // default true (gradual)
   };
   save('bloom_prefs', prefs);
   save('bloom_xp', { total: 0, streak: 0, daysShowedUp: 0, currentRun: 0, lastStreakDate: null });
