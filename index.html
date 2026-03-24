@@ -6296,6 +6296,7 @@ function tapWater(i) {
     const bottleSounds = ['water_1', 'water_2', 'water_3'];
     playSound(bottleSounds[i] || 'water');
   }
+  checkFirstTaskStreak();
   const newCount = state.todayData.water;
   if (newCount >= 3 && !state.todayData.waterXPGiven) {
     state.todayData.waterXPGiven = true;
@@ -6321,6 +6322,7 @@ function tapFood(id) {
     .filter(([k, v]) => v && k !== 'felt_nourished').length;
 
   haptic('light');
+  checkFirstTaskStreak();
   saveState();
   archiveToday();
   renderTodayTab();
@@ -10849,6 +10851,7 @@ function logCustomCheckin(id, value) {
   state.historyData[today()].customCheckins[id] = value;
   save('bloom_history', state.historyData);
 
+  checkFirstTaskStreak();
   haptic('light');
   renderTodayTab();
 }
