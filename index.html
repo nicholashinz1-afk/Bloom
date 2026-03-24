@@ -783,10 +783,6 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   background: rgba(176,120,120,0.1);
   border: 1px solid rgba(176,120,120,0.25);
 }
-.banner-streak-grace {
-  background: rgba(201,149,74,0.1);
-  border: 1px solid rgba(201,149,74,0.25);
-}
 .banner-all-done {
   background: rgba(122,158,126,0.12);
   border: 1px solid rgba(122,158,126,0.3);
@@ -2860,7 +2856,7 @@ function loadState() {
     todayData:   load('bloom_today_' + today(), {}),
     weekData:    load('bloom_week_' + weekStart(), {}),
     historyData: load('bloom_history', {}),
-    xpData:      load('bloom_xp', { total: 0, level: 0, streak: 0, daysShowedUp: 0, currentRun: 0, freezeTokens: 0, lastStreakDate: null }),
+    xpData:      load('bloom_xp', { total: 0, level: 0, streak: 0, daysShowedUp: 0, currentRun: 0, lastStreakDate: null }),
     wellnessData:load('bloom_wellness', { journal: {}, reflections: {}, insights: [], wins: {}, affirmations: [] }),
     seenVersion: load('bloom_version', null),
     backupDate:  load('bloom_backup_date', null),
@@ -3427,6 +3423,9 @@ function updateStreak() {
   // Migrate existing users: if they have streak but no daysShowedUp, seed it
   if (!xp.daysShowedUp && xp.streak) {
     xp.daysShowedUp = Math.max(xp.streak, Object.keys(state.historyData).length || xp.streak);
+    // Mark all milestones up to current total as already shown
+    const pastMilestones = [5, 10, 25, 50, 75, 100, 150, 200, 365].filter(m => m <= xp.daysShowedUp);
+    save('bloom_shown_milestones', pastMilestones);
   }
   if (!xp.daysShowedUp) xp.daysShowedUp = 0;
   if (!xp.currentRun) xp.currentRun = xp.streak || 0;
@@ -3634,6 +3633,11 @@ function buildStreakTreeSVG(streak) {
 function checkStreakMilestone(totalDays) {
   const milestones = [5, 10, 25, 50, 75, 100, 150, 200, 365];
   if (!milestones.includes(totalDays)) return;
+  // Prevent showing milestones the user already passed (e.g. after migration)
+  const shownMilestones = load('bloom_shown_milestones', []);
+  if (shownMilestones.includes(totalDays)) return;
+  shownMilestones.push(totalDays);
+  save('bloom_shown_milestones', shownMilestones);
   const messages = {
     5:   { title: '5 days!', sub: 'Five days you chose to show up. That\'s real.' },
     10:  { title: '10 days!', sub: 'Double digits. You\'re building something.' },
@@ -4828,7 +4832,7 @@ const CELEBRATIONS = {
     ],
   },
   w_shower: {
-    emoji: '🚿', xp: 25,
+    emoji: '🚿', xp: 20,
     messages: [
       { title: 'Fresh start.', sub: 'A clean slate changes everything.' },
       { title: 'That took real courage.', sub: 'Some days this is the hardest thing.' },
@@ -4841,7 +4845,7 @@ const CELEBRATIONS = {
     ],
   },
   w_exercise: {
-    emoji: '💪', xp: 30,
+    emoji: '💪', xp: 20,
     messages: [
       { title: 'Movement done!', sub: 'Every rep is a vote for yourself.' },
       { title: 'Your body says thank you.', sub: 'You chose to move, and that matters.' },
@@ -4890,7 +4894,7 @@ const CELEBRATIONS = {
     ],
   },
   water: {
-    emoji: '💧', xp: 10,
+    emoji: '💧', xp: 15,
     messages: [
       { title: 'Water goal reached! 💧', sub: 'Your body is saying thank you right now.' },
       { title: 'Three bottles — done!', sub: 'Hydration is self-care. You nailed it.' },
@@ -4899,7 +4903,7 @@ const CELEBRATIONS = {
     confetti: true,
   },
   food: {
-    emoji: '🍽', xp: 10,
+    emoji: '🍽', xp: 15,
     messages: [
       { title: 'Nourishment — checked ✓', sub: 'Feeding yourself is an act of love.' },
       { title: 'You fed yourself today.', sub: 'That matters more than you know.' },
@@ -4907,7 +4911,7 @@ const CELEBRATIONS = {
     ],
   },
   journal: {
-    emoji: '📓', xp: 10,
+    emoji: '📓', xp: 20,
     messages: [
       { title: 'Journal saved.', sub: 'bloom is reading what you wrote...' },
       { title: 'Words on the page.', sub: 'That took something. Good.' },
@@ -4915,7 +4919,7 @@ const CELEBRATIONS = {
     ],
   },
   reflection: {
-    emoji: '🪞', xp: 15,
+    emoji: '🪞', xp: 20,
     messages: [
       { title: 'Reflection saved.', sub: 'bloom is thinking about what you shared...' },
       { title: 'You looked inward.', sub: 'That\'s the hardest kind of courage.' },
@@ -5039,7 +5043,7 @@ const CELEBRATIONS = {
     ],
   },
   medication: {
-    emoji: '💊', xp: 10,
+    emoji: '💊', xp: 20,
     messages: [
       { title: 'Medication taken.', sub: 'Taking care of yourself in every way.' },
       { title: 'Done.', sub: 'One quiet act of self-care.' },
@@ -9091,6 +9095,7 @@ let obData = {
   theme: 'forest',
   selfCareTasks: [],
   multiBuddy: false,
+  buddyShareMood: true,
 };
 
 const OB_STEPS = 12;
