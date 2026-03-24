@@ -8559,6 +8559,30 @@ const SCIENCE_SECTIONS = {
       'Milkman, K. L., et al. (2021). Megastudies: A framework for large-scale interventions. <em>Nature</em>, 600, 478–483.',
     ],
   },
+  buddy: {
+    title: 'Bloom buddy',
+    tip: 'Having even one person who checks in on you significantly improves follow-through and emotional wellbeing.',
+    full: `<p>Decades of research on <strong>social support and health</strong> show that perceived social support — simply knowing someone is aware of your efforts — is one of the strongest predictors of sustained behavior change. A landmark meta-analysis by Holt-Lunstad et al. found that strong social connections improved the odds of survival by <strong>50%</strong>, making loneliness a health risk comparable to smoking.</p>
+    <p>bloom buddy applies this through <strong>mutual accountability</strong>: your buddy can see your streak and completion percentage (not your private data), and you can see theirs. This light-touch visibility leverages what behavioral scientists call the <strong>Köhler effect</strong> — people work harder when they know someone is counting on them. Research by Irwin et al. showed that partnered exercise adherence was significantly higher than solo exercise, even when partners never spoke.</p>
+    <p>Critically, bloom buddy is designed as <strong>encouragement, not surveillance</strong>. Your buddy gets notified when you're having a hard day so they can send support — not so they can judge. This mirrors findings from self-determination theory (Deci & Ryan) showing that autonomy-supportive relationships foster intrinsic motivation, while controlling ones undermine it.</p>`,
+    sources: [
+      'Holt-Lunstad, J., et al. (2010). Social relationships and mortality risk: A meta-analytic review. <em>PLoS Medicine</em>, 7(7), e1000316.',
+      'Irwin, B. C., et al. (2012). Aerobic exercise is promoted when individual performance affects the group: A test of the Köhler motivation gain effect. <em>Annals of Behavioral Medicine</em>, 44(2), 151–159.',
+      'Deci, E. L. & Ryan, R. M. (2000). The "what" and "why" of goal pursuits: Human needs and the self-determination of behavior. <em>Psychological Inquiry</em>, 11(4), 227–268.',
+    ],
+  },
+  wall: {
+    title: 'Encouragement wall',
+    tip: 'Giving kindness to strangers benefits you as much as receiving it. Anonymous generosity reduces stress and increases wellbeing.',
+    full: `<p>Research on <strong>prosocial behavior</strong> consistently shows that helping others — even strangers, even anonymously — improves the helper's own mood, reduces stress, and increases a sense of meaning. A study by Dunn et al. published in <em>Science</em> demonstrated that spending money on others produced greater happiness than spending on oneself, regardless of income.</p>
+    <p>The encouragement wall applies the concept of <strong>anonymous prosocial action</strong>: writing a kind word for a stranger you'll never meet. This removes social performance anxiety while preserving the wellbeing benefits. Research by Lyubomirsky et al. found that performing acts of kindness — particularly varied ones — significantly increased happiness over a 10-week period.</p>
+    <p>There's also a <strong>receiving</strong> benefit: reading kind words from anonymous strangers activates a sense of common humanity, a core component of Kristin Neff's model of <strong>self-compassion</strong>. Knowing that someone out there thought of you — without knowing you — can counter the isolation that often accompanies difficult mental health days.</p>`,
+    sources: [
+      'Dunn, E. W., et al. (2008). Spending money on others promotes happiness. <em>Science</em>, 319(5870), 1687–1688.',
+      'Lyubomirsky, S., et al. (2005). Pursuing happiness: The architecture of sustainable change. <em>Review of General Psychology</em>, 9(2), 111–131.',
+      'Neff, K. D. (2003). Self-compassion: An alternative conceptualization of a healthy attitude toward oneself. <em>Self and Identity</em>, 2(2), 85–101.',
+    ],
+  },
   hardday: {
     title: 'Hard day mode',
     tip: 'Reducing expectations on hard days is protective — it prevents the "I failed at everything" spiral.',
@@ -10321,6 +10345,7 @@ function renderBuddyContent() {
     ${buddyIcon(24)}
     <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">bloom buddy</div>
     <button onclick="openSheet('buddy-info-sheet')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted);padding:4px" title="What is bloom buddy?">&#9432;</button>
+    ${infoIcon('buddy')}
   </div>`;
 
   if (buddyState.status === 'paired' && buddyCachedBuddies.length > 0) {
@@ -10669,7 +10694,7 @@ function renderCommunityTab() {
   // Wall header
   html += `<div style="text-align:center;padding:8px 0 16px">
     <div style="font-size:32px;margin-bottom:8px">💛</div>
-    <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">Encouragement wall</div>
+    <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream)">Encouragement wall${infoIcon('wall')}</div>
     <div style="font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6">Anonymous words of kindness from the bloom community.<br>Leave something gentle for someone who needs it.</div>
   </div>`;
 
