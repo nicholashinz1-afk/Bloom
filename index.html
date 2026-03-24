@@ -2546,7 +2546,7 @@ const JOURNAL_PROMPTS = [
   "What does growth feel like for you lately?",
 ];
 
-// Mood-responsive prompts — shown when mood is logged low (0-1)
+// Gentle prompts — shown when mood is low (0-1)
 const JOURNAL_PROMPTS_LOW = [
   "You don't have to explain yourself. What's here right now?",
   "What does your body feel like today?",
@@ -2556,34 +2556,23 @@ const JOURNAL_PROMPTS_LOW = [
   "Is there anything you need to put down today?",
   "What does rest look like for you right now?",
   "You showed up. That matters. What's on your mind?",
+  "What's the smallest kind thing you could do for yourself right now?",
+  "You don't have to fix anything. What do you just need to say?",
+  "What would feel like enough for today?",
+  "Is there something you keep thinking about? You can put it here.",
+  "What does comfort look like for you today?",
+  "If today were almost over, what would you want to have done for yourself?",
+  "What's one thing that felt hard that you haven't said out loud?",
+  "You're allowed to not be okay. What's true right now?",
+  "What's something gentle you can tell yourself today?",
+  "What would it look like to go easy on yourself right now?",
 ];
 
-// Shown when mood is okay (2)
-const JOURNAL_PROMPTS_OKAY = [
-  "Okay is still something. What's making up your day?",
-  "What's taking up the most space in your head right now?",
-  "What would make tomorrow feel a little easier?",
-  "What's one thing you're carrying that you could set down?",
-  "How has your energy been today?",
-  "What do you need that you haven't given yourself yet?",
-];
-
-// Shown when mood is good/great (3-4)
-const JOURNAL_PROMPTS_GOOD = [
-  "What's behind the good mood today?",
-  "What's working well right now that you want to remember?",
-  "What are you proud of today, even quietly?",
-  "Who or what contributed to how you're feeling?",
-  "What do you want to carry into tomorrow?",
-  "What does this kind of day teach you about yourself?",
-];
 
 function getJournalPrompt() {
   const mood = state.todayData?.mood;
-  if (mood === undefined) return JOURNAL_PROMPTS[getDayIndex() % JOURNAL_PROMPTS.length];
-  if (mood <= 1) return JOURNAL_PROMPTS_LOW[getDayIndex() % JOURNAL_PROMPTS_LOW.length];
-  if (mood === 2) return JOURNAL_PROMPTS_OKAY[getDayIndex() % JOURNAL_PROMPTS_OKAY.length];
-  return JOURNAL_PROMPTS_GOOD[getDayIndex() % JOURNAL_PROMPTS_GOOD.length];
+  if (mood !== undefined && mood <= 1) return JOURNAL_PROMPTS_LOW[getDayIndex() % JOURNAL_PROMPTS_LOW.length];
+  return JOURNAL_PROMPTS[getDayIndex() % JOURNAL_PROMPTS.length];
 }
 
 const REFLECTION_QUESTIONS = [
@@ -6534,6 +6523,16 @@ function renderWellnessTab() {
     </div>`).join('')}
   </div>`;
 
+  // Just write — open journal anytime
+  html += `<div style="margin-top:10px;background:linear-gradient(135deg,rgba(186,156,124,0.12),rgba(186,156,124,0.05));border:1px solid rgba(186,156,124,0.25);border-radius:var(--r-lg);padding:18px 16px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="font-size:18px">📓</span>
+      <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--amber-light)">Just write</div>
+    </div>
+    <div style="font-size:13px;color:rgba(186,156,124,0.7);margin-bottom:14px;font-style:italic">No prompt, no structure — just get it out</div>
+    <div style="text-align:center"><button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button></div>
+  </div>`;
+
   // ── WEEKLY ─────────────────────────────────────────────────
   html += `<div style="font-family:Fraunces,serif;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.12em;padding:16px 4px 10px;display:flex;align-items:center;gap:8px"><span>This week</span><div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div></div>`;
 
@@ -6634,18 +6633,6 @@ function renderWellnessTab() {
       <div id="breath-ui" style="text-align:center">
         <button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="startBreathing()">Begin breathing exercise</button>
       </div>
-    </div>
-  </div>`;
-
-  // Just write — open journal anytime
-  html += `<div style="margin-top:10px">
-    <div style="background:linear-gradient(135deg,rgba(186,156,124,0.12),rgba(186,156,124,0.05));border:1px solid rgba(186,156,124,0.25);border-radius:var(--r-lg);padding:18px 16px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <span style="font-size:18px">📓</span>
-        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--amber-light)">Just write</div>
-      </div>
-      <div style="font-size:13px;color:rgba(186,156,124,0.7);margin-bottom:14px;font-style:italic">No prompt, no structure — just get it out</div>
-      <div style="text-align:center"><button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button></div>
     </div>
   </div>`;
 
