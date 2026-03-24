@@ -2,28 +2,64 @@
 // Uses Vercel KV (Upstash Redis) via REST API — same pattern as wall.js
 
 // ── Content moderation (shared with wall) ──────────────────
-const BLOCKED_PATTERNS = [
-  /\b(kill|suicide|die|hurt|harm|cut|end it)\b/i,
-  /\b(fuck|shit|damn|ass|bitch|cunt|dick|cock)\b/i,
-  /\b(hate|stupid|ugly|worthless|loser)\b/i,
+// Philosophy: allow venting/self-expression, offer resources for self-harm,
+// block language that targets or harms *others*
+
+// Directed harm — messages intended to hurt another person
+const DIRECTED_HARM = [
+  /\bkill\s*your\s*self\b/i,
+  /\bkys\b/i,
+  /\bgo\s*die\b/i,
+  /\bend\s*it\s*all\b/i,
+  /\byou\s*should\s*(die|kill|hurt)\b/i,
+  /\bnobody\s*(loves|cares about|likes)\s*you\b/i,
+  /\byou\s*deserve\s*to\s*(die|suffer|hurt)\b/i,
+  /\bi('ll|m going to|m gonna)\s*(kill|hurt|find)\s*you\b/i,
+];
+
+// Slurs & targeted abuse — language used to dehumanize others
+const TARGETED_ABUSE = [
+  /\b(bitch|cunt|faggot|retard|tranny|n[i1]gg[ae3]r)\b/i,
+];
+
+// Spam / link / injection prevention
+const SPAM_PATTERNS = [
   /\b(http|www\.|\.\bcom\b|\.\borg\b|\.\bnet\b)\b/i,
   /@|#|\$\$|[<>]/,
 ];
 
-const BLOCKED_EXACT = [
-  'kill yourself', 'kys', 'go die', 'end it all',
+// Self-harm language — not blocked, but flagged so the client can offer resources
+const SELF_HARM_PATTERNS = [
+  /\b(kill myself|end my life|want to die|don'?t want to (be here|live|exist))\b/i,
+  /\b(suicide|suicidal|self[- ]?harm|cut myself|hurt myself)\b/i,
 ];
 
 function moderateMessage(text) {
   const lower = text.toLowerCase().trim();
   if (lower.length < 1 || lower.length > 200) return { ok: false, reason: 'length' };
-  for (const phrase of BLOCKED_EXACT) {
-    if (lower.includes(phrase)) return { ok: false, reason: 'harmful' };
+
+  // Block directed harm toward others
+  for (const pat of DIRECTED_HARM) {
+    if (pat.test(lower)) return { ok: false, reason: 'harmful' };
   }
-  for (const pat of BLOCKED_PATTERNS) {
+
+  // Block targeted slurs/abuse
+  for (const pat of TARGETED_ABUSE) {
+    if (pat.test(lower)) return { ok: false, reason: 'harmful' };
+  }
+
+  // Block spam/links
+  for (const pat of SPAM_PATTERNS) {
     if (pat.test(lower)) return { ok: false, reason: 'filtered' };
   }
+
   if (!/[a-zA-Z]/.test(text)) return { ok: false, reason: 'no-text' };
+
+  // Flag self-harm language — allow the message but signal the client to show resources
+  for (const pat of SELF_HARM_PATTERNS) {
+    if (pat.test(lower)) return { ok: true, flag: 'self-harm' };
+  }
+
   return { ok: true };
 }
 
@@ -153,7 +189,11 @@ const MILESTONES = [7, 14, 30, 60, 100];
 
 // ── Main handler ────────────────────────────────────────────
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const allowedOrigins = ['https://bloomhabits.app', 'http://localhost:3000'];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -564,7 +604,9 @@ export default async function handler(req, res) {
       await sendPush(partner.oneSignalId, 'bloom buddy', `${myProfile?.name || 'Your buddy'}: ${text.slice(0, 80)}`);
     }
 
-    return res.json({ ok: true, message: msg });
+    const resp = { ok: true, message: msg };
+    if (check.flag) resp.flag = check.flag;
+    return res.json(resp);
   }
 
   // ── NUDGE: send a pre-written encouragement ─────────────

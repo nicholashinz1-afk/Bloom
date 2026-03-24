@@ -2114,69 +2114,69 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
      ============================================================ -->
 <div id="app" style="display:none">
   <!-- Sticky header -->
-  <div id="app-header">
+  <header id="app-header" role="banner">
     <div class="header-bloom">
-      <span id="header-bloom-icon"></span>
+      <span id="header-bloom-icon" aria-hidden="true"></span>
       <span class="header-bloom-name">bloom</span>
-      <button id="settings-gear" onclick="switchTab('settings')" title="Settings" style="position:absolute;left:0;background:none;border:none;cursor:pointer;font-size:17px;padding:4px;opacity:0.35;transition:opacity 0.2s;line-height:1">⚙️</button>
-      <button id="crisis-heart" onclick="openCrisisSheet()" title="Mental health resources">🤍</button>
+      <button id="settings-gear" onclick="switchTab('settings')" title="Settings" aria-label="Open settings" style="position:absolute;left:0;background:none;border:none;cursor:pointer;font-size:17px;padding:4px;opacity:0.35;transition:opacity 0.2s;line-height:1"><span aria-hidden="true">⚙️</span></button>
+      <button id="crisis-heart" onclick="openCrisisSheet()" title="Mental health resources" aria-label="Mental health crisis resources"><span aria-hidden="true">🤍</span></button>
     </div>
-    <div class="header-quote" id="daily-quote"></div>
-  </div>
+    <div class="header-quote" id="daily-quote" role="status" aria-live="polite"></div>
+  </header>
 
   <!-- Tab content -->
-  <div id="tab-content">
+  <main id="tab-content">
     <!-- TODAY TAB -->
-    <div class="tab-panel active" id="tab-today">
+    <div class="tab-panel active" id="tab-today" role="tabpanel" aria-labelledby="nav-today">
       <div class="tab-scroll" id="today-scroll"></div>
     </div>
 
     <!-- WEEKLY TAB -->
-    <div class="tab-panel" id="tab-weekly">
+    <div class="tab-panel" id="tab-weekly" role="tabpanel" aria-labelledby="nav-weekly">
       <div class="tab-scroll" id="weekly-scroll"></div>
     </div>
 
     <!-- WELLNESS TAB -->
-    <div class="tab-panel" id="tab-wellness">
+    <div class="tab-panel" id="tab-wellness" role="tabpanel" aria-labelledby="nav-wellness">
       <div class="tab-scroll" id="wellness-scroll"></div>
     </div>
 
     <!-- PROGRESS TAB -->
-    <div class="tab-panel" id="tab-progress">
+    <div class="tab-panel" id="tab-progress" role="tabpanel" aria-labelledby="nav-progress">
       <div class="tab-scroll" id="progress-scroll"></div>
     </div>
 
     <!-- COMMUNITY TAB -->
-    <div class="tab-panel" id="tab-community">
+    <div class="tab-panel" id="tab-community" role="tabpanel" aria-labelledby="nav-community">
       <div class="tab-scroll" id="community-scroll"></div>
     </div>
 
     <!-- SETTINGS TAB -->
-    <div class="tab-panel" id="tab-settings">
+    <div class="tab-panel" id="tab-settings" role="tabpanel" aria-labelledby="nav-settings">
       <div class="tab-scroll" id="settings-scroll"></div>
     </div>
-  </div>
+  </main>
 
   <!-- Bottom nav -->
-  <nav id="bottom-nav">
-    <button class="nav-btn active" id="nav-today" onclick="switchTab('today')">
-      <span class="nav-icon" id="nav-today-icon"></span>
+  <nav id="bottom-nav" role="tablist" aria-label="Main navigation">
+    <button class="nav-btn active" id="nav-today" role="tab" aria-selected="true" aria-controls="tab-today" onclick="switchTab('today')">
+      <span class="nav-icon" id="nav-today-icon" aria-hidden="true"></span>
       <span class="nav-label">Daily</span>
     </button>
-    <button class="nav-btn" id="nav-weekly" onclick="switchTab('weekly')">
-      <span class="nav-icon">📋</span>
+    <button class="nav-btn" id="nav-weekly" role="tab" aria-selected="false" aria-controls="tab-weekly" onclick="switchTab('weekly')">
+      <span class="nav-icon" aria-hidden="true">📋</span>
       <span class="nav-label">Weekly</span>
     </button>
-    <button class="nav-btn" id="nav-wellness" onclick="switchTab('wellness')">
-      <span class="nav-icon">🫧</span>
+    <button class="nav-btn" id="nav-wellness" role="tab" aria-selected="false" aria-controls="tab-wellness" onclick="switchTab('wellness')">
+      <span class="nav-icon" aria-hidden="true">🫧</span>
       <span class="nav-label">Wellness</span>
     </button>
-    <button class="nav-btn" id="nav-progress" onclick="switchTab('progress')">
-      <span class="nav-icon">✨</span>
+    <button class="nav-btn" id="nav-progress" role="tab" aria-selected="false" aria-controls="tab-progress" onclick="switchTab('progress')">
+      <span class="nav-icon" aria-hidden="true">✨</span>
       <span class="nav-label">Progress</span>
     </button>
-    <button class="nav-btn" id="nav-community" onclick="switchTab('community')">
-      <span class="nav-icon">💛</span>
+    <button class="nav-btn" id="nav-community" role="tab" aria-selected="false" aria-controls="tab-community" onclick="switchTab('community')">
+      <span class="nav-icon" aria-hidden="true">💛</span>
       <span class="nav-label">Community</span>
     </button>
   </nav>
@@ -2186,10 +2186,10 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 <!-- ============================================================
      GLOBAL BOTTOM SHEETS
      ============================================================ -->
-<div class="sheet-backdrop" id="sheet-backdrop" onclick="closeAllSheets()"></div>
+<div class="sheet-backdrop" id="sheet-backdrop" onclick="closeAllSheets()" aria-hidden="true"></div>
 
 <!-- Crisis sheet -->
-<div class="bottom-sheet" id="crisis-sheet">
+<div class="bottom-sheet" id="crisis-sheet" role="dialog" aria-label="Crisis support resources">
   <div class="sheet-handle"></div>
   <div style="padding:0 20px 8px">
     <div class="sheet-title">You don't have to face this alone</div>
@@ -2214,6 +2214,13 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
     <div>
       <div class="crisis-option-title">Chat Online</div>
       <div class="crisis-option-sub">988lifeline.org — live chat support</div>
+    </div>
+  </div>
+  <div class="crisis-option" onclick="window.open('https://findahelpline.com/')">
+    <div class="crisis-option-icon">🌍</div>
+    <div>
+      <div class="crisis-option-title">International Resources</div>
+      <div class="crisis-option-sub">findahelpline.com — crisis lines in 40+ languages worldwide</div>
     </div>
   </div>
   <div style="padding:20px 20px 0">
@@ -5593,11 +5600,11 @@ function showAIResponse(containerId, text) {
 // ============================================================
 function switchTab(tab) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
   const panel = document.getElementById('tab-' + tab);
   panel.classList.add('active');
   const navBtn = document.getElementById('nav-' + tab);
-  if (navBtn) navBtn.classList.add('active');
+  if (navBtn) { navBtn.classList.add('active'); navBtn.setAttribute('aria-selected', 'true'); }
   // Highlight settings gear when settings tab is active
   const gear = document.getElementById('settings-gear');
   if (gear) gear.style.opacity = tab === 'settings' ? '0.8' : '0.35';
@@ -10461,6 +10468,8 @@ async function buddySendMessage(pairId) {
     if (buddyCachedMessages[pairId].length > 50) buddyCachedMessages[pairId] = buddyCachedMessages[pairId].slice(-50);
     renderBuddyMessagesForPair(pairId);
     haptic('light');
+    // If self-harm language detected, gently surface crisis resources
+    if (data.flag === 'self-harm') openCrisisSheet();
   } else {
     const reasons = {
       'rate-limit': 'Easy there! Try again in a bit.',
@@ -11051,6 +11060,8 @@ async function postToWall() {
       // Refresh messages only, preserve textarea
       await fetchWallMessages();
       renderWallMessages();
+      // If self-harm language detected, gently surface crisis resources
+      if (data.flag === 'self-harm') setTimeout(() => openCrisisSheet(), 800);
     } else {
       const reasons = {
         'length': 'Message should be 3-140 characters.',
