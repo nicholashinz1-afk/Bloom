@@ -2356,7 +2356,10 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   <div class="sheet-handle"></div>
   <div style="padding:0 20px 20px">
     <div class="sheet-title">Save your backup link</div>
-    <p class="text-sm text-muted" style="line-height:1.6;margin-bottom:16px">Bookmark this link or copy it somewhere safe. It contains all your Bloom data and can restore everything if you switch devices or clear your browser.</p>
+    <p class="text-sm text-muted" style="line-height:1.6;margin-bottom:12px">Bookmark this link or copy it somewhere safe. It contains all your Bloom data and can restore everything if you switch devices or clear your browser.</p>
+    <div style="background:rgba(255,180,80,0.08);border:1px solid rgba(255,180,80,0.15);border-radius:var(--r-lg);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--amber-light);line-height:1.6">
+      ⚠️ This link contains your private data including journal entries. Keep it somewhere only you can access. Avoid saving it on shared devices or in shared bookmarks.
+    </div>
     <div class="backup-url-box" id="backup-url-display">Generating...</div>
     <div style="display:flex;gap:10px;margin-top:4px">
       <button class="btn btn-primary" style="flex:1" onclick="copyBackupLink()">Copy link</button>
@@ -2386,7 +2389,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
         <div><span style="color:var(--cream)">Your display name</span> (set in Settings)</div>
       </div>
       <p style="margin-bottom:12px"><strong style="color:var(--cream)">Your buddy cannot see:</strong> your journal entries, specific habits, affirmations, or any private data.</p>
-      <p style="margin-bottom:12px">You can send each other short messages and quick nudges. Your buddy gets a notification if you're having a rough day, so they can send encouragement.</p>
+      <p style="margin-bottom:12px">You can send each other short messages and quick nudges. If mood sharing is on, your buddy gets a notification on rough days so they can send encouragement. You can turn mood sharing off in Settings at any time.</p>
       <p>You can have <strong style="color:var(--cream)">multiple buddies</strong> and unpair at any time.</p>
       <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)">
         <div style="font-size:12px;color:var(--sky-light);margin-bottom:6px;font-weight:500">Why this works</div>
@@ -2395,6 +2398,30 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
       </div>
     </div>
     <button class="btn btn-ghost" style="width:100%;margin-top:12px" onclick="closeAllSheets()">Got it</button>
+  </div>
+</div>
+
+<!-- Buddy mood sharing migration prompt -->
+<div class="bottom-sheet" id="buddy-mood-migration-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:4px 20px 20px">
+    <div class="sheet-title">Buddy mood sharing</div>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+      bloom buddy currently shares your mood with your buddy and notifies them when you're having a rough day. We want to make sure you're comfortable with this.
+    </div>
+    <div style="background:var(--bg-card);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+        <strong style="color:var(--cream)">With mood sharing on:</strong> Your buddy sees your mood (Low / Rough / Okay / Good / Great) and gets notified on hard days so they can send support.
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-top:8px">
+        <strong style="color:var(--cream)">With mood sharing off:</strong> Your buddy sees your streak and habit %, but not your mood. No rough-day notifications.
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">You can change this any time in Settings → bloom buddy.</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn btn-primary btn-block" onclick="completeBuddyMoodMigration(true)">Keep mood sharing on</button>
+      <button class="btn btn-secondary btn-block" onclick="completeBuddyMoodMigration(false)">Turn mood sharing off</button>
+    </div>
   </div>
 </div>
 
@@ -2617,7 +2644,7 @@ const HABIT_AFFIRMATIONS = {
   skincare: ["Skincare done.", "You're investing in yourself.", "Kind acts for your body."],
   medication: ["Medication taken — that's real strength.", "One of the most important things you can do for yourself.", "You showed up for your well-being. That matters."],
   w_shower: ["That took real courage.", "A clean start changes everything.", "You showed up for yourself."],
-  w_exercise: ["Your body says thank you.", "Stronger than yesterday.", "Movement is medicine."],
+  w_exercise: ["Your body says thank you.", "You showed up and moved.", "That took effort — and you did it."],
   w_outside: ["Fresh air is self-care.", "The world needed your presence today.", "Outside counts."],
   mood: ["Noted — thanks for checking in.", "Awareness is the first step."],
   water: ["Hydration is self-care.", "Your body thanks you.", "One sip at a time."],
@@ -3603,7 +3630,7 @@ function checkStreakMilestone(streak) {
     3:   { title: '3 days in a row!', sub: 'A habit is starting to form.' },
     7:   { title: 'One full week!', sub: 'Seven days of showing up. That\'s real.' },
     14:  { title: 'Two weeks strong!', sub: 'You\'re building something that lasts.' },
-    30:  { title: '30 day streak!', sub: 'A full month. You should be proud.' },
+    30:  { title: '30 day streak!', sub: 'A full month of showing up for yourself.' },
     60:  { title: '60 days!', sub: 'Two months of consistency. Incredible.' },
     100: { title: '100 days!', sub: 'One hundred days of you. Extraordinary.' },
   };
@@ -3977,7 +4004,7 @@ async function saveOpenJournal() {
     saveState();
     archiveToday();
     if (aiEl) {
-      aiEl.innerHTML = `<div class="ai-response"><div class="ai-response-text">${ai}</div></div>`;
+      aiEl.innerHTML = `<div class="ai-response"><div class="ai-response-text">${escapeHtml(ai)}</div></div>`;
     }
   }
   if (btn) { btn.textContent = 'Saved ✓'; btn.disabled = true; }
@@ -4513,8 +4540,8 @@ function checkEveningNudge() {
       const remaining = total - done;
       const nudgeMsgs = [
         { title: `Almost there — ${remaining} left`, body: `You completed ${done}/${total} habits today. A few quick ones and you're done!` },
-        { title: `${Math.round(pct * 100)}% done today`, body: `You've been showing up. ${remaining} habit${remaining > 1 ? 's' : ''} left if you want a perfect day.` },
-        { title: 'So close to a perfect day', body: `${done} of ${total} done. You've got this — the finish line is right there.` },
+        { title: `${Math.round(pct * 100)}% done today`, body: `You've been showing up. ${remaining} habit${remaining > 1 ? 's' : ''} left — but only if you want to.` },
+        { title: 'So close to finishing', body: `${done} of ${total} done. You've already shown up today — that counts.` },
       ];
       const msg = nudgeMsgs[Math.floor(Math.random() * nudgeMsgs.length)];
       sendLocalNotification(msg.title, msg.body, 'reminder-evening-partial');
@@ -4807,11 +4834,11 @@ const CELEBRATIONS = {
     emoji: '💪', xp: 30,
     messages: [
       { title: 'Movement done!', sub: 'Every rep is a vote for yourself.' },
-      { title: 'Your body says thank you.', sub: 'Stronger than yesterday.' },
+      { title: 'Your body says thank you.', sub: 'You chose to move, and that matters.' },
       { title: 'You showed up for your body.', sub: 'This is what growth looks like.' },
       { title: 'Endorphins unlocked.', sub: 'You earned every single one.' },
       { title: 'That was all you.', sub: 'Your body is grateful.' },
-      { title: 'Movement is medicine.', sub: 'And you just took yours.' },
+      { title: 'You moved your body.', sub: 'That\'s a genuine act of self-care.' },
       { title: 'You chose the hard thing.', sub: 'That\'s character.' },
       { title: 'Energy: invested.', sub: 'Watch it come back to you tenfold.' },
     ],
@@ -5563,7 +5590,7 @@ function showAIResponse(containerId, text) {
     el.style.display = 'none';
     return;
   }
-  el.innerHTML = `<div class="ai-response-text">${text}</div>`;
+  el.innerHTML = `<div class="ai-response-text">${escapeHtml(text)}</div>`;
   el.className = 'ai-response';
   el.style.display = 'block';
 }
@@ -7291,7 +7318,7 @@ async function generateRollingInsight() {
   if (ai) {
     save(key, ai);
     const el = document.getElementById('rolling-insight-text');
-    if (el) el.innerHTML = ai;
+    if (el) el.innerHTML = escapeHtml(ai);
   }
 }
 
@@ -7495,7 +7522,15 @@ function renderSettingsTab() {
   // ── BLOOM BUDDY ────────────────────────────────────────────
   const multiBuddyOn = prefs.multiBuddy || false;
   const myBuddyId = load('bloom_buddy_id', 'Not yet generated');
+  const buddyShareMoodOn = prefs.buddyShareMood !== false; // default true
   html += settingsSection('buddy', buddyIcon(18) + ' bloom buddy', `
+    <div class="toggle-row" style="padding:12px 0">
+      <div>
+        <div class="toggle-label">Share mood with buddy</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let your buddy see your current mood and get notified on rough days</div>
+      </div>
+      <div class="toggle${buddyShareMoodOn ? ' on' : ''}" onclick="state.prefs.buddyShareMood=!${buddyShareMoodOn};saveState();renderSettingsTab()"></div>
+    </div>
     <div class="toggle-row" style="padding:12px 0">
       <div>
         <div class="toggle-label">Allow multiple buddies</div>
@@ -7857,7 +7892,7 @@ function renderSettingsTab() {
         <div style="font-weight:500;color:var(--cream);margin-bottom:4px">Your data belongs to you</div>
         Everything in bloom stays on this device — your journal, moods, habits, reflections. Never uploaded, never shared, never seen by anyone else.
         <div style="margin-top:6px;color:var(--text-muted)">AI responses send your prompt to Claude, but nothing is stored or linked to your identity.</div>
-        <div style="margin-top:6px;color:var(--text-muted)">Encouragement wall messages are anonymous — no personal data is attached or shared.</div>
+        <div style="margin-top:6px;color:var(--text-muted)">Encouragement wall posts are shared without your name or identity — no personal data is attached.</div>
       </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px">
@@ -7885,6 +7920,15 @@ function renderSettingsTab() {
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
         <strong style="color:var(--cream)">bloom is a self-care companion, not a substitute for professional mental health care.</strong>
         It is not therapy, counseling, or medical advice. If you are struggling, please reach out to a licensed therapist or counselor. Tap the 🤍 in the header any time for immediate crisis resources.
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.6">
+        bloom is intended for users aged 13 and older. If you are under 18, we encourage you to use this app with a parent or guardian's awareness.
+      </div>
+    </div>
+    <div style="background:rgba(122,158,126,0.06);border:1px solid rgba(122,158,126,0.12);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+        <strong style="color:var(--cream)">It's okay to take a break from bloom.</strong>
+        If tracking your habits or mood ever starts to feel like pressure instead of support, step away. bloom will be here when you come back — no guilt, no lost progress that matters. Your well-being always comes first, not your streak.
       </div>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="showWhatsNew(true)">📋 View release notes</button>
@@ -8570,7 +8614,7 @@ const SCIENCE_SECTIONS = {
     title: 'Breathing exercises',
     tip: 'The 4-7-8 technique activates your vagus nerve, shifting your body from stress mode to rest mode.',
     full: `<p>The <strong>4-7-8 breathing technique</strong> (inhale 4, hold 7, exhale 8) was developed by Dr. Andrew Weil based on pranayama breathing practices. The extended exhale activates the <strong>vagus nerve</strong>, which triggers the parasympathetic nervous system — your body's "rest and digest" mode.</p>
-    <p>A 2017 study in <em>Frontiers in Psychology</em> found that diaphragmatic breathing significantly reduced cortisol levels (the stress hormone) after just 8 weeks of practice. Even a single session can measurably lower heart rate and blood pressure. bloom offers this without any streak or pressure — it's here whenever you need it.</p>`,
+    <p>A 2017 study in <em>Frontiers in Psychology</em> found that diaphragmatic breathing significantly reduced cortisol levels (the stress hormone) after just 8 weeks of practice. Research suggests that even a single session may help you feel calmer and more grounded. bloom offers this without any streak or pressure — it's here whenever you need it.</p>`,
     sources: [
       'Ma, X., et al. (2017). The effect of diaphragmatic breathing on attention, negative affect, and stress. <em>Frontiers in Psychology</em>, 8, 874.',
       'Gerritsen, R. J. S. & Band, G. P. H. (2018). Breath of life: The respiratory vagal stimulation model of contemplative activity. <em>Frontiers in Human Neuroscience</em>, 12, 397.',
@@ -9552,13 +9596,20 @@ function renderOBBuddyIntro(body, footer) {
     <div style="background:var(--bg-card);border-radius:16px;padding:16px;margin-bottom:16px">
       <div style="font-size:13px;color:var(--cream);font-weight:500;margin-bottom:12px">What your buddy sees:</div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
-        Your mood (Low / Rough / Okay / Good / Great)<br>
+        Your mood (Low / Rough / Okay / Good / Great) — <em>if mood sharing is on</em><br>
         Your streak count<br>
         Your habit completion % (not which habits)<br>
         Your display name & when you were last active
       </div>
     </div>
 
+    <div class="toggle-row" style="padding:14px 0">
+      <div>
+        <div class="toggle-label">Share mood with buddy</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let your buddy see your mood and get notified on rough days</div>
+      </div>
+      <div class="toggle${obData.buddyShareMood !== false ? ' on' : ''}" onclick="obData.buddyShareMood=obData.buddyShareMood===false?true:false;renderOnboarding()"></div>
+    </div>
     <div class="toggle-row" style="padding:14px 0;border-bottom:none">
       <div>
         <div class="toggle-label">Allow multiple buddies</div>
@@ -10122,10 +10173,11 @@ async function syncBuddyStatus() {
   if (buddyState.status !== 'paired' && buddyState.status !== 'searching') return;
   const id = ensureBuddyId();
   const playerId = load('bloom_onesignal_pid', null);
+  const shareMood = state.prefs?.buddyShareMood !== false;
   await buddyApi({
     action: 'sync',
     buddyId: id,
-    mood: state.todayData?.mood,
+    mood: shareMood ? state.todayData?.mood : undefined,
     streak: state.xpData?.streak || 0,
     habitPct: getHabitPct(),
     oneSignalId: playerId,
@@ -10279,10 +10331,33 @@ async function buddyCancelSearch() {
   renderBuddyContent();
 }
 
+function checkBuddyMessageSafety(text) {
+  // Warn about sharing personal info
+  const personalPatterns = [
+    /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/, // phone numbers
+    /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/, // emails
+    /\b\d{1,5}\s+\w+\s+(st|street|ave|avenue|rd|road|dr|drive|blvd|ln|lane|ct|court)\b/i, // addresses
+    /\b(instagram|snapchat|tiktok|discord|telegram|whatsapp|ig|snap)\s*[:@]?\s*\w+/i, // social handles
+  ];
+  for (const p of personalPatterns) {
+    if (p.test(text)) return 'This looks like it might contain personal info (phone, email, address, or social handle). bloom buddy is safer without sharing personal details. Send anyway?';
+  }
+  return null;
+}
+
 async function buddySendMessage(pairId) {
   const input = document.getElementById('buddy-input-' + pairId);
   if (!input || !input.value.trim()) return;
   const text = input.value.trim();
+
+  // Client-side safety check for personal information
+  const warning = checkBuddyMessageSafety(text);
+  if (warning && !input.dataset.warned) {
+    input.dataset.warned = 'true';
+    showBuddyStatusForPair(pairId, warning, 'var(--amber)');
+    return;
+  }
+  delete input.dataset.warned;
 
   const data = await buddyApi({
     action: 'send-message',
@@ -11164,6 +11239,21 @@ function logCustomCheckin(id, value) {
   renderTodayTab();
 }
 
+function completeBuddyMoodMigration(shareOn) {
+  state.prefs.buddyShareMood = shareOn;
+  state.prefs._buddyMoodMigrated = true;
+  saveState();
+  closeAllSheets();
+}
+
+function checkBuddyMoodMigration() {
+  // Only show for existing buddy users who haven't been asked yet
+  if (state.prefs?._buddyMoodMigrated) return;
+  if (buddyState.status !== 'paired') return;
+  // Existing user with active buddy — show the prompt
+  setTimeout(() => openSheet('buddy-mood-migration-sheet'), 1500);
+}
+
 function initApp() {
   loadState();
   migrateToNewDailyHabits();
@@ -11187,6 +11277,7 @@ function initApp() {
   if (buddyState.status !== 'none') {
     syncBuddyStatus();
   }
+  checkBuddyMoodMigration();
   const pendingBuddyInvite = load('bloom_pending_buddy_invite', null);
   if (pendingBuddyInvite) {
     save('bloom_pending_buddy_invite', null);
