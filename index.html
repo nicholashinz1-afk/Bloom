@@ -4701,15 +4701,15 @@ function saveNewWeekGoals() {
 //  DAILY HABITS — all habits with AM/PM/Both/Any time support
 // ============================================================
 const DAILY_HABITS = [
-  { id: 'brush_teeth',  icon: '🦷', label: 'Brush teeth',       xp: 15, defaultTime: 'both' },
-  { id: 'brush_hair',   icon: '💇', label: 'Brush hair',        xp: 15, defaultTime: 'am' },
-  { id: 'wash_face',    icon: '🧴', label: 'Wash face',         xp: 15, defaultTime: 'both' },
-  { id: 'get_dressed',  icon: '👕', label: 'Get dressed',       xp: 15, defaultTime: 'am' },
-  { id: 'floss',        icon: '🦷', label: 'Floss',             xp: 15, defaultTime: 'pm' },
-  { id: 'skincare',     icon: '✨', label: 'Skincare routine',  xp: 15, defaultTime: 'both' },
+  { id: 'brush_teeth',  icon: '🦷', label: 'Brush teeth',       xp: 15, defaultTime: 'any' },
+  { id: 'brush_hair',   icon: '💇', label: 'Brush hair',        xp: 15, defaultTime: 'any' },
+  { id: 'wash_face',    icon: '🧴', label: 'Wash face',         xp: 15, defaultTime: 'any' },
+  { id: 'get_dressed',  icon: '👕', label: 'Get dressed',       xp: 15, defaultTime: 'any' },
+  { id: 'floss',        icon: '🦷', label: 'Floss',             xp: 15, defaultTime: 'any' },
+  { id: 'skincare',     icon: '✨', label: 'Skincare routine',  xp: 15, defaultTime: 'any' },
 ];
 
-const MEDICATION_HABIT = { id: 'medication', icon: '💊', label: 'Medication', xp: 10, defaultTime: 'am' };
+const MEDICATION_HABIT = { id: 'medication', icon: '💊', label: 'Medication', xp: 10, defaultTime: 'any' };
 
 // ============================================================
 //  SELF-CARE TASKS
@@ -5930,24 +5930,24 @@ function renderTodayTab() {
 
   // Collect AM habits
   const amHabits = allDailyHabits.filter(h => {
-    const t2 = htPrefs[h.id] || h.defaultTime;
+    const t2 = htPrefs[h.id] || 'any';
     return t2 === 'am' || t2 === 'both';
   });
   const medInAm = medEnabled && (htPrefs.medication === 'am' || htPrefs.medication === 'both');
 
   // Collect PM habits
   const pmHabits = allDailyHabits.filter(h => {
-    const t2 = htPrefs[h.id] || h.defaultTime;
+    const t2 = htPrefs[h.id] || 'any';
     return t2 === 'pm' || t2 === 'both';
   });
   const medInPm = medEnabled && (htPrefs.medication === 'pm' || htPrefs.medication === 'both');
 
-  // Collect Any habits
+  // Collect Any habits — default when no time preference is set
   const anyHabits = allDailyHabits.filter(h => {
-    const t2 = htPrefs[h.id] || h.defaultTime;
+    const t2 = htPrefs[h.id] || 'any';
     return t2 === 'any';
   });
-  const medInAny = medEnabled && htPrefs.medication === 'any';
+  const medInAny = medEnabled && (!htPrefs.medication || htPrefs.medication === 'any');
 
   function dailyHabitRow(h, timeSlot) {
     const key = h.id + '_' + timeSlot;
@@ -7537,7 +7537,7 @@ function renderSettingsTab() {
       </div>
       <div class="toggle${medOn ? ' on' : ''}" onclick="toggleDailyHabitPref('medication')"></div>`;
   if (medOn) {
-    const medTime = ht.medication || 'am';
+    const medTime = ht.medication || 'any';
     dailyHtml += `<div style="display:flex;gap:4px;width:100%;margin-top:8px;margin-left:28px">
       ${timeOptions.map(opt => {
         const sel = medTime === opt;
@@ -8771,7 +8771,7 @@ let obData = {
   name: '',
   habits: { m_teeth: true, e_teeth: true, w_shower: true, w_exercise: true, w_outside: true, track_meals: false },
   dailyHabits: { brush_teeth: true },
-  habitTimes: { brush_teeth: 'both' },
+  habitTimes: { brush_teeth: 'any' },
   goals: { w_shower: 3, w_exercise: 3, w_outside: 3 },
   householdTasks: [],
   notifications: { waterMode: 'smart', sundayReminder: true },
