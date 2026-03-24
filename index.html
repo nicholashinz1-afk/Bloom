@@ -2389,12 +2389,9 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
       <p style="margin-bottom:12px">You can send each other short messages and quick nudges. Your buddy gets a notification if you're having a rough day, so they can send encouragement.</p>
       <p>You can have <strong style="color:var(--cream)">multiple buddies</strong> and unpair at any time.</p>
       <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)">
-        <div style="font-size:12px;color:var(--sky-light);margin-bottom:8px;font-weight:500">Why this works</div>
-        <p style="margin-bottom:8px">Research shows that simply knowing someone is aware of your efforts is one of the strongest predictors of sustained behavior change. People work harder when paired with an accountability partner (the Köhler effect), and autonomy-supportive relationships foster intrinsic motivation.</p>
-        <div style="font-size:11px;color:var(--text-muted);line-height:1.6">
-          <div style="margin-bottom:4px;padding-left:10px;border-left:2px solid rgba(255,255,255,0.06)">Holt-Lunstad et al. (2010). Social relationships and mortality risk. <em>PLoS Medicine</em></div>
-          <div style="padding-left:10px;border-left:2px solid rgba(255,255,255,0.06)">Irwin et al. (2012). The Köhler motivation gain effect. <em>Annals of Behavioral Medicine</em></div>
-        </div>
+        <div style="font-size:12px;color:var(--sky-light);margin-bottom:6px;font-weight:500">Why this works</div>
+        <p style="margin-bottom:8px">Research shows that simply knowing someone is aware of your efforts is one of the strongest predictors of sustained behavior change.</p>
+        <button class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--sky);padding:4px 0" onclick="closeAllSheets();setTimeout(()=>openScienceSheet('buddy'),350)">Learn more →</button>
       </div>
     </div>
     <button class="btn btn-ghost" style="width:100%;margin-top:12px" onclick="closeAllSheets()">Got it</button>
