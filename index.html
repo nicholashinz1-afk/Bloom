@@ -2876,6 +2876,27 @@ function burstParticles(el) {
   }
 }
 
+function burstHearts(el) {
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top + rect.height/2;
+  const hearts = ['💗','💕','💖','🩷','♥️'];
+  for (let i = 0; i < 7; i++) {
+    const h = document.createElement('div');
+    h.textContent = hearts[i % hearts.length];
+    h.style.cssText = `position:fixed;pointer-events:none;font-size:${12 + Math.random()*10}px;z-index:10000;left:${cx}px;top:${cy}px;opacity:1;transition:all 0.9s cubic-bezier(.2,.8,.3,1)`;
+    document.body.appendChild(h);
+    const angle = (i / 7) * Math.PI * 2;
+    const dist = 35 + Math.random() * 35;
+    requestAnimationFrame(() => {
+      h.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist - 20}px) scale(0.4)`;
+      h.style.opacity = '0';
+    });
+    setTimeout(() => h.remove(), 1000);
+  }
+}
+
 // ── Haptic feedback ──────────────────────────────────────────
 function haptic(style = 'light') {
   try {
@@ -4840,7 +4861,7 @@ const CELEBRATIONS = {
     ],
   },
   win: {
-    emoji: '⭐', xp: 0,
+    emoji: '⭐', xp: 5,
     messages: [
       { title: 'Win logged!', sub: 'That counts. Every single one.' },
       { title: 'Look at that.', sub: 'You\'re doing better than you think.' },
@@ -4856,7 +4877,7 @@ const CELEBRATIONS = {
     ],
   },
   affirmation: {
-    emoji: '💌', xp: 0,
+    emoji: '💗', xp: 5, hearts: true,
     messages: [
       { title: 'Affirmation saved.', sub: 'It\'ll find you when you need it.' },
       { title: 'Kind words, kept safe.', sub: 'bloom will bring this back to you.' },
@@ -5112,7 +5133,9 @@ function celebrate(type, sourceEl) {
   }
 
   // Particle burst from source
-  if (sourceEl) burstParticles(sourceEl);
+  if (sourceEl) {
+    data.hearts ? burstHearts(sourceEl) : burstParticles(sourceEl);
+  }
 
   // Confetti for big moments
   if (data.confetti) {
@@ -6072,16 +6095,19 @@ function renderTodayTab() {
   const wellnessDone = [journalToday, winsToday, affirmationsExist].filter(Boolean).length;
 
   html += `<div class="section-label">📓 Wellness</div>`;
+  const wellnessAllDone = wellnessDone === 3;
+  const badgeColor = wellnessAllDone ? 'var(--sage-light)' : (wellnessDone > 0 ? 'var(--amber-light)' : 'var(--text-muted)');
+  const badgeBg = wellnessAllDone ? 'rgba(122,158,126,0.2)' : (wellnessDone > 0 ? 'rgba(186,156,124,0.2)' : 'rgba(255,255,255,0.06)');
   html += `<div class="card" onclick="switchTab('wellness')" style="cursor:pointer">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="font-size:15px;font-weight:500">Wellness</div>
-      <div style="font-size:11px;color:${wellnessDone === 3 ? 'var(--sage)' : 'var(--text-muted)'};background:${wellnessDone === 3 ? 'rgba(122,158,126,0.15)' : 'rgba(255,255,255,0.06)'};padding:2px 10px;border-radius:99px">${wellnessDone} of 3</div>
+      <div style="font-size:11px;font-weight:600;color:${badgeColor};background:${badgeBg};padding:3px 12px;border-radius:99px">${wellnessAllDone ? '✓ Done' : wellnessDone + ' of 3'}</div>
     </div>
-    <div style="font-size:13px;color:var(--text-secondary);font-style:italic;line-height:1.5;margin-bottom:6px">${getJournalPrompt()}</div>
-    <div style="font-size:11px;color:var(--text-muted);display:flex;gap:12px;flex-wrap:wrap">
-      <span>${journalToday ? '✓' : '○'} Journal</span>
-      <span>${winsToday ? '✓' : '○'} Small wins</span>
-      <span>${affirmationsExist ? '✓' : '○'} Affirmations</span>
+    <div style="font-size:13px;color:var(--cream);font-style:italic;line-height:1.5;margin-bottom:10px">${getJournalPrompt()}</div>
+    <div style="font-size:12px;display:flex;gap:14px;flex-wrap:wrap">
+      <span style="color:${journalToday ? 'var(--sage-light)' : 'var(--text-muted)'}">${journalToday ? '✓' : '○'} Journal</span>
+      <span style="color:${winsToday ? 'var(--sage-light)' : 'var(--text-muted)'}">${winsToday ? '✓' : '○'} Small wins</span>
+      <span style="color:${affirmationsExist ? 'var(--sage-light)' : 'var(--text-muted)'}">${affirmationsExist ? '✓' : '○'} Affirmations</span>
     </div>
   </div>`;
 
@@ -6796,6 +6822,10 @@ function addWin() {
   if (!state.wellnessData.wins) state.wellnessData.wins = {};
   if (!state.wellnessData.wins[t]) state.wellnessData.wins[t] = [];
   state.wellnessData.wins[t].push(input.value.trim());
+  if (!state.todayData.winsXPGiven) {
+    state.todayData.winsXPGiven = true;
+    addXP(5, null);
+  }
   saveState();
   celebrate('win', input);
   renderWellnessTab();
@@ -6806,6 +6836,10 @@ function addAffirmation() {
   if (!input || !input.value.trim()) return;
   if (!state.wellnessData.affirmations) state.wellnessData.affirmations = [];
   state.wellnessData.affirmations.push(input.value.trim());
+  if (!state.todayData.affirmXPGiven) {
+    state.todayData.affirmXPGiven = true;
+    addXP(5, null);
+  }
   saveState();
   celebrate('affirmation', input);
   renderWellnessTab();
