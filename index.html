@@ -674,6 +674,28 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
 .mood-btn:last-child { opacity: 0.65; }
 .mood-btn:last-child.selected { opacity: 1; }
 
+/* Feeling words */
+.feelings-toggle {
+  font-size: 12px; color: var(--text-muted); cursor: pointer;
+  text-align: center; margin-top: 10px; padding: 4px 0;
+  transition: color 0.2s;
+}
+.feelings-toggle:hover { color: var(--text-secondary); }
+.feelings-row {
+  display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+  margin-top: 8px; animation: fadeIn 0.25s ease;
+}
+.feeling-pill {
+  display: inline-flex; align-items: center; padding: 5px 11px;
+  border-radius: 99px; cursor: pointer; font-size: 12px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-secondary); transition: all 0.15s; user-select: none;
+}
+.feeling-pill.selected {
+  background: rgba(122,158,126,0.18); border-color: rgba(122,158,126,0.45);
+  color: var(--sage-light);
+}
+
 /* ============================================================
    WATER TRACKER
    ============================================================ */
@@ -1272,6 +1294,40 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   font-size: 14px;
   color: var(--sky-light);
   line-height: 1.6;
+}
+.ai-disclaimer {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  opacity: 0.7;
+}
+.ai-feedback {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.ai-feedback-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 3px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ai-feedback-btn:hover, .ai-feedback-btn.selected {
+  background: rgba(106,154,176,0.12);
+  border-color: var(--sky);
+  color: var(--sky-light);
+}
+.ai-feedback-thanks {
+  font-size: 11px;
+  color: var(--sage-light);
+  padding: 3px 0;
 }
 .ai-thinking {
   display: flex;
@@ -2373,6 +2429,12 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 <div class="bottom-sheet" id="buddy-match-sheet">
   <div class="sheet-handle"></div>
   <div class="sheet-content" id="buddy-match-content"></div>
+</div>
+
+<!-- Buddy safety sheet -->
+<div class="bottom-sheet" id="buddy-safety-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:4px 20px 20px" id="buddy-safety-content"></div>
 </div>
 
 <!-- Buddy info sheet -->
@@ -3961,6 +4023,7 @@ async function saveOpenJournal() {
   if (!ta || !ta.value.trim()) return;
   const text = ta.value.trim();
   const t = today();
+  trackEvent('journal_saved');
 
   // Save to journal (appends to any existing entry or creates new)
   if (!state.wellnessData.journal) state.wellnessData.journal = {};
@@ -3985,10 +4048,17 @@ async function saveOpenJournal() {
     aiEl.innerHTML = '<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>';
   }
 
-  const ai = await callClaude(
-    `Someone is having a hard day and wrote: "${text}". Respond with just 1-2 sentences of warm, human presence. No advice. No silver linings. Just witness what they said and remind them they're not alone.`,
-    'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity, no advice. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis, you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care.'
-  );
+  // Use scripted responses for very low mood (0-1) to avoid generative AI risk
+  const currentMood = state.todayData?.mood;
+  let ai;
+  if (currentMood !== undefined && currentMood >= 0 && currentMood <= 1) {
+    ai = getScriptedResponse();
+  } else {
+    ai = await callClaude(
+      `Someone is having a hard day and wrote: "${text}". Respond with just 1-2 sentences of warm, human presence. No advice. No silver linings. Just witness what they said and remind them they're not alone.`,
+      'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity, no advice. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis, you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care.'
+    );
+  }
 
   state.loadingJournalAI = false;
   if (ai) {
@@ -3996,7 +4066,7 @@ async function saveOpenJournal() {
     saveState();
     archiveToday();
     if (aiEl) {
-      aiEl.innerHTML = `<div class="ai-response"><div class="ai-response-text">${escapeHtml(ai)}</div></div>`;
+      aiEl.innerHTML = renderAIResponseHTML(ai, 'journal-' + t);
     }
   }
   if (btn) { btn.textContent = 'Saved ✓'; btn.disabled = true; }
@@ -4023,6 +4093,7 @@ function activateHardDayMode() {
   saveState();
   archiveToday();
   playSound('hard_day');
+  trackEvent('hard_day_activated');
   closeAllSheets();
   renderHardDaySheet();
   openSheet('hard-day-sheet');
@@ -4047,16 +4118,13 @@ async function renderHardDaySheet() {
     <div id="hard-day-ai" style="font-size:13px;color:var(--text-muted);font-style:italic;text-align:center;line-height:1.7">take your time...</div>
   `;
 
-  // Get AI response
-  const ai = await callClaude(
-    `Someone is having a hard day and activated hard day mode in a wellness app. Write 2 sentences of warm, human presence. No advice. No silver linings. Just acknowledge that it's hard and that they're not alone. Address them gently.`,
-    'You are Bloom. 2 sentences only. Warm, human, no toxic positivity. IMPORTANT: If the context suggests crisis or danger, gently remind them the 🤍 crisis heart connects to real people who can help right now.'
-  );
+  // Use scripted responses for hard day mode — user is at their most vulnerable
+  const hardDayResponse = getScriptedResponse();
   const aiEl = document.getElementById('hard-day-ai');
-  if (aiEl && ai) {
+  if (aiEl && hardDayResponse) {
     aiEl.style.color = 'var(--sky-light)';
     aiEl.style.fontStyle = 'italic';
-    aiEl.textContent = ai;
+    aiEl.textContent = hardDayResponse;
   }
 }
 
@@ -5149,9 +5217,15 @@ function celebrate(type, sourceEl) {
   const data = CELEBRATIONS[type];
   if (!data) return;
 
-  haptic(data.confetti ? 'success' : 'medium');
+  // Mood-aware celebration intensity
+  // 0=quiet (Low/Rough), 1=subtle (Okay), 2=full (Good/Great/unset)
+  const currentMood = state.todayData?.mood;
+  const celebLevel = (currentMood !== undefined && currentMood >= 0 && currentMood <= 1) ? 0
+    : (currentMood === 2) ? 1 : 2;
 
-  // Play audio
+  haptic(celebLevel === 0 ? 'light' : (data.confetti ? 'success' : 'medium'));
+
+  // Play audio — skip for quiet, play for subtle+full
   const audioMap = {
     water: null,        // handled per-bottle in tapWater
     food: 'food',
@@ -5167,7 +5241,7 @@ function celebrate(type, sourceEl) {
     insight: 'milestone',
   };
   const sound = audioMap.hasOwnProperty(type) ? audioMap[type] : 'habit';
-  if (sound) playSound(sound);
+  if (sound && celebLevel > 0) playSound(sound);
 
   // Variable reward: 1-in-20 chance of a golden message
   const isGolden = Math.random() < 0.05;
@@ -5193,13 +5267,13 @@ function celebrate(type, sourceEl) {
     msg = data.messages[Math.floor(Math.random() * data.messages.length)];
   }
 
-  // Particle burst from source
-  if (sourceEl) {
+  // Particle burst from source (skip for quiet mood, keep for subtle+full)
+  if (sourceEl && celebLevel > 0) {
     data.hearts ? burstHearts(sourceEl) : burstParticles(sourceEl);
   }
 
-  // Confetti for big moments
-  if (data.confetti) {
+  // Confetti for big moments (only at full celebration level)
+  if (data.confetti && celebLevel === 2) {
     const rect = sourceEl?.getBoundingClientRect();
     const cx = rect ? rect.left + rect.width/2 : window.innerWidth/2;
     const cy = rect ? rect.top + rect.height/2 : window.innerHeight * 0.4;
@@ -5557,8 +5631,92 @@ function archiveToday() {
 }
 
 // ============================================================
+//  TELEMETRY & ERROR CAPTURE
+// ============================================================
+function sendTelemetry(type, data) {
+  try {
+    fetch('/api/diagnostics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, ...data }),
+    }).catch(() => {});
+  } catch(e) {}
+}
+
+function trackFeature(feature) { sendTelemetry('feature_use', { feature }); }
+function trackEvent(eventName, meta) { sendTelemetry(eventName, meta ? { meta } : {}); }
+
+window.onerror = function(message, source, lineno, colno, error) {
+  const errLog = load('bloom_error_log', []);
+  errLog.push({ message: String(message).slice(0, 300), url: source, line: lineno, ts: Date.now() });
+  if (errLog.length > 50) errLog.splice(0, errLog.length - 50);
+  save('bloom_error_log', errLog);
+  sendTelemetry('error', {
+    message: String(message).slice(0, 300),
+    stack: error?.stack ? String(error.stack).slice(0, 500) : '',
+    url: source ? String(source).slice(0, 200) : '',
+  });
+};
+
+window.addEventListener('unhandledrejection', function(event) {
+  const msg = event.reason?.message || String(event.reason).slice(0, 300);
+  const errLog = load('bloom_error_log', []);
+  errLog.push({ message: 'Unhandled promise: ' + msg, ts: Date.now() });
+  if (errLog.length > 50) errLog.splice(0, errLog.length - 50);
+  save('bloom_error_log', errLog);
+  sendTelemetry('error', { message: 'Unhandled promise: ' + msg, stack: event.reason?.stack ? String(event.reason.stack).slice(0, 500) : '' });
+});
+
+function exportDiagnostics() {
+  const diag = {
+    exported: new Date().toISOString(), version: VERSION,
+    userAgent: navigator.userAgent, platform: navigator.platform,
+    screen: { w: screen.width, h: screen.height },
+    safari: typeof isSafariBrowser === 'function' ? isSafariBrowser() : false,
+    errors: load('bloom_error_log', []),
+    aiFeedback: load('bloom_ai_feedback', []),
+    historyDays: Object.keys(load('bloom_history', {})).length,
+    buddyPaired: (load('bloom_buddy_state', {})).status === 'paired',
+  };
+  if (navigator.storage?.estimate) {
+    navigator.storage.estimate().then(est => {
+      diag.storageEstimate = { usage: est.usage, quota: est.quota };
+      _dlDiag(diag);
+    }).catch(() => _dlDiag(diag));
+  } else { _dlDiag(diag); }
+}
+function _dlDiag(d) {
+  const b = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
+  const u = URL.createObjectURL(b);
+  const a = document.createElement('a'); a.href = u; a.download = `bloom-diagnostics-${today()}.json`; a.click();
+  URL.revokeObjectURL(u); showToast('Diagnostics exported!');
+}
+
+// ============================================================
 //  AI CALLS
 // ============================================================
+// ── Scripted warm responses for very low moods (0-1) ──────
+// These are hand-written, vetted responses used instead of generative AI
+// when the user is most vulnerable. They prioritize safety and warmth.
+const SCRIPTED_LOW_MOOD_RESPONSES = [
+  "What you're feeling right now is real, and it matters. You don't have to push through anything — just being here is enough.",
+  "Hard moments don't last forever, even when they feel endless. You showed up today, and that counts for something.",
+  "There's no right way to feel right now. Whatever is heavy, you don't have to carry it alone — the 🤍 is there whenever you need it.",
+  "Some days are just hard. That's not a failure — it's being human. You're allowed to take this one moment at a time.",
+  "You don't owe anyone productivity or positivity right now. Just existing through a hard time takes more strength than most people realize.",
+  "Rough days don't erase good ones, and good ones will come again. Right now, it's okay to just be where you are.",
+  "The fact that you're here, checking in with yourself — that's a quiet act of courage. Be gentle with yourself today.",
+  "You're carrying something heavy right now. You don't have to figure it all out today. Just this moment is enough.",
+];
+
+function getScriptedResponse() {
+  const name = state.prefs?.name;
+  const response = SCRIPTED_LOW_MOOD_RESPONSES[Math.floor(Math.random() * SCRIPTED_LOW_MOOD_RESPONSES.length)];
+  return response;
+}
+
+const AI_FALLBACK_RESPONSE = "You showed up today, and that matters. Whatever you're carrying, you don't have to carry it alone.";
+
 async function callClaude(prompt, systemPrompt) {
   try {
     const name = state.prefs?.name;
@@ -5572,10 +5730,37 @@ async function callClaude(prompt, systemPrompt) {
       })
     });
     const data = await res.json();
-    return data.text || null;
+    return data.text || AI_FALLBACK_RESPONSE;
   } catch(e) {
-    return null;
+    return AI_FALLBACK_RESPONSE;
   }
+}
+
+// Render AI response with disclaimer and feedback buttons
+function renderAIResponseHTML(text, context) {
+  const ctx = context || 'reflection';
+  return `<div class="ai-response">
+    <div class="ai-response-text">${escapeHtml(text)}</div>
+    <div class="ai-disclaimer">This is a reflection, not professional advice. Tap 🤍 anytime for crisis support.</div>
+    <div class="ai-feedback" id="ai-fb-${ctx}">
+      <span style="font-size:11px;color:var(--text-muted)">Did this feel helpful?</span>
+      <button class="ai-feedback-btn" onclick="aiResponseFeedback('${ctx}','yes',this)">Yes</button>
+      <button class="ai-feedback-btn" onclick="aiResponseFeedback('${ctx}','no',this)">Not really</button>
+    </div>
+  </div>`;
+}
+
+function aiResponseFeedback(context, value, btn) {
+  const container = document.getElementById('ai-fb-' + context);
+  if (!container) return;
+  // Log locally
+  const log = load('bloom_ai_feedback', []);
+  log.push({ context, value, date: today(), ts: Date.now() });
+  if (log.length > 100) log.splice(0, log.length - 100);
+  save('bloom_ai_feedback', log);
+  // Send to server for aggregated monitoring
+  sendTelemetry('ai_feedback', { context, value });
+  container.innerHTML = '<div class="ai-feedback-thanks">Thanks for the feedback.</div>';
 }
 
 function showThinking(containerId) {
@@ -5592,8 +5777,7 @@ function showAIResponse(containerId, text) {
     el.style.display = 'none';
     return;
   }
-  el.innerHTML = `<div class="ai-response-text">${escapeHtml(text)}</div>`;
-  el.className = 'ai-response';
+  el.innerHTML = renderAIResponseHTML(text, containerId);
   el.style.display = 'block';
 }
 
@@ -5655,11 +5839,17 @@ function renderTodayTop() {
   if (state.showWelcomeBack) {
     const daysAway = state.daysAway || 2;
     const name = state.prefs?.name ? `, ${state.prefs.name}` : '';
+    const wbTitle = daysAway >= 30 ? `Welcome back${name}.`
+      : daysAway >= 7 ? `It's good to see you${name}.`
+      : `Hey${name}.`;
+    const wbText = daysAway >= 30 ? 'A lot can change — let's start with just today.'
+      : daysAway >= 7 ? 'Whatever happened, today is a fresh start.'
+      : 'You came back. That says something about you.';
     html += `<div class="banner" style="background:rgba(122,158,126,0.1);border:1px solid rgba(122,158,126,0.25)">
       <div class="banner-icon" style="font-size:36px">🌱</div>
       <div class="banner-body">
-        <div class="banner-title" style="color:var(--sage-light);font-size:16px">Welcome back${name}!</div>
-        <div class="banner-text" style="line-height:1.7">Life happens. You're here now, and that's what counts. <span style="color:var(--amber-light)">+25 ☀️ comeback bonus</span></div>
+        <div class="banner-title" style="color:var(--sage-light);font-size:16px">${wbTitle}</div>
+        <div class="banner-text" style="line-height:1.7">${wbText} <span style="color:var(--amber-light);font-size:12px">+25 ☀️</span></div>
         <div style="font-size:12px;color:var(--text-muted);margin:8px 0">What happened? (optional, one-tap)</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
           ${['Life got busy', 'Not feeling it', 'Was doing okay', 'Forgot'].map(r =>
@@ -5884,10 +6074,8 @@ function inlineContinueBreathing() {
 
 async function triggerLowMoodAI() {
   if (state.lowMoodAIResponse) return;
-  const ai = await callClaude(
-    `The user has logged a low mood for two days in a row. Write a compassionate 1-2 sentence response that acknowledges their struggle with warmth and reminds them they're not alone. No advice, just presence.`,
-    'You are Bloom, a gentle mental wellness companion. 1-2 sentences only. Warm and human, never clinical. Gently remind them the 🤍 crisis heart is there if they need to talk to someone.'
-  );
+  // Use scripted response for low mood — safer than generative AI during distress
+  const ai = getScriptedResponse();
   if (ai) {
     state.lowMoodAIResponse = ai;
     renderTodayTop();
@@ -5929,6 +6117,14 @@ function renderTodayTab() {
         <div class="mood-label">${m.l}</div>
       </div>`).join('')}
     </div>
+    ${td.mood !== undefined ? `<div id="feelings-section">
+      <div class="feelings-toggle" onclick="document.getElementById('feelings-row').style.display=document.getElementById('feelings-row').style.display==='none'?'flex':'none';this.textContent=document.getElementById('feelings-row').style.display==='none'?'What\\'s behind this? ▸':'What\\'s behind this? ▾'">
+        What's behind this? ${(td.feelings && td.feelings.length) ? '▾' : '▸'}
+      </div>
+      <div class="feelings-row" id="feelings-row" style="display:${(td.feelings && td.feelings.length) ? 'flex' : 'none'}">
+        ${getFeelingWords(td.mood).map(w => `<div class="feeling-pill${(td.feelings || []).includes(w) ? ' selected' : ''}" onclick="toggleFeeling('${w}')">${w}</div>`).join('')}
+      </div>
+    </div>` : ''}
     <div style="margin-top:14px">
       <div class="card-title" style="margin-bottom:8px">🌙 Sleep last night${infoIcon('sleep')}</div>
       <div class="sleep-row">
@@ -6339,9 +6535,33 @@ function getSelfCareCelebType(id) {
   return map[cat.id] || 'sc_body';
 }
 
+function getFeelingWords(mood) {
+  if (mood === 0 || mood === 1) return ['anxious','lonely','overwhelmed','grieving','frustrated','numb','exhausted','hopeless'];
+  if (mood === 2) return ['restless','meh','uncertain','recovering','distracted','neutral'];
+  if (mood === 3 || mood === 4) return ['grateful','peaceful','energized','connected','proud','hopeful','content','relieved'];
+  if (mood === -1) return ['confused','mixed','disconnected','foggy'];
+  return [];
+}
+
+function toggleFeeling(word) {
+  if (!state.todayData.feelings) state.todayData.feelings = [];
+  const idx = state.todayData.feelings.indexOf(word);
+  if (idx >= 0) state.todayData.feelings.splice(idx, 1);
+  else state.todayData.feelings.push(word);
+  saveState();
+  archiveToday();
+  // Update pill in-place without full re-render
+  if (event && event.target) event.target.classList.toggle('selected');
+  haptic('light');
+}
+
 function logMood(val) {
   const wasLow = state.todayData.mood !== undefined && state.todayData.mood >= 0 && state.todayData.mood <= 2;
+  const prevMood = state.todayData.mood;
   state.todayData.mood = val;
+  trackFeature('mood_log');
+  // Clear feelings if mood changed
+  if (prevMood !== val) state.todayData.feelings = [];
   saveState();
   archiveToday();
   haptic('light');
@@ -6605,6 +6825,14 @@ function renderWellnessTab() {
   }
   html += `</div>`;
 
+  // Journal empty state — warm first-day experience
+  const allJournalEntries = Object.keys(state.wellnessData?.journal || {});
+  if (allJournalEntries.length === 0 && !journalEntry) {
+    html += `<div style="text-align:center;padding:8px 16px 4px">
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:13px;color:var(--text-muted);line-height:1.7">Your journal is here whenever you need it. No rules — just a space to be honest with yourself.</div>
+    </div>`;
+  }
+
   // --- SMALL WINS ---
   const wins = state.wellnessData?.wins?.[t] || [];
   html += `<div class="card">
@@ -6710,6 +6938,7 @@ function renderWellnessTab() {
       ? `<div class="insight-card" style="margin-bottom:0">
           <div class="insight-week-label">Week of ${latestInsight.weekLabel}</div>
           <div class="insight-text">${latestInsight.text}</div>
+          <div class="ai-disclaimer">This is a reflection, not professional advice.</div>
         </div>`
       : `<div style="font-size:13px;color:var(--text-muted);line-height:1.6">
           Auto-generates each Sunday — or tap Generate any time. bloom looks at your whole week and reflects it back: how you felt, what you did for yourself, and what it all adds up to.
@@ -6739,6 +6968,7 @@ function renderWellnessTab() {
       html += `<div class="insight-card" style="margin-bottom:10px">
         <div class="insight-week-label">${r.month}</div>
         <div class="insight-text">${r.text}</div>
+        <div class="ai-disclaimer">This is a reflection, not professional advice.</div>
       </div>`;
     });
     html += `</div>`;
@@ -6975,6 +7205,7 @@ function startBreathing() {
   breathPhase = 0;
   breathCycle = 0;
   runBreathCountdown(3);
+  trackFeature('breathing');
 }
 
 function runBreathCountdown(n) {
@@ -7116,6 +7347,13 @@ function renderProgressTab() {
       <div style="font-size:11px;color:var(--text-secondary)">Current run</div>
     </div>
   </div>`;
+
+  // Early days encouragement — show warm message for first week
+  if (daysShowedUp < 7) {
+    html += `<div style="text-align:center;padding:6px 16px 10px">
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:13px;color:var(--text-muted);line-height:1.7">Your story is just beginning. Check back after a few days — bloom tracks your patterns so you don't have to.</div>
+    </div>`;
+  }
 
   // Rolling week visual
   const weekDates = getWeekDates();
@@ -7924,10 +8162,17 @@ function renderSettingsTab() {
         <div style="margin-top:6px;color:var(--text-muted)">Encouragement wall posts are shared without your name or identity — no personal data is attached.</div>
       </div>
     </div>
+    ${isSafariBrowser() ? `<div style="background:rgba(255,180,80,0.08);border:1px solid rgba(255,180,80,0.15);border-radius:var(--r-lg);padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--amber-light);line-height:1.6">
+      ⚠️ <strong>Safari users:</strong> Safari may delete website data after 7 days of inactivity. Save a backup link regularly to protect your data.
+    </div>` : ''}
     <div style="display:flex;flex-direction:column;gap:8px">
       <button class="btn btn-secondary btn-block" onclick="showBackupSheet()">💾 Save restore link</button>
-      <button class="btn btn-secondary btn-block" onclick="exportJSON()">📤 Export my data</button>
+      <button class="btn btn-secondary btn-block" onclick="exportEncryptedJSON()">🔐 Export encrypted backup</button>
+      <button class="btn btn-secondary btn-block" onclick="exportJSON()">📤 Export my data (unencrypted)</button>
       <button class="btn btn-ghost btn-block" onclick="resetToday()">↺ Reset today's data</button>
+      <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:8px;padding-top:8px">
+        <button class="btn btn-ghost btn-block" onclick="exportDiagnostics()">🔧 Export diagnostics (for bug reports)</button>
+      </div>
     </div>
   `);
 
@@ -7961,6 +8206,51 @@ function renderSettingsTab() {
       </div>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="showWhatsNew(true)">📋 View release notes</button>
+  `);
+
+  // ── PRIVACY POLICY & TERMS ────────────────────────────────────
+  html += settingsSection('privacy', '📜 Privacy policy & terms', `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+      <div style="font-weight:500;color:var(--cream);margin-bottom:8px;font-size:14px">Privacy Policy</div>
+
+      <p style="margin-bottom:10px"><strong style="color:var(--cream)">What stays on your device:</strong><br>
+      Your journal entries, mood logs, habit data, affirmations, sleep data, wellness tracking, and all personal reflections are stored only in your browser's local storage. They are never uploaded to any server, never shared, and never seen by anyone else.</p>
+
+      <p style="margin-bottom:10px"><strong style="color:var(--cream)">What is sent to external services:</strong></p>
+      <ul style="padding-left:18px;margin-bottom:10px">
+        <li style="margin-bottom:6px"><strong>AI reflections:</strong> When you use AI features (journal reflections, weekly insights, monthly reflections), your prompt text is sent to Anthropic's Claude API to generate a response. This data is not stored or linked to your identity by Bloom or Anthropic. <em>Note: For very low mood entries and hard day mode, Bloom uses pre-written responses instead of AI.</em></li>
+        <li style="margin-bottom:6px"><strong>Bloom Buddy:</strong> If you use the buddy feature, your display name, mood (if sharing is on), streak count, habit completion percentage, and messages are stored on our server (Redis/Vercel KV) to enable the pairing. Your journal entries, specific habits, and other private data are never shared.</li>
+        <li style="margin-bottom:6px"><strong>Encouragement Wall:</strong> Posts you submit to the community wall are stored on our server without any identifying information attached.</li>
+        <li style="margin-bottom:6px"><strong>Push Notifications:</strong> If enabled, OneSignal processes a device identifier for delivery. No personal content is included.</li>
+      </ul>
+
+      <p style="margin-bottom:10px"><strong style="color:var(--cream)">Backups:</strong><br>
+      Backup links contain your personal data encoded in the URL. We recommend using the encrypted export option to protect your data with a passphrase. Never share unencrypted backup links in public or shared spaces.</p>
+
+      <p style="margin-bottom:10px"><strong style="color:var(--cream)">Analytics & tracking:</strong><br>
+      Bloom does not use analytics, tracking pixels, or any third-party tracking services. There are no ads.</p>
+
+      <div style="border-top:1px solid rgba(255,255,255,0.06);margin:16px 0;padding-top:16px">
+        <div style="font-weight:500;color:var(--cream);margin-bottom:8px;font-size:14px">Terms of Use</div>
+
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Not medical advice:</strong><br>
+        Bloom is a self-care companion app. It is not therapy, counseling, medical advice, or crisis intervention. It is not a substitute for professional mental health care. If you are in crisis, please use the 🤍 crisis resources or contact emergency services.</p>
+
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">AI-generated content:</strong><br>
+        AI reflections are generated by a language model. They may occasionally be inaccurate, unhelpful, or inappropriate. They should not be relied upon for mental health decisions. A "Did this feel helpful?" option is provided so you can flag unhelpful responses.</p>
+
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Buddy system:</strong><br>
+        Bloom Buddy connects you with other users for encouragement. We provide content moderation but cannot guarantee the behavior of other users. Never share personal identifying information with buddies you don't know. You can unpair at any time.</p>
+
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Age requirement:</strong><br>
+        Bloom is intended for users aged 13 and older. If you are under 18, we encourage you to use this app with a parent or guardian's awareness.</p>
+
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Data responsibility:</strong><br>
+        Because your data is stored locally on your device, you are responsible for maintaining backups. Bloom is not liable for data loss due to browser clearing, device changes, or Safari's storage policies.</p>
+      </div>
+
+      <div style="font-size:11px;color:var(--text-muted);margin-top:8px">Last updated: March 2026</div>
+    </div>
   `);
 
   // ── SHARE BLOOM ──────────────────────────────────────────────
@@ -8465,6 +8755,44 @@ function resetToday() {
 function showBackupSheet() {
   generateBackupLink();
   openSheet('backup-sheet');
+  trackEvent('backup_created');
+}
+
+// ── Backup encryption helpers (AES-GCM via Web Crypto) ────
+async function deriveKey(passphrase, salt) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptData(data, passphrase) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(passphrase, salt);
+  const enc = new TextEncoder();
+  const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(data)));
+  // Combine salt + iv + ciphertext into one base64 string
+  const combined = new Uint8Array(salt.length + iv.length + new Uint8Array(encrypted).length);
+  combined.set(salt, 0);
+  combined.set(iv, salt.length);
+  combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+  return btoa(String.fromCharCode(...combined));
+}
+
+async function decryptData(encoded, passphrase) {
+  const raw = Uint8Array.from(atob(encoded), c => c.charCodeAt(0));
+  const salt = raw.slice(0, 16);
+  const iv = raw.slice(16, 28);
+  const ciphertext = raw.slice(28);
+  const key = await deriveKey(passphrase, salt);
+  const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+  return JSON.parse(new TextDecoder().decode(decrypted));
 }
 
 function generateBackupLink() {
@@ -8496,6 +8824,37 @@ function copyBackupLink() {
   }
 }
 
+async function exportEncryptedJSON() {
+  const passphrase = prompt('Choose a passphrase to encrypt your backup.\n\nYou will need this passphrase to restore your data. Keep it safe!');
+  if (!passphrase) return;
+  if (passphrase.length < 4) { alert('Passphrase must be at least 4 characters.'); return; }
+
+  const data = {
+    version: VERSION,
+    exported: new Date().toISOString(),
+    prefs: load('bloom_prefs'),
+    xp: load('bloom_xp'),
+    today: load('bloom_today_' + today()),
+    history: load('bloom_history'),
+    wellness: load('bloom_wellness'),
+  };
+
+  try {
+    const encrypted = await encryptData(data, passphrase);
+    const wrapper = { bloom_encrypted: true, data: encrypted };
+    const blob = new Blob([JSON.stringify(wrapper)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bloom-encrypted-${today()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Encrypted backup saved!');
+  } catch(e) {
+    alert('Encryption failed. Try again or use the unencrypted export.');
+  }
+}
+
 function exportJSON() {
   const data = {
     version: VERSION,
@@ -8515,16 +8874,45 @@ function exportJSON() {
   URL.revokeObjectURL(url);
 }
 
+async function importJSON(file) {
+  const text = await file.text();
+  const parsed = JSON.parse(text);
+
+  // Check if it's an encrypted backup
+  if (parsed.bloom_encrypted) {
+    const passphrase = prompt('This backup is encrypted. Enter your passphrase to restore:');
+    if (!passphrase) return false;
+    try {
+      const data = await decryptData(parsed.data, passphrase);
+      applyRestoreData(data);
+      showToast('Encrypted backup restored!');
+      return true;
+    } catch(e) {
+      alert('Wrong passphrase or corrupted backup. Please try again.');
+      return false;
+    }
+  }
+
+  // Unencrypted backup
+  applyRestoreData(parsed);
+  return true;
+}
+
+function applyRestoreData(data) {
+  if (data.prefs) save('bloom_prefs', data.prefs);
+  if (data.xp) save('bloom_xp', data.xp);
+  if (data.today) save('bloom_today_' + today(), data.today);
+  if (data.history) save('bloom_history', data.history);
+  if (data.wellness) save('bloom_wellness', data.wellness);
+}
+
 function tryRestoreFromURL() {
   const params = new URLSearchParams(location.search);
   const encoded = params.get('restore');
   if (!encoded) return false;
   try {
     const data = JSON.parse(decodeURIComponent(atob(encoded)));
-    if (data.prefs) save('bloom_prefs', data.prefs);
-    if (data.xp) save('bloom_xp', data.xp);
-    if (data.history) save('bloom_history', data.history);
-    if (data.wellness) save('bloom_wellness', data.wellness);
+    applyRestoreData(data);
     history.replaceState({}, '', location.pathname);
     return true;
   } catch(e) { return false; }
@@ -8543,7 +8931,7 @@ function closeAllSheets() {
   document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('open'));
 }
 
-function openCrisisSheet() { openSheet('crisis-sheet'); }
+function openCrisisSheet() { openSheet('crisis-sheet'); trackFeature('crisis'); }
 
 // ============================================================
 //  SCIENCE / INFO TOOLTIPS
@@ -9717,6 +10105,9 @@ function renderOBBuddyIntro(body, footer) {
       <div class="toggle${multiOn ? ' on' : ''}" onclick="obData.multiBuddy=!obData.multiBuddy;renderOnboarding()"></div>
     </div>
 
+    <div style="background:rgba(106,154,176,0.08);border:1px solid rgba(106,154,176,0.15);border-radius:var(--r-lg);padding:10px 14px;margin-top:12px;font-size:12px;color:var(--sky-light);line-height:1.6">
+      Buddies are for encouragement — not therapy or crisis support. Never share personal info (phone, email, address). If anything feels off, you can unpair instantly.
+    </div>
     <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:8px;line-height:1.6">
       You can find a buddy from the Community tab anytime.<br>You can change this setting later.
     </div>
@@ -9745,6 +10136,7 @@ function renderOBReady(body, footer) {
           <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-top:8px">
             The only exception is when you use the AI features — those prompts are sent to Claude to generate a response, but are never stored or linked to you.
           </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:8px">Full privacy policy and terms available in Settings.</div>
         </div>
       </div>
     </div>
@@ -9857,6 +10249,37 @@ function registerServiceWorker() {
 // ============================================================
 //  BACKUP REMINDER
 // ============================================================
+function isSafariBrowser() {
+  const ua = navigator.userAgent;
+  return /Safari/.test(ua) && !/Chrome/.test(ua) && !/CriOS/.test(ua) && !/FxiOS/.test(ua);
+}
+
+function isSafariPWA() {
+  return isSafariBrowser() && window.navigator.standalone === true;
+}
+
+function checkSafariDataWarning() {
+  if (!isSafariBrowser()) return;
+  const warned = load('bloom_safari_warned', false);
+  if (warned) return;
+
+  setTimeout(() => {
+    const isPWA = isSafariPWA();
+    const msg = isPWA
+      ? 'Important: Safari on iOS may delete app data after 7 days of inactivity. Since you\'re using Bloom as an installed app, we strongly recommend saving a backup link now to protect your data.'
+      : 'Important: Safari may delete website data after 7 days of inactivity. We strongly recommend saving a backup link to protect your journal entries, mood history, and habits.';
+
+    if (confirm(msg + '\n\nWant to save a backup link now?')) {
+      switchTab('settings');
+      setTimeout(() => {
+        toggleSettingsSection('data');
+        showBackupSheet();
+      }, 400);
+    }
+    save('bloom_safari_warned', true);
+  }, 3000);
+}
+
 function checkBackupReminder() {
   const backupDate = load('bloom_backup_date');
   const history = load('bloom_history', {});
@@ -9864,10 +10287,15 @@ function checkBackupReminder() {
   if (!hasData) return;
 
   const now = Date.now();
-  const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-  if (!backupDate || (now - backupDate) > thirtyDays) {
+  // Safari users get reminded every 7 days; others every 30
+  const reminderInterval = isSafariBrowser()
+    ? 7 * 24 * 60 * 60 * 1000
+    : 30 * 24 * 60 * 60 * 1000;
+
+  if (!backupDate || (now - backupDate) > reminderInterval) {
     setTimeout(() => {
-      if (confirm('Friendly reminder 🌿 — it\'s been a while since you saved a backup link. Want to do that now?')) {
+      const safariNote = isSafariBrowser() ? ' Safari may clear data after 7 days of inactivity — backups are especially important.' : '';
+      if (confirm('Friendly reminder 🌿 — it\'s been a while since you saved a backup link.' + safariNote + ' Want to do that now?')) {
         switchTab('settings');
         setTimeout(() => {
           toggleSettingsSection('data');
@@ -10449,14 +10877,11 @@ async function buddySendMessage(pairId) {
   if (!input || !input.value.trim()) return;
   const text = input.value.trim();
 
-  // Client-side safety check for personal information
+  // Client-side safety check for personal information — blocking confirmation
   const warning = checkBuddyMessageSafety(text);
-  if (warning && !input.dataset.warned) {
-    input.dataset.warned = 'true';
-    showBuddyStatusForPair(pairId, warning, 'var(--amber)');
-    return;
+  if (warning) {
+    if (!confirm(warning + '\n\nAre you sure you want to send this?')) return;
   }
-  delete input.dataset.warned;
 
   const data = await buddyApi({
     action: 'send-message',
@@ -10517,6 +10942,49 @@ async function buddyUnpair(pairId) {
   save('bloom_buddy_state', buddyState);
   save('bloom_buddy_list', buddyCachedBuddies);
   renderBuddyContent();
+}
+
+function buddySafetyAction(pairId) {
+  // Surface crisis resources and offer to unpair
+  closeAllSheets();
+  const sheet = document.getElementById('buddy-safety-content');
+  if (sheet) {
+    sheet.innerHTML = `
+      <div style="text-align:center;padding:8px 0 16px">
+        <div style="font-size:36px;margin-bottom:12px">🤍</div>
+        <div style="font-family:Fraunces,serif;font-size:18px;font-weight:300;color:var(--cream);margin-bottom:8px">You're safe here</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+          If something about this buddy connection doesn't feel right — trust that feeling. You can unpair at any time, no questions asked.
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+        <button class="btn btn-secondary btn-block" onclick="closeAllSheets();openCrisisSheet()">🤍 Crisis & support resources</button>
+        <button class="btn btn-secondary btn-block" onclick="closeAllSheets();buddyUnpair('${pairId}')">Unpair from this buddy</button>
+        <button class="btn btn-ghost btn-block" onclick="closeAllSheets()">Go back</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);text-align:center;line-height:1.6">
+        Bloom buddies are for encouragement only — not therapy or crisis support. Never share personal info with someone you don't know.
+      </div>
+    `;
+  }
+  openSheet('buddy-safety-sheet');
+}
+
+function checkBuddyActivityTimeout() {
+  // Show gentle notice if buddy hasn't been active in 14+ days
+  if (!buddyCachedBuddies || buddyCachedBuddies.length === 0) return;
+  const fourteenDays = 14 * 24 * 60 * 60 * 1000;
+  buddyCachedBuddies.forEach(b => {
+    const el = document.getElementById('buddy-timeout-' + b.pairId);
+    if (!el) return;
+    if (b.lastActive && (Date.now() - b.lastActive) > fourteenDays) {
+      el.innerHTML = `<div style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.15);border-radius:var(--r-md);padding:8px 12px;margin-top:8px;font-size:11px;color:var(--amber-light);line-height:1.5">
+        This buddy hasn't been active in a while. That's okay — people take breaks. You can unpair anytime and find a new buddy when you're ready.
+      </div>`;
+    } else {
+      el.innerHTML = '';
+    }
+  });
 }
 
 function toggleMultiBuddy(val) {
@@ -10590,6 +11058,7 @@ function renderBuddyContent() {
     container.innerHTML = html;
     // Fetch messages for each buddy
     buddyCachedBuddies.forEach(b => fetchBuddyMessages(b.pairId));
+    checkBuddyActivityTimeout();
     startBuddyPolling();
   } else if (buddyState.status === 'searching') {
     html += renderBuddySearching();
@@ -10610,6 +11079,10 @@ function renderBuddySetup() {
       <div style="font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6">Partner with someone for mutual encouragement<br>and accountability. Share moods, trade nudges,<br>and keep each other going.</div>
     </div>
     <div id="buddy-status-msg" style="font-size:12px;text-align:center;margin:8px 0;display:none"></div>
+
+    <div style="background:rgba(106,154,176,0.08);border:1px solid rgba(106,154,176,0.15);border-radius:var(--r-lg);padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--sky-light);line-height:1.6">
+      <strong style="color:var(--cream)">Before you pair up:</strong> Buddies are for mutual encouragement — not therapy or crisis support. Never share personal info (phone, address, socials). If anything feels off, use the safety button on any buddy card, or tap 🤍 for crisis resources.
+    </div>
 
     <div class="buddy-setup-option" onclick="buddyCreateInvite()">
       <div style="display:flex;align-items:center;gap:12px">
@@ -10768,7 +11241,9 @@ function renderBuddyCard(b, index) {
           </div>
         </div>
 
-        <div style="text-align:right;margin-top:8px">
+        <div id="buddy-timeout-${pid}"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <button class="btn btn-ghost btn-sm" style="font-size:10px;color:var(--amber)" onclick="buddySafetyAction('${pid}')">Something feels wrong</button>
           <button class="btn btn-ghost btn-sm" style="font-size:10px;color:var(--text-muted)" onclick="buddyUnpair('${pid}')">Unpair</button>
         </div>
       </div>
@@ -10950,7 +11425,8 @@ function renderCommunityTab() {
   } else if (wallMessages.length === 0) {
     html += `<div class="card" style="text-align:center;padding:20px">
       <div style="font-size:24px;margin-bottom:8px">🌱</div>
-      <div style="font-size:13px;color:var(--text-secondary)">Be the first to share something kind.</div>
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--text-secondary);line-height:1.7">A quiet space for shared encouragement.</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:6px">Be the first to share something kind.</div>
     </div>`;
   } else {
     wallMessages.forEach(msg => {
@@ -11005,7 +11481,8 @@ function renderWallMessages() {
   if (wallMessages.length === 0) {
     html += `<div class="card" style="text-align:center;padding:20px">
       <div style="font-size:24px;margin-bottom:8px">🌱</div>
-      <div style="font-size:13px;color:var(--text-secondary)">Be the first to share something kind.</div>
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--text-secondary);line-height:1.7">A quiet space for shared encouragement.</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:6px">Be the first to share something kind.</div>
     </div>`;
   } else {
     wallMessages.forEach(msg => {
@@ -11349,6 +11826,7 @@ function initApp() {
   migrateToNewDailyHabits();
   initTheme();
   checkForUpdate();
+  trackEvent('session_start');
   renderDailyQuote();
   applySeasonalTheme();
   checkNewWeek();
@@ -11377,6 +11855,7 @@ function initApp() {
     showWhatsNew();
   }
   checkBackupReminder();
+  checkSafariDataWarning();
   checkShowTutorial();
   checkScheduledReminders();
   checkWaterReminders();

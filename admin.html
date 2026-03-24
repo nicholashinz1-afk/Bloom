@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom Admin Dashboard</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  :root {
+    --bg: #0a1a0b;
+    --bg-card: #0f2410;
+    --cream: #f5f0e8;
+    --sage: #7a9e7e;
+    --sage-light: #a8c5ab;
+    --sky: #6a9ab0;
+    --sky-light: #9ec4d8;
+    --amber: #c9954a;
+    --amber-light: #e8c088;
+    --text-secondary: rgba(245,240,232,0.55);
+    --text-muted: rgba(245,240,232,0.35);
+    --red: #d45d5d;
+    --r-md: 10px;
+    --r-lg: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--cream);
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  h1 { font-family: Georgia, serif; font-weight: 300; font-size: 28px; margin-bottom: 6px; }
+  h2 { font-size: 16px; font-weight: 500; color: var(--sage-light); margin-bottom: 12px; }
+  h3 { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+  /* Auth screen */
+  #auth-screen { max-width: 400px; margin: 100px auto; text-align: center; }
+  #auth-screen input {
+    width: 100%; padding: 12px 16px; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--r-md); color: var(--cream); font-size: 15px; margin: 16px 0;
+  }
+  #auth-screen button {
+    padding: 10px 32px; background: var(--sage); color: #0a1a0b; border: none;
+    border-radius: var(--r-md); font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  #auth-error { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
+
+  /* Dashboard */
+  #dashboard { display: none; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .card {
+    background: var(--bg-card); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--r-lg); padding: 18px;
+  }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+  .stat-label { font-size: 13px; color: var(--text-secondary); }
+  .stat-value { font-size: 20px; font-weight: 600; }
+  .stat-value.good { color: var(--sage-light); }
+  .stat-value.warn { color: var(--amber); }
+  .stat-value.bad { color: var(--red); }
+
+  /* Feedback bar */
+  .fb-bar { display: flex; height: 24px; border-radius: 12px; overflow: hidden; margin: 8px 0; }
+  .fb-yes { background: var(--sage); }
+  .fb-no { background: var(--amber); }
+  .fb-bar-label { font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; }
+
+  /* Error list */
+  .error-item {
+    padding: 10px 12px; margin-bottom: 6px; background: rgba(212,93,93,0.06);
+    border: 1px solid rgba(212,93,93,0.12); border-radius: var(--r-md);
+  }
+  .error-msg { font-size: 13px; color: var(--cream); font-family: monospace; word-break: break-all; }
+  .error-time { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .error-url { font-size: 11px; color: var(--sky); margin-top: 2px; }
+
+  /* Event list */
+  .event-item {
+    display: flex; align-items: center; gap: 10px; padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .event-type { font-size: 12px; font-weight: 500; color: var(--sky-light); min-width: 140px; }
+  .event-meta { font-size: 12px; color: var(--text-secondary); flex: 1; }
+  .event-time { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+  /* Daily chart */
+  .chart { display: flex; align-items: flex-end; gap: 3px; height: 100px; margin: 12px 0 4px; }
+  .chart-bar { flex: 1; min-width: 8px; background: var(--sage); border-radius: 3px 3px 0 0; position: relative; transition: height 0.3s; }
+  .chart-bar:hover { opacity: 0.8; }
+  .chart-bar .tooltip {
+    display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    background: #1a2e1b; padding: 4px 8px; border-radius: 6px; font-size: 11px;
+    white-space: nowrap; margin-bottom: 4px; pointer-events: none;
+  }
+  .chart-bar:hover .tooltip { display: block; }
+  .chart-labels { display: flex; gap: 3px; }
+  .chart-labels span { flex: 1; min-width: 8px; font-size: 9px; color: var(--text-muted); text-align: center; }
+
+  /* Feature heatmap */
+  .feature-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  .feature-name { font-size: 12px; color: var(--text-secondary); min-width: 120px; }
+  .feature-bar-bg { flex: 1; height: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; overflow: hidden; }
+  .feature-bar { height: 100%; background: var(--sky); border-radius: 8px; transition: width 0.3s; }
+  .feature-count { font-size: 11px; color: var(--text-muted); min-width: 40px; text-align: right; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 8px 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px; color: var(--text-secondary); font-size: 13px; cursor: pointer;
+  }
+  .tab-btn:hover { background: rgba(255,255,255,0.08); }
+  .tab-btn.active { background: rgba(122,158,126,0.15); border-color: var(--sage); color: var(--sage-light); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Refresh */
+  .refresh-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .refresh-bar button {
+    padding: 6px 16px; background: var(--sage); color: #0a1a0b; border: none;
+    border-radius: var(--r-md); font-size: 13px; font-weight: 500; cursor: pointer;
+  }
+  .refresh-bar .last-refresh { font-size: 12px; color: var(--text-muted); }
+  .refresh-bar .auto-label { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+  .loading { color: var(--text-muted); font-size: 13px; padding: 20px; text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- Auth Screen -->
+<div id="auth-screen">
+  <div style="font-size:48px;margin-bottom:16px">🌱</div>
+  <h1>Bloom Admin</h1>
+  <div class="subtitle">Diagnostics & telemetry dashboard</div>
+  <input type="password" id="admin-key-input" placeholder="Enter admin key" onkeydown="if(event.key==='Enter')authenticate()">
+  <br>
+  <button onclick="authenticate()">Sign in</button>
+  <div id="auth-error">Invalid admin key. Check your ADMIN_KEY environment variable.</div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+    <span style="font-size:28px">🌱</span>
+    <h1>Bloom Admin</h1>
+  </div>
+  <div class="subtitle">Anonymous telemetry dashboard — no personal data is collected or displayed</div>
+
+  <div class="refresh-bar">
+    <button onclick="loadDashboard()">Refresh</button>
+    <span class="last-refresh" id="last-refresh"></span>
+    <label class="auto-label">
+      <input type="checkbox" id="auto-refresh" checked> Auto-refresh (60s)
+    </label>
+  </div>
+
+  <div class="tabs">
+    <div class="tab-btn active" onclick="switchAdminTab('overview')">Overview</div>
+    <div class="tab-btn" onclick="switchAdminTab('ai')">AI Feedback</div>
+    <div class="tab-btn" onclick="switchAdminTab('errors')">Errors</div>
+    <div class="tab-btn" onclick="switchAdminTab('events')">Events</div>
+    <div class="tab-btn" onclick="switchAdminTab('features')">Features</div>
+  </div>
+
+  <!-- Overview -->
+  <div class="tab-panel active" id="panel-overview">
+    <div class="grid" id="overview-cards">
+      <div class="loading">Loading dashboard data...</div>
+    </div>
+    <div class="card" id="daily-chart-card" style="display:none">
+      <h2>Daily Activity (30 days)</h2>
+      <div id="daily-chart"></div>
+    </div>
+  </div>
+
+  <!-- AI Feedback -->
+  <div class="tab-panel" id="panel-ai">
+    <div class="grid">
+      <div class="card" id="ai-summary-card">
+        <h2>AI Reflection Feedback</h2>
+        <div class="loading">Loading...</div>
+      </div>
+      <div class="card" id="ai-trend-card">
+        <h2>7-Day Trend</h2>
+        <div class="loading">Loading...</div>
+      </div>
+    </div>
+    <div class="card" id="ai-detail-card" style="margin-top:16px">
+      <h2>Recent Feedback</h2>
+      <div class="loading">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Errors -->
+  <div class="tab-panel" id="panel-errors">
+    <div class="card" id="error-summary-card" style="margin-bottom:16px">
+      <h2>Error Summary</h2>
+      <div class="loading">Loading...</div>
+    </div>
+    <div class="card" id="error-list-card">
+      <h2>Recent Errors</h2>
+      <div class="loading">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Events -->
+  <div class="tab-panel" id="panel-events">
+    <div class="card" id="events-list-card">
+      <h2>Recent Events</h2>
+      <div class="loading">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="tab-panel" id="panel-features">
+    <div class="card" id="features-card">
+      <h2>Feature Usage (Today)</h2>
+      <div class="loading">Loading...</div>
+    </div>
+    <div class="card" id="features-30d-card" style="margin-top:16px">
+      <h2>Feature Usage (30-Day Total)</h2>
+      <div class="loading">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let adminKey = '';
+let dashboardData = null;
+let refreshInterval = null;
+
+function authenticate() {
+  adminKey = document.getElementById('admin-key-input').value.trim();
+  if (!adminKey) return;
+
+  fetch('/api/diagnostics?view=dashboard&key=' + encodeURIComponent(adminKey))
+    .then(r => r.json())
+    .then(data => {
+      if (data.error === 'Unauthorized') {
+        document.getElementById('auth-error').style.display = 'block';
+        return;
+      }
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      dashboardData = data.summary;
+      renderDashboard();
+      startAutoRefresh();
+    })
+    .catch(() => {
+      document.getElementById('auth-error').style.display = 'block';
+    });
+}
+
+function startAutoRefresh() {
+  if (refreshInterval) clearInterval(refreshInterval);
+  refreshInterval = setInterval(() => {
+    if (document.getElementById('auto-refresh').checked) loadDashboard();
+  }, 60000);
+}
+
+async function loadDashboard() {
+  try {
+    const res = await fetch('/api/diagnostics?view=dashboard&key=' + encodeURIComponent(adminKey));
+    const data = await res.json();
+    if (data.ok) {
+      dashboardData = data.summary;
+      renderDashboard();
+    }
+  } catch(e) {}
+}
+
+function switchAdminTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts;
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+  return Math.floor(diff/86400000) + 'd ago';
+}
+
+function formatDate(ts) {
+  return new Date(ts).toLocaleString();
+}
+
+function renderDashboard() {
+  if (!dashboardData) return;
+  document.getElementById('last-refresh').textContent = 'Last refreshed: ' + new Date().toLocaleTimeString();
+  renderOverview();
+  renderAIFeedback();
+  renderErrors();
+  renderEvents();
+  renderFeatures();
+}
+
+function renderOverview() {
+  const d = dashboardData;
+  const fb = d.aiFeedback;
+  const totalFb7 = fb.last7Days.yes + fb.last7Days.no;
+  const helpfulRate7 = totalFb7 > 0 ? Math.round((fb.last7Days.yes / totalFb7) * 100) : 0;
+  const rateClass = helpfulRate7 >= 70 ? 'good' : helpfulRate7 >= 50 ? 'warn' : 'bad';
+
+  // Calculate today's total events from dailyStats
+  const today = new Date().toISOString().slice(0, 10);
+  const todayStats = d.dailyStats[today] || {};
+  const todayTotal = Object.values(todayStats).reduce((a, b) => a + b, 0);
+
+  document.getElementById('overview-cards').innerHTML = `
+    <div class="card">
+      <h3>AI Feedback (7 days)</h3>
+      <div class="stat-row">
+        <span class="stat-label">Helpful rate</span>
+        <span class="stat-value ${rateClass}">${helpfulRate7}%</span>
+      </div>
+      <div class="fb-bar">
+        <div class="fb-yes" style="width:${totalFb7 > 0 ? (fb.last7Days.yes/totalFb7)*100 : 50}%"></div>
+        <div class="fb-no" style="width:${totalFb7 > 0 ? (fb.last7Days.no/totalFb7)*100 : 50}%"></div>
+      </div>
+      <div class="fb-bar-label"><span>Helpful: ${fb.last7Days.yes}</span><span>Not helpful: ${fb.last7Days.no}</span></div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:8px">Total all-time: ${fb.total} responses</div>
+    </div>
+
+    <div class="card">
+      <h3>Errors</h3>
+      <div class="stat-row">
+        <span class="stat-label">Last 24 hours</span>
+        <span class="stat-value ${d.errors.last24h > 10 ? 'bad' : d.errors.last24h > 0 ? 'warn' : 'good'}">${d.errors.last24h}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Total tracked</span>
+        <span class="stat-value" style="font-size:16px">${d.errors.total}</span>
+      </div>
+      ${d.errors.recent.length > 0 ? `<div style="margin-top:8px;font-size:12px;color:var(--text-muted)">Latest: ${timeAgo(d.errors.recent[0]?.ts)}</div>` : ''}
+    </div>
+
+    <div class="card">
+      <h3>Activity Today</h3>
+      <div class="stat-row">
+        <span class="stat-label">Total events</span>
+        <span class="stat-value good">${todayTotal}</span>
+      </div>
+      ${Object.entries(todayStats).slice(0, 5).map(([k, v]) => `
+        <div class="stat-row">
+          <span class="stat-label">${k.replace('feature:', '').replace('event:', '')}</span>
+          <span style="font-size:14px;color:var(--cream)">${v}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // Daily chart
+  const dates = Object.keys(d.dailyStats).sort();
+  if (dates.length > 0) {
+    document.getElementById('daily-chart-card').style.display = 'block';
+    const maxVal = Math.max(...dates.map(dt => Object.values(d.dailyStats[dt]).reduce((a,b) => a+b, 0)), 1);
+    document.getElementById('daily-chart').innerHTML = `
+      <div class="chart">
+        ${dates.map(dt => {
+          const total = Object.values(d.dailyStats[dt]).reduce((a,b) => a+b, 0);
+          const pct = (total / maxVal) * 100;
+          return `<div class="chart-bar" style="height:${Math.max(2, pct)}%">
+            <div class="tooltip">${dt}: ${total} events</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="chart-labels">
+        ${dates.map(dt => `<span>${dt.slice(8)}</span>`).join('')}
+      </div>
+    `;
+  }
+}
+
+function renderAIFeedback() {
+  const fb = dashboardData.aiFeedback;
+  const total30 = fb.last30Days.yes + fb.last30Days.no;
+  const rate30 = total30 > 0 ? Math.round((fb.last30Days.yes / total30) * 100) : 0;
+
+  document.getElementById('ai-summary-card').innerHTML = `
+    <h2>AI Reflection Feedback</h2>
+    <div class="stat-row"><span class="stat-label">30-day helpful rate</span><span class="stat-value ${rate30 >= 70 ? 'good' : rate30 >= 50 ? 'warn' : 'bad'}">${rate30}%</span></div>
+    <div class="fb-bar">
+      <div class="fb-yes" style="width:${total30 > 0 ? (fb.last30Days.yes/total30)*100 : 50}%"></div>
+      <div class="fb-no" style="width:${total30 > 0 ? (fb.last30Days.no/total30)*100 : 50}%"></div>
+    </div>
+    <div class="fb-bar-label"><span>Helpful: ${fb.last30Days.yes}</span><span>Not helpful: ${fb.last30Days.no}</span></div>
+    <div style="margin-top:12px">
+      <div class="stat-row"><span class="stat-label">Total feedback</span><span style="color:var(--cream)">${fb.total}</span></div>
+      <div class="stat-row"><span class="stat-label">7-day: yes</span><span style="color:var(--sage-light)">${fb.last7Days.yes}</span></div>
+      <div class="stat-row"><span class="stat-label">7-day: no</span><span style="color:var(--amber)">${fb.last7Days.no}</span></div>
+    </div>
+  `;
+
+  document.getElementById('ai-trend-card').innerHTML = `
+    <h2>7-Day Trend</h2>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+      ${(() => {
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(); d.setDate(d.getDate() - i);
+          const key = d.toISOString().slice(0, 10);
+          const stats = dashboardData.dailyStats[key] || {};
+          days.push({ date: key.slice(5), yes: stats.ai_helpful || 0, no: stats.ai_unhelpful || 0 });
+        }
+        return days.map(d => {
+          const total = d.yes + d.no;
+          const rate = total > 0 ? Math.round((d.yes/total)*100) : '-';
+          return `<div class="stat-row"><span class="stat-label">${d.date}</span><span>${rate === '-' ? '-' : rate + '%'} (${total})</span></div>`;
+        }).join('');
+      })()}
+    </div>
+  `;
+}
+
+function renderErrors() {
+  const errs = dashboardData.errors;
+  document.getElementById('error-summary-card').innerHTML = `
+    <h2>Error Summary</h2>
+    <div class="stat-row"><span class="stat-label">Last 24 hours</span><span class="stat-value ${errs.last24h > 10 ? 'bad' : errs.last24h > 0 ? 'warn' : 'good'}">${errs.last24h}</span></div>
+    <div class="stat-row"><span class="stat-label">Total tracked</span><span style="color:var(--cream)">${errs.total}</span></div>
+  `;
+
+  const recent = errs.recent || [];
+  document.getElementById('error-list-card').innerHTML = `
+    <h2>Recent Errors (${recent.length})</h2>
+    ${recent.length === 0 ? '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No errors recorded. That\'s great!</div>' : ''}
+    ${recent.map(e => `
+      <div class="error-item">
+        <div class="error-msg">${escapeHtml(e.message || 'unknown')}</div>
+        ${e.url ? `<div class="error-url">${escapeHtml(e.url)}</div>` : ''}
+        <div class="error-time">${formatDate(e.ts)}</div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderEvents() {
+  const events = dashboardData.events?.recent || [];
+  document.getElementById('events-list-card').innerHTML = `
+    <h2>Recent Events (${events.length})</h2>
+    ${events.length === 0 ? '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No events yet.</div>' : ''}
+    ${events.map(e => `
+      <div class="event-item">
+        <span class="event-type">${escapeHtml(e.event)}</span>
+        <span class="event-meta">${e.meta ? escapeHtml(e.meta) : ''}</span>
+        <span class="event-time">${timeAgo(e.ts)}</span>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderFeatures() {
+  // Today
+  const today = new Date().toISOString().slice(0, 10);
+  const todayStats = dashboardData.dailyStats[today] || {};
+  const features = Object.entries(todayStats)
+    .filter(([k]) => k.startsWith('feature:'))
+    .map(([k, v]) => ({ name: k.replace('feature:', ''), count: v }))
+    .sort((a, b) => b.count - a.count);
+
+  const maxToday = Math.max(...features.map(f => f.count), 1);
+
+  document.getElementById('features-card').innerHTML = `
+    <h2>Feature Usage (Today)</h2>
+    ${features.length === 0 ? '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No feature usage recorded today.</div>' : ''}
+    ${features.map(f => `
+      <div class="feature-row">
+        <span class="feature-name">${f.name}</span>
+        <div class="feature-bar-bg"><div class="feature-bar" style="width:${(f.count/maxToday)*100}%"></div></div>
+        <span class="feature-count">${f.count}</span>
+      </div>
+    `).join('')}
+  `;
+
+  // 30-day totals
+  const allDays = Object.values(dashboardData.dailyStats);
+  const featureTotals = {};
+  allDays.forEach(day => {
+    Object.entries(day).forEach(([k, v]) => {
+      if (k.startsWith('feature:')) {
+        const name = k.replace('feature:', '');
+        featureTotals[name] = (featureTotals[name] || 0) + v;
+      }
+    });
+  });
+  const featureList30 = Object.entries(featureTotals)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+  const max30 = Math.max(...featureList30.map(f => f.count), 1);
+
+  document.getElementById('features-30d-card').innerHTML = `
+    <h2>Feature Usage (30-Day Total)</h2>
+    ${featureList30.length === 0 ? '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No data yet.</div>' : ''}
+    ${featureList30.map(f => `
+      <div class="feature-row">
+        <span class="feature-name">${f.name}</span>
+        <div class="feature-bar-bg"><div class="feature-bar" style="width:${(f.count/max30)*100}%"></div></div>
+        <span class="feature-count">${f.count}</span>
+      </div>
+    `).join('')}
+  `;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+// Auto-focus the key input
+document.getElementById('admin-key-input').focus();
+
+// Check for key in URL hash for bookmarkability
+if (location.hash.startsWith('#key=')) {
+  document.getElementById('admin-key-input').value = location.hash.slice(5);
+  authenticate();
+}
+</script>
+</body>
+</html>
