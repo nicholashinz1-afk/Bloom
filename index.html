@@ -6262,6 +6262,7 @@ function logMood(val) {
   saveState();
   archiveToday();
   haptic('light');
+  checkFirstTaskStreak();
   renderTodayTab();
   bounceMoodBtn(val);
   const moodEl = document.querySelectorAll('.mood-btn')[val];
@@ -6275,6 +6276,7 @@ function logSleep(val) {
   saveState();
   archiveToday();
   haptic('light');
+  checkFirstTaskStreak();
   const sleepEl = document.querySelectorAll('.sleep-btn')[val];
   celebrate('sleep', sleepEl);
   renderTodayTab();
@@ -6682,6 +6684,7 @@ async function saveJournal() {
   state.journalDraft = '';
   state.loadingJournalAI = true;
   saveState();
+  checkFirstTaskStreak();
   renderWellnessTab();
 
   if (!state.todayData.journalXPGiven) {
@@ -6827,6 +6830,7 @@ function addWin() {
     addXP(5, null);
   }
   saveState();
+  checkFirstTaskStreak();
   celebrate('win', input);
   renderWellnessTab();
 }
@@ -6841,6 +6845,7 @@ function addAffirmation() {
     addXP(5, null);
   }
   saveState();
+  checkFirstTaskStreak();
   celebrate('affirmation', input);
   renderWellnessTab();
 }
