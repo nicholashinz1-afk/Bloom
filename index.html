@@ -6143,7 +6143,7 @@ function renderTodayTab() {
   // --- WELLNESS GATEWAY CARD ---
   const journalToday = state.wellnessData?.journal?.[t];
   const winsToday = (state.wellnessData?.wins?.[t] || []).length > 0;
-  const affirmationsExist = (state.wellnessData?.affirmations || []).length > 0;
+  const affirmationsExist = (state.todayData?.affirmations || []).length > 0;
   const wellnessDone = [journalToday, winsToday, affirmationsExist].filter(Boolean).length;
 
   html += `<div class="section-label">📓 Wellness</div>`;
@@ -6588,7 +6588,8 @@ function renderWellnessTab() {
   </div>`;
 
   // --- CUSTOM AFFIRMATIONS ---
-  const affirmations = state.wellnessData?.affirmations || [];
+  const todayAffirmations = state.todayData?.affirmations || [];
+  const allAffirmations = state.wellnessData?.affirmations || [];
   html += `<div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div class="card-title" style="margin-bottom:0">💌 My affirmations${infoIcon('affirmations')}</div>
@@ -6598,11 +6599,17 @@ function renderWellnessTab() {
       <input type="text" id="affirm-input" placeholder="Write something kind to yourself...">
       <button class="btn btn-primary btn-sm" onclick="addAffirmation()">Save</button>
     </div>
-    ${affirmations.length === 0 ? '<div class="text-sm text-muted">Saved affirmations appear randomly as you log habits.</div>' : ''}
-    ${affirmations.map((a,i) => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+    ${todayAffirmations.length === 0 ? '<div class="text-sm text-muted">Write an affirmation for today — it\'ll appear randomly as you log habits.</div>' : ''}
+    ${todayAffirmations.map(a => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
       <div style="flex:1;font-size:13px;color:var(--cream);font-family:Fraunces,serif;font-style:italic">"${a}"</div>
-      <div onclick="removeAffirmation(${i})" style="color:var(--text-muted);cursor:pointer;font-size:12px">✕</div>
     </div>`).join('')}
+    ${allAffirmations.length > 0 ? `<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">${allAffirmations.length} saved affirmation${allAffirmations.length === 1 ? '' : 's'} in your pool · <span onclick="toggleAffirmationPool()" style="cursor:pointer;text-decoration:underline;text-underline-offset:2px">manage</span></div>` : ''}
+    <div id="affirmation-pool" style="display:none;margin-top:8px">
+      ${allAffirmations.map((a,i) => `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="flex:1;font-size:12px;color:var(--text-secondary);font-style:italic">"${a}"</div>
+        <div onclick="removeAffirmation(${i})" style="color:var(--text-muted);cursor:pointer;font-size:12px">✕</div>
+      </div>`).join('')}
+    </div>
   </div>`;
 
   // Just write — open journal anytime
@@ -6895,8 +6902,12 @@ function addWin() {
 function addAffirmation() {
   const input = document.getElementById('affirm-input');
   if (!input || !input.value.trim()) return;
+  const text = input.value.trim();
   if (!state.wellnessData.affirmations) state.wellnessData.affirmations = [];
-  state.wellnessData.affirmations.push(input.value.trim());
+  state.wellnessData.affirmations.push(text);
+  // Track today's affirmations separately so the gateway card is date-aware
+  if (!state.todayData.affirmations) state.todayData.affirmations = [];
+  state.todayData.affirmations.push(text);
   if (!state.todayData.affirmXPGiven) {
     state.todayData.affirmXPGiven = true;
     addXP(5, null);
@@ -6911,6 +6922,11 @@ function removeAffirmation(i) {
   state.wellnessData.affirmations.splice(i, 1);
   saveState();
   renderWellnessTab();
+}
+
+function toggleAffirmationPool() {
+  const pool = document.getElementById('affirmation-pool');
+  if (pool) pool.style.display = pool.style.display === 'none' ? 'block' : 'none';
 }
 
 // Breathing exercise
