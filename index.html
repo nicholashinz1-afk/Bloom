@@ -9794,9 +9794,9 @@ function migrateToNewDailyHabits() {
 }
 
 // Migration: reset old AM/PM/Both defaults to 'any' for existing users
-(function migrateHabitTimesToAny() {
+function migrateHabitTimesToAny() {
   const p = state.prefs;
-  if (p._migratedTimesToAny) return;
+  if (!p || p._migratedTimesToAny) return;
   if (!p.habitTimes) { p._migratedTimesToAny = true; save('bloom_prefs', p); return; }
 
   // Old defaults that were auto-assigned — reset to 'any'
@@ -9823,7 +9823,7 @@ function migrateToNewDailyHabits() {
   if (td) save('bloom_today_' + today(), td);
   p._migratedTimesToAny = true;
   save('bloom_prefs', p);
-})();
+}
 
 // ============================================================
 //  BLOOM BUDDY
@@ -10920,6 +10920,7 @@ function logCustomCheckin(id, value) {
 function initApp() {
   loadState();
   migrateToNewDailyHabits();
+  migrateHabitTimesToAny();
   initTheme();
   checkForUpdate();
   renderDailyQuote();
