@@ -671,6 +671,8 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
 }
 .mood-emoji { font-size: 22px; }
 .mood-label { font-size: 10px; color: var(--text-secondary); font-weight: 500; }
+.mood-btn:last-child { opacity: 0.65; }
+.mood-btn:last-child.selected { opacity: 1; }
 
 /* ============================================================
    WATER TRACKER
@@ -2598,7 +2600,7 @@ const JOURNAL_PROMPTS_LOW = [
 
 function getJournalPrompt() {
   const mood = state.todayData?.mood;
-  if (mood !== undefined && mood <= 1) return JOURNAL_PROMPTS_LOW[getDayIndex() % JOURNAL_PROMPTS_LOW.length];
+  if (mood !== undefined && mood >= 0 && mood <= 1) return JOURNAL_PROMPTS_LOW[getDayIndex() % JOURNAL_PROMPTS_LOW.length];
   return JOURNAL_PROMPTS[getDayIndex() % JOURNAL_PROMPTS.length];
 }
 
@@ -3424,7 +3426,7 @@ function updateStreak() {
     state.wellnessData?.journal?.[t]
   );
 
-  const moodGrace = td.mood !== undefined && td.mood <= 2;
+  const moodGrace = td.mood !== undefined && td.mood >= 0 && td.mood <= 2;
 
   if (anyAction || moodGrace) {
     if (xp.lastStreakDate !== t) {
@@ -3725,7 +3727,7 @@ function getMoodPattern() {
   const dates = Object.keys(history).sort().slice(-14); // last 2 weeks
   if (dates.length < 5) return null;
 
-  const withMood = dates.filter(d => history[d]?.mood !== undefined);
+  const withMood = dates.filter(d => history[d]?.mood !== undefined && history[d].mood >= 0);
   if (withMood.length < 5) return null;
 
   const recent = withMood.slice(-7).map(d => history[d].mood);
@@ -3736,9 +3738,9 @@ function getMoodPattern() {
 
   // Check exercise correlation
   const exerciseDays = dates.filter(d => history[d]?.habits?.w_exercise);
-  const exerciseMoods = exerciseDays.map(d => history[d].mood).filter(m => m !== undefined);
+  const exerciseMoods = exerciseDays.map(d => history[d].mood).filter(m => m !== undefined && m >= 0);
   const nonExerciseMoods = dates
-    .filter(d => !history[d]?.habits?.w_exercise && history[d]?.mood !== undefined)
+    .filter(d => !history[d]?.habits?.w_exercise && history[d]?.mood !== undefined && history[d].mood >= 0)
     .map(d => history[d].mood);
 
   const avgExercise = exerciseMoods.length >= 3 ? exerciseMoods.reduce((a,b)=>a+b,0)/exerciseMoods.length : null;
@@ -3770,7 +3772,7 @@ function getMoodHabitCorrelation() {
   const highDays = [], lowDays = [];
   dates.forEach(d => {
     const h = history[d];
-    if (h?.mood === undefined) return;
+    if (h?.mood === undefined || h.mood < 0) return;
     const habits = h.habits || {};
     const boolVals = Object.values(habits).filter(v => typeof v === 'boolean');
     const pct = boolVals.length > 0 ? boolVals.filter(Boolean).length / boolVals.length : 0;
@@ -3795,7 +3797,7 @@ function getMoodHabitCorrelation() {
   for (let i = 0; i < sortedDates.length - 1; i++) {
     const today2 = history[sortedDates[i]];
     const tomorrow = history[sortedDates[i + 1]];
-    if (today2?.sleep !== undefined && tomorrow?.mood !== undefined) {
+    if (today2?.sleep !== undefined && tomorrow?.mood !== undefined && tomorrow.mood >= 0) {
       sleepMoodPairs.push({ sleep: today2.sleep, mood: tomorrow.mood });
     }
   }
@@ -3819,7 +3821,7 @@ function getMoodHabitCorrelation() {
   const habitMoods = {};
   dates.forEach(d => {
     const h = history[d];
-    if (h?.mood === undefined || !h.habits) return;
+    if (h?.mood === undefined || h.mood < 0 || !h.habits) return;
     Object.keys(h.habits).forEach(k => {
       if (typeof h.habits[k] !== 'boolean') return;
       if (!habitMoods[k]) habitMoods[k] = { with: [], without: [] };
@@ -3887,8 +3889,8 @@ async function shareWeekInReview() {
   weekDates.forEach((d, i) => {
     const hist = state.historyData[d] || {};
     const mood = hist.mood;
-    const barH = mood !== undefined ? ((mood+1)/5 * 120) : 6;
-    const color = mood !== undefined ? moodColors2[mood] : 'rgba(255,255,255,0.05)';
+    const barH = (mood !== undefined && mood >= 0) ? ((mood+1)/5 * 120) : (mood === -1 ? 12 : 6);
+    const color = (mood !== undefined && mood >= 0) ? moodColors2[mood] : (mood === -1 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)');
     const x = startX + i * (barWidth + barGap);
     const y = 240 - barH;
     ctx.fillStyle = color;
@@ -4085,7 +4087,7 @@ async function showMonthlyReflectionPrompt() {
   // Get last month's data
   const prevMonthStr = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth()+1).padStart(2,'0')}`;
   const prevDates = Object.keys(state.historyData).filter(d => d.startsWith(prevMonthStr));
-  const moods = prevDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined);
+  const moods = prevDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined && m >= 0);
   const avgMood = moods.length ? (moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1) : 'unknown';
   const journalCount = prevDates.filter(d => state.historyData[d]?.journal).length;
 
@@ -5738,7 +5740,7 @@ function renderTodayTop() {
   }
 
   // Low mood banner — only for Low (0) and Rough (1)
-  if (mood !== undefined && mood <= 1) {
+  if (mood !== undefined && mood >= 0 && mood <= 1) {
     const yesterdayLow = checkYesterdayLowMood();
     const breatheExpanded = state.inlineBreatheOpen;
 
@@ -5771,7 +5773,7 @@ function checkYesterdayLowMood() {
   yesterday.setDate(yesterday.getDate() - 1);
   const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
   const yData = state.historyData[yStr];
-  return yData && yData.mood !== undefined && yData.mood <= 2;
+  return yData && yData.mood !== undefined && yData.mood >= 0 && yData.mood <= 2;
 }
 
 // Inline breathe (in low mood banner)
@@ -5909,6 +5911,7 @@ function renderTodayTab() {
     { v: 2, e: '😐', l: 'Okay' },
     { v: 3, e: '🙂', l: 'Good' },
     { v: 4, e: '😊', l: 'Great' },
+    { v: -1, e: '🤷', l: 'Unsure' },
   ];
   const sleeps = [
     { v: 0, e: '😴', l: 'Rough' },
@@ -5939,7 +5942,7 @@ function renderTodayTab() {
 
   // --- GENTLE MODE TOGGLE ---
   const isGentleMode = !!td.gentleMode;
-  const isLowMoodDay = td.mood !== undefined && td.mood <= 1;
+  const isLowMoodDay = td.mood !== undefined && td.mood >= 0 && td.mood <= 1;
   if (!isLowMoodDay) {
     html += `<div onclick="toggleGentleMode()" style="
       display:flex;align-items:center;gap:10px;
@@ -6263,7 +6266,7 @@ function renderTodayTab() {
   checkAllDone();
 
   // Low mood AI trigger
-  if (state.todayData.mood !== undefined && state.todayData.mood <= 1 && checkYesterdayLowMood() && !state.lowMoodAIResponse) {
+  if (state.todayData.mood !== undefined && state.todayData.mood >= 0 && state.todayData.mood <= 1 && checkYesterdayLowMood() && !state.lowMoodAIResponse) {
     triggerLowMoodAI();
   }
 }
@@ -6337,17 +6340,18 @@ function getSelfCareCelebType(id) {
 }
 
 function logMood(val) {
-  const wasLow = state.todayData.mood !== undefined && state.todayData.mood <= 2;
+  const wasLow = state.todayData.mood !== undefined && state.todayData.mood >= 0 && state.todayData.mood <= 2;
   state.todayData.mood = val;
   saveState();
   archiveToday();
   haptic('light');
   checkFirstTaskStreak();
   renderTodayTab();
-  bounceMoodBtn(val);
-  const moodEl = document.querySelectorAll('.mood-btn')[val];
+  const btnIndex = val === -1 ? 5 : val;
+  bounceMoodBtn(btnIndex);
+  const moodEl = document.querySelectorAll('.mood-btn')[btnIndex];
   celebrate('mood', moodEl);
-  if (val <= 2 && !wasLow) showAffirmation('mood');
+  if (val >= 0 && val <= 2 && !wasLow) showAffirmation('mood');
   scheduleBuddySync();
 }
 
@@ -6500,7 +6504,7 @@ function renderWeeklyTab() {
   weekDates.forEach((d, i) => {
     const hist = state.historyData[d] || {};
     const isToday = d === todayStr;
-    const moodEmoji = hist.mood !== undefined ? ['😔','😕','😐','🙂','😊'][hist.mood] : '';
+    const moodEmoji = hist.mood !== undefined ? (hist.mood === -1 ? '🤷' : ['😔','😕','😐','🙂','😊'][hist.mood]) : '';
     let dotClass = '';
     if (hist.habits) {
       const done = Object.values(hist.habits).filter(Boolean).length;
@@ -6536,7 +6540,7 @@ function renderWeeklyTab() {
         html += `<div style="font-size:12px;color:var(--text-muted);margin:12px 0 6px;font-weight:500">${month}</div>`;
       }
       const day = history[d];
-      const moodE = day.mood !== undefined ? moodEmojis[day.mood] : '·';
+      const moodE = day.mood !== undefined ? (day.mood === -1 ? '🤷' : moodEmojis[day.mood]) : '·';
       const habitsArr = day.habits ? Object.entries(day.habits).filter(([_,v]) => v) : [];
       const habitsStr = habitsArr.length > 0 ? `${habitsArr.length} habits` : '';
       const journal = day.journal ? '📝' : '';
@@ -6854,7 +6858,7 @@ async function generateWeeklyInsight(e) {
   const weekDates = getWeekDates();
 
   // Mood data
-  const moodData = weekDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined);
+  const moodData = weekDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined && m >= 0);
   const avgMood = moodData.length > 0 ? (moodData.reduce((a,b) => a+b, 0) / moodData.length).toFixed(1) : null;
   const lowDays = moodData.filter(m => m <= 1).length;
   const goodDays = moodData.filter(m => m >= 3).length;
@@ -7128,7 +7132,7 @@ function renderProgressTab() {
   weekDates.forEach((d, i) => {
     const hist = state.historyData[d] || {};
     const isToday = d === todayStr;
-    const moodEmoji = hist.mood !== undefined ? ['😔','😕','😐','🙂','😊'][hist.mood] : '';
+    const moodEmoji = hist.mood !== undefined ? (hist.mood === -1 ? '🤷' : ['😔','😕','😐','🙂','😊'][hist.mood]) : '';
     let dotClass = '';
     if (hist.habits) {
       const done = Object.values(hist.habits).filter(Boolean).length;
@@ -7217,8 +7221,8 @@ function renderProgressTab() {
   weekDates.forEach((d,i) => {
     const hist = state.historyData[d] || {};
     const mood = hist.mood;
-    const h = mood !== undefined ? ((mood+1)/5*100) : 8;
-    const color = mood !== undefined ? moodColors[mood] : 'rgba(255,255,255,0.05)';
+    const h = (mood !== undefined && mood >= 0) ? ((mood+1)/5*100) : (mood === -1 ? 12 : 8);
+    const color = (mood !== undefined && mood >= 0) ? moodColors[mood] : (mood === -1 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)');
     html += `<div class="mood-chart-bar" style="height:${h}%;background:${color};border-radius:4px 4px 0 0"></div>`;
   });
 
@@ -7326,7 +7330,7 @@ async function generateRollingInsight() {
   if (load(key, null)) return; // already generated today
 
   const weekDates = getWeekDates();
-  const moodData = weekDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined);
+  const moodData = weekDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined && m >= 0);
   const avgMood = moodData.length > 0 ? (moodData.reduce((a,b) => a+b, 0) / moodData.length).toFixed(1) : null;
   const daysIn = moodData.length;
   const wd = state.weekData || {};
@@ -7398,7 +7402,7 @@ function renderHistoryTab() {
     }
 
     const entry = history[d];
-    const mood = entry.mood !== undefined ? moodEmojis[entry.mood] : '○';
+    const mood = entry.mood !== undefined ? (entry.mood === -1 ? '🤷' : moodEmojis[entry.mood]) : '○';
     const habits = entry.habits || {};
     const habitKeys = Object.keys(habits);
     const pips = habitKeys.slice(0,8).map(h =>
@@ -7434,7 +7438,7 @@ function openHistoryDetail(dateStr) {
   let html = `<div style="font-family:Fraunces,serif;font-size:22px;font-weight:300;color:var(--cream);margin-bottom:4px">${date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>`;
 
   if (entry.mood !== undefined) {
-    html += `<div style="font-size:24px;margin:12px 0 4px">${moodEmojis[entry.mood]}</div>`;
+    html += `<div style="font-size:24px;margin:12px 0 4px">${entry.mood === -1 ? '🤷 Unsure' : moodEmojis[entry.mood]}</div>`;
   }
   if (entry.sleep !== undefined) {
     html += `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Sleep: ${sleepLabels[entry.sleep]}</div>`;
@@ -10715,7 +10719,7 @@ function toggleBuddyCard(pid) {
 
 function renderBuddyCard(b, index) {
   const moods = ['\ud83d\ude14 Low', '\ud83d\ude15 Rough', '\ud83d\ude10 Okay', '\ud83d\ude42 Good', '\ud83d\ude0a Great'];
-  const moodDisplay = b.mood !== undefined && b.mood !== null ? moods[b.mood] || '\u2014' : '\u2014';
+  const moodDisplay = b.mood !== undefined && b.mood !== null ? (b.mood === -1 ? '🤷 Unsure' : moods[b.mood] || '\u2014') : '\u2014';
   const dotClass = buddyStatusDotClass(b.lastActive);
   const pctWidth = Math.min(100, Math.max(0, b.habitPct || 0));
   const pid = b.pairId;
@@ -11154,7 +11158,7 @@ function getSeasonalInsights() {
   const monthMoods = {};
   dates.forEach(d => {
     const h = history[d];
-    if (h?.mood === undefined) return;
+    if (h?.mood === undefined || h.mood < 0) return;
     const month = parseInt(d.split('-')[1]) - 1; // 0-indexed
     if (!monthMoods[month]) monthMoods[month] = [];
     monthMoods[month].push(h.mood);
@@ -11192,7 +11196,7 @@ function getSeasonalInsights() {
   const currentMonth = now.getMonth();
   const currentMonthData = monthMoods[currentMonth];
   if (currentMonthData && currentMonthData.length >= 5) {
-    const allMoods = dates.map(d => history[d]?.mood).filter(m => m !== undefined);
+    const allMoods = dates.map(d => history[d]?.mood).filter(m => m !== undefined && m >= 0);
     const overallAvg = allMoods.reduce((a,b) => a+b, 0) / allMoods.length;
     const currentAvg = currentMonthData.reduce((a,b) => a+b, 0) / currentMonthData.length;
     const diff = currentAvg - overallAvg;
@@ -11217,7 +11221,7 @@ function getSeasonalInsights() {
   const dowNames = ['Sundays','Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays'];
   dates.forEach(d => {
     const h = history[d];
-    if (h?.mood === undefined) return;
+    if (h?.mood === undefined || h.mood < 0) return;
     const dow = new Date(d + 'T12:00:00').getDay();
     dowMoods[dow].push(h.mood);
   });
@@ -11263,7 +11267,7 @@ function checkWeeklySummaryNotification() {
 
   // Build summary
   const weekDates = getWeekDates();
-  const moodData = weekDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined);
+  const moodData = weekDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined && m >= 0);
   const avgMood = moodData.length > 0 ? (moodData.reduce((a,b) => a+b, 0) / moodData.length) : null;
   const moodEmojis = ['😔','😕','😐','🙂','😊'];
   const moodLabel = avgMood !== null ? moodEmojis[Math.round(avgMood)] : '';
