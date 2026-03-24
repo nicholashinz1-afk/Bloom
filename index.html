@@ -5927,7 +5927,8 @@ function renderTodayTab() {
     const xp = h.xp || 15;
     const habitStreak = getHabitStreak(key);
     const streakBadge = habitStreak >= 2 ? `<div style="font-size:11px;color:var(--amber);background:rgba(201,149,74,0.1);padding:2px 7px;border-radius:99px;margin-right:6px">🔥${habitStreak}</div>` : '';
-    const trigger = state.prefs?.habitTriggers?.[h.id] || '';
+    const triggers = state.prefs?.habitTriggers || {};
+    const trigger = triggers[h.id + '_' + timeSlot] || triggers[h.id] || '';
     const triggerHtml = trigger ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px;font-style:italic">${trigger}</div>` : '';
     return `<div class="habit-row" onclick="tapDailyHabit('${h.id}', '${timeSlot}', this)">
       <div class="habit-check${done ? ' done' : ''}">${done ? '✓' : h.icon}</div>
@@ -5940,10 +5941,14 @@ function renderTodayTab() {
   function medHabitRow(timeSlot) {
     const key = 'medication_' + timeSlot;
     const done = td[key];
+    const triggers = state.prefs?.habitTriggers || {};
+    const trigger = triggers['medication_' + timeSlot] || triggers['medication'] || '';
+    const triggerHtml = trigger ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px;font-style:italic">${trigger}</div>` : '';
     return `<div class="habit-row" onclick="tapDailyHabit('medication', '${timeSlot}', this)">
       <div class="habit-check${done ? ' done' : ''}" style="${!done ? 'border-color:rgba(106,154,176,0.3)' : ''}">${done ? '✓' : '💊'}</div>
       <div class="habit-info">
         <div class="habit-name" style="color:var(--sky-light)">Medication</div>
+        ${triggerHtml}
       </div>
       ${!done ? '<div class="habit-xp" style="background:rgba(106,154,176,0.15);border-color:rgba(106,154,176,0.3);color:var(--sky-light)">+10</div>' : ''}
     </div>`;
@@ -7537,29 +7542,59 @@ function renderSettingsTab() {
 
   html += settingsSection('daily', '☀️ Daily habits', dailyHtml);
 
-  // ── IMPLEMENTATION INTENTIONS (Habit Triggers) ─────────────
+  // ── HABIT CUES (Implementation Intentions) ─────────────
   {
     const triggers = prefs.habitTriggers || {};
-    const allTriggerHabits = [];
-    // Built-in teeth habits
-    if (prefs?.habits?.m_teeth !== false) allTriggerHabits.push({ id: 'm_teeth', icon: '🦷', label: 'Brush teeth (morning)' });
-    if (prefs?.habits?.e_teeth !== false) allTriggerHabits.push({ id: 'e_teeth', icon: '🦷', label: 'Brush teeth (evening)' });
-    // Configurable daily habits
-    DAILY_HABITS.filter(h => dh[h.id]).forEach(h => allTriggerHabits.push(h));
-    // Medication
-    if (dh.medication) allTriggerHabits.push(MEDICATION_HABIT);
+    const ht = prefs.habitTimes || {};
+    let triggerHtml = `<div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">
+      Link each habit to a moment in your day — "I will [habit] when [cue]."
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:16px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:var(--r-md);border:1px solid rgba(255,255,255,0.05)">
+      <span style="color:var(--sky-light)">ℹ️ Why cues work:</span> Research shows that pairing a new habit with an existing routine (like "after I pour my coffee") makes you 2-3x more likely to follow through. Your cue shows beneath each habit as a gentle reminder.
+    </div>`;
 
-    if (allTriggerHabits.length > 0) {
-      let triggerHtml = `<div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
-        Set a trigger for each habit — "I will [habit] when [trigger]." Research shows this 2-3x your follow-through.
+    let hasTriggerHabits = false;
+
+    function triggerInput(id, label, icon, placeholder) {
+      hasTriggerHabits = true;
+      return `<div style="margin-bottom:16px">
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px">${icon} ${label}</div>
+        <input type="text" id="trigger-${id}" value="${escapeHtml(triggers[id] || '')}" placeholder="${placeholder}" style="box-sizing:border-box" onchange="saveHabitTrigger('${id}')" onfocus="setTimeout(()=>this.scrollIntoView({block:'center',behavior:'smooth'}),300)">
       </div>`;
-      allTriggerHabits.forEach(h => {
-        triggerHtml += `<div style="margin-bottom:16px">
-          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px">${h.icon} ${h.label}</div>
-          <input type="text" id="trigger-${h.id}" value="${escapeHtml(triggers[h.id] || '')}" placeholder="e.g. After morning coffee..." style="box-sizing:border-box" onchange="saveHabitTrigger('${h.id}')" onfocus="setTimeout(()=>this.scrollIntoView({block:'center',behavior:'smooth'}),300)">
-        </div>`;
+    }
+
+    // Daily habits — respect AM/PM/Both/Anytime time settings
+    const allDaily = [...DAILY_HABITS.filter(h => dh[h.id]), ...(dh.medication ? [MEDICATION_HABIT] : [])];
+    allDaily.forEach(h => {
+      const time = ht[h.id] || h.defaultTime || 'any';
+      if (time === 'both') {
+        triggerHtml += triggerInput(h.id + '_am', h.label + ' (morning)', h.icon, 'e.g. After waking up...');
+        triggerHtml += triggerInput(h.id + '_pm', h.label + ' (evening)', h.icon, 'e.g. Before bed...');
+      } else if (time === 'am') {
+        triggerHtml += triggerInput(h.id + '_am', h.label + ' (morning)', h.icon, 'e.g. After waking up...');
+      } else if (time === 'pm') {
+        triggerHtml += triggerInput(h.id + '_pm', h.label + ' (evening)', h.icon, 'e.g. Before bed...');
+      } else {
+        triggerHtml += triggerInput(h.id, h.label, h.icon, 'e.g. After morning coffee...');
+      }
+    });
+
+    // Self-care tasks
+    const enabledSelfCare = [];
+    SELF_CARE_CATEGORIES.forEach(cat => {
+      cat.tasks.forEach(task => {
+        if (prefs.selfCare?.[task.id]) enabledSelfCare.push(task);
       });
-      html += settingsSection('triggers', '🎯 Habit triggers', triggerHtml);
+    });
+    if (enabledSelfCare.length > 0) {
+      triggerHtml += `<div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin:8px 0 12px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">Self-care</div>`;
+      enabledSelfCare.forEach(t => {
+        triggerHtml += triggerInput(t.id, t.label, t.icon, 'e.g. When I first get up...');
+      });
+    }
+
+    if (hasTriggerHabits) {
+      html += settingsSection('triggers', '🔗 Habit cues', triggerHtml);
     }
   }
 
