@@ -5153,6 +5153,15 @@ function celebrate(type, sourceEl) {
       { title: `${userName}, look how far you\'ve come.`, sub: 'Every single step has mattered.' },
     ];
     msg = goldenMsgs[Math.floor(Math.random() * goldenMsgs.length)];
+  } else if (type !== 'win' && type !== 'affirmation' && Math.random() < 0.12) {
+    // ~1-in-8 chance: surface a past small win as a callback
+    const allWins = Object.values(state.wellnessData?.wins || {}).flat();
+    if (allWins.length > 0) {
+      const randomWin = allWins[Math.floor(Math.random() * allWins.length)];
+      msg = { title: 'Remember this win?', sub: `⭐ ${randomWin}` };
+    } else {
+      msg = data.messages[Math.floor(Math.random() * data.messages.length)];
+    }
   } else {
     msg = data.messages[Math.floor(Math.random() * data.messages.length)];
   }
@@ -6814,6 +6823,9 @@ async function generateWeeklyInsight(e) {
   // Journal excerpts
   const journals = weekDates.map(d => state.wellnessData?.journal?.[d]?.text).filter(Boolean);
 
+  // Small wins this week
+  const weekWins = weekDates.flatMap(d => state.wellnessData?.wins?.[d] || []);
+
   const selfCareContext = [
     exerciseCount > 0 ? `exercised ${exerciseCount} time${exerciseCount > 1 ? 's' : ''}` : null,
     showerCount > 0 ? `showered ${showerCount} time${showerCount > 1 ? 's' : ''}` : null,
@@ -6823,9 +6835,9 @@ async function generateWeeklyInsight(e) {
   ].filter(Boolean).join(', ');
 
   const ai = await callClaude(
-    `Write a weekly insight for a mental wellness app user. This week: ${avgMood ? `average mood ${avgMood}/4` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}.
+    `Write a weekly insight for a mental wellness app user. This week: ${avgMood ? `average mood ${avgMood}/4` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}. Small wins they logged: ${weekWins.length > 0 ? weekWins.slice(0,5).join(', ') : 'none this week'}.
 
-Write 3-4 sentences from an emotional lens — how they showed up for themselves this week. If it was a hard week emotionally but they still did self-care, reflect that back as evidence of resilience. Celebrate specific acts of self-care as emotional wins. Never shame, never clinical. End with something genuinely encouraging about the week ahead.`,
+Write 3-4 sentences from an emotional lens — how they showed up for themselves this week. If they logged small wins, reflect specific ones back to them as evidence of progress. If it was a hard week emotionally but they still did self-care, reflect that back as evidence of resilience. Celebrate specific acts of self-care as emotional wins. Never shame, never clinical. End with something genuinely encouraging about the week ahead.`,
     'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only.'
   );
 
