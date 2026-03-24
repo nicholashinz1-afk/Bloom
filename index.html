@@ -776,8 +776,8 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   animation: fadeSlideIn 0.4s ease;
 }
 .banner-low-mood {
-  background: rgba(176,120,120,0.1);
-  border: 1px solid rgba(176,120,120,0.25);
+  background: rgba(106,154,176,0.08);
+  border: 1px solid rgba(106,154,176,0.2);
 }
 .banner-all-done {
   background: rgba(122,158,126,0.12);
@@ -2445,7 +2445,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.6.0';
+const VERSION = '2.7.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -2491,13 +2491,10 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'Streaks are now "Days you\'ve shown up" — a number that only goes up. Missing a day is just missing a day, not losing progress. No more freeze tokens needed.', spotlight: null, tab: 'progress', featured: true },
-  { text: 'Buddy mood sharing is now opt-in. Go to Settings → bloom buddy to control whether your buddy sees your mood and gets notified on rough days.', spotlight: '#sh-buddy', tab: 'settings', featured: true },
-  { text: 'bloom now includes a professional care disclaimer — because bloom is a self-care companion, not a substitute for therapy.', spotlight: '#sh-about', tab: 'settings' },
-  { text: 'Your habits have moved to "Anytime today." To set Morning or Evening times, go to Settings → Daily Habits and tap AM, PM, or Both on each habit.', spotlight: '#sh-daily', tab: 'settings' },
-  { text: 'Habit cues — link each habit to a moment in your day (like "after morning coffee") to build follow-through. Set yours in Settings.', spotlight: '#sh-triggers', tab: 'settings' },
-  { text: 'Science behind bloom — tap the ⓘ icons throughout the app to learn why each feature works, backed by peer-reviewed research. Or explore it all in Settings.', spotlight: '#sh-science', tab: 'settings' },
-  { text: 'Wellness tab on your Daily page — see today\'s journal prompt, track your progress across journal, small wins, and affirmations, all in one card.', spotlight: null, tab: 'today' },
+  { text: 'Gentle mode — tap "Light day?" on your Daily page to reduce habits to your top 2. No mood required, no questions asked.', spotlight: null, tab: 'today', featured: true },
+  { text: 'Softer onboarding — new "Start small" option lets you skip habit setup entirely and begin with just water & nourishment.', spotlight: null, featured: true },
+  { text: 'Self-care setup now starts with 3 curated suggestions instead of 16 options at once. Tap "Explore all" to see everything.', spotlight: null },
+  { text: 'Hard day mode now uses calmer blue tones instead of red — because comfort shouldn\'t look like a warning.', spotlight: null, tab: 'today' },
 ];
 
 // ============================================================
@@ -4001,6 +3998,14 @@ async function saveOpenJournal() {
     saveState();
     checkMilestones();
   }
+}
+
+function toggleGentleMode() {
+  state.todayData.gentleMode = !state.todayData.gentleMode;
+  state._showAllHabitsOnHardDay = false;
+  saveState();
+  archiveToday();
+  renderTodayTab();
 }
 
 function activateHardDayMode() {
@@ -5623,14 +5628,14 @@ function renderTodayTop() {
   if (!state.hardDayMode && mood === undefined) {
     html += `<div onclick="activateHardDayMode()" style="
       display:flex;align-items:center;gap:12px;
-      background:rgba(176,120,120,0.07);
-      border:1px solid rgba(176,120,120,0.18);
+      background:rgba(106,154,176,0.07);
+      border:1px solid rgba(106,154,176,0.18);
       border-radius:var(--r-lg);padding:12px 16px;
       margin-bottom:12px;cursor:pointer;
       transition:background 0.2s">
       <span style="font-size:22px">🫂</span>
       <div style="flex:1">
-        <div style="font-size:14px;font-weight:500;color:var(--rose-light)">Having a hard day?</div>
+        <div style="font-size:14px;font-weight:500;color:var(--sky-light)">Having a hard day?</div>
         <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Tap for support — your streak is protected</div>
       </div>
       <div style="font-size:18px;color:var(--text-muted)">›</div>
@@ -5733,7 +5738,7 @@ function renderTodayTop() {
     html += `<div class="banner banner-low-mood" id="low-mood-banner">
       <div class="banner-icon">🫂</div>
       <div class="banner-body" style="width:100%">
-        <div class="banner-title" style="color:var(--rose-light)">It's okay not to be okay</div>
+        <div class="banner-title" style="color:var(--sky-light)">It's okay not to be okay</div>
         <div class="banner-text">${yesterdayLow ? (state.lowMoodAIResponse || 'Two hard days in a row takes real courage to keep going. You\'re not alone.') : 'Hard days happen. You don\'t have to push through anything right now.'}</div>
         <div class="banner-actions">
           <div class="banner-action" id="inline-breathe-btn" onclick="toggleInlineBreathe()">${breatheExpanded ? '✕ Close' : '🌬 Breathe'}</div>
@@ -5925,21 +5930,41 @@ function renderTodayTab() {
     </div>
   </div>`;
 
+  // --- GENTLE MODE TOGGLE ---
+  const isGentleMode = !!td.gentleMode;
+  const isLowMoodDay = td.mood !== undefined && td.mood <= 1;
+  if (!isLowMoodDay) {
+    html += `<div onclick="toggleGentleMode()" style="
+      display:flex;align-items:center;gap:10px;
+      padding:10px 16px;margin-bottom:12px;cursor:pointer;
+      background:${isGentleMode ? 'rgba(106,154,176,0.08)' : 'transparent'};
+      border:1px solid ${isGentleMode ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.06)'};
+      border-radius:var(--r-md);transition:all 0.2s">
+      <span style="font-size:16px">${isGentleMode ? '🌿' : '🍃'}</span>
+      <div style="flex:1;font-size:13px;color:${isGentleMode ? 'var(--sky-light)' : 'var(--text-muted)'}">
+        ${isGentleMode ? 'Gentle mode — showing less today' : 'Light day? Tap for gentle mode'}
+      </div>
+      <div class="toggle${isGentleMode ? ' on' : ''}" style="pointer-events:none;transform:scale(0.8)"></div>
+    </div>`;
+  }
+
   // --- DAILY HABITS (grouped by time: AM / PM / Any) ---
   const dhPrefs = prefs?.dailyHabits || {};
   const htPrefs = prefs?.habitTimes || {};
   let allDailyHabits = DAILY_HABITS.filter(h => dhPrefs[h.id]);
   const medEnabled = !!dhPrefs.medication;
 
-  // Adaptive difficulty: if mood is low (0 or 1), show reduced list
-  const isLowMoodDay = td.mood !== undefined && td.mood <= 1;
+  // Adaptive difficulty: if mood is low (0 or 1) or gentle mode, show reduced list
+  const isReducedDay = isLowMoodDay || isGentleMode;
   const showAllHabits = state._showAllHabitsOnHardDay;
-  if (isLowMoodDay && !showAllHabits && allDailyHabits.length > 2) {
-    html += `<div style="background:rgba(176,120,120,0.06);border:1px solid rgba(176,120,120,0.15);border-radius:var(--r-md);padding:12px 16px;margin-bottom:12px">
-      <div style="font-size:13px;color:var(--rose-light);font-weight:500;margin-bottom:4px">Easy does it today</div>
-      <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:8px">Showing your top priorities. The rest can wait.</div>
-      <div onclick="state._showAllHabitsOnHardDay=true;renderTodayTab()" style="font-size:12px;color:var(--text-secondary);cursor:pointer;text-decoration:underline">Show all habits</div>
-    </div>`;
+  if (isReducedDay && !showAllHabits && allDailyHabits.length > 2) {
+    if (isLowMoodDay) {
+      html += `<div style="background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.15);border-radius:var(--r-md);padding:12px 16px;margin-bottom:12px">
+        <div style="font-size:13px;color:var(--sky-light);font-weight:500;margin-bottom:4px">Easy does it today</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:8px">Showing your top priorities. The rest can wait.</div>
+        <div onclick="state._showAllHabitsOnHardDay=true;renderTodayTab()" style="font-size:12px;color:var(--text-secondary);cursor:pointer;text-decoration:underline">Show all habits</div>
+      </div>`;
+    }
     allDailyHabits = allDailyHabits.slice(0, 2);
   }
 
@@ -9186,41 +9211,67 @@ function renderOBHabits(body, footer) {
   let html = `<div class="ob-title">Choose your habits</div>
   <div class="ob-sub">Toggle on what you'd like to track. You can change these anytime.</div>`;
 
-  habits.forEach(h => {
-    const on = obData.habits[h.id];
-    html += `<div class="toggle-row" style="padding:12px 0">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:20px">${h.icon}</span>
+  // "Start small" escape hatch
+  if (!obData._startSmall) {
+    html += `<div onclick="obStartSmall()" style="
+      display:flex;align-items:center;gap:12px;
+      background:rgba(122,158,126,0.07);border:1px solid rgba(122,158,126,0.18);
+      border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px;cursor:pointer">
+      <span style="font-size:20px">🌱</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;color:var(--sage-light)">Feeling overwhelmed? Start small</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;line-height:1.5">Skip this for now — just water & nourishment. You can add habits anytime from Settings.</div>
+      </div>
+      <div style="font-size:18px;color:var(--text-muted)">›</div>
+    </div>`;
+  } else {
+    html += `<div style="
+      display:flex;align-items:center;gap:10px;
+      background:rgba(122,158,126,0.07);border:1px solid rgba(122,158,126,0.18);
+      border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px">
+      <span style="font-size:16px">🌱</span>
+      <div style="font-size:13px;color:var(--sage-light);font-style:italic;flex:1">Starting small — just water & nourishment. You can add more anytime.</div>
+      <div onclick="obUndoStartSmall()" style="font-size:12px;color:var(--text-muted);cursor:pointer;text-decoration:underline">Undo</div>
+    </div>`;
+  }
+
+  if (!obData._startSmall) {
+    habits.forEach(h => {
+      const on = obData.habits[h.id];
+      html += `<div class="toggle-row" style="padding:12px 0">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">${h.icon}</span>
+          <div>
+            <div class="toggle-label">${h.name}</div>
+            <div class="toggle-sub">${h.type === 'daily' ? 'Daily +15 ☀️' : 'Weekly goal'}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${h.type === 'weekly' && on ? `<div class="stepper">
+            <div class="stepper-btn" onclick="obAdjustGoal('${h.id}',-1)">−</div>
+            <div class="stepper-val" id="ob-goal-${h.id}">${obData.goals[h.id] || 3}x</div>
+            <div class="stepper-btn" onclick="obAdjustGoal('${h.id}',1)">+</div>
+          </div>` : ''}
+          <div class="toggle${on?' on':''}" id="ob-toggle-${h.id}" onclick="obToggleHabit('${h.id}','${h.type}')"></div>
+        </div>
+      </div>`;
+    });
+
+    // Meals tracking option
+    const mealsOn = obData.habits.track_meals;
+    html += `
+    <div style="height:1px;background:rgba(255,255,255,0.06);margin:4px 0"></div>
+    <div class="toggle-row" style="padding:12px 0">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <span style="font-size:20px;margin-top:2px">🍽</span>
         <div>
-          <div class="toggle-label">${h.name}</div>
-          <div class="toggle-sub">${h.type === 'daily' ? 'Daily +15 ☀️' : 'Weekly goal'}</div>
+          <div class="toggle-label">Track daily meals</div>
+          <div class="toggle-sub" style="line-height:1.5">Adds Breakfast, Lunch & Dinner to your daily check-in — not as a nutrition tracker, just a gentle reminder that feeding yourself is an act of self-care.</div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        ${h.type === 'weekly' && on ? `<div class="stepper">
-          <div class="stepper-btn" onclick="obAdjustGoal('${h.id}',-1)">−</div>
-          <div class="stepper-val" id="ob-goal-${h.id}">${obData.goals[h.id] || 3}x</div>
-          <div class="stepper-btn" onclick="obAdjustGoal('${h.id}',1)">+</div>
-        </div>` : ''}
-        <div class="toggle${on?' on':''}" id="ob-toggle-${h.id}" onclick="obToggleHabit('${h.id}','${h.type}')"></div>
-      </div>
+      <div class="toggle${mealsOn?' on':''}" style="flex-shrink:0;margin-top:2px" onclick="obToggleHabit('track_meals','daily')"></div>
     </div>`;
-  });
-
-  // Meals tracking option
-  const mealsOn = obData.habits.track_meals;
-  html += `
-  <div style="height:1px;background:rgba(255,255,255,0.06);margin:4px 0"></div>
-  <div class="toggle-row" style="padding:12px 0">
-    <div style="display:flex;align-items:flex-start;gap:10px">
-      <span style="font-size:20px;margin-top:2px">🍽</span>
-      <div>
-        <div class="toggle-label">Track daily meals</div>
-        <div class="toggle-sub" style="line-height:1.5">Adds Breakfast, Lunch & Dinner to your daily check-in — not as a nutrition tracker, just a gentle reminder that feeding yourself is an act of self-care.</div>
-      </div>
-    </div>
-    <div class="toggle${mealsOn?' on':''}" style="flex-shrink:0;margin-top:2px" onclick="obToggleHabit('track_meals','daily')"></div>
-  </div>`;
+  }
 
   body.innerHTML = html;
   footer.innerHTML = `
@@ -9233,6 +9284,21 @@ function renderOBHabits(body, footer) {
 
 function obToggleHabit(id, type) {
   obData.habits[id] = !obData.habits[id];
+  renderOnboarding();
+}
+
+function obStartSmall() {
+  obData._startSmall = true;
+  // Turn off all habits — user starts with just water & nourishment
+  obData._savedHabits = { ...obData.habits };
+  Object.keys(obData.habits).forEach(k => { obData.habits[k] = false; });
+  renderOnboarding();
+}
+
+function obUndoStartSmall() {
+  obData._startSmall = false;
+  if (obData._savedHabits) obData.habits = { ...obData._savedHabits };
+  delete obData._savedHabits;
   renderOnboarding();
 }
 
@@ -9467,30 +9533,60 @@ function obSetTheme(key) {
 
 function renderOBSelfCare(body, footer) {
   const selected = obData.selfCareTasks || [];
+  const showAll = obData._showAllSelfCare;
+
+  // Curated suggestions — one gentle pick from each category
+  const curatedIds = ['sc_warm_drink', 'sc_deep_breath', 'sc_music'];
+  const curatedTasks = curatedIds.map(id => SELF_CARE_TASKS.find(t => t.id === id)).filter(Boolean);
 
   let html = `
     <div class="ob-title">Daily self-care</div>
-    <div class="ob-sub" style="line-height:1.7">Choose what you'd like to gently track each day. There's no right answer — pick what feels possible, not what feels perfect.</div>
+    <div class="ob-sub" style="line-height:1.7">A few gentle ideas to start with. Pick what feels possible, not what feels perfect.</div>
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;font-style:italic;line-height:1.6">You can add, change, or remove any of these later. This is entirely yours.</div>`;
 
-  SELF_CARE_CATEGORIES.forEach(cat => {
-    html += `<div style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <span style="font-size:16px">${cat.icon}</span>
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--cream)">${cat.label}</div>
-          <div style="font-size:11px;color:var(--text-muted)">${cat.sub}</div>
-        </div>
+  if (!showAll) {
+    // Show curated suggestions
+    html += `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">`;
+    curatedTasks.forEach(t => {
+      const on = selected.includes(t.id);
+      const pillStyle = `display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;background:${on ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};font-size:13px;color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
+      html += `<div onclick="obToggleSelfCare('${t.id}')" id="ob-sc-${t.id}" style="${pillStyle}"><span>${t.icon}</span>${t.label}</div>`;
+    });
+    html += `</div>`;
+
+    // "Explore more" link
+    html += `<div onclick="obData._showAllSelfCare=true;renderOnboarding()" style="
+      display:flex;align-items:center;gap:10px;
+      background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+      border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px;cursor:pointer">
+      <span style="font-size:16px">✨</span>
+      <div style="flex:1">
+        <div style="font-size:13px;color:var(--text-secondary)">Explore all self-care options</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">16 gentle ideas across 4 categories</div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">
-        ${cat.tasks.map(t => {
-          const on = selected.includes(t.id);
-          const pillStyle = `display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;background:${on ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};font-size:13px;color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
-          return `<div onclick="obToggleSelfCare('${t.id}')" id="ob-sc-${t.id}" style="${pillStyle}"><span>${t.icon}</span>${t.label}</div>`;
-        }).join('')}
-      </div>
+      <div style="font-size:18px;color:var(--text-muted)">›</div>
     </div>`;
-  });
+  } else {
+    // Show all categories
+    SELF_CARE_CATEGORIES.forEach(cat => {
+      html += `<div style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:16px">${cat.icon}</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--cream)">${cat.label}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${cat.sub}</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${cat.tasks.map(t => {
+            const on = selected.includes(t.id);
+            const pillStyle = `display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;background:${on ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};font-size:13px;color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
+            return `<div onclick="obToggleSelfCare('${t.id}')" id="ob-sc-${t.id}" style="${pillStyle}"><span>${t.icon}</span>${t.label}</div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    });
+  }
 
   // Medication — separate, extra gentle
   const medOn = selected.includes('sc_medication');
@@ -9504,11 +9600,9 @@ function renderOBSelfCare(body, footer) {
   body.innerHTML = html;
   footer.innerHTML = `
     <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
-    <button class="btn btn-ghost" id="ob-btn-skip" style="color:var(--text-muted)">Skip for now</button>
     <button class="btn btn-primary" id="ob-btn-next" style="flex:1">Continue</button>
   `;
   document.getElementById('ob-btn-back').addEventListener('click', obBack);
-  document.getElementById('ob-btn-skip').addEventListener('click', obNext);
   document.getElementById('ob-btn-next').addEventListener('click', obNext);
 }
 
