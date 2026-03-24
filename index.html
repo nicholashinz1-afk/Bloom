@@ -2383,7 +2383,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
       <p style="margin-bottom:12px">bloom buddy pairs you with someone for <strong style="color:var(--cream)">mutual encouragement and accountability</strong>. Here's what your buddy can see:</p>
       <div style="margin-bottom:12px">
         <div style="margin-bottom:4px"><span style="color:var(--cream)">Your current mood</span> (Low / Rough / Okay / Good / Great)</div>
-        <div style="margin-bottom:4px"><span style="color:var(--cream)">Your streak count</span> (how many days in a row)</div>
+        <div style="margin-bottom:4px"><span style="color:var(--cream)">Your days shown up</span> (total days active)</div>
         <div style="margin-bottom:4px"><span style="color:var(--cream)">Your habit completion %</span> (not which specific habits)</div>
         <div style="margin-bottom:4px"><span style="color:var(--cream)">When you were last active</span></div>
         <div><span style="color:var(--cream)">Your display name</span> (set in Settings)</div>
@@ -2414,7 +2414,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
         <strong style="color:var(--cream)">With mood sharing on:</strong> Your buddy sees your mood (Low / Rough / Okay / Good / Great) and gets notified on hard days so they can send support.
       </div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-top:8px">
-        <strong style="color:var(--cream)">With mood sharing off:</strong> Your buddy sees your streak and habit %, but not your mood. No rough-day notifications.
+        <strong style="color:var(--cream)">With mood sharing off:</strong> Your buddy sees your days shown up and habit %, but not your mood. No rough-day notifications.
       </div>
     </div>
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">You can change this any time in Settings → bloom buddy.</div>
@@ -2477,7 +2477,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.5.0';
+const VERSION = '2.6.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -2523,9 +2523,12 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'Your habits have moved to "Anytime today." To set Morning or Evening times, go to Settings → Daily Habits and tap AM, PM, or Both on each habit.', spotlight: '#sh-daily', tab: 'settings', featured: true },
-  { text: 'Habit cues — link each habit to a moment in your day (like "after morning coffee") to build follow-through. Set yours in Settings.', spotlight: '#sh-triggers', tab: 'settings', featured: true },
-  { text: 'Science behind bloom — tap the ⓘ icons throughout the app to learn why each feature works, backed by peer-reviewed research. Or explore it all in Settings.', spotlight: '#sh-science', tab: 'settings', featured: true },
+  { text: 'Streaks are now "Days you\'ve shown up" — a number that only goes up. Missing a day is just missing a day, not losing progress. No more freeze tokens needed.', spotlight: null, tab: 'progress', featured: true },
+  { text: 'Buddy mood sharing is now opt-in. Go to Settings → bloom buddy to control whether your buddy sees your mood and gets notified on rough days.', spotlight: '#sh-buddy', tab: 'settings', featured: true },
+  { text: 'bloom now includes a professional care disclaimer — because bloom is a self-care companion, not a substitute for therapy.', spotlight: '#sh-about', tab: 'settings' },
+  { text: 'Your habits have moved to "Anytime today." To set Morning or Evening times, go to Settings → Daily Habits and tap AM, PM, or Both on each habit.', spotlight: '#sh-daily', tab: 'settings' },
+  { text: 'Habit cues — link each habit to a moment in your day (like "after morning coffee") to build follow-through. Set yours in Settings.', spotlight: '#sh-triggers', tab: 'settings' },
+  { text: 'Science behind bloom — tap the ⓘ icons throughout the app to learn why each feature works, backed by peer-reviewed research. Or explore it all in Settings.', spotlight: '#sh-science', tab: 'settings' },
   { text: 'Wellness tab on your Daily page — see today\'s journal prompt, track your progress across journal, small wins, and affirmations, all in one card.', spotlight: null, tab: 'today' },
 ];
 
@@ -2857,7 +2860,7 @@ function loadState() {
     todayData:   load('bloom_today_' + today(), {}),
     weekData:    load('bloom_week_' + weekStart(), {}),
     historyData: load('bloom_history', {}),
-    xpData:      load('bloom_xp', { total: 0, level: 0, streak: 0, freezeTokens: 0, lastStreakDate: null }),
+    xpData:      load('bloom_xp', { total: 0, level: 0, streak: 0, daysShowedUp: 0, currentRun: 0, freezeTokens: 0, lastStreakDate: null }),
     wellnessData:load('bloom_wellness', { journal: {}, reflections: {}, insights: [], wins: {}, affirmations: [] }),
     seenVersion: load('bloom_version', null),
     backupDate:  load('bloom_backup_date', null),
@@ -3421,6 +3424,13 @@ function updateStreak() {
 
   if (xp.lastStreakDate === t) return;
 
+  // Migrate existing users: if they have streak but no daysShowedUp, seed it
+  if (!xp.daysShowedUp && xp.streak) {
+    xp.daysShowedUp = Math.max(xp.streak, Object.keys(state.historyData).length || xp.streak);
+  }
+  if (!xp.daysShowedUp) xp.daysShowedUp = 0;
+  if (!xp.currentRun) xp.currentRun = xp.streak || 0;
+
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
@@ -3442,32 +3452,30 @@ function updateStreak() {
   const moodGrace = td.mood !== undefined && td.mood <= 2;
 
   if (anyAction || moodGrace) {
-    if (xp.lastStreakDate === yStr || !xp.lastStreakDate) {
-      const oldStreak = xp.streak || 0;
-      xp.streak = oldStreak + 1;
-      xp.lastStreakDate = t;
-      if ([7,14,30].includes(xp.streak) || (xp.streak > 30 && xp.streak % 30 === 0)) {
-        if ((xp.freezeTokens || 0) < 5) xp.freezeTokens = (xp.freezeTokens || 0) + 1;
+    if (xp.lastStreakDate !== t) {
+      // Increment cumulative days — this never goes down
+      xp.daysShowedUp = (xp.daysShowedUp || 0) + 1;
+
+      // Update current run (consecutive days)
+      if (xp.lastStreakDate === yStr || !xp.lastStreakDate) {
+        xp.currentRun = (xp.currentRun || 0) + 1;
+      } else {
+        // Gap in days — reset run but NOT daysShowedUp
+        xp.currentRun = 1;
       }
-      // Check streak milestones
-      checkStreakMilestone(xp.streak);
-    }
-  } else {
-    // No action taken today yet — handle missed-day logic but don't lock
-    // lastStreakDate to today, so the first task can still increment streak
-    if ((xp.freezeTokens || 0) > 0 && xp.lastStreakDate && xp.lastStreakDate !== yStr && xp.lastStreakDate !== t) {
-      xp.freezeTokens--;
+
+      // Keep legacy streak field in sync for buddy display
+      xp.streak = xp.currentRun;
       xp.lastStreakDate = t;
-    } else if (xp.lastStreakDate && xp.lastStreakDate !== yStr && xp.lastStreakDate !== t) {
-      const lostStreak = xp.streak || 0;
-      xp.streak = 0;
-      // Don't set lastStreakDate = t here — allow first action to start fresh streak
-      if (lostStreak >= 3) {
-        state.showStreakRecovery = true;
-        state.lostStreakCount = lostStreak;
-      }
+
+      // Check milestones on cumulative days
+      checkStreakMilestone(xp.daysShowedUp);
     }
-    // If lastStreakDate is yesterday, leave it — first action today will pick it up
+  } else if (xp.lastStreakDate && xp.lastStreakDate !== yStr && xp.lastStreakDate !== t) {
+    // Missed day — only reset current run, never daysShowedUp
+    xp.currentRun = 0;
+    xp.streak = 0;
+    // No recovery banner — missing a day is just missing a day
   }
 
   // Update individual habit streaks
@@ -3623,18 +3631,21 @@ function buildStreakTreeSVG(streak) {
   </svg>`;
 }
 
-function checkStreakMilestone(streak) {
-  const milestones = [3, 7, 14, 30, 60, 100];
-  if (!milestones.includes(streak)) return;
+function checkStreakMilestone(totalDays) {
+  const milestones = [5, 10, 25, 50, 75, 100, 150, 200, 365];
+  if (!milestones.includes(totalDays)) return;
   const messages = {
-    3:   { title: '3 days in a row!', sub: 'A habit is starting to form.' },
-    7:   { title: 'One full week!', sub: 'Seven days of showing up. That\'s real.' },
-    14:  { title: 'Two weeks strong!', sub: 'You\'re building something that lasts.' },
-    30:  { title: '30 day streak!', sub: 'A full month of showing up for yourself.' },
-    60:  { title: '60 days!', sub: 'Two months of consistency. Incredible.' },
-    100: { title: '100 days!', sub: 'One hundred days of you. Extraordinary.' },
+    5:   { title: '5 days!', sub: 'Five days you chose to show up. That\'s real.' },
+    10:  { title: '10 days!', sub: 'Double digits. You\'re building something.' },
+    25:  { title: '25 days!', sub: 'Twenty-five days of caring for yourself.' },
+    50:  { title: '50 days!', sub: 'Half a hundred. Look how far you\'ve come.' },
+    75:  { title: '75 days!', sub: 'Three quarters of the way to 100. Incredible.' },
+    100: { title: '100 days!', sub: 'One hundred days you showed up for yourself. Extraordinary.' },
+    150: { title: '150 days!', sub: 'You keep coming back. That says everything.' },
+    200: { title: '200 days!', sub: 'Two hundred days of you. That\'s a practice.' },
+    365: { title: 'One full year!', sub: 'A year of showing up. There are no words.' },
   };
-  const msg = messages[streak];
+  const msg = messages[totalDays];
   if (!msg) return;
   setTimeout(() => {
     haptic('heavy');
@@ -3642,14 +3653,13 @@ function checkStreakMilestone(streak) {
     const div = document.createElement('div');
     div.id = 'levelup-overlay';
     div.innerHTML = `<div class="levelup-card" style="max-width:320px">
-      <div style="margin-bottom:16px">${buildStreakTreeSVG(streak)}</div>
-      <div style="font-family:Fraunces,serif;font-size:13px;color:var(--amber);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">${streak}-day streak</div>
+      <div style="margin-bottom:16px">${buildStreakTreeSVG(totalDays)}</div>
+      <div style="font-family:Fraunces,serif;font-size:13px;color:var(--sage);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">${totalDays} days shown up</div>
       <div style="font-family:Fraunces,serif;font-size:24px;font-weight:300;color:var(--cream);margin-bottom:8px">${msg.title}</div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">${msg.sub}</div>
       <button class="btn btn-primary btn-block" id="levelup-close">Keep growing 🌿</button>
     </div>`;
     document.body.appendChild(div);
-    // Delay confetti slightly so tree animation plays first
     setTimeout(() => launchConfetti(window.innerWidth / 2, window.innerHeight / 3, 80), 1000);
     document.getElementById('levelup-close').addEventListener('click', () => div.remove());
     setTimeout(() => { if (div.parentNode) div.remove(); }, 10000);
@@ -3884,7 +3894,7 @@ async function shareWeekInReview() {
   const streak = state.xpData.streak || 0;
   ctx.fillStyle = '#c9954a';
   ctx.font = '500 16px "Instrument Sans", sans-serif';
-  ctx.fillText(`🔥 ${streak}-day streak`, 300, 85);
+  ctx.fillText(`🌿 ${state.xpData.daysShowedUp || streak} days shown up`, 300, 85);
 
   // Mood bars
   const weekDates = getWeekDates();
@@ -4037,14 +4047,14 @@ async function renderHardDaySheet() {
     <div style="text-align:center;padding:8px 0 20px">
       <div style="font-size:48px;margin-bottom:12px">🫂</div>
       <div style="font-family:Fraunces,serif;font-size:22px;font-weight:300;color:var(--cream);margin-bottom:8px">It's okay${name}.</div>
-      <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">Hard days happen. Your streak is protected today — you don't have to do anything you don't want to.</div>
+      <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">Hard days happen. Today still counts — you showed up. You don't have to do anything you don't want to.</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
       <button class="btn btn-secondary btn-block" onclick="closeAllSheets();switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">🌬 Take a breath</button>
       <button class="btn btn-secondary btn-block" onclick="closeAllSheets();openOpenJournal()">📓 Just write it out</button>
       <button class="btn btn-secondary btn-block" onclick="closeAllSheets();openCrisisSheet()">🤍 I need more support</button>
     </div>
-    <div id="hard-day-ai" style="font-size:13px;color:var(--text-muted);font-style:italic;text-align:center;line-height:1.7">bloom is here with you...</div>
+    <div id="hard-day-ai" style="font-size:13px;color:var(--text-muted);font-style:italic;text-align:center;line-height:1.7">take your time...</div>
   `;
 
   // Get AI response
@@ -5336,7 +5346,7 @@ function toggleHouseholdTask(taskId, el) {
 }
 
 // ============================================================
-//  FIRST TASK STREAK OVERLAY
+//  FIRST TASK DAILY WELCOME OVERLAY
 // ============================================================
 function checkFirstTaskStreak() {
   const t = today();
@@ -5346,26 +5356,28 @@ function checkFirstTaskStreak() {
   // Update streak now — this is the moment it should count
   updateStreak();
 
-  const streak = state.xpData.streak || 1;
-  const isNew = streak === 1;
+  const totalDays = state.xpData.daysShowedUp || 1;
 
-  // Pick message based on streak length
+  // Pick message based on cumulative days
   let headline, sub;
-  if (isNew) {
+  if (totalDays === 1) {
     headline = 'Day one. 🌱';
-    sub = 'Every streak starts here. You showed up.';
-  } else if (streak < 7) {
-    headline = `${streak} days in a row.`;
-    sub = 'Something is building. Keep going.';
-  } else if (streak < 14) {
-    headline = `${streak} days strong. 🌿`;
-    sub = 'A week and counting. This is becoming real.';
-  } else if (streak < 30) {
-    headline = `${streak} days. ✨`;
-    sub = 'You keep coming back. That means everything.';
+    sub = 'You showed up. That\'s where it all starts.';
+  } else if (totalDays < 10) {
+    headline = `Day ${totalDays}.`;
+    sub = 'Another day you chose yourself. It adds up.';
+  } else if (totalDays < 25) {
+    headline = `${totalDays} days and counting.`;
+    sub = 'You keep coming back. That says something.';
+  } else if (totalDays < 50) {
+    headline = `${totalDays} days. 🌿`;
+    sub = 'Look at what you\'re building, one day at a time.';
+  } else if (totalDays < 100) {
+    headline = `${totalDays} days. ✨`;
+    sub = 'This is a real practice now. You\'re doing it.';
   } else {
-    headline = `${streak} days. 🌻`;
-    sub = 'This kind of consistency is rare. Be proud.';
+    headline = `${totalDays} days. 🌻`;
+    sub = 'The kind of consistency that changes a life.';
   }
 
   haptic('medium');
@@ -5383,9 +5395,9 @@ function checkFirstTaskStreak() {
   `;
   div.innerHTML = `
     <div style="text-align:center;max-width:300px">
-      <div style="font-size:64px;margin-bottom:20px">🔥</div>
-      <div style="font-family:Fraunces,serif;font-size:13px;color:var(--amber);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px">
-        ${streak === 1 ? 'streak started' : `${streak}-day streak`}
+      <div style="font-size:64px;margin-bottom:20px">🌿</div>
+      <div style="font-family:Fraunces,serif;font-size:13px;color:var(--sage);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px">
+        day ${totalDays}
       </div>
       <div style="font-family:Fraunces,serif;font-size:30px;font-weight:300;color:var(--cream);margin-bottom:12px;line-height:1.2">
         ${headline}
@@ -5565,7 +5577,7 @@ async function callClaude(prompt, systemPrompt) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        system: (systemPrompt || 'You are Bloom, a warm and compassionate mental wellness companion. Keep responses brief, warm, and human. Never clinical. 1-4 sentences maximum.') + nameContext,
+        system: (systemPrompt || 'You are Bloom, a warm and compassionate mental wellness companion. Keep responses brief, warm, and human. Never clinical. 1-4 sentences maximum.') + ' Never use first-person language like "I am here for you" or "I care about you" — you are a tool, not a person. Frame support as observations and affirmations, not as a relationship.' + nameContext,
         message: prompt,
       })
     });
@@ -5671,19 +5683,8 @@ function renderTodayTop() {
     </div>`;
   }
 
-  // Streak recovery banner
-  if (state.showStreakRecovery && state.lostStreakCount) {
-    html += `<div class="banner" style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.2)">
-      <div class="banner-icon">🌱</div>
-      <div class="banner-body">
-        <div class="banner-title" style="color:var(--amber-light)">Starting fresh</div>
-        <div class="banner-text">Your ${state.lostStreakCount}-day streak ended, but everything you built still happened. Today is day one of something new.</div>
-        <div class="banner-actions">
-          <div class="banner-action" onclick="state.showStreakRecovery=false;renderTodayTop()">I've got this</div>
-        </div>
-      </div>
-    </div>`;
-  }
+  // Welcome back banner (shown after a gap)
+
 
   // Mood pattern insight
   const pattern = getMoodPattern();
@@ -7049,8 +7050,8 @@ function renderProgressTab() {
 
   const xp = state.xpData;
   const total = xp.total || 0;
-  const streak = xp.streak || 0;
-  const freeze = xp.freezeTokens || 0;
+  const daysShowedUp = xp.daysShowedUp || 0;
+  const currentRun = xp.currentRun || 0;
   const level = getLevel(total);
   const nextLevel = getNextLevel(total);
   const pct = nextLevel ? Math.round(((total - level.min) / (nextLevel.min - level.min)) * 100) : 100;
@@ -7073,18 +7074,18 @@ function renderProgressTab() {
     </div>` : `<div style="font-size:12px;color:var(--sage);text-align:center;margin-top:6px">Maximum level reached 🌟</div>`}
   </div>`;
 
-  // Streak + Freeze chips
+  // Days shown up + current run
   html += `<div style="display:flex;gap:10px;margin-bottom:12px">
-    <div class="card mb-0" style="flex:1;text-align:center;padding:14px 10px">
-      <div style="font-size:26px">🔥</div>
-      <div style="font-family:Fraunces,serif;font-size:28px;font-weight:300;color:var(--cream);margin:4px 0">${streak}</div>
-      <div style="font-size:11px;color:var(--text-secondary)">Day streak</div>
-      <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Log your mood to keep it going</div>
+    <div class="card mb-0" style="flex:1.5;text-align:center;padding:14px 10px">
+      <div style="font-size:26px">🌿</div>
+      <div style="font-family:Fraunces,serif;font-size:28px;font-weight:300;color:var(--cream);margin:4px 0">${daysShowedUp}</div>
+      <div style="font-size:11px;color:var(--text-secondary)">Days you've shown up</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px">This number only goes up</div>
     </div>
     <div class="card mb-0" style="flex:1;text-align:center;padding:14px 10px">
-      <div style="font-size:26px">❄️</div>
-      <div style="font-family:Fraunces,serif;font-size:28px;font-weight:300;color:var(--sky-light);margin:4px 0">${freeze}</div>
-      <div style="font-size:11px;color:var(--text-secondary)">Freeze tokens</div>
+      <div style="font-size:26px">🌱</div>
+      <div style="font-family:Fraunces,serif;font-size:28px;font-weight:300;color:var(--sage-light);margin:4px 0">${currentRun}</div>
+      <div style="font-size:11px;color:var(--text-secondary)">Current run</div>
     </div>
   </div>`;
 
@@ -7219,7 +7220,7 @@ function renderProgressTab() {
   });
   html += `</div></div>`;
 
-  // 30-day streak heatmap
+  // 30-day activity heatmap
   html += `<div class="card">
     <div class="card-title">Last 30 days</div>
     <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px">`;
@@ -7508,14 +7509,14 @@ function renderSettingsTab() {
     </div>
     <div class="divider"></div>
     <div style="display:flex;align-items:center;gap:12px">
-      <div style="font-size:24px">🔥</div>
+      <div style="font-size:24px">🌿</div>
       <div>
-        <div style="font-size:15px;font-weight:500;color:var(--cream)">${xp.streak || 0}-day streak</div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">${xp.freezeTokens || 0} freeze token${(xp.freezeTokens || 0) !== 1 ? 's' : ''} · earned at 7, 14 & 30 days</div>
+        <div style="font-size:15px;font-weight:500;color:var(--cream)">${xp.daysShowedUp || 0} days shown up</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Current run: ${xp.currentRun || 0} day${(xp.currentRun || 0) !== 1 ? 's' : ''} in a row</div>
       </div>
     </div>
     <div style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.6">
-      Logging a Rough or Low mood automatically protects your streak — no token needed.
+      Every day you show up adds to your total — it never goes down, even if you miss a day.
     </div>
   `);
 
@@ -7873,7 +7874,7 @@ function renderSettingsTab() {
     </div>
     <div class="divider"></div>
     <div class="toggle-row">
-      <div><div class="toggle-label">Weekly summary</div><div class="toggle-sub">A gentle Sunday evening recap of your mood, streak, and journal activity</div></div>
+      <div><div class="toggle-label">Weekly summary</div><div class="toggle-sub">A gentle Sunday evening recap of your mood, progress, and journal activity</div></div>
       <div class="toggle${notifs.weeklySummary ? ' on' : ''}" onclick="toggleNotif('weeklySummary')"></div>
     </div>
     <div class="divider"></div>
@@ -7928,7 +7929,7 @@ function renderSettingsTab() {
     <div style="background:rgba(122,158,126,0.06);border:1px solid rgba(122,158,126,0.12);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
         <strong style="color:var(--cream)">It's okay to take a break from bloom.</strong>
-        If tracking your habits or mood ever starts to feel like pressure instead of support, step away. bloom will be here when you come back — no guilt, no lost progress that matters. Your well-being always comes first, not your streak.
+        If tracking your habits or mood ever starts to feel like pressure instead of support, step away. bloom will be here when you come back — no guilt, no lost progress that matters. Your well-being always comes first.
       </div>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="showWhatsNew(true)">📋 View release notes</button>
@@ -8561,10 +8562,10 @@ const SCIENCE_SECTIONS = {
     ],
   },
   streaks: {
-    title: 'Streaks & consistency',
-    tip: 'Streaks build momentum, but missing a day doesn\'t erase your progress. Consistency matters more than perfection.',
-    full: `<p>The "don't break the chain" method, popularized by Jerry Seinfeld, works because of <strong>loss aversion</strong> — we're more motivated to maintain a streak than to start one. However, research on habit formation shows that missing a single day has <strong>no measurable impact</strong> on long-term habit strength.</p>
-    <p>Phillippa Lally's research at University College London found that habits take an average of 66 days to become automatic, and occasional misses during that period didn't derail the process. bloom celebrates streaks but never punishes breaks — because shame doesn't build habits.</p>`,
+    title: 'Showing up & consistency',
+    tip: 'What matters is how many days you show up — not whether they\'re in a row. Missing a day changes nothing.',
+    full: `<p>Research on habit formation shows that missing a single day has <strong>no measurable impact</strong> on long-term habit strength. Phillippa Lally's research at University College London found that habits take an average of 66 days to become automatic, and occasional misses during that period didn't derail the process.</p>
+    <p>That's why bloom tracks <strong>total days you've shown up</strong> instead of consecutive streaks. Your total never goes down — missing a day is just missing a day, not losing progress. This removes the anxiety of "breaking a streak" while preserving the motivation of watching your number grow.</p>`,
     sources: [
       'Lally, P., et al. (2010). How are habits formed: Modelling habit formation in the real world. <em>European Journal of Social Psychology</em>, 40(6), 998–1009.',
       'Gardner, B., et al. (2012). Making health habitual. <em>British Journal of General Practice</em>, 62(605), 664–666.',
@@ -9597,7 +9598,7 @@ function renderOBBuddyIntro(body, footer) {
       <div style="font-size:13px;color:var(--cream);font-weight:500;margin-bottom:12px">What your buddy sees:</div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
         Your mood (Low / Rough / Okay / Good / Great) — <em>if mood sharing is on</em><br>
-        Your streak count<br>
+        Your days shown up (total days active)<br>
         Your habit completion % (not which habits)<br>
         Your display name & when you were last active
       </div>
@@ -9696,7 +9697,7 @@ function completeOnboarding() {
     onboarded: true,
   };
   save('bloom_prefs', prefs);
-  save('bloom_xp', { total: 0, streak: 0, freezeTokens: 0, lastStreakDate: null });
+  save('bloom_xp', { total: 0, streak: 0, daysShowedUp: 0, currentRun: 0, lastStreakDate: null });
   document.getElementById('onboarding').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   initApp();
@@ -9831,7 +9832,7 @@ const TUTORIAL_STEPS = [
     spotlight: '#breath-card',
     cardPos: 'top',
     title: '🌬 4-7-8 breathing',
-    text: 'This lives at the bottom of Wellness and also appears inline when you\'re having a hard day. No streaks, no sunlight — just a tool that\'s here whenever you need it.',
+    text: 'This lives at the bottom of Wellness and also appears inline when you\'re having a hard day. No tracking, no pressure — just a tool that\'s here whenever you need it.',
     scrollToBottom: true,
   },
   {
@@ -9840,14 +9841,14 @@ const TUTORIAL_STEPS = [
     cardPos: 'bottom',
     pulse: true,
     title: '✨ Progress',
-    text: 'Track your sunlight, streak, and mood chart here. Just logging your mood each day is enough to keep your streak alive. Freeze tokens protect you on days you miss entirely.',
+    text: 'Track your sunlight, days shown up, and mood chart here. Every day you log anything adds to your total — and that number never goes down.',
   },
   {
     tab: 'progress',
     spotlight: '#tab-progress .tab-scroll',
     cardPos: 'top',
-    title: 'Your streak & sunlight',
-    text: 'Logging a rough or low mood gives your streak automatic grace that day — no token needed. bloom looks out for you.',
+    title: 'Your progress & sunlight',
+    text: 'Every day you show up gets counted — even hard days where you just log your mood. Missing a day is just missing a day, nothing is lost.',
     scrollToTop: true,
   },
   {
@@ -10637,7 +10638,7 @@ function renderBuddyCard(b, index) {
       <div id="buddy-body-${pid}" style="display:${isFirst || !multipleCards ? 'block' : 'none'}">
         <div class="buddy-stats">
           <div class="buddy-stat"><span>${moodDisplay}</span></div>
-          <div class="buddy-stat">\ud83d\udd25 <span class="buddy-stat-value">${b.streak || 0}</span> day streak</div>
+          <div class="buddy-stat">🌿 <span class="buddy-stat-value">${b.streak || 0}</span> days shown up</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
           <span style="font-size:12px;color:var(--text-secondary)">Habits</span>
@@ -11174,7 +11175,8 @@ function checkWeeklySummaryNotification() {
 
   let summaryParts = [];
   if (avgMood !== null) summaryParts.push(`Mood: ${moodLabel} avg ${avgMood.toFixed(1)}/4`);
-  if (streak > 0) summaryParts.push(`${streak}-day streak`);
+  const daysUp = state.xpData?.daysShowedUp || streak;
+  if (daysUp > 0) summaryParts.push(`${daysUp} total days`);
   if (journalCount > 0) summaryParts.push(`${journalCount} journal ${journalCount === 1 ? 'entry' : 'entries'}`);
 
   const body = summaryParts.length > 0
