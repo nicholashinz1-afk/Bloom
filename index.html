@@ -2253,11 +2253,11 @@ body.theme-ocean #app-header::after {
   height: 2px;
   background: linear-gradient(90deg, transparent 0%, rgba(var(--sage-rgb),0.6) 50%, transparent 100%);
   background-size: 200% 100%;
-  animation: oceanShimmer 4s ease-in-out infinite;
+  animation: oceanShimmer 12s ease-in-out infinite;
 }
 @keyframes oceanShimmer {
-  0%, 100% { background-position: -100% 0; }
-  50%      { background-position: 200% 0; }
+  0%   { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* Rose — soft blush glow at top of scroll areas */
@@ -4897,7 +4897,7 @@ const THEMES = {
     bg: '#0d1318', bgMid: '#101820', bgCard: '#141e28', bgElevated: '#1a2838',
     bgOverlay: 'rgba(13,19,24,0.93)',
     primary: '#6a9ab0', primaryLight: '#9ec4d8', primaryDim: '#1a3a50',
-    textSecondary: '#7a9eb0', textMuted: '#3a5868', seasonal: '#9ec4d8',
+    textSecondary: '#88aec0', textMuted: '#4e6e80', seasonal: '#9ec4d8',
     accent: 'linear-gradient(90deg, #0d1a28, #3a6a80, #6a9ab0, #3a6a80, #0d1a28)',
     confetti: ['#6a9ab0','#9ec4d8','#4a7a90','#b8dae8','#e8e0d0'],
   },
@@ -4906,7 +4906,7 @@ const THEMES = {
     bg: '#180d10', bgMid: '#201015', bgCard: '#281418', bgElevated: '#341820',
     bgOverlay: 'rgba(24,13,16,0.93)',
     primary: '#b07878', primaryLight: '#d4a8a8', primaryDim: '#4a2030',
-    textSecondary: '#b08888', textMuted: '#603848', seasonal: '#d4a8a8',
+    textSecondary: '#c09898', textMuted: '#7a5060', seasonal: '#d4a8a8',
     accent: 'linear-gradient(90deg, #2a1418, #804858, #b07878, #804858, #2a1418)',
     confetti: ['#b07878','#d4a8a8','#c89090','#e8c8c8','#e8e0d0'],
   },
@@ -4915,7 +4915,7 @@ const THEMES = {
     bg: '#180f08', bgMid: '#20130a', bgCard: '#28180c', bgElevated: '#342010',
     bgOverlay: 'rgba(24,15,8,0.93)',
     primary: '#c9954a', primaryLight: '#e0b87a', primaryDim: '#5c3f1a',
-    textSecondary: '#b09060', textMuted: '#604830', seasonal: '#e0b87a',
+    textSecondary: '#c0a070', textMuted: '#785838', seasonal: '#e0b87a',
     accent: 'linear-gradient(90deg, #281a0a, #8a6530, #c9954a, #8a6530, #281a0a)',
     confetti: ['#c9954a','#e0b87a','#a87830','#f0d8a0','#e8e0d0'],
   },
@@ -4924,7 +4924,7 @@ const THEMES = {
     bg: '#1a1a22', bgMid: '#1e1e28', bgCard: '#24242e', bgElevated: '#2c2c38',
     bgOverlay: 'rgba(26,26,34,0.93)',
     primary: '#b5a8c8', primaryLight: '#d4c8e8', primaryDim: '#3e3650',
-    textSecondary: '#a8a0b8', textMuted: '#585068', seasonal: '#d4c8e8',
+    textSecondary: '#b0a8c0', textMuted: '#686080', seasonal: '#d4c8e8',
     accent: 'linear-gradient(90deg, #22202e, #7a6e98, #b5a8c8, #7a6e98, #22202e)',
     confetti: ['#b5a8c8','#d4c8e8','#9888b8','#e0d8f0','#e8e0d0'],
   },
@@ -4933,7 +4933,7 @@ const THEMES = {
     bg: '#12101a', bgMid: '#161420', bgCard: '#1c1a28', bgElevated: '#242232',
     bgOverlay: 'rgba(18,16,26,0.93)',
     primary: '#c8a0d8', primaryLight: '#e0c0f0', primaryDim: '#3e2850',
-    textSecondary: '#b8a0c8', textMuted: '#5a4870', seasonal: '#e0c0f0',
+    textSecondary: '#c0a8d0', textMuted: '#6a5880', seasonal: '#e0c0f0',
     pride: true,
     accent: 'linear-gradient(90deg, #e04050, #e87030, #e8c840, #50b868, #4080d0, #9050c8)',
     confetti: ['#e04050','#e87030','#e8c840','#50b868','#4080d0','#9050c8'],
