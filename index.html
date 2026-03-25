@@ -8161,15 +8161,17 @@ function renderWellnessTab() {
     <div style="text-align:center"><button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button></div>
   </div>`;
 
-  // --- EVENING WIND-DOWN (always available, not just from evening routine) ---
-  html += `<div style="margin-top:10px;background:linear-gradient(135deg,rgba(106,154,176,0.12),rgba(106,154,176,0.05));border:1px solid rgba(106,154,176,0.25);border-radius:var(--r-lg);padding:18px 16px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <span style="font-size:18px">🌙</span>
-      <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sky-light)">Wind down</div>
-    </div>
-    <div style="font-size:13px;color:rgba(106,154,176,0.7);margin-bottom:14px;font-style:italic">Evening check-in, journal prompt, and breathing — all in one gentle flow</div>
-    <div style="text-align:center"><button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="openWindDown()">Start wind-down</button></div>
-  </div>`;
+  // --- EVENING WIND-DOWN (only shown from 7pm onward) ---
+  if (new Date().getHours() >= 19) {
+    html += `<div style="margin-top:10px;background:linear-gradient(135deg,rgba(106,154,176,0.12),rgba(106,154,176,0.05));border:1px solid rgba(106,154,176,0.25);border-radius:var(--r-lg);padding:18px 16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:18px">🌙</span>
+        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sky-light)">Wind down</div>
+      </div>
+      <div style="font-size:13px;color:rgba(106,154,176,0.7);margin-bottom:14px;font-style:italic">Evening check-in, journal prompt, and breathing — all in one gentle flow</div>
+      <div style="text-align:center"><button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="openWindDown()">Start wind-down</button></div>
+    </div>`;
+  }
 
   // ── WEEKLY ─────────────────────────────────────────────────
   html += `<div style="font-family:Fraunces,serif;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.12em;padding:16px 4px 10px;display:flex;align-items:center;gap:8px"><span>This week</span><div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div></div>`;
@@ -8262,23 +8264,24 @@ function renderWellnessTab() {
     });
     html += `</div>`;
   }
-  html += `<div id="breath-section" style="margin:8px 0 0">
-    <div style="background:linear-gradient(135deg,rgba(106,154,176,0.12),rgba(106,154,176,0.05));border:1px solid rgba(106,154,176,0.25);border-radius:var(--r-lg);padding:18px 16px" id="breath-card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <span style="font-size:18px">🌬</span>
-        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sky-light)">Take a breath${infoIcon('breathing')}</div>
-        <div style="margin-left:auto;font-size:11px;color:var(--sky);background:rgba(106,154,176,0.15);padding:2px 8px;border-radius:99px">4-7-8</div>
-      </div>
-      <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
-      <div id="breath-ui" style="text-align:center">
-        <button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="startBreathing()">Begin breathing exercise</button>
-      </div>
-    </div>
-  </div>`;
-
   // --- SKILL-BUILDING MODULES ---
   html += `<div style="margin-top:16px">
     <div style="font-family:Fraunces,serif;font-size:16px;font-weight:400;color:var(--cream);margin-bottom:12px;padding:0 2px">Skill-building tools</div>
+
+    <!-- Take a Breath -->
+    <div id="breath-section" style="margin-bottom:10px">
+      <div style="background:linear-gradient(135deg,rgba(106,154,176,0.12),rgba(106,154,176,0.05));border:1px solid rgba(106,154,176,0.25);border-radius:var(--r-lg);padding:18px 16px" id="breath-card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <span style="font-size:18px">🌬</span>
+          <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sky-light)">Take a breath${infoIcon('breathing')}</div>
+          <div style="margin-left:auto;font-size:11px;color:var(--sky);background:rgba(106,154,176,0.15);padding:2px 8px;border-radius:99px">4-7-8</div>
+        </div>
+        <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
+        <div id="breath-ui" style="text-align:center">
+          <button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="startBreathing()">Begin breathing exercise</button>
+        </div>
+      </div>
+    </div>
 
     <!-- 5-4-3-2-1 Grounding -->
     <div style="background:linear-gradient(135deg,rgba(var(--sage-rgb),0.12),rgba(var(--sage-rgb),0.05));border:1px solid rgba(var(--sage-rgb),0.25);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:10px" id="grounding-card">
