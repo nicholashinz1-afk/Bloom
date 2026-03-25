@@ -2764,6 +2764,12 @@ select:focus {
   <div id="history-sheet-content" style="padding:0 20px 20px"></div>
 </div>
 
+<!-- Journal history sheet -->
+<div class="bottom-sheet" id="journal-history-sheet">
+  <div class="sheet-handle"></div>
+  <div id="journal-history-content" style="padding:0 20px 20px;max-height:70vh;overflow-y:auto"></div>
+</div>
+
 <!-- Reframe History sheet -->
 <div class="bottom-sheet" id="reframe-history-sheet">
   <div class="sheet-handle"></div>
@@ -7993,13 +7999,14 @@ function renderWeeklyTab() {
       const habitsStr = habitsArr.length > 0 ? `${habitsArr.length} habits` : '';
       const journal = day.journal ? '📝' : '';
 
-      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px">
+      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px;cursor:pointer" onclick="openHistoryDetail('${d}')">
         <div style="display:flex;align-items:center;gap:12px">
           <div style="font-size:22px;width:30px;text-align:center">${moodE}</div>
           <div style="flex:1">
             <div style="font-size:13px;color:var(--cream)">${dt.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'})}</div>
             <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${[habitsStr, journal].filter(Boolean).join(' · ') || 'No data'}</div>
           </div>
+          <div style="color:var(--text-muted);font-size:16px">›</div>
         </div>
       </div>`;
     });
@@ -8075,6 +8082,11 @@ function renderWellnessTab() {
       <button class="btn btn-ghost btn-sm" onclick="newJournalEntry('prompt')">New prompt</button>
       <button class="btn btn-ghost btn-sm" onclick="newJournalEntry('free')">Just write</button>
     </div>`;
+    if (totalJournalDays > 1 || (totalJournalDays === 1 && journalEntries.length === 0)) {
+      html += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
+        <button class="btn btn-ghost btn-sm" onclick="openJournalHistory()" style="font-size:11px;color:var(--text-muted)">📖 View past entries</button>
+      </div>`;
+    }
   } else {
     // No entries yet — show textarea
     html += `<textarea id="journal-textarea" placeholder="What's on your mind today..." rows="5" style="margin-bottom:10px">${state.journalDraft || ''}</textarea>
@@ -8083,6 +8095,11 @@ function renderWellnessTab() {
     </div>
     <div style="font-size:12px;color:var(--sky);margin-top:10px;display:flex;align-items:center;gap:5px"><span>✦</span> bloom will respond to what you write</div>
     <div id="journal-ai-response" style="display:none;margin-top:12px"></div>`;
+    if (totalJournalDays > 0) {
+      html += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
+        <button class="btn btn-ghost btn-sm" onclick="openJournalHistory()" style="font-size:11px;color:var(--text-muted)">📖 View past entries</button>
+      </div>`;
+    }
   }
   html += `</div>`;
 
@@ -9358,6 +9375,77 @@ function openHistoryDetail(dateStr) {
 
   document.getElementById('history-sheet-content').innerHTML = html;
   openSheet('history-sheet');
+}
+
+function openJournalHistory() {
+  const todayStr = today();
+  // Collect all dates with journal entries from both wellnessData and historyData
+  const journalDates = new Set();
+  const wellnessJournal = state.wellnessData?.journal || {};
+  Object.keys(wellnessJournal).forEach(d => {
+    if (getJournalEntries(d).length > 0) journalDates.add(d);
+  });
+  Object.keys(state.historyData || {}).forEach(d => {
+    const entry = state.historyData[d];
+    if (entry.journalEntries?.length > 0 || entry.journal) journalDates.add(d);
+  });
+
+  const dates = [...journalDates]
+    .filter(d => d !== todayStr)
+    .sort((a, b) => b.localeCompare(a));
+
+  let html = `<div style="font-family:Fraunces,serif;font-size:22px;font-weight:300;color:var(--cream);margin-bottom:16px">📖 Journal history</div>`;
+
+  if (dates.length === 0) {
+    html += `<div style="text-align:center;padding:24px 0">
+      <div style="font-size:13px;color:var(--text-muted);font-style:italic">Your past journal entries will appear here.</div>
+    </div>`;
+  } else {
+    let lastMonth = '';
+    dates.forEach(d => {
+      const date = new Date(d + 'T00:00:00');
+      const monthLabel = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      if (monthLabel !== lastMonth) {
+        lastMonth = monthLabel;
+        html += `<div style="font-size:12px;color:var(--text-muted);margin:12px 0 6px;font-weight:500">${monthLabel}</div>`;
+      }
+
+      // Get entries from wellnessData first, fall back to historyData
+      let entries = getJournalEntries(d);
+      let preview = '';
+      let count = entries.length;
+      if (count > 0) {
+        preview = entries[0].text || '';
+      } else {
+        const hist = state.historyData[d];
+        if (hist?.journalEntries?.length > 0) {
+          count = hist.journalEntries.length;
+          preview = hist.journalEntries[0].text || '';
+        } else if (hist?.journal) {
+          count = 1;
+          preview = hist.journal;
+        }
+      }
+      if (preview.length > 60) preview = preview.substring(0, 60) + '...';
+
+      const dateLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      const hasHistory = !!state.historyData[d];
+
+      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px;cursor:pointer" onclick="${hasHistory ? `closeSheet('journal-history-sheet');setTimeout(()=>openHistoryDetail('${d}'),300)` : ''}">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:22px;width:30px;text-align:center">📝</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;color:var(--cream)">${dateLabel}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${count} entry${count !== 1 ? 'ies' : ''}${preview ? ' · ' : ''}<span style="font-style:italic">${preview}</span></div>
+          </div>
+          ${hasHistory ? '<div style="color:var(--text-muted);font-size:16px">›</div>' : ''}
+        </div>
+      </div>`;
+    });
+  }
+
+  document.getElementById('journal-history-content').innerHTML = html;
+  openSheet('journal-history-sheet');
 }
 
 // ============================================================
