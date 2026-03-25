@@ -2396,22 +2396,6 @@ select:focus {
   80%      { transform: translateX(3px); }
 }
 
-/* ── Swipe tab transition direction ────────────────────── */
-.tab-panel.slide-left {
-  animation: tabSlideLeft 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-.tab-panel.slide-right {
-  animation: tabSlideRight 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-@keyframes tabSlideLeft {
-  from { opacity: 0; transform: translateX(30px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes tabSlideRight {
-  from { opacity: 0; transform: translateX(-30px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
 /* ── Scroll progress bar ───────────────────────────────── */
 .scroll-progress {
   position: absolute;
@@ -6479,25 +6463,10 @@ function showAIResponse(containerId, text) {
 //  TABS
 // ============================================================
 function switchTab(tab) {
-  document.querySelectorAll('.tab-panel').forEach(p => {
-    p.classList.remove('active', 'slide-left', 'slide-right');
-  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
   const panel = document.getElementById('tab-' + tab);
-
-  // If triggered by swipe, use directional slide and suppress the default tabFadeIn
-  if (_swipeDirection) {
-    panel.style.animation = 'none';
-    panel.classList.add('active', _swipeDirection);
-    // Re-enable default animation after this transition completes
-    setTimeout(() => {
-      panel.classList.remove('slide-left', 'slide-right');
-      panel.style.animation = '';
-    }, 260);
-  } else {
-    panel.classList.add('active');
-  }
-
+  panel.classList.add('active');
   const navBtn = document.getElementById('nav-' + tab);
   if (navBtn) { navBtn.classList.add('active'); navBtn.setAttribute('aria-selected', 'true'); }
   // Highlight settings gear when settings tab is active
@@ -6513,8 +6482,8 @@ function switchTab(tab) {
   if (tab === 'settings') renderSettingsTab();
   // Stop buddy polling when leaving community tab
   if (tab !== 'community') stopBuddyPolling();
-  // Stagger cards — skip during swipe (directional slide is enough)
-  if (!_swipeDirection) setTimeout(() => staggerCards(panel), 50);
+  // Stagger cards
+  setTimeout(() => staggerCards(panel), 50);
 }
 
 // ============================================================
@@ -6608,8 +6577,6 @@ function enhanceToggles() {
 // ============================================================
 //  SWIPE GESTURE NAVIGATION
 // ============================================================
-let _swipeDirection = null; // set during swipe to suppress competing animations
-
 (function initSwipeNav() {
   let startX = 0, startY = 0, swiping = false;
   const content = document.getElementById('tab-content');
@@ -6638,10 +6605,7 @@ let _swipeDirection = null; // set during swipe to suppress competing animations
     else if (dx > 0 && cur > 0) next = cur - 1;
     else return;
 
-    // Set direction flag — switchTab reads this to suppress tabFadeIn + staggerCards
-    _swipeDirection = dx < 0 ? 'slide-left' : 'slide-right';
     switchTab(TAB_ORDER[next]);
-    _swipeDirection = null;
   }, { passive: true });
 })();
 
