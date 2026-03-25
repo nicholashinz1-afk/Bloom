@@ -2284,14 +2284,26 @@ body.theme-pastel .card {
   box-shadow: inset 0 1px 30px rgba(var(--sage-rgb),0.1), 0 1px 4px rgba(0,0,0,0.4);
 }
 
-/* Pride — prismatic rainbow card borders */
+/* Gradient card borders — all themes (background-clip trick preserves border-radius) */
+.card {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    linear-gradient(135deg,
+      rgba(var(--sage-rgb),0.3) 0%,
+      rgba(var(--sage-light-rgb),0.15) 50%,
+      rgba(var(--sage-rgb),0.3) 100%
+    ) border-box;
+}
+
+/* Pride — rainbow gradient override */
 body.theme-pride .card {
-  border-image: linear-gradient(135deg,
-    rgba(224,64,80,0.25), rgba(232,112,48,0.25), rgba(232,200,64,0.25),
-    rgba(80,184,104,0.25), rgba(64,128,208,0.25), rgba(144,80,200,0.25)
-  ) 1;
-  border-width: 1px;
-  border-style: solid;
+  background:
+    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    linear-gradient(135deg,
+      rgba(224,64,80,0.35), rgba(232,112,48,0.35), rgba(232,200,64,0.35),
+      rgba(80,184,104,0.35), rgba(64,128,208,0.35), rgba(144,80,200,0.35)
+    ) border-box;
 }
 
 /* ── Hard day: dim accent bar and suppress signatures ──── */
