@@ -180,6 +180,30 @@
   .refresh-bar .last-refresh { font-size: 12px; color: var(--text-muted); }
   .refresh-bar .auto-label { font-size: 12px; color: var(--text-muted); margin-left: auto; }
   .loading { color: var(--text-muted); font-size: 13px; padding: 20px; text-align: center; }
+
+  /* Wall moderation */
+  .wall-admin-msg {
+    padding: 14px; margin-bottom: 8px; background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06); border-radius: var(--r-md);
+    transition: opacity 0.2s;
+  }
+  .wall-admin-msg.is-moderated { border-left: 3px solid var(--amber); opacity: 0.7; }
+  .wall-admin-msg.is-reported { border-left: 3px solid var(--red); }
+  .wall-msg-text { font-size: 14px; font-style: italic; line-height: 1.5; margin-bottom: 8px; }
+  .wall-msg-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 11px; color: var(--text-muted); }
+  .wall-msg-actions { display: flex; gap: 6px; margin-left: auto; }
+  .wall-msg-actions button {
+    padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04); color: var(--text-secondary); font-size: 11px; cursor: pointer;
+  }
+  .wall-msg-actions button:hover { background: rgba(255,255,255,0.08); }
+  .wall-msg-actions button.warn { border-color: rgba(201,149,74,0.3); color: var(--amber-light); }
+  .wall-msg-actions button.remove { border-color: rgba(212,93,93,0.3); color: var(--red); }
+  .wall-msg-actions button.clear { border-color: rgba(122,158,126,0.3); color: var(--sage-light); }
+  .wall-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+  .wall-badge.auto { background: rgba(201,149,74,0.12); color: var(--amber-light); }
+  .wall-badge.admin { background: rgba(212,93,93,0.12); color: var(--red); }
+  .wall-badge.reported { background: rgba(212,93,93,0.08); color: #e88; }
 </style>
 </head>
 <body>
@@ -218,6 +242,7 @@
     <div class="tab-btn" onclick="switchAdminTab('events')">Events</div>
     <div class="tab-btn" onclick="switchAdminTab('features')">Features</div>
     <div class="tab-btn" onclick="switchAdminTab('agents')">Agents</div>
+    <div class="tab-btn" onclick="switchAdminTab('wall')">Wall</div>
   </div>
 
   <!-- Overview -->
@@ -305,6 +330,28 @@
       <div class="card">
         <h2>Report History</h2>
         <div id="agent-history-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wall Moderation -->
+  <div class="tab-panel" id="panel-wall">
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h2>Encouragement Wall Moderation</h2>
+        <button onclick="loadWallMessages()" style="padding:6px 14px;background:var(--sage);color:#0a1a0b;border:none;border-radius:var(--r-md);font-size:12px;font-weight:600;cursor:pointer">Refresh</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+        Review and moderate wall messages. Warned messages appear greyed out with a content warning for users.
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button onclick="filterWallView('all')" class="wall-filter active" style="padding:5px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:16px;color:var(--cream);font-size:12px;cursor:pointer">All</button>
+        <button onclick="filterWallView('moderated')" class="wall-filter" style="padding:5px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;color:var(--text-secondary);font-size:12px;cursor:pointer">Moderated</button>
+        <button onclick="filterWallView('reported')" class="wall-filter" style="padding:5px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;color:var(--text-secondary);font-size:12px;cursor:pointer">Reported</button>
+        <button onclick="filterWallView('clean')" class="wall-filter" style="padding:5px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;color:var(--text-secondary);font-size:12px;cursor:pointer">Clean</button>
+      </div>
+      <div id="wall-admin-list">
+        <div class="loading">Click "Refresh" to load wall messages.</div>
       </div>
     </div>
   </div>
@@ -792,7 +839,101 @@ switchAdminTab = function(tab) {
   event.target.classList.add('active');
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'agents') loadAgentHistory();
+  if (tab === 'wall') loadWallMessages();
 };
+
+// ── Wall moderation ──────────────────────────────────────
+let wallAdminMessages = [];
+let wallFilter = 'all';
+
+async function loadWallMessages() {
+  const container = document.getElementById('wall-admin-list');
+  container.innerHTML = '<div class="loading">Loading wall messages...</div>';
+  try {
+    const res = await fetch('/api/wall');
+    const data = await res.json();
+    wallAdminMessages = data.messages || [];
+    renderWallAdmin();
+  } catch(e) {
+    container.innerHTML = '<div class="loading" style="color:var(--red)">Failed to load: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+function filterWallView(filter) {
+  wallFilter = filter;
+  document.querySelectorAll('.wall-filter').forEach(b => {
+    b.classList.remove('active');
+    b.style.background = 'rgba(255,255,255,0.04)';
+    b.style.color = 'var(--text-secondary)';
+    b.style.borderColor = 'rgba(255,255,255,0.08)';
+  });
+  event.target.classList.add('active');
+  event.target.style.background = 'rgba(255,255,255,0.08)';
+  event.target.style.color = 'var(--cream)';
+  event.target.style.borderColor = 'rgba(255,255,255,0.12)';
+  renderWallAdmin();
+}
+
+function renderWallAdmin() {
+  const container = document.getElementById('wall-admin-list');
+  let msgs = wallAdminMessages;
+
+  if (wallFilter === 'moderated') msgs = msgs.filter(m => m.moderated);
+  else if (wallFilter === 'reported') msgs = msgs.filter(m => m.reports > 0);
+  else if (wallFilter === 'clean') msgs = msgs.filter(m => !m.moderated && !(m.reports > 0));
+
+  if (msgs.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:16px;text-align:center">No messages match this filter.</div>';
+    return;
+  }
+
+  container.innerHTML = msgs.map(msg => {
+    const classes = ['wall-admin-msg'];
+    if (msg.moderated) classes.push('is-moderated');
+    if (msg.reports > 0) classes.push('is-reported');
+
+    let badges = '';
+    if (msg.moderated === 'auto') badges += '<span class="wall-badge auto">auto-flagged</span> ';
+    if (msg.moderated === 'admin') badges += '<span class="wall-badge admin">admin-warned</span> ';
+    if (msg.reports > 0) badges += '<span class="wall-badge reported">' + msg.reports + ' report' + (msg.reports > 1 ? 's' : '') + '</span> ';
+
+    const actions = msg.moderated
+      ? `<button class="clear" onclick="moderateWallMsg('${msg.id}','clear')">Clear warning</button>
+         <button class="remove" onclick="moderateWallMsg('${msg.id}','remove')">Remove</button>`
+      : `<button class="warn" onclick="moderateWallMsg('${msg.id}','warn')">Warn</button>
+         <button class="remove" onclick="moderateWallMsg('${msg.id}','remove')">Remove</button>`;
+
+    return `<div class="${classes.join(' ')}">
+      <div class="wall-msg-text">"${escapeHtml(msg.text)}"</div>
+      <div class="wall-msg-meta">
+        ${badges}
+        <span>${msg.hearts || 0} hearts</span>
+        <span>${timeAgo(msg.ts)}</span>
+        <span style="opacity:0.5">id: ${msg.id}</span>
+        <div class="wall-msg-actions">${actions}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function moderateWallMsg(id, type) {
+  if (type === 'remove' && !confirm('Remove this message permanently?')) return;
+  try {
+    const res = await fetch('/api/wall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'moderate', id, type, adminKey }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      await loadWallMessages();
+    } else {
+      alert('Moderation failed: ' + (data.error || 'Unknown error'));
+    }
+  } catch(e) {
+    alert('Network error: ' + e.message);
+  }
+}
 
 // Auto-focus the key input
 document.getElementById('admin-key-input').focus();
