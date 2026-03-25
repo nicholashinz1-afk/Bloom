@@ -4637,7 +4637,7 @@ function activateHardDayMode() {
   saveState();
   archiveToday();
   playSound('hard_day');
-  trackEvent('hard_day_activated');
+  trackEvent('hard_day_activated', { mood: state.todayData.mood, habitsCompleted: Object.keys(state.todayData).filter(k => (k.endsWith('_am') || k.endsWith('_pm') || k.endsWith('_any')) && state.todayData[k]).length });
   // Dim the UI to feel calmer
   document.body.classList.add('hard-day-active');
   closeAllSheets();
@@ -6474,6 +6474,83 @@ function errorBoundary(fn, context) {
   };
 }
 
+// ── IndexedDB performance metrics ──────────────────────────
+const _origDbSet = typeof dbSet === 'function' ? dbSet : null;
+const _origDbGet = typeof dbGet === 'function' ? dbGet : null;
+
+if (_origDbSet) {
+  dbSet = async function(key, value) {
+    const start = performance.now();
+    try {
+      const result = await _origDbSet(key, value);
+      const duration = Math.round(performance.now() - start);
+      if (duration > 500) sendTelemetry('idb_slow', { meta: { op: 'set', key, duration } });
+      return result;
+    } catch(err) {
+      sendTelemetry('idb_error', { meta: { op: 'set', key, error: String(err.message || err).slice(0, 200) } });
+      throw err;
+    }
+  };
+}
+
+if (_origDbGet) {
+  dbGet = async function(key) {
+    const start = performance.now();
+    try {
+      const result = await _origDbGet(key);
+      const duration = Math.round(performance.now() - start);
+      if (duration > 500) sendTelemetry('idb_slow', { meta: { op: 'get', key, duration } });
+      return result;
+    } catch(err) {
+      sendTelemetry('idb_error', { meta: { op: 'get', key, error: String(err.message || err).slice(0, 200) } });
+      throw err;
+    }
+  };
+}
+
+// ── Session start diagnostics ─────────────────────────────
+(function captureSessionDiagnostics() {
+  const navEntry = performance.getEntriesByType('navigation')[0];
+  const sessionMeta = {
+    loadTime: navEntry ? Math.round(navEntry.loadEventEnd - navEntry.startTime) : null,
+    domReady: navEntry ? Math.round(navEntry.domContentLoadedEventEnd - navEntry.startTime) : null,
+    returning: !!load('bloom_state', null),
+    tabVisible: !document.hidden,
+    online: navigator.onLine,
+    idbAvailable: !!db,
+  };
+  // Delay to ensure load metrics are populated
+  setTimeout(() => {
+    const nav = performance.getEntriesByType('navigation')[0];
+    if (nav) {
+      sessionMeta.loadTime = Math.round(nav.loadEventEnd - nav.startTime);
+      sessionMeta.domReady = Math.round(nav.domContentLoadedEventEnd - nav.startTime);
+    }
+    sendTelemetry('session_diagnostics', { meta: sessionMeta });
+  }, 3000);
+})();
+
+// ── Mood pattern tracking ─────────────────────────────────
+function trackMoodPattern(val) {
+  const history = load('bloom_history', {});
+  const recentDays = Object.keys(history).sort().slice(-7);
+  const recentMoods = recentDays.map(d => history[d]?.mood).filter(m => m !== undefined && m >= 0);
+  const meta = {
+    current: val,
+    recentAvg: recentMoods.length ? +(recentMoods.reduce((a, b) => a + b, 0) / recentMoods.length).toFixed(1) : null,
+    recentCount: recentMoods.length,
+    trend: recentMoods.length >= 3 ? (recentMoods[recentMoods.length - 1] - recentMoods[0] > 0 ? 'improving' : recentMoods[recentMoods.length - 1] - recentMoods[0] < 0 ? 'declining' : 'stable') : 'insufficient_data',
+    isLow: val >= 0 && val <= 1,
+    isUnknown: val === -1,
+  };
+  sendTelemetry('mood_pattern', { meta });
+}
+
+// ── AI reflection journey tracking ────────────────────────
+function trackAIJourney(context, source) {
+  sendTelemetry('ai_journey', { meta: { context, source, hasName: !!(state.prefs?.name), hardDay: !!state.hardDayMode } });
+}
+
 window.onerror = function(message, source, lineno, colno, error) {
   const errLog = load('bloom_error_log', []);
   errLog.push({ message: String(message).slice(0, 300), url: source, line: lineno, ts: Date.now() });
@@ -6546,6 +6623,9 @@ function getScriptedResponse() {
 const AI_FALLBACK_RESPONSE = "You showed up today, and that matters. Whatever you're carrying, you don't have to carry it alone.";
 
 async function callClaude(prompt, systemPrompt) {
+  // Track AI reflection usage for journey analysis
+  const aiSource = prompt.includes('journal') ? 'journal' : prompt.includes('reflection') ? 'reflection' : prompt.includes('hard day') ? 'hard_day' : prompt.includes('weekly') || prompt.includes('week') ? 'weekly_insight' : prompt.includes('monthly') || prompt.includes('month') ? 'monthly_reflection' : 'other';
+  trackAIJourney(aiSource, aiSource);
   try {
     const name = state.prefs?.name;
     const nameContext = name ? ` The user's name is ${name} — use it occasionally but naturally, not in every sentence.` : '';
@@ -7702,6 +7782,7 @@ function logMood(val) {
   const prevMood = state.todayData.mood;
   state.todayData.mood = val;
   trackFeature('mood_log');
+  trackMoodPattern(val);
   // Clear feelings if mood changed
   if (prevMood !== val) state.todayData.feelings = [];
   saveState();

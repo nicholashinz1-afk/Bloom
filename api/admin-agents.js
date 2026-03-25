@@ -109,6 +109,40 @@ ${featureRanking || 'No feature data'}
 Helpful: ${fbYes}, Not helpful: ${fbNo}
 ${fbRecent.slice(-10).map(f => `  ${f.context}: ${f.value}`).join('\n')}
 
+## AI Reflection User Journey
+${(() => {
+    const journeys = data.events.filter(e => e.event === 'ai_journey');
+    if (!journeys.length) return 'No AI journey data yet';
+    const sources = {};
+    journeys.forEach(e => { try { const m = JSON.parse(e.meta); sources[m.source] = (sources[m.source] || 0) + 1; } catch {} });
+    return Object.entries(sources).sort(([,a],[,b]) => b - a).map(([s, c]) => `  ${s}: ${c} reflections`).join('\n');
+  })()}
+
+## Session Diagnostics
+${(() => {
+    const sessions = data.events.filter(e => e.event === 'session_diagnostics');
+    if (!sessions.length) return 'No session diagnostics yet';
+    const latest = sessions[sessions.length - 1];
+    try { const m = JSON.parse(latest.meta); return `  Load time: ${m.loadTime}ms, DOM ready: ${m.domReady}ms, Returning user: ${m.returning}, IDB available: ${m.idbAvailable}`; } catch { return '  Unable to parse'; }
+  })()}
+
+## Mood Patterns
+${(() => {
+    const moods = data.events.filter(e => e.event === 'mood_pattern');
+    if (!moods.length) return 'No mood pattern data yet';
+    const latest = moods[moods.length - 1];
+    try {
+      const m = JSON.parse(latest.meta);
+      return `  Latest mood: ${m.current}, 7-day avg: ${m.recentAvg}, Trend: ${m.trend}, Low mood: ${m.isLow}, Unknown selected: ${m.isUnknown}`;
+    } catch { return '  Unable to parse'; }
+  })()}
+
+## Hard Day Mode Usage
+${(() => {
+    const hdEvents = data.events.filter(e => e.event === 'hard_day_activated');
+    return hdEvents.length ? `${hdEvents.length} activations in tracked period` : 'No hard day activations';
+  })()}
+
 ## Recent Events
 ${data.events.slice(-20).map(e => `  ${e.event}${e.meta ? ' — ' + e.meta : ''}`).join('\n') || 'None'}
 
@@ -122,7 +156,7 @@ Provide your audit as JSON with this structure:
   "summary": "1-2 sentence overall UX health summary"
 }
 
-Focus on: engagement patterns, underused features, drop-offs, AI satisfaction trends, potential UX friction points. Be specific and actionable.`;
+Focus on: engagement patterns, underused features, AI reflection journey (which features drive AI usage), hard day mode discoverability, session performance, mood logging patterns, navigation friction. Be specific and actionable.`;
 }
 
 function buildClinicalPrompt(data) {
@@ -188,6 +222,28 @@ ${(() => {
     return `Allowed: ${allowed}, Flagged (self-harm, crisis resources shown): ${flagged}, Blocked (harmful): ${blocked}\nRecent flagged:\n${flaggedDetails.map(e => `  ${new Date(e.ts).toISOString().slice(0,16)} — ${JSON.parse(e.meta).source}`).join('\n') || '  None'}`;
   })()}
 
+## Mood Logging Patterns
+${(() => {
+    const moods = data.events.filter(e => e.event === 'mood_pattern');
+    if (!moods.length) return 'No mood pattern data yet';
+    const lowCount = moods.filter(e => { try { return JSON.parse(e.meta).isLow; } catch { return false; } }).length;
+    const unknownCount = moods.filter(e => { try { return JSON.parse(e.meta).isUnknown; } catch { return false; } }).length;
+    const latest = moods[moods.length - 1];
+    try {
+      const m = JSON.parse(latest.meta);
+      return `Total mood logs: ${moods.length}, Low moods: ${lowCount}, "I don't know" selected: ${unknownCount}\nLatest: mood=${m.current}, 7-day avg=${m.recentAvg}, trend=${m.trend}`;
+    } catch { return `Total mood logs: ${moods.length}`; }
+  })()}
+
+## Hard Day Mode & Crisis Resources
+${(() => {
+    const hd = data.events.filter(e => e.event === 'hard_day_activated');
+    const crisis = data.dailyStats;
+    let crisisTotal = 0;
+    Object.values(crisis).forEach(s => { crisisTotal += s['feature:crisis'] || 0; });
+    return `Hard day activations: ${hd.length}, Crisis resource opens: ${crisisTotal}`;
+  })()}
+
 Provide your audit as JSON with this structure:
 {
   "status": "healthy" | "needs_attention" | "critical",
@@ -198,7 +254,7 @@ Provide your audit as JSON with this structure:
   "summary": "1-2 sentence clinical safety summary"
 }
 
-Focus on: AI response quality/satisfaction trends, crisis resource accessibility, content safety signals, moderation effectiveness, clinical feature engagement, any patterns suggesting users may not be getting adequate support. Be compassionate but thorough.`;
+Focus on: AI response quality/satisfaction trends, crisis resource accessibility and usage, content safety signals, moderation effectiveness, clinical feature engagement, mood logging patterns (especially low moods and "I don't know" selections), hard day mode discoverability and usage, any patterns suggesting users may not be getting adequate support. Be compassionate but thorough.`;
 }
 
 function buildSecurityPrompt(data) {
@@ -275,6 +331,30 @@ ${(() => {
     return `Allowed: ${allowed}, Flagged (crisis resources shown): ${flagged}, Blocked: ${blocked}`;
   })()}
 
+## IndexedDB Performance
+${(() => {
+    const slow = data.events.filter(e => e.event === 'idb_slow');
+    const errors = data.events.filter(e => e.event === 'idb_error');
+    if (!slow.length && !errors.length) return 'No IndexedDB issues detected (operations under 500ms)';
+    let out = '';
+    if (slow.length) out += `Slow operations (>500ms): ${slow.length}\n${slow.slice(-5).map(e => { try { const m = JSON.parse(e.meta); return '  ' + m.op + ' ' + m.key + ': ' + m.duration + 'ms'; } catch { return ''; } }).filter(Boolean).join('\n')}`;
+    if (errors.length) out += `\nIDB errors: ${errors.length}\n${errors.slice(-5).map(e => { try { const m = JSON.parse(e.meta); return '  ' + m.op + ' ' + m.key + ': ' + m.error; } catch { return ''; } }).filter(Boolean).join('\n')}`;
+    return out;
+  })()}
+
+## Session Performance
+${(() => {
+    const sessions = data.events.filter(e => e.event === 'session_diagnostics');
+    if (!sessions.length) return 'No session diagnostics yet';
+    const loadTimes = sessions.map(e => { try { return JSON.parse(e.meta).loadTime; } catch { return null; } }).filter(Boolean);
+    const avg = loadTimes.length ? Math.round(loadTimes.reduce((a,b) => a+b, 0) / loadTimes.length) : null;
+    const latest = sessions[sessions.length - 1];
+    try {
+      const m = JSON.parse(latest.meta);
+      return `Sessions tracked: ${sessions.length}, Avg load time: ${avg}ms\nLatest: load=${m.loadTime}ms, DOM=${m.domReady}ms, online=${m.online}, IDB=${m.idbAvailable}`;
+    } catch { return `Sessions tracked: ${sessions.length}`; }
+  })()}
+
 ## Recent Events (last 20)
 ${recentEvents.slice(-20).map(e => `  ${e.event}${e.meta ? ' — ' + e.meta : ''}`).join('\n') || 'None'}
 
@@ -288,7 +368,7 @@ Provide your audit as JSON with this structure:
   "summary": "1-2 sentence technical/security health summary"
 }
 
-Focus on: error rate trends, recurring error patterns, potential security concerns, API health, data integrity signals, performance indicators, any anomalous patterns. Be specific and actionable.`;
+Focus on: error rate trends, recurring error patterns, potential security concerns, API health and response times, IndexedDB performance, session load times, data integrity signals, any anomalous patterns. Be specific and actionable.`;
 }
 
 const AGENTS = {

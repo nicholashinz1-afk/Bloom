@@ -76,6 +76,7 @@ function validateEvent(body) {
     'hard_day_activated', 'crisis_opened', 'journal_saved',
     'wall_post', 'onboarding_complete', 'encrypted_backup',
     'api_timing', 'health_check', 'error_boundary',
+    'idb_slow', 'idb_error', 'session_diagnostics', 'mood_pattern', 'ai_journey',
   ];
   if (!type || !allowed.includes(type)) return false;
   return true;
