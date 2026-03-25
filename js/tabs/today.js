@@ -6,7 +6,7 @@ import { DAILY_HABITS, MEDICATION_HABIT, SELF_CARE_CATEGORIES, SELF_CARE_TASKS, 
 import { getLevel, getNextLevel, addXP, buildFlowerSVG, showXPFloat, burstParticles, burstHearts, bounceMoodBtn, animateWaterBottle } from '../xp.js';
 import { celebrate, showUndoToast } from '../celebrate.js';
 import { callClaude, renderAIResponseHTML, showThinking } from '../ai.js';
-import { sendTelemetry, trackFeature } from '../telemetry.js';
+import { sendTelemetry, trackFeature, trackMoodPattern } from '../telemetry.js';
 import { bloomIcon } from '../icons.js';
 import { THEMES } from '../theme.js';
 import { staggerCards } from '../ui.js';
@@ -902,6 +902,7 @@ function logMood(val) {
   const prevMood = state.todayData.mood;
   state.todayData.mood = val;
   trackFeature('mood_log');
+  trackMoodPattern(val);
   // Clear feelings if mood changed
   if (prevMood !== val) state.todayData.feelings = [];
   saveState();
