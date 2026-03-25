@@ -1,7 +1,7 @@
 // Bloom progress tab — stats, XP, levels, flower, history, insights
-import { state, today, getWeekDates, formatDateLabel, getDayIndex, saveState } from '../state.js';
+import { state, today, getWeekDates, formatDateLabel, getDayIndex, dayOfWeek, saveState } from '../state.js';
 import { save, load } from '../storage.js';
-import { haptic } from '../utils.js';
+import { haptic, escapeHtml } from '../utils.js';
 import { LEVELS } from '../constants.js';
 import { getLevel, getNextLevel, buildFlowerSVG, buildStreakTreeSVG } from '../xp.js';
 import { getMoodPattern, getMoodHabitCorrelation, shareWeekInReview } from '../features/mood.js';
@@ -9,6 +9,9 @@ import { callClaude, renderAIResponseHTML, showThinking } from '../ai.js';
 import { bloomIcon } from '../icons.js';
 import { infoIcon } from '../sheets.js';
 import { getSeasonalInsights } from '../seasonal.js';
+
+// Late-bound cross-module references (avoid circular imports)
+function openSheet(...args) { return window.openSheet?.(...args); }
 
 function renderProgressTab() {
   const scroll = document.getElementById('progress-scroll');

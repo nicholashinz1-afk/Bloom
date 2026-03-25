@@ -7,6 +7,10 @@ import { XP_VALUES, HABIT_AFFIRMATIONS, DAILY_HABITS, MEDICATION_HABIT } from '.
 import { sendTelemetry } from './telemetry.js';
 import { updateStreak } from './streaks.js';
 
+// Late-bound cross-module references (avoid circular imports)
+function renderTodayTab(...args) { return window.renderTodayTab?.(...args); }
+function renderWeeklyTab(...args) { return window.renderWeeklyTab?.(...args); }
+
 export function toggleHabit(habitId, el) {
   const wasDone = state.todayData[habitId];
   state.todayData[habitId] = !wasDone;
@@ -287,6 +291,9 @@ export function showPartialCompletionToast(type) {
 // ============================================================
 //  TODAY ARCHIVE (for history)
 // ============================================================
+window.archiveToday = archiveToday;
+window.checkFirstTaskStreak = checkFirstTaskStreak;
+
 export function archiveToday() {
   const t = today();
   if (!state.historyData[t]) state.historyData[t] = {};

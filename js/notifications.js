@@ -2,8 +2,17 @@
 import { state, today, getDayIndex, dayOfWeek, getWeekDates, saveState } from './state.js';
 import { save, load } from './storage.js';
 import { haptic } from './utils.js';
+import { updateStreak } from './streaks.js';
 import { DAILY_HABITS, MEDICATION_HABIT, DAILY_QUOTES } from './constants.js';
 import { bloomIcon } from './icons.js';
+
+// Late-bound cross-module references (avoid circular imports)
+function renderTodayTab(...args) { return window.renderTodayTab?.(...args); }
+function switchTab(...args) { return window.switchTab?.(...args); }
+function openSheet(...args) { return window.openSheet?.(...args); }
+function closeAllSheets(...args) { return window.closeAllSheets?.(...args); }
+function archiveToday(...args) { return window.archiveToday?.(...args); }
+function loadState(...args) { return window.loadState?.(...args); }
 
 function checkDailyAffirmation() {
   const lastShown = load('bloom_affirmation_date', null);

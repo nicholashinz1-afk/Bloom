@@ -1,7 +1,9 @@
 // Bloom settings tab — preferences, habit config, data management, accessibility
 import { state, today, weekStart, saveState } from '../state.js';
 import { save, load } from '../storage.js';
-import { haptic, playSound } from '../utils.js';
+import { haptic, playSound, escapeHtml } from '../utils.js';
+import { celebrate } from '../celebrate.js';
+import { addXP, getLevel } from '../xp.js';
 import { DAILY_HABITS, MEDICATION_HABIT, SELF_CARE_CATEGORIES, SELF_CARE_TASKS, VERSION } from '../constants.js';
 import { THEMES, setTheme } from '../theme.js';
 import { bloomIcon } from '../icons.js';
@@ -10,6 +12,10 @@ import { showBackupSheet } from '../backup.js';
 import { openSheet, closeAllSheets } from '../sheets.js';
 import { switchTab } from '../router.js';
 import { renderTodayTab } from './today.js';
+
+// Late-bound cross-module references (avoid circular imports)
+function archiveToday(...args) { return window.archiveToday?.(...args); }
+function checkFirstTaskStreak(...args) { return window.checkFirstTaskStreak?.(...args); }
 
 function renderSettingsTab() {
   const scroll = document.getElementById('settings-scroll');

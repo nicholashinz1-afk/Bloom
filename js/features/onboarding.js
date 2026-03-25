@@ -6,6 +6,9 @@ import { THEMES, initTheme } from '../theme.js';
 import { haptic, playSound } from '../utils.js';
 import { bloomIcon } from '../icons.js';
 
+// Late-bound cross-module references (avoid circular imports)
+function saveState(...args) { return window.saveState?.(...args); }
+
 let obStep = 0;
 let obData = {
   name: '',

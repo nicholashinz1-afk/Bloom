@@ -15,6 +15,11 @@ import { toggleHabit, toggleWeeklyHabit, toggleHouseholdTask, checkFirstTaskStre
 import { openOpenJournal, toggleGentleMode, activateHardDayMode, openWindDown } from '../features/hardday.js';
 import { updateStreak } from '../streaks.js';
 
+// Late-bound cross-module references (avoid circular imports)
+function switchTab(...args) { return window.switchTab?.(...args); }
+function openCrisisSheet(...args) { return window.openCrisisSheet?.(...args); }
+function archiveToday(...args) { return window.archiveToday?.(...args); }
+
 function renderTodayTop() {
   const container = document.getElementById('today-top');
   if (!container) return;

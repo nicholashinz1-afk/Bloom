@@ -1,4 +1,5 @@
 import { state, today, getWeekDates, formatDateLabel } from '../state.js';
+import { getLevel } from '../xp.js';
 
 function getMoodPattern() {
   const history = state.historyData;

@@ -1,11 +1,15 @@
 // Bloom buddy — peer-to-peer mutual support system (client-side)
 import { state, today } from '../state.js';
 import { save, load } from '../storage.js';
-import { haptic } from '../utils.js';
+import { haptic, escapeHtml } from '../utils.js';
 import { bloomIcon, buddyIcon } from '../icons.js';
 import { sendTelemetry, trackFeature } from '../telemetry.js';
 import { addXP } from '../xp.js';
 import { openSheet, closeAllSheets } from '../sheets.js';
+
+// Late-bound cross-module references (avoid circular imports)
+function switchTab(...args) { return window.switchTab?.(...args); }
+function openCrisisSheet(...args) { return window.openCrisisSheet?.(...args); }
 
 let bloomBuddyId = load('bloom_buddy_id', null);
 // Generate buddy ID immediately so it shows in Settings

@@ -5,6 +5,10 @@ import { haptic, playSound } from './utils.js';
 import { launchConfetti } from './ui.js';
 import { addXP, showXPFloat, burstHearts, burstParticles } from './xp.js';
 
+// Late-bound cross-module references (avoid circular imports)
+function renderTodayTab(...args) { return window.renderTodayTab?.(...args); }
+function archiveToday(...args) { return window.archiveToday?.(...args); }
+
 export let undoTimeout = null;
 export let undoData = null;
 

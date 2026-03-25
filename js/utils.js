@@ -227,3 +227,17 @@ export function playSound(type, param) {
 
 // ── Animated checkmark SVG ───────────────────────────────────
 export const CHECK_SVG = '<svg class="habit-check-svg" viewBox="0 0 16 16"><path class="check-path" d="M3.5 8.5L6.5 11.5L12.5 4.5"/></svg>';
+
+// ── HTML escaping ──────────────────────────────────────────
+export function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Simple toast (stub for missing original) ────────────────
+export function showToast(msg) {
+  const div = document.createElement('div');
+  div.className = 'toast';
+  div.textContent = msg;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 3000);
+}

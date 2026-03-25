@@ -7,6 +7,11 @@ import { switchTab } from './router.js';
 import { bloomIcon } from './icons.js';
 import { haptic } from './utils.js';
 
+// Late-bound cross-module references (avoid circular imports)
+function renderTodayTab(...args) { return window.renderTodayTab?.(...args); }
+function openSheet(...args) { return window.openSheet?.(...args); }
+function closeAllSheets(...args) { return window.closeAllSheets?.(...args); }
+
 function showWhatsNew(force = false) {
   if (!load('bloom_tutorial_done') && !force) return;
   if (!force && load('bloom_version') === VERSION) return;

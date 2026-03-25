@@ -1,5 +1,6 @@
 import { save as saveKey, load, today } from './storage.js';
 import { VERSION } from './constants.js';
+import { showToast } from './utils.js';
 
 export function sendTelemetry(type, data) {
   try {

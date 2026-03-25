@@ -1,6 +1,6 @@
 import { state, today, saveState, loadState } from './state.js';
 import { save, load } from './storage.js';
-import { haptic } from './utils.js';
+import { haptic, showToast } from './utils.js';
 import { sendTelemetry, trackEvent } from './telemetry.js';
 import { VERSION } from './constants.js';
 import { openSheet } from './sheets.js';

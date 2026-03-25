@@ -1,6 +1,7 @@
 import { state, getWeekDates, formatDateLabel, today } from '../state.js';
 import { DAILY_HABITS, MEDICATION_HABIT } from '../constants.js';
 import { bloomIcon } from '../icons.js';
+import { CHECK_SVG } from '../utils.js';
 
 function renderWeeklyTab() {
   const scroll = document.getElementById('weekly-scroll');

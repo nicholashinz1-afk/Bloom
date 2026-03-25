@@ -1,8 +1,20 @@
-import { state, today } from '../state.js';
+import { state, today, saveState } from '../state.js';
 import { save, load } from '../storage.js';
-import { haptic } from '../utils.js';
-import { callClaude, renderAIResponseHTML, showThinking } from '../ai.js';
-import { sendTelemetry, trackFeature } from '../telemetry.js';
+import { haptic, playSound } from '../utils.js';
+import { callClaude, renderAIResponseHTML, showThinking, getScriptedResponse } from '../ai.js';
+import { sendTelemetry, trackFeature, trackEvent } from '../telemetry.js';
+import { addXP } from '../xp.js';
+import { openSheet, closeAllSheets } from '../sheets.js';
+import { checkMilestones } from '../streaks.js';
+
+// Late-bound cross-module references (avoid circular imports)
+function renderWellnessTab(...args) { return window.renderWellnessTab?.(...args); }
+function switchTab(...args) { return window.switchTab?.(...args); }
+function openCrisisSheet(...args) { return window.openCrisisSheet?.(...args); }
+
+// Late-bound references to avoid circular imports
+function archiveToday() { if (window.archiveToday) window.archiveToday(); }
+function renderTodayTab() { if (window.renderTodayTab) window.renderTodayTab(); }
 
 function openOpenJournal() {
   closeAllSheets();

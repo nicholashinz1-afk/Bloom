@@ -1,13 +1,18 @@
 // Bloom wellness tab — journal, breathing, grounding, body scan, reframing, wins, affirmations
 import { state, today, getDayIndex, getWeekDates, formatDateLabel, getJournalPrompt, saveState } from '../state.js';
 import { save, load } from '../storage.js';
-import { haptic } from '../utils.js';
+import { haptic, escapeHtml, playSound } from '../utils.js';
+import { celebrate } from '../celebrate.js';
 import { REFLECTION_QUESTIONS } from '../constants.js';
 import { callClaude, renderAIResponseHTML, showThinking } from '../ai.js';
 import { sendTelemetry, trackFeature } from '../telemetry.js';
 import { bloomIcon } from '../icons.js';
 import { addXP } from '../xp.js';
 import { infoIcon } from '../sheets.js';
+
+// Late-bound cross-module references (avoid circular imports)
+function archiveToday(...args) { return window.archiveToday?.(...args); }
+function checkFirstTaskStreak(...args) { return window.checkFirstTaskStreak?.(...args); }
 
 function renderWellnessTab() {
   const scroll = document.getElementById('wellness-scroll');

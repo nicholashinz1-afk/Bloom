@@ -1,10 +1,13 @@
 // Bloom community tab — encouragement wall + buddy list
 import { state } from '../state.js';
 import { save, load } from '../storage.js';
-import { haptic } from '../utils.js';
+import { haptic, escapeHtml } from '../utils.js';
 import { bloomIcon, buddyIcon } from '../icons.js';
 import { sendTelemetry, trackFeature } from '../telemetry.js';
 import { renderBuddyContent } from '../features/buddy.js';
+
+// Late-bound cross-module references (avoid circular imports)
+function openCrisisSheet(...args) { return window.openCrisisSheet?.(...args); }
 
 let wallMessages = [];
 let wallLoading = false;
@@ -269,9 +272,7 @@ function getTimeAgo(ts) {
   return `${Math.floor(days / 7)}w ago`;
 }
 
-function escapeHtml(str) {
-
-export { renderCommunityTab, fetchWallMessages, renderWallMessages, escapeHtml, getTimeAgo };
+export { renderCommunityTab, fetchWallMessages, renderWallMessages, getTimeAgo };
 
 window.renderCommunityTab = renderCommunityTab;
 window.postToWall = postToWall;
