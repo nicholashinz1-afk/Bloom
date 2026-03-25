@@ -6414,6 +6414,13 @@ function archiveToday() {
 // ============================================================
 //  TELEMETRY & ERROR CAPTURE
 // ============================================================
+// Anonymous user ID for unique user counts (no PII — just a random token)
+let _bloomUid = load('bloom_uid', null);
+if (!_bloomUid) {
+  _bloomUid = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  save('bloom_uid', _bloomUid);
+}
+
 function sendTelemetry(type, data) {
   try {
     fetch('/api/diagnostics', {
@@ -6517,24 +6524,19 @@ if (_origDbGet) {
 
 // ── Session start diagnostics ─────────────────────────────
 (function captureSessionDiagnostics() {
-  const navEntry = performance.getEntriesByType('navigation')[0];
-  const sessionMeta = {
-    loadTime: navEntry ? Math.round(navEntry.loadEventEnd - navEntry.startTime) : null,
-    domReady: navEntry ? Math.round(navEntry.domContentLoadedEventEnd - navEntry.startTime) : null,
-    returning: !!load('bloom_state', null),
-    tabVisible: !document.hidden,
-    online: navigator.onLine,
-    idbAvailable: !!db,
-  };
-  // Delay to ensure load metrics are populated
+  // Delay to ensure both navigation metrics and IndexedDB are ready
   setTimeout(() => {
     const nav = performance.getEntriesByType('navigation')[0];
-    if (nav) {
-      sessionMeta.loadTime = Math.round(nav.loadEventEnd - nav.startTime);
-      sessionMeta.domReady = Math.round(nav.domContentLoadedEventEnd - nav.startTime);
-    }
+    const sessionMeta = {
+      loadTime: nav ? Math.round(nav.loadEventEnd - nav.startTime) : null,
+      domReady: nav ? Math.round(nav.domContentLoadedEventEnd - nav.startTime) : null,
+      returning: !!load('bloom_state', null),
+      tabVisible: !document.hidden,
+      online: navigator.onLine,
+      idbAvailable: !!db,
+    };
     sendTelemetry('session_diagnostics', { meta: sessionMeta });
-  }, 3000);
+  }, 5000);
 })();
 
 // ── Mood pattern tracking ─────────────────────────────────
@@ -14483,7 +14485,7 @@ function initApp() {
     document.body.classList.add('high-contrast');
   }
   checkForUpdate();
-  trackEvent('session_start');
+  sendTelemetry('session_start', { uid: _bloomUid });
   renderDailyQuote();
   applySeasonalTheme();
   checkNewWeek();

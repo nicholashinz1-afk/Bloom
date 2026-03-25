@@ -395,9 +395,31 @@ function renderOverview() {
   // Calculate today's total events from dailyStats
   const today = new Date().toISOString().slice(0, 10);
   const todayStats = d.dailyStats[today] || {};
-  const todayTotal = Object.values(todayStats).reduce((a, b) => a + b, 0);
+  const todayTotal = Object.entries(todayStats).filter(([k]) => !k.startsWith('_')).reduce((a, [,b]) => a + b, 0);
+  const todayUniqueUsers = todayStats.unique_users || 0;
+
+  // Calculate running unique users (30-day)
+  const allDates = Object.keys(d.dailyStats).sort();
+  const allUids = new Set();
+  allDates.forEach(date => {
+    const s = d.dailyStats[date];
+    if (s._uids) s._uids.split(',').forEach(u => allUids.add(u));
+  });
+  const totalUniqueUsers = allUids.size;
 
   document.getElementById('overview-cards').innerHTML = `
+    <div class="card">
+      <h3>Users</h3>
+      <div class="stat-row">
+        <span class="stat-label">Today</span>
+        <span class="stat-value good">${todayUniqueUsers}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">30-day unique</span>
+        <span class="stat-value" style="font-size:16px">${totalUniqueUsers}</span>
+      </div>
+    </div>
+
     <div class="card">
       <h3>AI Feedback (7 days)</h3>
       <div class="stat-row">
@@ -431,7 +453,7 @@ function renderOverview() {
         <span class="stat-label">Total events</span>
         <span class="stat-value good">${todayTotal}</span>
       </div>
-      ${Object.entries(todayStats).slice(0, 5).map(([k, v]) => `
+      ${Object.entries(todayStats).filter(([k]) => !k.startsWith('_') && k !== 'unique_users').slice(0, 5).map(([k, v]) => `
         <div class="stat-row">
           <span class="stat-label">${k.replace('feature:', '').replace('event:', '')}</span>
           <span style="font-size:14px;color:var(--cream)">${v}</span>
@@ -444,11 +466,12 @@ function renderOverview() {
   const dates = Object.keys(d.dailyStats).sort();
   if (dates.length > 0) {
     document.getElementById('daily-chart-card').style.display = 'block';
-    const maxVal = Math.max(...dates.map(dt => Object.values(d.dailyStats[dt]).reduce((a,b) => a+b, 0)), 1);
+    const chartTotal = (stats) => Object.entries(stats).filter(([k]) => !k.startsWith('_') && k !== 'unique_users').reduce((a,[,b]) => a + (typeof b === 'number' ? b : 0), 0);
+    const maxVal = Math.max(...dates.map(dt => chartTotal(d.dailyStats[dt])), 1);
     document.getElementById('daily-chart').innerHTML = `
       <div class="chart">
         ${dates.map(dt => {
-          const total = Object.values(d.dailyStats[dt]).reduce((a,b) => a+b, 0);
+          const total = chartTotal(d.dailyStats[dt]);
           const pct = (total / maxVal) * 100;
           return `<div class="chart-bar" style="height:${Math.max(2, pct)}%">
             <div class="tooltip">${dt}: ${total} events</div>

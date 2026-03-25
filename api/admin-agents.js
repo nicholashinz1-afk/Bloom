@@ -99,6 +99,28 @@ Bloom has these tabs: Today (daily habits, mood), Weekly (weekly habits), Wellne
 
 Key design principles: no consecutive streaks (total days only), hard day mode, no shame/pressure.
 
+## IMPORTANT: Expected Event Frequencies
+When evaluating engagement, do NOT flag low counts for infrequent features. Here are normal frequencies:
+- **Every session (multiple/day):** session_start, mood_log, tab navigation (today/weekly/wellness/progress/community/settings)
+- **Daily (1-3x/day):** journal saves, habit completions, breathing exercises, mood_feelings
+- **Weekly (1x/week):** weekly_insight AI reflection (auto-generated on Weekly tab)
+- **Monthly (1x/month):** monthly_reflection AI reflection (auto-generated at month start)
+- **As-needed (0-few/week):** hard_day activation, crisis resource opens, buddy messages/nudges, wall posts, reframe, grounding, bodyscan
+- **Rare:** ai_feedback (only shown after AI responses, user must click), backup_created, encrypted_backup
+Low numbers for weekly/monthly/as-needed features are NORMAL, not a sign of poor engagement. Only flag if a DAILY feature shows zero activity.
+
+## User Counts
+${(() => {
+    const allUids = new Set();
+    dates.forEach(date => {
+      const s = data.dailyStats[date];
+      if (s?._uids) s._uids.split(',').forEach(u => allUids.add(u));
+    });
+    const todayDate = new Date().toISOString().slice(0, 10);
+    const todayUids = data.dailyStats[todayDate]?._uids?.split(',').length || 0;
+    return `Today: ${todayUids} unique users, 30-day total: ${allUids.size} unique users`;
+  })()}
+
 ## Daily Activity (last 30 days, chronological — oldest first)
 ${dailySummary.join('\n') || 'No data'}
 
@@ -195,6 +217,15 @@ Bloom's clinical principles:
 - Moderation allows venting — emotional language is NOT filtered
 - No consecutive streaks (total days only, never goes down)
 - Hard day mode reduces habits to top 2
+
+## IMPORTANT: Expected Event Frequencies
+Do NOT flag low counts for features that are designed to be infrequent:
+- **AI reflections:** journal responses are per-entry, weekly insight is 1x/week, monthly reflection is 1x/month
+- **AI feedback:** only shown after AI responses; user must click — low counts are normal
+- **Crisis resources:** 0 opens can be GOOD (no one needed them). Only concerning if mood logs show consistent low moods WITH zero crisis resource access
+- **Hard day mode:** as-needed; 0 activations can mean users are doing well
+- **Breathing/grounding/bodyscan:** as-needed wellness tools, not daily habits
+- **Content moderation:** low/zero counts mean community is healthy, not that moderation is broken
 
 ## AI Feedback (last 7 days)
 Helpful: ${fbLast7.filter(f => f.value === 'yes').length}, Not helpful: ${fbLast7.filter(f => f.value === 'no').length}
@@ -297,6 +328,12 @@ Architecture:
 - CSP headers configured in vercel.json
 - No user accounts/auth — data stays local unless using community features
 - Content moderation on buddy.js and wall.js
+
+## IMPORTANT: Expected Patterns
+- **Redis response times:** First request after cold start can be 500-1000ms (Vercel serverless). Subsequent requests should be <200ms. Only flag if SUSTAINED high latency across many requests.
+- **IndexedDB:** Used as backup mirror for localStorage. idbAvailable=false may occur on some browsers/contexts but is not critical — localStorage is the primary store.
+- **Session diagnostics:** loadTime of 0 can happen if measured before load completes. loadTime under 3000ms is acceptable for a 13K-line SPA.
+- **API timing:** buddy/wall endpoints hit Redis; claude endpoint hits external Anthropic API (expect 1-3s). Compare like-for-like.
 
 ## Error Summary
 Total tracked: ${errors.length}

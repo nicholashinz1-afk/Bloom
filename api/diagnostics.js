@@ -169,6 +169,25 @@ export default async function handler(req, res) {
         return res.json({ ok: true });
       }
 
+      case 'session_start': {
+        // Track unique users per day using anonymous uid
+        const uid = body.uid;
+        if (uid && typeof uid === 'string') {
+          const dayKey = KEYS.dailyStats(todayKey());
+          const stats = await kvGet(dayKey) || {};
+          // Store unique uids as a comma-separated string (lightweight set)
+          const uidSet = stats._uids ? new Set(stats._uids.split(',')) : new Set();
+          uidSet.add(uid.slice(0, 20));
+          stats._uids = [...uidSet].join(',');
+          stats.unique_users = uidSet.size;
+          await kvSet(dayKey, stats, NINETY_DAYS);
+        }
+        // Also track as regular event
+        await appendToList(KEYS.events, { event: 'session_start', ts });
+        await incrementDaily('event:session_start');
+        return res.json({ ok: true });
+      }
+
       default: {
         // Generic event tracking
         await appendToList(KEYS.events, {
