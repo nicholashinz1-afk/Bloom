@@ -2235,12 +2235,12 @@ body.theme-forest .card::after {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(ellipse at 25% 15%, rgba(var(--sage-rgb),0.06) 0%, transparent 50%),
-              radial-gradient(ellipse at 75% 85%, rgba(var(--sage-light-rgb),0.04) 0%, transparent 50%);
+  background: radial-gradient(ellipse 120% 80% at 20% 10%, rgba(var(--sage-light-rgb),0.12) 0%, transparent 60%),
+              radial-gradient(ellipse 100% 60% at 80% 90%, rgba(var(--sage-rgb),0.08) 0%, transparent 50%);
   pointer-events: none;
 }
 
-/* Ocean — slow shimmer wave on header border */
+/* Ocean — shimmer wave on header border */
 body.theme-ocean #app-header {
   position: relative;
 }
@@ -2250,14 +2250,14 @@ body.theme-ocean #app-header::after {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(var(--sage-rgb),0.4), transparent);
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(var(--sage-rgb),0.6) 50%, transparent 100%);
   background-size: 200% 100%;
-  animation: oceanShimmer 6s ease-in-out infinite;
+  animation: oceanShimmer 12s ease-in-out infinite;
 }
 @keyframes oceanShimmer {
-  0%, 100% { background-position: -100% 0; }
-  50%      { background-position: 200% 0; }
+  0%   { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* Rose — soft blush glow at top of scroll areas */
@@ -2267,8 +2267,8 @@ body.theme-rose .tab-scroll::before {
   top: 0;
   left: 0;
   right: 0;
-  height: 80px;
-  background: radial-gradient(ellipse at 50% -20%, rgba(var(--sage-rgb),0.08) 0%, transparent 70%);
+  height: 120px;
+  background: radial-gradient(ellipse 80% 100% at 50% -10%, rgba(var(--sage-rgb),0.18) 0%, transparent 70%);
   pointer-events: none;
   z-index: 1;
 }
@@ -2276,22 +2276,34 @@ body.theme-rose .tab-scroll { position: relative; }
 
 /* Amber — warm sunset glow under header */
 body.theme-amber #app-header {
-  box-shadow: 0 2px 24px rgba(var(--sage-rgb),0.1), 0 1px 0 rgba(var(--sage-rgb),0.08);
+  box-shadow: 0 4px 30px rgba(var(--sage-rgb),0.18), 0 1px 0 rgba(var(--sage-rgb),0.15);
 }
 
 /* Pastel — soft inner glow on cards */
 body.theme-pastel .card {
-  box-shadow: inset 0 1px 20px rgba(var(--sage-rgb),0.04), 0 1px 4px rgba(0,0,0,0.4);
+  box-shadow: inset 0 1px 30px rgba(var(--sage-rgb),0.1), 0 1px 4px rgba(0,0,0,0.4);
 }
 
-/* Pride — already has rainbow accent bar, add subtle prismatic card borders */
+/* Gradient card borders — all themes (background-clip trick preserves border-radius) */
+.card {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    linear-gradient(135deg,
+      rgba(var(--sage-rgb),0.3) 0%,
+      rgba(var(--sage-light-rgb),0.15) 50%,
+      rgba(var(--sage-rgb),0.3) 100%
+    ) border-box;
+}
+
+/* Pride — rainbow gradient override */
 body.theme-pride .card {
-  border-image: linear-gradient(135deg,
-    rgba(224,64,80,0.12), rgba(232,112,48,0.12), rgba(232,200,64,0.12),
-    rgba(80,184,104,0.12), rgba(64,128,208,0.12), rgba(144,80,200,0.12)
-  ) 1;
-  border-width: 1px;
-  border-style: solid;
+  background:
+    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    linear-gradient(135deg,
+      rgba(224,64,80,0.35), rgba(232,112,48,0.35), rgba(232,200,64,0.35),
+      rgba(80,184,104,0.35), rgba(64,128,208,0.35), rgba(144,80,200,0.35)
+    ) border-box;
 }
 
 /* ── Hard day: dim accent bar and suppress signatures ──── */
@@ -4885,7 +4897,7 @@ const THEMES = {
     bg: '#0d1318', bgMid: '#101820', bgCard: '#141e28', bgElevated: '#1a2838',
     bgOverlay: 'rgba(13,19,24,0.93)',
     primary: '#6a9ab0', primaryLight: '#9ec4d8', primaryDim: '#1a3a50',
-    textSecondary: '#7a9eb0', textMuted: '#3a5868', seasonal: '#9ec4d8',
+    textSecondary: '#88aec0', textMuted: '#4e6e80', seasonal: '#9ec4d8',
     accent: 'linear-gradient(90deg, #0d1a28, #3a6a80, #6a9ab0, #3a6a80, #0d1a28)',
     confetti: ['#6a9ab0','#9ec4d8','#4a7a90','#b8dae8','#e8e0d0'],
   },
@@ -4894,7 +4906,7 @@ const THEMES = {
     bg: '#180d10', bgMid: '#201015', bgCard: '#281418', bgElevated: '#341820',
     bgOverlay: 'rgba(24,13,16,0.93)',
     primary: '#b07878', primaryLight: '#d4a8a8', primaryDim: '#4a2030',
-    textSecondary: '#b08888', textMuted: '#603848', seasonal: '#d4a8a8',
+    textSecondary: '#c09898', textMuted: '#7a5060', seasonal: '#d4a8a8',
     accent: 'linear-gradient(90deg, #2a1418, #804858, #b07878, #804858, #2a1418)',
     confetti: ['#b07878','#d4a8a8','#c89090','#e8c8c8','#e8e0d0'],
   },
@@ -4903,7 +4915,7 @@ const THEMES = {
     bg: '#180f08', bgMid: '#20130a', bgCard: '#28180c', bgElevated: '#342010',
     bgOverlay: 'rgba(24,15,8,0.93)',
     primary: '#c9954a', primaryLight: '#e0b87a', primaryDim: '#5c3f1a',
-    textSecondary: '#b09060', textMuted: '#604830', seasonal: '#e0b87a',
+    textSecondary: '#c0a070', textMuted: '#785838', seasonal: '#e0b87a',
     accent: 'linear-gradient(90deg, #281a0a, #8a6530, #c9954a, #8a6530, #281a0a)',
     confetti: ['#c9954a','#e0b87a','#a87830','#f0d8a0','#e8e0d0'],
   },
@@ -4912,7 +4924,7 @@ const THEMES = {
     bg: '#1a1a22', bgMid: '#1e1e28', bgCard: '#24242e', bgElevated: '#2c2c38',
     bgOverlay: 'rgba(26,26,34,0.93)',
     primary: '#b5a8c8', primaryLight: '#d4c8e8', primaryDim: '#3e3650',
-    textSecondary: '#a8a0b8', textMuted: '#585068', seasonal: '#d4c8e8',
+    textSecondary: '#b0a8c0', textMuted: '#686080', seasonal: '#d4c8e8',
     accent: 'linear-gradient(90deg, #22202e, #7a6e98, #b5a8c8, #7a6e98, #22202e)',
     confetti: ['#b5a8c8','#d4c8e8','#9888b8','#e0d8f0','#e8e0d0'],
   },
@@ -4921,7 +4933,7 @@ const THEMES = {
     bg: '#12101a', bgMid: '#161420', bgCard: '#1c1a28', bgElevated: '#242232',
     bgOverlay: 'rgba(18,16,26,0.93)',
     primary: '#c8a0d8', primaryLight: '#e0c0f0', primaryDim: '#3e2850',
-    textSecondary: '#b8a0c8', textMuted: '#5a4870', seasonal: '#e0c0f0',
+    textSecondary: '#c0a8d0', textMuted: '#6a5880', seasonal: '#e0c0f0',
     pride: true,
     accent: 'linear-gradient(90deg, #e04050, #e87030, #e8c840, #50b868, #4080d0, #9050c8)',
     confetti: ['#e04050','#e87030','#e8c840','#50b868','#4080d0','#9050c8'],
@@ -7234,7 +7246,7 @@ function renderTodayTab() {
 
   // Water card
   const waterPct = Math.round((waterCount / 3) * 100);
-  const t = THEMES[state.prefs?.theme || 'forest'] || THEMES.forest;
+  const thm = THEMES[state.prefs?.theme || 'forest'] || THEMES.forest;
   html += `<div class="card">
     <div class="card-title" style="margin-bottom:6px">💧 Hydration${infoIcon('hydration')}</div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
@@ -7251,12 +7263,12 @@ function renderTodayTab() {
         <svg viewBox="0 0 56 100" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="waterGrad${i}" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="${filled ? t.primaryLight : '#3a3d30'}"/>
-              <stop offset="100%" stop-color="${filled ? t.primaryDim : '#252820'}"/>
+              <stop offset="0%" stop-color="${filled ? thm.primaryLight : '#3a3d30'}"/>
+              <stop offset="100%" stop-color="${filled ? thm.primaryDim : '#252820'}"/>
             </linearGradient>
           </defs>
-          <path d="M18 8 L14 22 Q10 28 10 38 L10 82 Q10 90 18 90 L38 90 Q46 90 46 82 L46 38 Q46 28 42 22 L38 8 Z" fill="url(#waterGrad${i})" stroke="${filled ? t.primaryLight : '#3a3d30'}" stroke-width="1.5"/>
-          <path d="M18 8 L38 8 L36 2 L20 2 Z" fill="${filled ? t.primaryLight : '#3a3d30'}"/>
+          <path d="M18 8 L14 22 Q10 28 10 38 L10 82 Q10 90 18 90 L38 90 Q46 90 46 82 L46 38 Q46 28 42 22 L38 8 Z" fill="url(#waterGrad${i})" stroke="${filled ? thm.primaryLight : '#3a3d30'}" stroke-width="1.5"/>
+          <path d="M18 8 L38 8 L36 2 L20 2 Z" fill="${filled ? thm.primaryLight : '#3a3d30'}"/>
           ${filled ? `
             <path d="M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" fill="rgba(var(--sage-rgb),0.4)">
               <animate attributeName="d" values="M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 50 Q18 54 28 50 Q38 46 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" dur="3s" repeatCount="indefinite"/>
