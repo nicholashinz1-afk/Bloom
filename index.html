@@ -11785,14 +11785,17 @@ function initOneSignal() {
     try {
       OneSignal.User.PushSubscription.addEventListener('change', (e) => {
         if (e.current?.id) {
-          const prev = load('bloom_onesignal_pid', null);
           save('bloom_onesignal_pid', e.current.id);
-          // If player ID just became available, re-register with server
-          if (!prev && e.current.id) buddyRegisterAndSync();
+          // Always re-register so the server has the current player ID
+          buddyRegisterAndSync();
         }
       });
       const pid = OneSignal.User.PushSubscription.id;
-      if (pid) save('bloom_onesignal_pid', pid);
+      if (pid) {
+        save('bloom_onesignal_pid', pid);
+        // Sync with server in case the stored ID was lost or changed
+        buddyRegisterAndSync();
+      }
     } catch(e) {}
 
     // Request permission after a short delay if not yet granted
