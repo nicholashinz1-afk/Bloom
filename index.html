@@ -7932,6 +7932,7 @@ function renderWellnessTab() {
     // Entry count transparency
     html += `<div style="font-size:11px;color:var(--text-muted);margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">${journalEntries.length} entry${journalEntries.length !== 1 ? 'ies' : ''} today · all entries are saved</div>`;
     html += `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="newJournalEntry('same')">Same prompt again</button>
       <button class="btn btn-ghost btn-sm" onclick="newJournalEntry('prompt')">New prompt</button>
       <button class="btn btn-ghost btn-sm" onclick="newJournalEntry('free')">Just write</button>
     </div>`;
@@ -8252,6 +8253,9 @@ function newJournalEntry(mode) {
     // Cycle to a different prompt than the current one
     if (!state.journalPromptOffset) state.journalPromptOffset = 0;
     state.journalPromptOffset++;
+    state.journalMode = 'prompt';
+  } else if (mode === 'same') {
+    // Keep the same prompt
     state.journalMode = 'prompt';
   } else {
     state.journalMode = 'free';
