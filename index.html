@@ -4637,6 +4637,7 @@ function activateHardDayMode() {
   saveState();
   archiveToday();
   playSound('hard_day');
+  trackFeature('hard_day');
   trackEvent('hard_day_activated', { mood: state.todayData.mood, habitsCompleted: Object.keys(state.todayData).filter(k => (k.endsWith('_am') || k.endsWith('_pm') || k.endsWith('_any')) && state.todayData[k]).length });
   // Dim the UI to feel calmer
   document.body.classList.add('hard-day-active');
@@ -6626,6 +6627,7 @@ async function callClaude(prompt, systemPrompt) {
   // Track AI reflection usage for journey analysis
   const aiSource = prompt.includes('journal') ? 'journal' : prompt.includes('reflection') ? 'reflection' : prompt.includes('hard day') ? 'hard_day' : prompt.includes('weekly') || prompt.includes('week') ? 'weekly_insight' : prompt.includes('monthly') || prompt.includes('month') ? 'monthly_reflection' : 'other';
   trackAIJourney(aiSource, aiSource);
+  trackFeature('ai_reflection');
   try {
     const name = state.prefs?.name;
     const nameContext = name ? ` The user's name is ${name} — use it occasionally but naturally, not in every sentence.` : '';
@@ -6720,6 +6722,8 @@ function switchTab(tab) {
   if (gear) gear.style.opacity = tab === 'settings' ? '0.8' : '0.35';
   // Haptic
   haptic('light');
+  // Track tab navigation
+  if (['weekly', 'wellness', 'progress', 'community', 'settings'].includes(tab)) trackFeature(tab);
   if (tab === 'today') renderTodayTab();
   if (tab === 'weekly') renderWeeklyTab();
   if (tab === 'wellness') renderWellnessTab();
@@ -7732,7 +7736,7 @@ function toggleFeeling(word) {
   if (!state.todayData.feelings) state.todayData.feelings = [];
   const idx = state.todayData.feelings.indexOf(word);
   if (idx >= 0) state.todayData.feelings.splice(idx, 1);
-  else state.todayData.feelings.push(word);
+  else { state.todayData.feelings.push(word); trackFeature('mood_feelings'); }
   saveState();
   archiveToday();
   // Update pill in-place without full re-render
@@ -8332,6 +8336,7 @@ async function saveJournal() {
   state.editingJournalIndex = null;
   state.journalDraft = '';
   state.loadingJournalAI = true;
+  trackFeature('journal');
   saveState();
   checkFirstTaskStreak();
   renderWellnessTab();
@@ -13242,6 +13247,7 @@ function checkBuddyMessageSafety(text) {
 }
 
 async function buddySendMessage(pairId) {
+  trackFeature('buddy');
   const input = document.getElementById('buddy-input-' + pairId);
   if (!input || !input.value.trim()) return;
   const text = input.value.trim();
@@ -13286,6 +13292,7 @@ async function buddySendMessage(pairId) {
 }
 
 async function buddySendNudge(nudgeType, pairId) {
+  trackFeature('buddy');
   const data = await buddyApi({
     action: 'nudge',
     buddyId: ensureBuddyId(),
@@ -14078,6 +14085,7 @@ async function postToWall() {
 
   btn.disabled = true;
   btn.textContent = '...';
+  trackFeature('wall');
   try {
     const res = await timedFetch('/api/wall', {
       method: 'POST',

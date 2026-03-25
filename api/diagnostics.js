@@ -160,6 +160,7 @@ export default async function handler(req, res) {
           'hard_day', 'weekly_insight', 'monthly_reflection',
           'backup', 'encrypted_backup', 'mood_feelings',
           'settings', 'crisis', 'ai_reflection',
+          'weekly', 'wellness', 'progress', 'community', 'grounding', 'bodyscan', 'reframe',
         ];
         if (!feature || !allowedFeatures.includes(feature)) {
           return res.json({ ok: false });
