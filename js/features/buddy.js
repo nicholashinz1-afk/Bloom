@@ -741,10 +741,19 @@ function toggleBuddyCard(pid) {
   if (!open) fetchBuddyMessages(pid);
 }
 
+function isBuddyDataFromToday(ts) {
+  if (!ts) return false;
+  const d = new Date(ts);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+}
+
 function renderBuddyCard(b, index) {
   const moods = ['\ud83d\ude14 Low', '\ud83d\ude15 Rough', '\ud83d\ude10 Okay', '\ud83d\ude42 Good', '\ud83d\ude0a Great'];
-  const moodDisplay = b.mood !== undefined && b.mood !== null ? (b.mood === -1 ? '🤷 Unsure' : moods[b.mood] || '\u2014') : '\u2014';
-  const pctWidth = Math.min(100, Math.max(0, b.habitPct || 0));
+  const buddyActiveToday = isBuddyDataFromToday(b.lastActive);
+  const moodFresh = isBuddyDataFromToday(b.moodTs);
+  const moodDisplay = moodFresh && b.mood !== undefined && b.mood !== null ? (b.mood === -1 ? '🤷 Unsure' : moods[b.mood] || '\u2014') : '\u2014';
+  const pctWidth = buddyActiveToday ? Math.min(100, Math.max(0, b.habitPct || 0)) : 0;
   const pid = b.pairId;
   const isFirst = index === 0;
   const multipleCards = buddyCachedBuddies.length > 1;
