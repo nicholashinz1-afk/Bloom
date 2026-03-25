@@ -1,5 +1,5 @@
 // Bloom wellness tab — journal, breathing, grounding, body scan, reframing, wins, affirmations
-import { state, today, getDayIndex, getWeekDates, formatDateLabel, getJournalPrompt, saveState } from '../state.js';
+import { state, today, getDayIndex, dayOfWeek, getWeekDates, formatDateLabel, getJournalPrompt, saveState } from '../state.js';
 import { save, load } from '../storage.js';
 import { haptic, escapeHtml, playSound } from '../utils.js';
 import { celebrate } from '../celebrate.js';
