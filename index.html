@@ -6419,6 +6419,60 @@ function sendTelemetry(type, data) {
 function trackFeature(feature) { sendTelemetry('feature_use', { feature }); }
 function trackEvent(eventName, meta) { sendTelemetry(eventName, meta ? { meta } : {}); }
 
+// ── API response time tracking ────────────────────────────
+async function timedFetch(url, options) {
+  const start = performance.now();
+  const endpoint = url.replace(/^\/api\//, '').split('?')[0];
+  try {
+    const res = await fetch(url, options);
+    const duration = Math.round(performance.now() - start);
+    sendTelemetry('api_timing', { meta: { endpoint, duration, status: res.status } });
+    return res;
+  } catch(err) {
+    const duration = Math.round(performance.now() - start);
+    sendTelemetry('api_timing', { meta: { endpoint, duration, status: 0, error: err.message?.slice(0, 100) } });
+    throw err;
+  }
+}
+
+// ── API health checks ─────────────────────────────────────
+async function runHealthChecks() {
+  const endpoints = ['claude', 'buddy', 'wall', 'diagnostics'];
+  const results = {};
+  await Promise.all(endpoints.map(async (ep) => {
+    try {
+      const res = await fetch('/api/' + ep + '?check=health');
+      results[ep] = await res.json();
+    } catch(e) {
+      results[ep] = { ok: false, service: ep, error: e.message };
+    }
+  }));
+  sendTelemetry('health_check', { meta: results });
+  return results;
+}
+
+// Run health check on session start (after a short delay to not block load)
+setTimeout(() => runHealthChecks(), 5000);
+
+// ── Error boundary wrapper ────────────────────────────────
+function errorBoundary(fn, context) {
+  return function(...args) {
+    try {
+      const result = fn.apply(this, args);
+      if (result && typeof result.catch === 'function') {
+        return result.catch(err => {
+          sendTelemetry('error_boundary', { meta: { context, message: String(err.message || err).slice(0, 300) } });
+          throw err;
+        });
+      }
+      return result;
+    } catch(err) {
+      sendTelemetry('error_boundary', { meta: { context, message: String(err.message || err).slice(0, 300) } });
+      throw err;
+    }
+  };
+}
+
 window.onerror = function(message, source, lineno, colno, error) {
   const errLog = load('bloom_error_log', []);
   errLog.push({ message: String(message).slice(0, 300), url: source, line: lineno, ts: Date.now() });
@@ -6494,7 +6548,7 @@ async function callClaude(prompt, systemPrompt) {
   try {
     const name = state.prefs?.name;
     const nameContext = name ? ` The user's name is ${name} — use it occasionally but naturally, not in every sentence.` : '';
-    const res = await fetch('/api/claude', {
+    const res = await timedFetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -8679,7 +8733,7 @@ function processReframe() {
     </div>`;
 
   // Use the Claude API for a warm reframe
-  fetch('/api/claude', {
+  timedFetch('/api/claude', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -12859,7 +12913,7 @@ function getHabitPct() {
 // ── Buddy API helpers ─────────────────────────────────────
 async function buddyApi(payload) {
   try {
-    const res = await fetch('/api/buddy', {
+    const res = await timedFetch('/api/buddy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -13752,7 +13806,7 @@ if (!wallFingerprint) {
 async function fetchWallMessages() {
   wallLoading = true;
   try {
-    const res = await fetch('/api/wall');
+    const res = await timedFetch('/api/wall');
     const data = await res.json();
     wallMessages = data.messages || [];
   } catch(e) {
@@ -13913,7 +13967,7 @@ async function postToWall() {
   btn.disabled = true;
   btn.textContent = '...';
   try {
-    const res = await fetch('/api/wall', {
+    const res = await timedFetch('/api/wall', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'post', text, fp: wallFingerprint }),
@@ -13967,7 +14021,7 @@ async function heartWallMessage(id) {
   renderWallMessages();
 
   try {
-    await fetch('/api/wall', {
+    await timedFetch('/api/wall', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'heart', id }),
@@ -13978,7 +14032,7 @@ async function heartWallMessage(id) {
 async function reportWallMessage(id) {
   if (confirm('Report this message as inappropriate?')) {
     try {
-      await fetch('/api/wall', {
+      await timedFetch('/api/wall', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'report', id }),

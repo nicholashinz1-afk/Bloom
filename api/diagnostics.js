@@ -75,6 +75,7 @@ function validateEvent(body) {
     'buddy_pair', 'buddy_unpair', 'backup_created', 'backup_restored',
     'hard_day_activated', 'crisis_opened', 'journal_saved',
     'wall_post', 'onboarding_complete', 'encrypted_backup',
+    'api_timing', 'health_check', 'error_boundary',
   ];
   if (!type || !allowed.includes(type)) return false;
   return true;
@@ -101,6 +102,14 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Key');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Health check
+  if (req.method === 'GET' && req.query?.check === 'health') {
+    const hasRedis = !!process.env.REDIS_URL;
+    let redisOk = false;
+    if (hasRedis) { try { await getRedis(); redisOk = true; } catch(e) {} }
+    return res.json({ ok: hasRedis && redisOk, service: 'diagnostics', ts: Date.now() });
+  }
 
   if (!process.env.REDIS_URL) {
     return res.status(503).json({ error: 'Storage not configured' });

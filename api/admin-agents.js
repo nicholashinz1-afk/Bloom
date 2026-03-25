@@ -176,6 +176,16 @@ ${crisisEvents.slice(-20).map(e => `  ${e.event} at ${new Date(e.ts).toISOString
 ## Clinical Feature Usage (30 days)
 ${Object.entries(clinicalFeatures).map(([k, v]) => `  ${k}: ${v}`).join('\n') || 'No data'}
 
+## Content Moderation Activity
+${(() => {
+    const modEvents = data.events.filter(e => e.event === 'moderation');
+    if (!modEvents.length) return 'No moderation data yet';
+    let blocked = 0, flagged = 0, allowed = 0;
+    modEvents.forEach(e => { try { const m = JSON.parse(e.meta); if (!m.ok) blocked++; else if (m.flag) flagged++; else allowed++; } catch {} });
+    const flaggedDetails = modEvents.filter(e => { try { return JSON.parse(e.meta).flag; } catch { return false; } }).slice(-5);
+    return `Allowed: ${allowed}, Flagged (self-harm, crisis resources shown): ${flagged}, Blocked (harmful): ${blocked}\nRecent flagged:\n${flaggedDetails.map(e => `  ${new Date(e.ts).toISOString().slice(0,16)} — ${JSON.parse(e.meta).source}`).join('\n') || '  None'}`;
+  })()}
+
 Provide your audit as JSON with this structure:
 {
   "status": "healthy" | "needs_attention" | "critical",
@@ -243,6 +253,25 @@ ${errors.slice(-10).reverse().map(e => `  ${new Date(e.ts).toISOString().slice(0
 
 ## Daily Error Rates
 ${dailyErrors.join('\n') || 'No error data'}
+
+## API Response Times
+${data.events.filter(e => e.event === 'api_timing').slice(-20).map(e => {
+    try { const m = JSON.parse(e.meta); return `  ${m.endpoint}: ${m.duration}ms (status ${m.status})`; } catch { return ''; }
+  }).filter(Boolean).join('\n') || 'No API timing data yet'}
+
+## Health Checks
+${data.events.filter(e => e.event === 'health_check').slice(-5).map(e => {
+    try { const m = JSON.parse(e.meta); return '  ' + Object.entries(m).map(([k,v]) => `${k}: ${v.ok ? 'OK' : 'FAIL'}`).join(', '); } catch { return ''; }
+  }).filter(Boolean).join('\n') || 'No health check data yet'}
+
+## Content Moderation
+${(() => {
+    const modEvents = data.events.filter(e => e.event === 'moderation');
+    if (!modEvents.length) return 'No moderation data yet';
+    let blocked = 0, flagged = 0, allowed = 0;
+    modEvents.forEach(e => { try { const m = JSON.parse(e.meta); if (!m.ok) blocked++; else if (m.flag) flagged++; else allowed++; } catch {} });
+    return `Allowed: ${allowed}, Flagged (crisis resources shown): ${flagged}, Blocked: ${blocked}`;
+  })()}
 
 ## Recent Events (last 20)
 ${recentEvents.slice(-20).map(e => `  ${e.event}${e.meta ? ' — ' + e.meta : ''}`).join('\n') || 'None'}

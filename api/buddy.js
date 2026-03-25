@@ -99,6 +99,31 @@ async function kvDel(key) {
   } catch(e) {}
 }
 
+// Log moderation events to diagnostics
+async function logModeration(source, result) {
+  try {
+    const key = 'bloom_diag:events';
+    const client = await getRedis();
+    const raw = await client.get(key);
+    const events = raw ? JSON.parse(raw) : [];
+    events.push({
+      event: 'moderation',
+      meta: JSON.stringify({ source, ok: result.ok, reason: result.reason || null, flag: result.flag || null }),
+      ts: Date.now(),
+    });
+    if (events.length > 5000) events.splice(0, events.length - 5000);
+    await client.set(key, JSON.stringify(events), { EX: 90 * 86400 });
+    // Also increment daily counter
+    const dayKey = `bloom_diag:daily:${new Date().toISOString().slice(0, 10)}`;
+    const dayRaw = await client.get(dayKey);
+    const dayStats = dayRaw ? JSON.parse(dayRaw) : {};
+    const counterKey = result.ok ? (result.flag ? 'mod_flagged' : 'mod_allowed') : 'mod_blocked';
+    dayStats[counterKey] = (dayStats[counterKey] || 0) + 1;
+    await client.set(dayKey, JSON.stringify(dayStats), { EX: 90 * 86400 });
+  } catch(e) {}
+}
+}
+
 // ── OneSignal push notification helper ──────────────────────
 async function sendPush(playerId, title, message) {
   const appId = process.env.ONESIGNAL_APP_ID;
@@ -198,6 +223,14 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Health check
+  if (req.method === 'GET' && req.query?.check === 'health') {
+    const hasRedis = !!process.env.REDIS_URL;
+    let redisOk = false;
+    if (hasRedis) { try { await getRedis(); redisOk = true; } catch(e) {} }
+    return res.json({ ok: hasRedis && redisOk, service: 'buddy', ts: Date.now() });
+  }
 
   if (!process.env.REDIS_URL) {
     return res.status(503).json({ error: 'Storage not configured' });
@@ -575,6 +608,7 @@ export default async function handler(req, res) {
     if (!buddyId || !text) return res.status(400).json({ error: 'Missing buddyId or text' });
 
     const check = moderateMessage(text);
+    await logModeration('buddy_message', check);
     if (!check.ok) return res.json({ ok: false, reason: check.reason });
 
     const lookup = await getLookup(buddyId);
