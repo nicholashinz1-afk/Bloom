@@ -59,6 +59,10 @@
   --danger:  var(--rose);
   --info:    var(--sky);
 
+  /* RGB channels for alpha compositing (updated by applyTheme) */
+  --sage-rgb:       122,158,126;
+  --sage-light-rgb: 168,197,171;
+
   /* Radii */
   --r-sm: 8px;
   --r-md: 14px;
@@ -2363,13 +2367,13 @@ button:focus-visible,
 }
 /* Subtle glow pulse on completion */
 .habit-check.done {
-  box-shadow: 0 0 0 0 rgba(122,158,126,0.4);
+  box-shadow: 0 0 0 0 rgba(var(--sage-rgb),0.4);
   animation: checkGlow 0.6s cubic-bezier(0.34,1.56,0.64,1);
 }
 @keyframes checkGlow {
-  0%   { box-shadow: 0 0 0 0 rgba(122,158,126,0.5); transform: scale(0.85); }
-  50%  { box-shadow: 0 0 0 8px rgba(122,158,126,0); transform: scale(1.1); }
-  100% { box-shadow: 0 0 0 0 rgba(122,158,126,0); transform: scale(1); }
+  0%   { box-shadow: 0 0 0 0 rgba(var(--sage-rgb),0.5); transform: scale(0.85); }
+  50%  { box-shadow: 0 0 0 8px rgba(var(--sage-rgb),0); transform: scale(1.1); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--sage-rgb),0); transform: scale(1); }
 }
 
 /* ── Input focus glow ──────────────────────────────────── */
@@ -2377,7 +2381,7 @@ input[type="text"]:focus,
 input[type="time"]:focus,
 textarea:focus,
 select:focus {
-  box-shadow: 0 0 0 3px rgba(122,158,126,0.15);
+  box-shadow: 0 0 0 3px rgba(var(--sage-rgb),0.15);
 }
 
 /* ── Validation shake ──────────────────────────────────── */
@@ -2414,7 +2418,7 @@ select:focus {
   top: 0;
   left: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--sage), var(--sage-light));
+  background: linear-gradient(90deg, var(--sage), var(--sage-light, var(--sage)));
   border-radius: 0 1px 1px 0;
   transition: width 0.1s linear;
   z-index: 5;
@@ -2469,7 +2473,7 @@ select:focus {
   transition-duration: 0.08s;
 }
 .btn-primary:active {
-  background: #6a8e6e;
+  filter: brightness(0.88);
 }
 
 /* ── Nav dot morph on active ───────────────────────────── */
@@ -2502,7 +2506,7 @@ select:focus {
 
 /* ── Mood button selected glow ─────────────────────────── */
 .mood-btn.selected {
-  box-shadow: 0 0 0 1px rgba(122,158,126,0.2), 0 2px 8px rgba(122,158,126,0.1);
+  box-shadow: 0 0 0 1px rgba(var(--sage-rgb),0.2), 0 2px 8px rgba(var(--sage-rgb),0.1);
 }
 
 /* ── Card hover for desktop users ──────────────────────── */
@@ -2514,7 +2518,7 @@ select:focus {
     filter: brightness(1.08);
   }
   .btn-primary:hover {
-    box-shadow: 0 2px 12px rgba(122,158,126,0.25);
+    box-shadow: 0 2px 12px rgba(var(--sage-rgb),0.25);
   }
   .nav-btn:hover {
     color: var(--sage);
@@ -4890,6 +4894,11 @@ const THEMES = {
   },
 };
 
+function hexToRgb(hex) {
+  const h = hex.replace('#', '');
+  return [parseInt(h.substring(0,2),16), parseInt(h.substring(2,4),16), parseInt(h.substring(4,6),16)].join(',');
+}
+
 function applyTheme(themeKey) {
   const t = THEMES[themeKey] || THEMES.forest;
   const r = document.documentElement.style;
@@ -4901,6 +4910,8 @@ function applyTheme(themeKey) {
   r.setProperty('--sage',           t.primary);
   r.setProperty('--sage-light',     t.primaryLight);
   r.setProperty('--sage-dim',       t.primaryDim);
+  r.setProperty('--sage-rgb',       hexToRgb(t.primary));
+  r.setProperty('--sage-light-rgb', hexToRgb(t.primaryLight));
   r.setProperty('--text-secondary', t.textSecondary);
   r.setProperty('--text-muted',     t.textMuted);
   r.setProperty('--seasonal',       t.seasonal);
