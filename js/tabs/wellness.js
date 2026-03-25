@@ -867,7 +867,7 @@ function processReframe() {
     </div>`;
 
   // Use the Claude API for a warm reframe
-  fetch('/api/claude', {
+  timedFetch('/api/claude', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

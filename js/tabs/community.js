@@ -22,7 +22,7 @@ if (!wallFingerprint) {
 async function fetchWallMessages() {
   wallLoading = true;
   try {
-    const res = await fetch('/api/wall');
+    const res = await timedFetch('/api/wall');
     const data = await res.json();
     wallMessages = data.messages || [];
   } catch(e) {
@@ -183,7 +183,7 @@ async function postToWall() {
   btn.disabled = true;
   btn.textContent = '...';
   try {
-    const res = await fetch('/api/wall', {
+    const res = await timedFetch('/api/wall', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'post', text, fp: wallFingerprint }),
@@ -237,7 +237,7 @@ async function heartWallMessage(id) {
   renderWallMessages();
 
   try {
-    await fetch('/api/wall', {
+    await timedFetch('/api/wall', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'heart', id }),
@@ -248,7 +248,7 @@ async function heartWallMessage(id) {
 async function reportWallMessage(id) {
   if (confirm('Report this message as inappropriate?')) {
     try {
-      await fetch('/api/wall', {
+      await timedFetch('/api/wall', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'report', id }),
