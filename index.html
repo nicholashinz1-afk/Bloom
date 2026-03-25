@@ -7234,7 +7234,7 @@ function renderTodayTab() {
 
   // Water card
   const waterPct = Math.round((waterCount / 3) * 100);
-  const t = THEMES[state.prefs?.theme || 'forest'] || THEMES.forest;
+  const thm = THEMES[state.prefs?.theme || 'forest'] || THEMES.forest;
   html += `<div class="card">
     <div class="card-title" style="margin-bottom:6px">💧 Hydration${infoIcon('hydration')}</div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
@@ -7251,12 +7251,12 @@ function renderTodayTab() {
         <svg viewBox="0 0 56 100" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="waterGrad${i}" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="${filled ? t.primaryLight : '#3a3d30'}"/>
-              <stop offset="100%" stop-color="${filled ? t.primaryDim : '#252820'}"/>
+              <stop offset="0%" stop-color="${filled ? thm.primaryLight : '#3a3d30'}"/>
+              <stop offset="100%" stop-color="${filled ? thm.primaryDim : '#252820'}"/>
             </linearGradient>
           </defs>
-          <path d="M18 8 L14 22 Q10 28 10 38 L10 82 Q10 90 18 90 L38 90 Q46 90 46 82 L46 38 Q46 28 42 22 L38 8 Z" fill="url(#waterGrad${i})" stroke="${filled ? t.primaryLight : '#3a3d30'}" stroke-width="1.5"/>
-          <path d="M18 8 L38 8 L36 2 L20 2 Z" fill="${filled ? t.primaryLight : '#3a3d30'}"/>
+          <path d="M18 8 L14 22 Q10 28 10 38 L10 82 Q10 90 18 90 L38 90 Q46 90 46 82 L46 38 Q46 28 42 22 L38 8 Z" fill="url(#waterGrad${i})" stroke="${filled ? thm.primaryLight : '#3a3d30'}" stroke-width="1.5"/>
+          <path d="M18 8 L38 8 L36 2 L20 2 Z" fill="${filled ? thm.primaryLight : '#3a3d30'}"/>
           ${filled ? `
             <path d="M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" fill="rgba(var(--sage-rgb),0.4)">
               <animate attributeName="d" values="M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 50 Q18 54 28 50 Q38 46 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" dur="3s" repeatCount="indefinite"/>
