@@ -2284,9 +2284,20 @@ body.theme-pastel .card {
   box-shadow: inset 0 1px 30px rgba(var(--sage-rgb),0.1), 0 1px 4px rgba(0,0,0,0.4);
 }
 
-/* Pride — prismatic rainbow card borders (background-clip trick preserves border-radius) */
-body.theme-pride .card {
+/* Gradient card borders — all themes (background-clip trick preserves border-radius) */
+.card {
   border: 1px solid transparent;
+  background:
+    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    linear-gradient(135deg,
+      rgba(var(--sage-rgb),0.3) 0%,
+      rgba(var(--sage-light-rgb),0.15) 50%,
+      rgba(var(--sage-rgb),0.3) 100%
+    ) border-box;
+}
+
+/* Pride — rainbow gradient override */
+body.theme-pride .card {
   background:
     linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
     linear-gradient(135deg,
