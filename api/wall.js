@@ -68,11 +68,11 @@ import { createClient } from 'redis';
 
 let _redisClient = null;
 async function getRedis() {
-  if (!_redisClient) {
-    _redisClient = createClient({ url: process.env.REDIS_URL });
-    _redisClient.on('error', () => {});
-    await _redisClient.connect();
-  }
+  if (_redisClient && _redisClient.isReady) return _redisClient;
+  if (_redisClient) { try { await _redisClient.disconnect(); } catch(e) {} }
+  _redisClient = createClient({ url: process.env.REDIS_URL, socket: { reconnectStrategy: (retries) => retries < 3 ? Math.min(retries * 200, 1000) : false } });
+  _redisClient.on('error', () => {});
+  await _redisClient.connect();
   return _redisClient;
 }
 
