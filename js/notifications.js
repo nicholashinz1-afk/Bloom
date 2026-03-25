@@ -13,6 +13,10 @@ function openSheet(...args) { return window.openSheet?.(...args); }
 function closeAllSheets(...args) { return window.closeAllSheets?.(...args); }
 function archiveToday(...args) { return window.archiveToday?.(...args); }
 function loadState(...args) { return window.loadState?.(...args); }
+function checkForUpdate(...args) { return window.checkForUpdate?.(...args); }
+function renderDailyQuote(...args) { return window.renderDailyQuote?.(...args); }
+function updateProgressTab(...args) { return window.updateProgressTab?.(...args); }
+function getCompletionRate(...args) { return window.getCompletionRate?.(...args); }
 
 function checkDailyAffirmation() {
   const lastShown = load('bloom_affirmation_date', null);

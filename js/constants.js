@@ -522,3 +522,4 @@ export const XP_VALUES = {
   skincare_am: 15, skincare_pm: 15, skincare_any: 15,
   // Medication adherence — one of the most impactful mental health actions
   medication_am: 20, medication_pm: 20, medication_any: 20,
+};

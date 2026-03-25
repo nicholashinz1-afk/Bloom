@@ -56,6 +56,14 @@ import './features/mood.js';
 import './whatsnew.js';
 import './seasonal.js';
 
+// ── Window bindings for cross-module late-bound references ──
+window.loadState = loadState;
+window.saveState = saveState;
+window.checkForUpdate = checkForUpdate;
+window.renderDailyQuote = renderDailyQuote;
+window.initApp = initApp;
+window.checkAutoGenerateInsight = checkAutoGenerateInsight;
+
 // ── App initialization ──────────────────────────────────────
 
 function initApp() {

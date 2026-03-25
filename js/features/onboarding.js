@@ -8,6 +8,9 @@ import { bloomIcon } from '../icons.js';
 
 // Late-bound cross-module references (avoid circular imports)
 function saveState(...args) { return window.saveState?.(...args); }
+function initApp(...args) { return window.initApp?.(...args); }
+function switchTab(...args) { return window.switchTab?.(...args); }
+function showBackupSheet(...args) { return window.showBackupSheet?.(...args); }
 
 let obStep = 0;
 let obData = {

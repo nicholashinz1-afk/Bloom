@@ -10,6 +10,7 @@ import { updateStreak } from './streaks.js';
 // Late-bound cross-module references (avoid circular imports)
 function renderTodayTab(...args) { return window.renderTodayTab?.(...args); }
 function renderWeeklyTab(...args) { return window.renderWeeklyTab?.(...args); }
+function updateProgressTab(...args) { return window.updateProgressTab?.(...args); }
 
 export function toggleHabit(habitId, el) {
   const wasDone = state.todayData[habitId];
@@ -293,6 +294,7 @@ export function showPartialCompletionToast(type) {
 // ============================================================
 window.archiveToday = archiveToday;
 window.checkFirstTaskStreak = checkFirstTaskStreak;
+window.getCompletionRate = getCompletionRate;
 
 export function archiveToday() {
   const t = today();

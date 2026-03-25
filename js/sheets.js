@@ -249,6 +249,8 @@ function openScienceSheet(scrollTo) {
 }
 
 function infoIcon(sectionId) {
+  return `<span onclick="showInfoTip('${sectionId}',event)" style="cursor:pointer;font-size:12px;color:var(--text-muted);opacity:0.5;margin-left:6px;vertical-align:middle" title="Why this matters">ⓘ</span>`;
+}
 
 export { openSheet, closeAllSheets, openCrisisSheet, SCIENCE_SECTIONS,
   showInfoTip, openScienceSheet, infoIcon };
