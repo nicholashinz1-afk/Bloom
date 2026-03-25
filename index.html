@@ -82,6 +82,8 @@
   --crisis-height: 44px;
   --header-height: 56px;
   --pride-active: 0;
+  --theme-accent: linear-gradient(90deg, #1a2e1c, #4a7a4e, #7a9e7e, #4a7a4e, #1a2e1c);
+  --theme-accent-height: 3px;
 }
 
 /* ============================================================
@@ -130,14 +132,13 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   position: relative;
 }
 
-/* Pride theme rainbow accent bar */
+/* Per-theme accent bar */
 #app::before {
   content: '';
   display: block;
-  height: calc(3px * var(--pride-active));
-  background: linear-gradient(90deg, #e04050, #e87030, #e8c840, #50b868, #4080d0, #9050c8);
+  height: var(--theme-accent-height, 0px);
+  background: var(--theme-accent);
   flex-shrink: 0;
-  opacity: var(--pride-active);
   transition: height 0.3s, opacity 0.3s;
 }
 
@@ -404,12 +405,12 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   position: absolute;
   left: 12px;
   right: 12px;
-  background: #1e3022;
-  border: 2px solid #5a9e60;
+  background: var(--bg-card);
+  border: 2px solid var(--sage);
   border-radius: var(--r-xl);
   padding: 16px 18px;
   z-index: 490;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 0 4px rgba(90,158,96,0.15);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 0 4px rgba(var(--sage-rgb),0.15);
   display: flex;
   align-items: center;
   gap: 14px;
@@ -433,13 +434,13 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   font-family: 'Fraunces', serif;
   font-size: 17px;
   font-weight: 400;
-  color: #e8f0e8;
+  color: var(--cream);
   line-height: 1.3;
   margin-bottom: 3px;
 }
 .celebrate-toast-sub {
   font-size: 13px;
-  color: #a8c5ab;
+  color: var(--sage-light);
   font-style: italic;
   font-family: 'Fraunces', serif;
 }
@@ -2232,8 +2233,8 @@ body.hard-day-active #app {
   transition: filter 0.8s ease;
 }
 body.hard-day-active .celebrate-toast {
-  border-color: rgba(106,154,176,0.3);
-  background: #152028;
+  border-color: rgba(var(--sage-rgb),0.3);
+  background: var(--bg-elevated);
 }
 
 /* ── High contrast mode ─────────────────────────────────── */
@@ -3611,7 +3612,8 @@ function addRipple(el, e) {
 
 // ── Confetti burst ───────────────────────────────────────────
 function launchConfetti(cx, cy, count = 40) {
-  const colors = ['#7a9e7e','#a8c5ab','#c9954a','#e0b87a','#b07878','#d4a8a8','#6a9ab0','#9ec4d8','#e8e0d0'];
+  const themeKey = state.prefs?.theme || 'forest';
+  const colors = (THEMES[themeKey] || THEMES.forest).confetti;
   const shapes = ['2px','50%','0'];
   for (let i = 0; i < count; i++) {
     const p = document.createElement('div');
@@ -4839,6 +4841,8 @@ const THEMES = {
     bgOverlay: 'rgba(13,22,16,0.93)',
     primary: '#7a9e7e', primaryLight: '#a8c5ab', primaryDim: '#2e4d32',
     textSecondary: '#8a9e8c', textMuted: '#4a5e4c', seasonal: '#a8c5ab',
+    accent: 'linear-gradient(90deg, #1a2e1c, #4a7a4e, #7a9e7e, #4a7a4e, #1a2e1c)',
+    confetti: ['#7a9e7e','#a8c5ab','#5c8a60','#c8deca','#e8e0d0'],
   },
   ocean: {
     name: 'Ocean', emoji: '🌊', description: 'Deep blue, calm',
@@ -4846,6 +4850,8 @@ const THEMES = {
     bgOverlay: 'rgba(13,19,24,0.93)',
     primary: '#6a9ab0', primaryLight: '#9ec4d8', primaryDim: '#1a3a50',
     textSecondary: '#7a9eb0', textMuted: '#3a5868', seasonal: '#9ec4d8',
+    accent: 'linear-gradient(90deg, #0d1a28, #3a6a80, #6a9ab0, #3a6a80, #0d1a28)',
+    confetti: ['#6a9ab0','#9ec4d8','#4a7a90','#b8dae8','#e8e0d0'],
   },
   rose: {
     name: 'Rose', emoji: '🌸', description: 'Warm mauve, soft',
@@ -4853,6 +4859,8 @@ const THEMES = {
     bgOverlay: 'rgba(24,13,16,0.93)',
     primary: '#b07878', primaryLight: '#d4a8a8', primaryDim: '#4a2030',
     textSecondary: '#b08888', textMuted: '#603848', seasonal: '#d4a8a8',
+    accent: 'linear-gradient(90deg, #2a1418, #804858, #b07878, #804858, #2a1418)',
+    confetti: ['#b07878','#d4a8a8','#c89090','#e8c8c8','#e8e0d0'],
   },
   amber: {
     name: 'Amber', emoji: '🌅', description: 'Warm gold, cozy',
@@ -4860,6 +4868,8 @@ const THEMES = {
     bgOverlay: 'rgba(24,15,8,0.93)',
     primary: '#c9954a', primaryLight: '#e0b87a', primaryDim: '#5c3f1a',
     textSecondary: '#b09060', textMuted: '#604830', seasonal: '#e0b87a',
+    accent: 'linear-gradient(90deg, #281a0a, #8a6530, #c9954a, #8a6530, #281a0a)',
+    confetti: ['#c9954a','#e0b87a','#a87830','#f0d8a0','#e8e0d0'],
   },
   pastel: {
     name: 'Pastel', emoji: '🧸', description: 'Soft, gentle, quiet',
@@ -4867,6 +4877,8 @@ const THEMES = {
     bgOverlay: 'rgba(26,26,34,0.93)',
     primary: '#b5a8c8', primaryLight: '#d4c8e8', primaryDim: '#3e3650',
     textSecondary: '#a8a0b8', textMuted: '#585068', seasonal: '#d4c8e8',
+    accent: 'linear-gradient(90deg, #22202e, #7a6e98, #b5a8c8, #7a6e98, #22202e)',
+    confetti: ['#b5a8c8','#d4c8e8','#9888b8','#e0d8f0','#e8e0d0'],
   },
   pride: {
     name: 'Pride', emoji: '🏳️‍🌈', description: 'Warm, inclusive, radiant',
@@ -4875,6 +4887,8 @@ const THEMES = {
     primary: '#c8a0d8', primaryLight: '#e0c0f0', primaryDim: '#3e2850',
     textSecondary: '#b8a0c8', textMuted: '#5a4870', seasonal: '#e0c0f0',
     pride: true,
+    accent: 'linear-gradient(90deg, #e04050, #e87030, #e8c840, #50b868, #4080d0, #9050c8)',
+    confetti: ['#e04050','#e87030','#e8c840','#50b868','#4080d0','#9050c8'],
   },
 };
 
@@ -4900,6 +4914,8 @@ function applyTheme(themeKey) {
   r.setProperty('--text-muted',     t.textMuted);
   r.setProperty('--seasonal',       t.seasonal);
   r.setProperty('--pride-active',   t.pride ? '1' : '0');
+  r.setProperty('--theme-accent',   t.accent);
+  r.setProperty('--theme-accent-height', '3px');
   document.body.style.background = t.bg;
 }
 
@@ -9050,11 +9066,14 @@ function renderSettingsTab() {
         return `
         <div onclick="setTheme('${key}')" style="
           background:${t.bg};border:2px solid ${key === currentTheme ? t.primary : 'rgba(255,255,255,0.08)'};
-          border-radius:var(--r-lg);padding:14px 12px;cursor:pointer;
+          border-radius:var(--r-lg);padding:0;cursor:pointer;
           transition:border-color 0.2s;position:relative;overflow:hidden">
-          <div style="display:flex;gap:5px;margin-bottom:8px">${dots}</div>
-          <div style="font-size:13px;font-weight:500;color:${t.primaryLight}">${t.emoji} ${t.name}</div>
-          <div style="font-size:11px;color:${t.textSecondary};margin-top:2px">${t.description}</div>
+          <div style="height:3px;background:${t.accent};border-radius:var(--r-lg) var(--r-lg) 0 0"></div>
+          <div style="padding:12px 12px 14px">
+            <div style="display:flex;gap:5px;margin-bottom:8px">${dots}</div>
+            <div style="font-size:13px;font-weight:500;color:${t.primaryLight}">${t.emoji} ${t.name}</div>
+            <div style="font-size:11px;color:${t.textSecondary};margin-top:2px">${t.description}</div>
+          </div>
           ${key === currentTheme ? `<div style="position:absolute;top:8px;right:8px;font-size:12px;color:${t.primary}">✓</div>` : ''}
         </div>`;
       }).join('')}
@@ -10967,7 +10986,7 @@ function closeReintro() {
   setTimeout(() => {
     const div = document.createElement('div');
     div.style.cssText = `position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
-      background:#1e3022;border:2px solid #5a9e60;border-radius:99px;
+      background:var(--bg-card);border:2px solid var(--sage);border-radius:99px;
       padding:12px 24px;font-size:14px;color:var(--cream);z-index:600;
       font-family:Fraunces,serif;font-style:italic;white-space:nowrap;
       animation:celebrateIn 0.4s ease forwards`;
@@ -11001,7 +11020,7 @@ function runWhatsNewTourStep(items) {
     const doneAppRect = document.getElementById('app')?.getBoundingClientRect() || { left: 0, width: window.innerWidth };
     const doneCx = doneAppRect.left + doneAppRect.width / 2;
     div.style.cssText = `position:fixed;bottom:100px;left:${doneCx}px;transform:translateX(-50%);
-      background:#1e3022;border:2px solid #5a9e60;border-radius:99px;
+      background:var(--bg-card);border:2px solid var(--sage);border-radius:99px;
       padding:12px 24px;font-size:14px;color:var(--cream);z-index:600;
       font-family:Fraunces,serif;font-style:italic;white-space:nowrap;
       animation:celebrateIn 0.4s ease forwards`;
@@ -11074,14 +11093,14 @@ function showTourSpotlight(el, text, total, onNext) {
       <rect width="${appW}" height="${appH}" fill="rgba(0,0,0,0.7)" mask="url(#tour-mask)"/>
       <rect x="${relLeft - pad}" y="${relTop - pad}"
         width="${elRect.width + pad*2}" height="${elRect.height + pad*2}"
-        rx="12" fill="none" stroke="#5a9e60" stroke-width="2"
+        rx="12" fill="none" stroke="var(--sage, #5a9e60)" stroke-width="2"
         style="animation:pulse 1.5s ease-in-out infinite"/>
     </svg>
     <div style="
       position:absolute;
       left:16px;right:16px;
       ${cardPos};
-      background:#1e3022;border:2px solid #5a9e60;border-radius:20px;
+      background:var(--bg-card);border:2px solid var(--sage);border-radius:20px;
       padding:16px 18px;pointer-events:all;
       box-shadow:0 8px 32px rgba(0,0,0,0.8)">
       <div style="font-size:11px;color:var(--sage-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">
@@ -11098,8 +11117,8 @@ function showTourSpotlight(el, text, total, onNext) {
           Skip tour
         </button>
         <button id="tour-next-btn" style="
-          flex:1;background:rgba(90,158,96,0.2);border:1px solid #5a9e60;
-          color:#a8c5ab;border-radius:99px;padding:8px 16px;
+          flex:1;background:rgba(var(--sage-rgb),0.2);border:1px solid var(--sage);
+          color:var(--sage-light);border-radius:99px;padding:8px 16px;
           font-size:13px;cursor:pointer;font-family:Instrument Sans,sans-serif">
           ${whatsNewTourStep + 1 >= total ? 'Done ✓' : 'Next →'}
         </button>
