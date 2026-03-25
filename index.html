@@ -3158,6 +3158,7 @@ const HABIT_AFFIRMATIONS = {
   w_shower: ["That took real courage.", "A clean start changes everything.", "You showed up for yourself."],
   w_exercise: ["Your body says thank you.", "You showed up and moved.", "That took effort — and you did it."],
   w_outside: ["Fresh air is self-care.", "The world needed your presence today.", "Outside counts."],
+  w_therapy: ["You showed up for yourself today.", "Asking for help is the bravest thing.", "That session matters more than you know."],
   mood: ["Noted — thanks for checking in.", "Awareness is the first step."],
   water: ["Hydration is self-care.", "Your body thanks you.", "One sip at a time."],
   food: ["Nourishment matters.", "You fed yourself. That counts.", "Taking care from the inside."],
@@ -3568,6 +3569,7 @@ function getDailyCompletionCount() {
   if ((wd.w_shower || 0) > 0) count++;
   if ((wd.w_exercise || 0) > 0) count++;
   if ((wd.w_outside || 0) > 0) count++;
+  if ((wd.w_therapy || 0) > 0) count++;
   // Self-care tasks
   const sc = state.todayData?.selfCare || {};
   count += Object.values(sc).filter(Boolean).length;
@@ -5642,6 +5644,19 @@ const CELEBRATIONS = {
       { title: 'Green therapy.', sub: 'Your nervous system thanks you.' },
     ],
   },
+  w_therapy: {
+    emoji: '🛋️', xp: 25,
+    messages: [
+      { title: 'You showed up for yourself.', sub: 'That takes real courage.' },
+      { title: 'Therapy session done.', sub: 'Investing in yourself is never wasted.' },
+      { title: 'You did something brave today.', sub: 'Asking for help is strength.' },
+      { title: 'Session complete.', sub: 'Growth isn\'t always visible, but it\'s happening.' },
+      { title: 'You kept the appointment.', sub: 'Future you is grateful.' },
+      { title: 'Another session in the books.', sub: 'You\'re doing the work. That matters.' },
+      { title: 'Proud of you.', sub: 'Not everyone has the courage to sit in that chair.' },
+      { title: 'You chose yourself today.', sub: 'That\'s what healing looks like.' },
+    ],
+  },
   household: {
     emoji: '🏠', xp: 15,
     messages: [
@@ -6055,7 +6070,7 @@ function celebrate(type, sourceEl) {
 // - Physical activity is valued but not disproportionately above self-care
 const XP_VALUES = {
   m_teeth: 15, e_teeth: 15, w_shower: 20, w_exercise: 20,
-  w_outside: 20, water_goal: 15, food: 15, journal: 20,
+  w_outside: 20, w_therapy: 25, water_goal: 15, food: 15, journal: 20,
   household: 15, reflection: 20,
   // Daily habits — all self-care is equally valued
   brush_teeth_am: 15, brush_teeth_pm: 15, brush_teeth_any: 15,
@@ -7710,6 +7725,7 @@ function renderWeeklyTab() {
     { id: 'w_shower',   icon: '🚿', name: 'Shower' },
     { id: 'w_exercise', icon: '💪', name: 'Exercise' },
     { id: 'w_outside',  icon: '🌿', name: 'Go outside' },
+    { id: 'w_therapy',  icon: '🛋️', name: 'Go to therapy' },
   ].filter(h => prefs?.habits?.[h.id] !== false);
 
   if (weeklyHabits.length > 0) {
@@ -8195,6 +8211,7 @@ async function generateWeeklyInsight(e) {
   const exerciseCount = wd.w_exercise || 0;
   const showerCount = wd.w_shower || 0;
   const outsideCount = wd.w_outside || 0;
+  const therapyCount = wd.w_therapy || 0;
   const journalDays = weekDates.filter(d => state.wellnessData?.journal?.[d]).length;
   const waterDays = weekDates.filter(d => (state.historyData[d]?.habits?.waterXPGiven)).length;
   const breathSessions = state.wellnessData?.breathSessions || 0;
@@ -8209,6 +8226,7 @@ async function generateWeeklyInsight(e) {
     exerciseCount > 0 ? `exercised ${exerciseCount} time${exerciseCount > 1 ? 's' : ''}` : null,
     showerCount > 0 ? `showered ${showerCount} time${showerCount > 1 ? 's' : ''}` : null,
     outsideCount > 0 ? `went outside ${outsideCount} time${outsideCount > 1 ? 's' : ''}` : null,
+    therapyCount > 0 ? `went to therapy ${therapyCount} time${therapyCount > 1 ? 's' : ''}` : null,
     journalDays > 0 ? `journaled ${journalDays} day${journalDays > 1 ? 's' : ''}` : null,
     breathSessions > 0 ? `did ${breathSessions} breathing session${breathSessions > 1 ? 's' : ''}` : null,
   ].filter(Boolean).join(', ');
@@ -8732,6 +8750,7 @@ function renderProgressTab() {
     { key: 'w_exercise', icon: '💪', label: 'Exercise',  daily: false },
     { key: 'w_shower',   icon: '🚿', label: 'Shower',    daily: false },
     { key: 'w_outside',  icon: '🌿', label: 'Go outside', daily: false },
+    { key: 'w_therapy',  icon: '🛋️', label: 'Go to therapy', daily: false },
   ].filter(h => state.prefs?.habits?.[h.key] !== false).forEach(h => habitRows.push(h));
 
   habitRows.forEach(h => {
@@ -8898,6 +8917,7 @@ async function generateRollingInsight() {
     (wd.w_exercise || 0) > 0 ? 'exercised' : null,
     (wd.w_shower || 0) > 0 ? 'showered' : null,
     (wd.w_outside || 0) > 0 ? 'gone outside' : null,
+    (wd.w_therapy || 0) > 0 ? 'went to therapy' : null,
   ].filter(Boolean);
 
   const ai = await callClaude(
@@ -9008,7 +9028,7 @@ function openHistoryDetail(dateStr) {
 
   const habits = entry.habits || {};
   const habitNames = {
-    m_teeth:'Morning brush', e_teeth:'Evening brush', w_shower:'Shower', w_exercise:'Exercise', w_outside:'Go outside',
+    m_teeth:'Morning brush', e_teeth:'Evening brush', w_shower:'Shower', w_exercise:'Exercise', w_outside:'Go outside', w_therapy:'Go to therapy',
     brush_teeth_am:'Brush teeth (AM)', brush_teeth_pm:'Brush teeth (PM)',
     brush_hair_am:'Brush hair (AM)', brush_hair_pm:'Brush hair (PM)',
     wash_face_am:'Wash face (AM)', wash_face_pm:'Wash face (PM)',
@@ -9325,6 +9345,7 @@ function renderSettingsTab() {
       { id: 'w_shower',   icon: '🚿', label: 'Shower' },
       { id: 'w_exercise', icon: '💪', label: 'Exercise' },
       { id: 'w_outside',  icon: '🌿', label: 'Go outside' },
+      { id: 'w_therapy',  icon: '🛋️', label: 'Go to therapy' },
     ].map(h => `<div class="toggle-row">
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-size:18px">${h.icon}</span>
@@ -11200,10 +11221,10 @@ function renderDailyQuote() {
 let obStep = 0;
 let obData = {
   name: '',
-  habits: { m_teeth: true, e_teeth: true, w_shower: true, w_exercise: true, w_outside: true, track_meals: false },
+  habits: { m_teeth: true, e_teeth: true, w_shower: true, w_exercise: true, w_outside: true, w_therapy: false, track_meals: false },
   dailyHabits: { brush_teeth: true },
   habitTimes: { brush_teeth: 'any' },
-  goals: { w_shower: 3, w_exercise: 3, w_outside: 3 },
+  goals: { w_shower: 3, w_exercise: 3, w_outside: 3, w_therapy: 1 },
   householdTasks: [],
   notifications: { waterMode: 'smart', sundayReminder: true },
   audio: true,
@@ -11366,6 +11387,7 @@ function renderOBRoutine(body, footer) {
     { id: 'w_shower', icon: '🚿', name: 'Shower', type: 'weekly' },
     { id: 'w_exercise', icon: '💪', name: 'Exercise', type: 'weekly' },
     { id: 'w_outside', icon: '🌿', name: 'Go outside', type: 'weekly' },
+    { id: 'w_therapy', icon: '🛋️', name: 'Go to therapy', type: 'weekly' },
   ];
 
   let html = `<div class="ob-title">Your routine</div>
@@ -11567,6 +11589,7 @@ function renderOBHabits(body, footer) {
     { id: 'w_shower', icon: '🚿', name: 'Shower', type: 'weekly' },
     { id: 'w_exercise', icon: '💪', name: 'Exercise', type: 'weekly' },
     { id: 'w_outside', icon: '🌿', name: 'Go outside', type: 'weekly' },
+    { id: 'w_therapy', icon: '🛋️', name: 'Go to therapy', type: 'weekly' },
   ];
 
   let html = `<div class="ob-title">Choose your habits</div>
