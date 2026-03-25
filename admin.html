@@ -409,14 +409,26 @@ function renderOverview() {
 
   document.getElementById('overview-cards').innerHTML = `
     <div class="card">
-      <h3>Users</h3>
+      <h3>Activity Today</h3>
       <div class="stat-row">
-        <span class="stat-label">Today</span>
+        <span class="stat-label">Unique users</span>
         <span class="stat-value good">${todayUniqueUsers}</span>
       </div>
       <div class="stat-row">
-        <span class="stat-label">30-day unique</span>
-        <span class="stat-value" style="font-size:16px">${totalUniqueUsers}</span>
+        <span class="stat-label">Total events</span>
+        <span class="stat-value" style="font-size:16px">${todayTotal}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">30-day unique users</span>
+        <span style="font-size:14px;color:var(--cream)">${totalUniqueUsers}</span>
+      </div>
+      <div style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">
+      ${Object.entries(todayStats).filter(([k]) => !k.startsWith('_') && k !== 'unique_users').sort(([,a],[,b]) => b - a).slice(0, 5).map(([k, v]) => `
+        <div class="stat-row">
+          <span class="stat-label" style="font-size:12px">${k.replace('feature:', '').replace('event:', '')}</span>
+          <span style="font-size:13px;color:var(--text-secondary)">${v}</span>
+        </div>
+      `).join('')}
       </div>
     </div>
 
@@ -445,20 +457,6 @@ function renderOverview() {
         <span class="stat-value" style="font-size:16px">${d.errors.total}</span>
       </div>
       ${d.errors.recent.length > 0 ? `<div style="margin-top:8px;font-size:12px;color:var(--text-muted)">Latest: ${timeAgo(d.errors.recent[0]?.ts)}</div>` : ''}
-    </div>
-
-    <div class="card">
-      <h3>Activity Today</h3>
-      <div class="stat-row">
-        <span class="stat-label">Total events</span>
-        <span class="stat-value good">${todayTotal}</span>
-      </div>
-      ${Object.entries(todayStats).filter(([k]) => !k.startsWith('_') && k !== 'unique_users').slice(0, 5).map(([k, v]) => `
-        <div class="stat-row">
-          <span class="stat-label">${k.replace('feature:', '').replace('event:', '')}</span>
-          <span style="font-size:14px;color:var(--cream)">${v}</span>
-        </div>
-      `).join('')}
     </div>
   `;
 
