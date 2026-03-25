@@ -6739,7 +6739,7 @@ function renderTodayTop() {
       <span style="font-size:22px">🫂</span>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:500;color:var(--sky-light)">Having a hard day?</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Tap for support — your streak is protected</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Tap for support — showing up is what matters</div>
       </div>
       <div style="font-size:18px;color:var(--text-muted)">›</div>
     </div>`;
@@ -11218,13 +11218,13 @@ let obData = {
 function getOBPath() {
   if (obData.readiness === 'ready') {
     // Full setup: Welcome+Name → Readiness → Habits+SelfCare → Appearance+Sound+Notifications → Ready
-    return ['welcome', 'readiness', 'routine', 'customize', 'ready'];
+    return ['welcome', 'readiness', 'routine', 'customize', 'install', 'ready'];
   } else if (obData.readiness === 'gentle') {
-    // Minimal: Welcome+Name → Readiness → Ready (smart defaults, gentle mode)
-    return ['welcome', 'readiness', 'ready'];
+    // Minimal: Welcome+Name → Readiness → Install → Ready (smart defaults, gentle mode)
+    return ['welcome', 'readiness', 'install', 'ready'];
   } else if (obData.readiness === 'exploring') {
-    // Quick: Welcome+Name → Readiness → Appearance → Ready
-    return ['welcome', 'readiness', 'customize', 'ready'];
+    // Quick: Welcome+Name → Readiness → Appearance → Install → Ready
+    return ['welcome', 'readiness', 'customize', 'install', 'ready'];
   }
   // Before readiness is chosen
   return ['welcome', 'readiness'];
@@ -11247,6 +11247,7 @@ function renderOnboarding() {
     case 'readiness':  renderOBReadiness(body, footer); break;
     case 'routine':    renderOBRoutine(body, footer); break;
     case 'customize':  renderOBCustomize(body, footer); break;
+    case 'install':    renderOBInstall(body, footer); break;
     case 'ready':      renderOBReady(body, footer); break;
   }
 }
