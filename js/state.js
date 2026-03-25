@@ -102,4 +102,7 @@ function migrateJournalFormat() {
   if (migrated) saveState();
 }
 
+// Expose state getter for cross-module access (used by telemetry to avoid circular imports)
+window._getBloomState = () => state;
+
 export { state, today, dayOfWeek, weekStart, formatDateLabel, getDayIndex, getWeekDates, loadState, saveState, getJournalPrompt, getJournalEntries, getLatestJournalText, migrateJournalFormat };
