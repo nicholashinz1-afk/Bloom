@@ -14082,21 +14082,7 @@ function renderCommunityTab() {
     </div>`;
   } else {
     wallMessages.forEach(msg => {
-      const timeAgo = getTimeAgo(msg.ts);
-      const hearted = wallHearted[msg.id];
-      html += `<div class="card wall-message" style="padding:14px 16px;margin-bottom:8px">
-        <div style="font-size:14px;color:var(--cream);line-height:1.6;font-family:Fraunces,serif;font-style:italic">"${escapeHtml(msg.text)}"</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-          <div style="display:flex;align-items:center;gap:12px">
-            <button onclick="heartWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:99px;transition:all 0.2s;${hearted ? 'background:rgba(201,149,74,0.15)' : ''}" ${hearted ? 'disabled' : ''}>
-              <span style="font-size:14px">${hearted ? '💛' : '🤍'}</span>
-              <span style="font-size:12px;color:${hearted ? 'var(--amber-light)' : 'var(--text-muted)'}">${msg.hearts || 0}</span>
-            </button>
-            <button onclick="reportWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);opacity:0.5;padding:4px" title="Report">flag</button>
-          </div>
-          <div style="font-size:11px;color:var(--text-muted)">${timeAgo}</div>
-        </div>
-      </div>`;
+      html += renderWallMessageCard(msg);
     });
   }
   html += `</div>`;
@@ -14126,6 +14112,47 @@ function renderCommunityTab() {
   renderBuddyContent();
 }
 
+// Track which moderated messages the user has chosen to reveal this session
+let wallRevealedIds = {};
+
+function renderWallMessageCard(msg) {
+  const timeAgo = getTimeAgo(msg.ts);
+  const hearted = wallHearted[msg.id];
+  const isModerated = msg.moderated && !wallRevealedIds[msg.id];
+
+  if (isModerated) {
+    return `<div class="card wall-message" style="padding:14px 16px;margin-bottom:8px;position:relative;opacity:0.45">
+      <div style="font-size:14px;color:var(--cream);line-height:1.6;font-family:Fraunces,serif;font-style:italic;filter:blur(4px);user-select:none" aria-hidden="true">"${escapeHtml(msg.text)}"</div>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center">
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:8px">This message may not be appropriate for this space.</div>
+        <button onclick="revealWallMessage('${msg.id}')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 14px;font-size:11px;color:var(--text-muted);cursor:pointer">Show anyway</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:10px">
+        <div style="font-size:11px;color:var(--text-muted)">${timeAgo}</div>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="card wall-message" style="padding:14px 16px;margin-bottom:8px">
+    <div style="font-size:14px;color:var(--cream);line-height:1.6;font-family:Fraunces,serif;font-style:italic">"${escapeHtml(msg.text)}"</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button onclick="heartWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:99px;transition:all 0.2s;${hearted ? 'background:rgba(201,149,74,0.15)' : ''}" ${hearted ? 'disabled' : ''}>
+          <span style="font-size:14px">${hearted ? '💛' : '🤍'}</span>
+          <span style="font-size:12px;color:${hearted ? 'var(--amber-light)' : 'var(--text-muted)'}">${msg.hearts || 0}</span>
+        </button>
+        <button onclick="reportWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);opacity:0.5;padding:4px" title="Report">flag</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted)">${timeAgo}</div>
+    </div>
+  </div>`;
+}
+
+function revealWallMessage(id) {
+  wallRevealedIds[id] = true;
+  renderWallMessages();
+}
+
 function renderWallMessages() {
   const container = document.getElementById('wall-messages');
   if (!container) return;
@@ -14138,21 +14165,7 @@ function renderWallMessages() {
     </div>`;
   } else {
     wallMessages.forEach(msg => {
-      const timeAgo = getTimeAgo(msg.ts);
-      const hearted = wallHearted[msg.id];
-      html += `<div class="card wall-message" style="padding:14px 16px;margin-bottom:8px">
-        <div style="font-size:14px;color:var(--cream);line-height:1.6;font-family:Fraunces,serif;font-style:italic">"${escapeHtml(msg.text)}"</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-          <div style="display:flex;align-items:center;gap:12px">
-            <button onclick="heartWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:99px;transition:all 0.2s;${hearted ? 'background:rgba(201,149,74,0.15)' : ''}" ${hearted ? 'disabled' : ''}>
-              <span style="font-size:14px">${hearted ? '💛' : '🤍'}</span>
-              <span style="font-size:12px;color:${hearted ? 'var(--amber-light)' : 'var(--text-muted)'}">${msg.hearts || 0}</span>
-            </button>
-            <button onclick="reportWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);opacity:0.5;padding:4px" title="Report">flag</button>
-          </div>
-          <div style="font-size:11px;color:var(--text-muted)">${timeAgo}</div>
-        </div>
-      </div>`;
+      html += renderWallMessageCard(msg);
     });
   }
   container.innerHTML = html;

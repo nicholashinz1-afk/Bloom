@@ -124,6 +124,39 @@ async function logModeration(source, result) {
   } catch(e) {}
 }
 
+// ── User moderation strikes (shared store with wall.js) ─────
+const STRIKES_KEY = 'bloom_mod:strikes';
+
+async function getStrikes() {
+  return await kvGet(STRIKES_KEY) || {};
+}
+
+async function saveStrikes(strikes) {
+  await kvSet(STRIKES_KEY, strikes);
+}
+
+async function recordStrike(userId, reason, source, messageText) {
+  if (!userId) return;
+  const strikes = await getStrikes();
+  if (!strikes[userId]) strikes[userId] = { incidents: [], banned: false };
+  strikes[userId].incidents.push({
+    reason,
+    source,
+    text: (messageText || '').slice(0, 80),
+    ts: Date.now(),
+  });
+  if (strikes[userId].incidents.length > 50) {
+    strikes[userId].incidents = strikes[userId].incidents.slice(-50);
+  }
+  await saveStrikes(strikes);
+}
+
+async function isUserBanned(userId) {
+  if (!userId) return false;
+  const strikes = await getStrikes();
+  return strikes[userId]?.banned === true;
+}
+
 // ── OneSignal push notification helper ──────────────────────
 async function sendPush(playerId, title, message) {
   const appId = process.env.ONESIGNAL_APP_ID;
@@ -454,6 +487,11 @@ export default async function handler(req, res) {
     const { prefs } = body;
     if (!buddyId) return res.status(400).json({ error: 'Missing buddyId' });
 
+    // Block banned users from finding new buddies
+    if (await isUserBanned(buddyId)) {
+      return res.json({ ok: false, reason: 'not-available' });
+    }
+
     // Check buddy limit
     const myLookup = await getLookup(buddyId);
     if (!canAddBuddy(buddyId, myLookup)) return res.json({ ok: false, reason: 'max-buddies' });
@@ -615,9 +653,17 @@ export default async function handler(req, res) {
     const { text, pairId } = body;
     if (!buddyId || !text) return res.status(400).json({ error: 'Missing buddyId or text' });
 
+    // Check if user is banned from social features
+    if (await isUserBanned(buddyId)) {
+      return res.json({ ok: false, reason: 'filtered' });
+    }
+
     const check = moderateMessage(text);
     await logModeration('buddy_message', check);
-    if (!check.ok) return res.json({ ok: false, reason: check.reason });
+    if (!check.ok) {
+      await recordStrike(buddyId, check.reason, 'buddy', text);
+      return res.json({ ok: false, reason: check.reason });
+    }
 
     const lookup = await getLookup(buddyId);
     const targetPair = pairId
