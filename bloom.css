@@ -27,7 +27,7 @@
   /* Text */
   --text-primary:   #e8e0d0;
   --text-secondary: #8a9e8c;
-  --text-muted:     #4a5e4c;
+  --text-muted:     #6b7f6d;
   --text-on-sage:   #0a1a0b;
 
   --seasonal:      #a8c5ab;
@@ -58,6 +58,9 @@
   --nav-height:  64px;
   --crisis-height: 44px;
   --header-height: 56px;
+  --pride-active: 0;
+  --theme-accent: linear-gradient(90deg, #1a2e1c, #4a7a4e, #7a9e7e, #4a7a4e, #1a2e1c);
+  --theme-accent-height: 3px;
 }
 
 /* ============================================================
@@ -106,6 +109,16 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   position: relative;
 }
 
+/* Per-theme accent bar */
+#app::before {
+  content: '';
+  display: block;
+  height: var(--theme-accent-height, 0px);
+  background: var(--theme-accent);
+  flex-shrink: 0;
+  transition: height 0.3s, opacity 0.3s;
+}
+
 /* Sticky header */
 #app-header {
   flex-shrink: 0;
@@ -151,6 +164,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   line-height: 1;
 }
 #crisis-heart:active { opacity: 0.8; transform: scale(0.92); }
+#settings-gear:active { opacity: 0.8; transform: scale(0.92); }
 
 /* Tab content area */
 #tab-content {
@@ -246,6 +260,38 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
 @keyframes levelupBounce {
   from { transform: scale(0.5) rotate(-10deg); opacity: 0; }
   to   { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.flower-grow {
+  animation: flowerGrow 1.2s cubic-bezier(0.34,1.56,0.64,1) both;
+  transform-origin: 100px 160px;
+}
+@keyframes flowerGrow {
+  0%   { transform: scaleY(0.3) scaleX(0.7); opacity: 0.5; }
+  50%  { transform: scaleY(1.1) scaleX(1.05); }
+  100% { transform: scaleY(1) scaleX(1); opacity: 1; }
+}
+.sparkle {
+  animation: sparkleFloat 2s ease-in-out infinite;
+}
+@keyframes sparkleFloat {
+  0%, 100% { opacity: 0.3; transform: translateY(0); }
+  50%      { opacity: 1; transform: translateY(-3px); }
+}
+.glow-pulse {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%, 100% { r: 22; opacity: 0.15; }
+  50%      { r: 28; opacity: 0.3; }
+}
+.streak-grow {
+  animation: streakGrow 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+  transform-origin: 100px 175px;
+}
+@keyframes streakGrow {
+  0%   { transform: scaleY(0) scaleX(0.5); opacity: 0; }
+  60%  { transform: scaleY(1.05) scaleX(1.02); }
+  100% { transform: scaleY(1) scaleX(1); opacity: 1; }
 }
 
 /* ============================================================
@@ -572,6 +618,10 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   padding: 2px 7px;
   border-radius: var(--r-full);
 }
+.habit-xp::after {
+  content: ' ☀️';
+  font-size: 10px;
+}
 
 /* ============================================================
    SECTION HEADERS
@@ -615,6 +665,30 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
 }
 .mood-emoji { font-size: 22px; }
 .mood-label { font-size: 10px; color: var(--text-secondary); font-weight: 500; }
+.mood-btn:last-child { opacity: 0.65; }
+.mood-btn:last-child.selected { opacity: 1; }
+
+/* Feeling words */
+.feelings-toggle {
+  font-size: 12px; color: var(--text-muted); cursor: pointer;
+  text-align: center; margin-top: 10px; padding: 4px 0;
+  transition: color 0.2s;
+}
+.feelings-toggle:hover { color: var(--text-secondary); }
+.feelings-row {
+  display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+  margin-top: 8px; animation: fadeIn 0.25s ease;
+}
+.feeling-pill {
+  display: inline-flex; align-items: center; padding: 5px 11px;
+  border-radius: 99px; cursor: pointer; font-size: 12px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-secondary); transition: all 0.15s; user-select: none;
+}
+.feeling-pill.selected {
+  background: rgba(var(--sage-rgb),0.18); border-color: rgba(var(--sage-rgb),0.45);
+  color: var(--sage-light);
+}
 
 /* ============================================================
    WATER TRACKER
@@ -656,6 +730,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   border-style: solid !important;
   opacity: 1;
 }
+.food-chips {
   display: flex;
   gap: 6px;
   flex-wrap: nowrap;
@@ -896,6 +971,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   flex-shrink: 0;
   border: 1px solid rgba(255,255,255,0.1);
 }
+.toggle:focus-visible { outline: 2px solid var(--sage-light); outline-offset: 2px; }
 .toggle.on { background: var(--sage); border-color: var(--sage); }
 .toggle::after {
   content: '';
@@ -1041,6 +1117,15 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 /* ============================================================
    SETTINGS COLLAPSIBLE
    ============================================================ */
+.settings-group { margin-bottom: 4px; }
+.settings-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 4px 8px;
+  cursor: pointer;
+}
+.settings-group-header:focus-visible { outline: 2px solid var(--sage-light); outline-offset: 2px; border-radius: 4px; }
 .settings-section { margin-bottom: 8px; }
 .settings-header {
   display: flex;
@@ -1079,7 +1164,9 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 .settings-body.open {
   max-height: 2000px;
   padding: 12px 16px 16px;
+  overflow: visible;
 }
+
 
 /* ============================================================
    ONBOARDING
@@ -1231,6 +1318,40 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   font-size: 14px;
   color: var(--sky-light);
   line-height: 1.6;
+}
+.ai-disclaimer {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  opacity: 0.7;
+}
+.ai-feedback {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.ai-feedback-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 3px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ai-feedback-btn:hover, .ai-feedback-btn.selected {
+  background: rgba(106,154,176,0.12);
+  border-color: var(--sky);
+  color: var(--sky-light);
+}
+.ai-feedback-thanks {
+  font-size: 11px;
+  color: var(--sage-light);
+  padding: 3px 0;
 }
 .ai-thinking {
   display: flex;
@@ -1440,19 +1561,21 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 .tutorial-card {
   position: absolute;
-  left: 16px;
-  right: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 398px;
+  max-height: calc(100dvh - 200px);
+  overflow-y: auto;
   background: var(--bg-card);
   border: 1px solid rgba(var(--sage-rgb),0.3);
   border-radius: var(--r-xl);
   padding: 20px;
   box-shadow: var(--shadow-lg);
   animation: scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
-  max-width: 398px;
-  margin: 0 auto;
 }
 .tutorial-card.pos-top { top: calc(var(--safe-top) + 80px); }
-.tutorial-card.pos-mid { top: 50%; transform: translateY(-50%); }
+.tutorial-card.pos-mid { top: 50%; transform: translate(-50%, -50%); }
 .tutorial-card.pos-bottom { bottom: calc(var(--nav-height) + var(--crisis-height) + var(--safe-bottom) + 16px); }
 .tutorial-step-label {
   font-size: 10px;
@@ -1801,6 +1924,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   from { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
   to   { opacity: 0; transform: translateX(-50%) translateY(-12px) scale(0.95); }
 }
+.debug-code-block {
   background: var(--bg-elevated);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--r-md);
@@ -1817,8 +1941,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 /* ============================================================
    BLOOM BUDDY
    ============================================================ */
-
-/* Segmented toggle (Buddy / Wall) */
 .community-toggle {
   display: flex;
   background: var(--bg-mid);
@@ -1845,8 +1967,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   background: var(--sage);
   color: var(--bg);
 }
-
-/* Buddy status card */
 .buddy-card {
   background: var(--bg-card);
   border: 1px solid rgba(255,255,255,0.06);
@@ -1866,17 +1986,33 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   font-weight: 300;
   color: var(--cream);
 }
+.buddy-unread-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(var(--sage-rgb),0.2);
+  border: 1px solid rgba(var(--sage-rgb),0.3);
+  color: var(--sage-light);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 99px;
+  margin-left: 8px;
+  animation: badgeFadeIn 0.3s ease;
+}
+@keyframes badgeFadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
 .buddy-status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   display: inline-block;
-  margin-left: 8px;
 }
 .buddy-status-dot.online { background: #4ade80; }
 .buddy-status-dot.recent { background: #fbbf24; }
 .buddy-status-dot.away   { background: var(--text-muted); }
-
 .buddy-stats {
   display: flex;
   gap: 16px;
@@ -1893,7 +2029,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   color: var(--cream);
   font-weight: 500;
 }
-
 .buddy-habit-bar {
   height: 6px;
   border-radius: 3px;
@@ -1907,8 +2042,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   background: var(--sage);
   transition: width 0.4s ease;
 }
-
-/* Nudge buttons */
 .buddy-nudge-row {
   display: flex;
   flex-wrap: wrap;
@@ -1935,8 +2068,11 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   border-color: rgba(var(--sage-rgb),0.4);
   transform: scale(0.95);
 }
-
-/* Messages */
+.buddy-love-btn:active {
+  background: rgba(176,120,120,0.2);
+  border-color: rgba(176,120,120,0.5);
+  transform: scale(0.93);
+}
 .buddy-messages {
   max-height: 300px;
   overflow-y: auto;
@@ -1975,7 +2111,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   color: var(--text-muted);
   margin-top: 2px;
 }
-
 .buddy-msg-input {
   display: flex;
   gap: 8px;
@@ -1995,8 +2130,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   min-height: 40px;
   max-height: 80px;
 }
-
-/* Invite code display */
 .buddy-invite-code {
   font-family: 'Fraunces', serif;
   font-size: 32px;
@@ -2010,8 +2143,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   border: 1px dashed rgba(255,255,255,0.12);
   margin: 12px 0;
 }
-
-/* Setup flow */
 .buddy-setup-option {
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
@@ -2026,8 +2157,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   background: rgba(var(--sage-rgb),0.2);
   border-color: rgba(var(--sage-rgb),0.4);
 }
-
-/* Preference picker */
 .buddy-pref-option {
   padding: 12px 10px;
   border-radius: var(--r-md);
@@ -2050,8 +2179,6 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   border-color: rgba(var(--sage-rgb),0.4);
   font-weight: 500;
 }
-
-/* Searching animation */
 .buddy-searching {
   text-align: center;
   padding: 30px 20px;
@@ -2073,4 +2200,399 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 @keyframes buddyPulse {
   0%, 100% { opacity: 0.3; transform: scale(0.8); }
   50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* ── Reduced motion ─────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .confetti-piece,
+  .particle,
+  .xp-float,
+  .celebrate-toast { animation: none !important; }
+  .confetti-piece { display: none !important; }
+  .habit-check.done .check-path { stroke-dashoffset: 0 !important; animation: none !important; }
+  .habit-check.done { animation: none !important; }
+  .scroll-progress { display: none !important; }
+  .water-bottle.filling { animation: none !important; }
+  .water-bottle svg animate { display: none; }
+  body.theme-ocean #app-header::after { animation: none !important; background-position: 50% 0; }
+  #inline-breath-zone,
+  #winddown-breath-circle { transition-duration: 0.01ms !important; }
+  @keyframes breathCountNum { from, to { transform: none; } }
+  body.hard-day-active #app { transition-duration: 0.01ms !important; }
+  .celebrate-toast {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ── Per-theme CSS signatures ──────────────────────────── */
+
+/* Forest — dappled light on cards */
+body.theme-forest .card {
+  position: relative;
+  overflow: hidden;
+}
+body.theme-forest .card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 120% 80% at 20% 10%, rgba(var(--sage-light-rgb),0.12) 0%, transparent 60%),
+              radial-gradient(ellipse 100% 60% at 80% 90%, rgba(var(--sage-rgb),0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Ocean — shimmer wave on header border */
+body.theme-ocean #app-header {
+  position: relative;
+}
+body.theme-ocean #app-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(var(--sage-rgb),0.6) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: oceanShimmer 12s ease-in-out infinite;
+}
+@keyframes oceanShimmer {
+  0%   { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Rose — soft blush glow at top of scroll areas */
+body.theme-rose .tab-scroll::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: radial-gradient(ellipse 80% 100% at 50% -10%, rgba(var(--sage-rgb),0.18) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+body.theme-rose .tab-scroll { position: relative; }
+
+/* Amber — warm sunset glow under header */
+body.theme-amber #app-header {
+  box-shadow: 0 4px 30px rgba(var(--sage-rgb),0.18), 0 1px 0 rgba(var(--sage-rgb),0.15);
+}
+
+/* Pastel — soft inner glow on cards */
+body.theme-pastel .card {
+  box-shadow: inset 0 1px 30px rgba(var(--sage-rgb),0.1), 0 1px 4px rgba(0,0,0,0.4);
+}
+
+/* Gradient card borders — all themes (background-clip trick preserves border-radius) */
+.card {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    linear-gradient(135deg,
+      rgba(var(--sage-rgb),0.3) 0%,
+      rgba(var(--sage-light-rgb),0.15) 50%,
+      rgba(var(--sage-rgb),0.3) 100%
+    ) border-box;
+}
+
+/* Pride — rainbow gradient override */
+body.theme-pride .card {
+  background:
+    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    linear-gradient(135deg,
+      rgba(224,64,80,0.35), rgba(232,112,48,0.35), rgba(232,200,64,0.35),
+      rgba(80,184,104,0.35), rgba(64,128,208,0.35), rgba(144,80,200,0.35)
+    ) border-box;
+}
+
+/* ── Hard day: dim accent bar and suppress signatures ──── */
+body.hard-day-active #app::before {
+  opacity: 0.3;
+}
+body.hard-day-active .card::after,
+body.hard-day-active #app-header::after,
+body.hard-day-active .tab-scroll::before {
+  display: none;
+}
+
+/* ── Hard day dimming ───────────────────────────────────── */
+body.hard-day-active {
+  --bg:          #0b120d;
+  --bg-card:     #131b15;
+  --bg-elevated: #182019;
+}
+body.hard-day-active #app {
+  filter: saturate(0.7) brightness(0.92);
+  transition: filter 0.8s ease;
+}
+body.hard-day-active .celebrate-toast {
+  border-color: rgba(var(--sage-rgb),0.3);
+  background: var(--bg-elevated);
+}
+
+/* ── High contrast mode ─────────────────────────────────── */
+body.high-contrast {
+  --text-primary:   #ffffff;
+  --text-secondary: #c0c0c0;
+  --text-muted:     #909090;
+  --bg:             #000000;
+  --bg-mid:         #0a0a0a;
+  --bg-card:        #141414;
+  --bg-elevated:    #1e1e1e;
+  --sage:           #90c894;
+  --sage-light:     #b8e0bb;
+  --amber:          #e0a850;
+  --amber-light:    #f0c870;
+  --rose:           #d08080;
+  --rose-light:     #e8b0b0;
+  --sky:            #80b8d0;
+  --sky-light:      #b0d8f0;
+  --cream:          #ffffff;
+}
+
+/* ── Buddy onboarding ───────────────────────────────────── */
+.buddy-onboard-step {
+  text-align: center;
+  padding: 20px 0;
+}
+.buddy-onboard-progress {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.buddy-onboard-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: all 0.3s;
+}
+.buddy-onboard-dot.active {
+  background: var(--sage);
+  width: 10px;
+  height: 10px;
+}
+
+/* ── Evening wind-down flow ─────────────────────────────── */
+.winddown-step {
+  text-align: center;
+  padding: 16px 0;
+  animation: fadeIn 0.5s ease;
+}
+
+/* ── Focus-visible rings (keyboard accessibility) ──────── */
+button:focus-visible,
+.btn:focus-visible,
+.nav-btn:focus-visible,
+.mood-btn:focus-visible,
+.sleep-btn:focus-visible,
+.food-chip:focus-visible,
+.habit-row:focus-visible,
+.water-bottle:focus-visible,
+.radio-option:focus-visible,
+.settings-header:focus-visible,
+.crisis-option:focus-visible,
+.buddy-nudge-btn:focus-visible,
+.buddy-setup-option:focus-visible,
+.community-toggle-btn:focus-visible,
+.banner-action:focus-visible,
+.stepper-btn:focus-visible,
+#crisis-heart:focus-visible {
+  outline: 2px solid var(--sage-light);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+/* Skip link visible focus */
+.skip-link:focus {
+  outline: 2px solid var(--sage-light);
+  outline-offset: 2px;
+}
+
+/* ── Animated checkmark stroke (habit completion) ──────── */
+.habit-check-svg {
+  width: 16px;
+  height: 16px;
+}
+.habit-check-svg .check-path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  stroke: var(--text-on-sage);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.habit-check.done .check-path {
+  animation: checkStroke 0.35s 0.05s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+@keyframes checkStroke {
+  to { stroke-dashoffset: 0; }
+}
+/* Subtle glow pulse on completion */
+.habit-check.done {
+  box-shadow: 0 0 0 0 rgba(var(--sage-rgb),0.4);
+  animation: checkGlow 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes checkGlow {
+  0%   { box-shadow: 0 0 0 0 rgba(var(--sage-rgb),0.5); transform: scale(0.85); }
+  50%  { box-shadow: 0 0 0 8px rgba(var(--sage-rgb),0); transform: scale(1.1); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--sage-rgb),0); transform: scale(1); }
+}
+
+/* ── Input focus glow ──────────────────────────────────── */
+input[type="text"]:focus,
+input[type="time"]:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 3px rgba(var(--sage-rgb),0.15);
+}
+
+/* ── Validation shake ──────────────────────────────────── */
+.shake {
+  animation: inputShake 0.4s ease;
+}
+@keyframes inputShake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(5px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(3px); }
+}
+
+/* ── Scroll progress bar ───────────────────────────────── */
+.scroll-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--sage), var(--sage-light, var(--sage)));
+  border-radius: 0 1px 1px 0;
+  transition: width 0.1s linear;
+  z-index: 5;
+  opacity: 0;
+  transition: width 0.1s linear, opacity 0.3s ease;
+}
+.scroll-progress.visible { opacity: 1; }
+
+/* ── Enhanced habit row interaction ────────────────────── */
+.habit-row {
+  border-radius: var(--r-md);
+  margin: 0 -8px;
+  padding: 10px 8px;
+  transition: opacity 0.2s, background 0.15s;
+}
+.habit-row:active {
+  background: rgba(255,255,255,0.03);
+}
+
+/* ── Toast type variants ───────────────────────────────── */
+.toast-info {
+  border-color: rgba(106,154,176,0.4) !important;
+  background: rgba(106,154,176,0.1) !important;
+}
+.toast-info .celebrate-toast-sub { color: var(--sky-light) !important; }
+.toast-warning {
+  border-color: rgba(201,149,74,0.4) !important;
+  background: rgba(201,149,74,0.1) !important;
+}
+.toast-warning .celebrate-toast-sub { color: var(--amber-light) !important; }
+.toast-error {
+  border-color: rgba(176,120,120,0.4) !important;
+  background: rgba(176,120,120,0.12) !important;
+}
+.toast-error .celebrate-toast-sub { color: var(--rose-light) !important; }
+
+/* ── Stat counter transition ───────────────────────────── */
+.stat-val {
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.stat-val.bumped {
+  animation: statBump 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes statBump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* ── Button press ripple enhancement ───────────────────── */
+.btn:active {
+  transition-duration: 0.08s;
+}
+.btn-primary:active {
+  filter: brightness(0.88);
+}
+
+/* ── Nav dot morph on active ───────────────────────────── */
+.nav-btn .nav-icon {
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+.nav-btn:active .nav-icon {
+  transform: scale(0.85);
+}
+
+/* ── Week dot pop-in ───────────────────────────────────── */
+.week-dot.full,
+.week-dot.partial {
+  animation: dotPop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes dotPop {
+  from { transform: scale(0.7); }
+  to   { transform: scale(1); }
+}
+
+/* ── Toggle switch bounce ──────────────────────────────── */
+.toggle.just-toggled::after {
+  animation: toggleBounce 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes toggleBounce {
+  0%   { transform: translateX(var(--toggle-x, 0)) scale(1); }
+  50%  { transform: translateX(var(--toggle-x, 0)) scale(1.15, 0.85); }
+  100% { transform: translateX(var(--toggle-x, 0)) scale(1); }
+}
+
+/* ── Mood button selected glow ─────────────────────────── */
+.mood-btn.selected {
+  box-shadow: 0 0 0 1px rgba(var(--sage-rgb),0.2), 0 2px 8px rgba(var(--sage-rgb),0.1);
+}
+
+/* ── Card hover for desktop users ──────────────────────── */
+@media (hover: hover) {
+  .habit-row:hover {
+    background: rgba(255,255,255,0.02);
+  }
+  .btn:hover {
+    filter: brightness(1.08);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 2px 12px rgba(var(--sage-rgb),0.25);
+  }
+  .nav-btn:hover {
+    color: var(--sage);
+  }
+  .crisis-option:hover {
+    background: rgba(255,255,255,0.03);
+  }
+  .food-chip:hover {
+    border-color: rgba(255,255,255,0.2);
+  }
+  .settings-header:hover {
+    background: rgba(255,255,255,0.02);
+  }
+  .buddy-nudge-btn:hover {
+    border-color: rgba(255,255,255,0.25);
+    color: var(--text-primary);
+  }
+  .water-bottle:hover {
+    transform: scale(1.04);
+  }
 }
