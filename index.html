@@ -268,15 +268,15 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   pointer-events: all;
 }
 .levelup-card {
-  background: linear-gradient(135deg, var(--bg-card), rgba(122,158,126,0.08));
-  border: 1px solid rgba(122,158,126,0.4);
+  background: linear-gradient(135deg, var(--bg-card), rgba(var(--sage-rgb),0.08));
+  border: 1px solid rgba(var(--sage-rgb),0.4);
   border-radius: var(--r-xl);
   padding: 32px 28px;
   text-align: center;
   max-width: 300px;
   margin: 0 24px;
   animation: scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  box-shadow: 0 0 60px rgba(122,158,126,0.2);
+  box-shadow: 0 0 60px rgba(var(--sage-rgb),0.2);
 }
 .levelup-emoji { font-size: 64px; margin-bottom: 12px; animation: levelupBounce 0.6s 0.3s cubic-bezier(0.34,1.56,0.64,1) both; }
 @keyframes levelupBounce {
@@ -683,7 +683,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
 .mood-btn:active { transform: scale(0.93); }
 .mood-btn.selected {
   border-color: var(--sage);
-  background: rgba(122,158,126,0.12);
+  background: rgba(var(--sage-rgb),0.12);
 }
 .mood-emoji { font-size: 22px; }
 .mood-label { font-size: 10px; color: var(--text-secondary); font-weight: 500; }
@@ -708,7 +708,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   color: var(--text-secondary); transition: all 0.15s; user-select: none;
 }
 .feeling-pill.selected {
-  background: rgba(122,158,126,0.18); border-color: rgba(122,158,126,0.45);
+  background: rgba(var(--sage-rgb),0.18); border-color: rgba(var(--sage-rgb),0.45);
   color: var(--sage-light);
 }
 
@@ -757,7 +757,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   white-space: nowrap;
 }
 .food-chip.selected {
-  background: rgba(122,158,126,0.15);
+  background: rgba(var(--sage-rgb),0.15);
   border-color: var(--sage);
   color: var(--sage-light);
 }
@@ -785,8 +785,8 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
    AFFIRMATION BANNER
    ============================================================ */
 .affirm-banner {
-  background: linear-gradient(135deg, rgba(122,158,126,0.1), rgba(201,149,74,0.08));
-  border: 1px solid rgba(122,158,126,0.2);
+  background: linear-gradient(135deg, rgba(var(--sage-rgb),0.1), rgba(201,149,74,0.08));
+  border: 1px solid rgba(var(--sage-rgb),0.2);
   border-radius: var(--r-lg);
   padding: 14px 16px;
   margin-bottom: 12px;
@@ -820,8 +820,8 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   border: 1px solid rgba(106,154,176,0.2);
 }
 .banner-all-done {
-  background: rgba(122,158,126,0.12);
-  border: 1px solid rgba(122,158,126,0.3);
+  background: rgba(var(--sage-rgb),0.12);
+  border: 1px solid rgba(var(--sage-rgb),0.3);
 }
 .banner-icon { font-size: 20px; flex-shrink: 0; }
 .banner-body {}
@@ -1255,9 +1255,9 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   transition: background 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease;
 }
 .breath-circle.inhale {
-  background: radial-gradient(circle, rgba(122,158,126,0.35), rgba(122,158,126,0.05));
-  border: 3px solid rgba(122,158,126,0.7);
-  box-shadow: 0 0 32px rgba(122,158,126,0.2), inset 0 0 20px rgba(122,158,126,0.1);
+  background: radial-gradient(circle, rgba(var(--sage-rgb),0.35), rgba(var(--sage-rgb),0.05));
+  border: 3px solid rgba(var(--sage-rgb),0.7);
+  box-shadow: 0 0 32px rgba(var(--sage-rgb),0.2), inset 0 0 20px rgba(var(--sage-rgb),0.1);
   animation: breatheIn 4s ease-in-out forwards;
 }
 .breath-circle.hold {
@@ -1383,8 +1383,8 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: rgba(122,158,126,0.1);
-  border: 1px solid rgba(122,158,126,0.2);
+  background: rgba(var(--sage-rgb),0.1);
+  border: 1px solid rgba(var(--sage-rgb),0.2);
   border-radius: var(--r-full);
   font-size: 13px;
   color: var(--sage-light);
@@ -1570,7 +1570,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   max-height: calc(100dvh - 200px);
   overflow-y: auto;
   background: var(--bg-card);
-  border: 1px solid rgba(122,158,126,0.3);
+  border: 1px solid rgba(var(--sage-rgb),0.3);
   border-radius: var(--r-xl);
   padding: 20px;
   box-shadow: var(--shadow-lg);
@@ -1603,8 +1603,8 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 .tutorial-highlight {
   display: inline-block;
-  background: rgba(122,158,126,0.15);
-  border: 1px solid rgba(122,158,126,0.25);
+  background: rgba(var(--sage-rgb),0.15);
+  border: 1px solid rgba(var(--sage-rgb),0.25);
   border-radius: 6px;
   padding: 1px 6px;
   color: var(--sage-light);
@@ -1632,7 +1632,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   width: 14px;
   height: 14px;
   background: var(--bg-card);
-  border: 1px solid rgba(122,158,126,0.3);
+  border: 1px solid rgba(var(--sage-rgb),0.3);
   transform: rotate(45deg);
 }
 .tutorial-arrow.down { bottom: -7px; left: 50%; margin-left: -7px; border-top: none; border-left: none; }
@@ -1641,8 +1641,8 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   position: absolute;
   bottom: var(--safe-bottom);
   height: var(--nav-height);
-  background: rgba(122,158,126,0.08);
-  border-top: 2px solid rgba(122,158,126,0.4);
+  background: rgba(var(--sage-rgb),0.08);
+  border-top: 2px solid rgba(var(--sage-rgb),0.4);
   border-radius: 2px 2px 0 0;
   transition: left 0.3s, width 0.3s;
   pointer-events: none;
@@ -1715,7 +1715,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   font-size: 12px;
   font-weight: 500;
 }
-.chip-sage { background: rgba(122,158,126,0.15); color: var(--sage-light); }
+.chip-sage { background: rgba(var(--sage-rgb),0.15); color: var(--sage-light); }
 .chip-amber { background: rgba(201,149,74,0.15); color: var(--amber-light); }
 .chip-rose { background: rgba(176,120,120,0.15); color: var(--rose-light); }
 .chip-sky { background: rgba(106,154,176,0.15); color: var(--sky-light); }
@@ -1739,7 +1739,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   cursor: pointer;
   transition: background 0.15s;
 }
-.radio-option.selected { background: rgba(122,158,126,0.1); }
+.radio-option.selected { background: rgba(var(--sage-rgb),0.1); }
 .radio-dot {
   width: 18px;
   height: 18px;
@@ -1847,7 +1847,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 
 /* Insights card */
 .insight-card {
-  background: linear-gradient(135deg, rgba(106,154,176,0.08), rgba(122,158,126,0.05));
+  background: linear-gradient(135deg, rgba(106,154,176,0.08), rgba(var(--sage-rgb),0.05));
   border: 1px solid rgba(106,154,176,0.2);
   border-radius: var(--r-lg);
   padding: 16px;
@@ -1991,8 +1991,8 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(122,158,126,0.2);
-  border: 1px solid rgba(122,158,126,0.3);
+  background: rgba(var(--sage-rgb),0.2);
+  border: 1px solid rgba(var(--sage-rgb),0.3);
   color: var(--sage-light);
   font-size: 11px;
   font-weight: 500;
@@ -2055,9 +2055,9 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   white-space: nowrap;
 }
 .buddy-nudge-btn:active {
-  background: rgba(122,158,126,0.2);
+  background: rgba(var(--sage-rgb),0.2);
   color: var(--sage-light);
-  border-color: rgba(122,158,126,0.4);
+  border-color: rgba(var(--sage-rgb),0.4);
   transform: scale(0.95);
 }
 .buddy-love-btn:active {
@@ -2146,8 +2146,8 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 .buddy-setup-option:active {
   transform: scale(0.98);
-  background: rgba(122,158,126,0.2);
-  border-color: rgba(122,158,126,0.4);
+  background: rgba(var(--sage-rgb),0.2);
+  border-color: rgba(var(--sage-rgb),0.4);
 }
 .buddy-pref-option {
   padding: 12px 10px;
@@ -2166,9 +2166,9 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   transform: scale(0.96);
 }
 .buddy-pref-option.selected {
-  background: rgba(122,158,126,0.2);
+  background: rgba(var(--sage-rgb),0.2);
   color: var(--sage-light);
-  border-color: rgba(122,158,126,0.4);
+  border-color: rgba(var(--sage-rgb),0.4);
   font-weight: 500;
 }
 .buddy-searching {
@@ -2670,7 +2670,7 @@ select:focus {
     </div>
   </div>
   <div style="padding:20px 20px 0">
-    <div class="banner" style="background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.15);">
+    <div class="banner" style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);">
       <div class="banner-body">
         <div class="banner-text">Whatever you're feeling is valid. Take a breath at your own pace. You matter.</div>
       </div>
@@ -4400,7 +4400,7 @@ async function shareWeekInReview() {
   ctx.fillRect(0, 0, 600, 400);
 
   // Border
-  ctx.strokeStyle = 'rgba(122,158,126,0.3)';
+  ctx.strokeStyle = 'rgba(var(--sage-rgb),0.3)';
   ctx.lineWidth = 2;
   ctx.roundRect(10, 10, 580, 380, 20);
   ctx.stroke();
@@ -4621,9 +4621,9 @@ async function renderHardDaySheet() {
   // Check what helped on a previous hard day
   const helped = getWhatHelpedLastTime();
   const helpedHtml = helped
-    ? `<div style="background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.15);border-radius:var(--r-md);padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--sage-light);line-height:1.6;text-align:left">
+    ? `<div style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:var(--r-md);padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--sage-light);line-height:1.6;text-align:left">
         <div style="font-weight:500;color:var(--cream);margin-bottom:4px">Last time, this seemed to help:</div>
-        ${helped.actions.map(a => `<span style="display:inline-block;padding:3px 10px;border-radius:99px;background:rgba(122,158,126,0.15);margin:3px 2px;font-size:12px">${a}</span>`).join('')}
+        ${helped.actions.map(a => `<span style="display:inline-block;padding:3px 10px;border-radius:99px;background:rgba(var(--sage-rgb),0.15);margin:3px 2px;font-size:12px">${a}</span>`).join('')}
         <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Your mood went up the next day.</div>
       </div>`
     : '';
@@ -4735,7 +4735,7 @@ function renderWindDownStep() {
         <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream);margin-bottom:8px">Evening check-in</div>
         <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">How are you feeling right now?</div>
         <div style="display:flex;justify-content:center;gap:16px;margin-bottom:20px">
-          ${moodEmojis.map((e, i) => `<div onclick="winddownSetMood(${i})" style="font-size:32px;cursor:pointer;padding:8px;border-radius:50%;transition:all 0.2s;${state.todayData.mood === i ? 'background:rgba(122,158,126,0.2);transform:scale(1.2)' : ''}">${e}</div>`).join('')}
+          ${moodEmojis.map((e, i) => `<div onclick="winddownSetMood(${i})" style="font-size:32px;cursor:pointer;padding:8px;border-radius:50%;transition:all 0.2s;${state.todayData.mood === i ? 'background:rgba(var(--sage-rgb),0.2);transform:scale(1.2)' : ''}">${e}</div>`).join('')}
         </div>
         <button class="btn btn-primary" onclick="winddownNext()">Next</button>
       </div>`;
@@ -4819,7 +4819,7 @@ function startWinddownBreath() {
       circle.style.background = 'rgba(106,154,176,0.25)';
     } else if (phase === 'hold') {
       circle.style.transform = 'scale(1.4)';
-      circle.style.background = 'rgba(122,158,126,0.2)';
+      circle.style.background = 'rgba(var(--sage-rgb),0.2)';
     } else {
       circle.style.transform = 'scale(1)';
       circle.style.background = 'rgba(106,154,176,0.1)';
@@ -5066,7 +5066,7 @@ function showSessionRefreshIndicator() {
     position:fixed;top:0;left:50%;transform:translateX(-50%);
     max-width:430px;width:100%;z-index:800;
     padding:calc(env(safe-area-inset-top, 0px) + 8px) 20px 10px;
-    background:linear-gradient(180deg,rgba(122,158,126,0.18),transparent);
+    background:linear-gradient(180deg,rgba(var(--sage-rgb),0.18),transparent);
     text-align:center;pointer-events:none;
     animation:sessionRefreshIn 0.4s ease forwards;
   `;
@@ -6710,7 +6710,7 @@ function renderTodayTop() {
     const wbText = daysAway >= 30 ? "A lot can change — let's start with just today."
       : daysAway >= 7 ? 'Whatever happened, today is a fresh start.'
       : 'You came back. That says something about you.';
-    html += `<div class="banner" style="background:rgba(122,158,126,0.1);border:1px solid rgba(122,158,126,0.25)">
+    html += `<div class="banner" style="background:rgba(var(--sage-rgb),0.1);border:1px solid rgba(var(--sage-rgb),0.25)">
       <div class="banner-icon" style="font-size:36px">🌱</div>
       <div class="banner-body">
         <div class="banner-title" style="color:var(--sage-light);font-size:16px">${wbTitle}</div>
@@ -6749,7 +6749,7 @@ function renderTodayTop() {
   if (state.showReflectionBanner) {
     const hasReflected = Object.keys(state.wellnessData?.reflections?.[weekStart()] || {}).length > 0;
     if (!hasReflected) {
-      html += `<div class="banner" style="background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.22)">
+      html += `<div class="banner" style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.22)">
         <div class="banner-icon">🪞</div>
         <div class="banner-body">
           <div class="banner-title" style="color:var(--sage-light)">Weekly reflection is ready</div>
@@ -6765,7 +6765,7 @@ function renderTodayTop() {
 
   // New week banner
   if (state.showNewWeekBanner) {
-    html += `<div class="banner banner-all-done" style="background:rgba(122,158,126,0.1);border:1px solid rgba(122,158,126,0.25)">
+    html += `<div class="banner banner-all-done" style="background:rgba(var(--sage-rgb),0.1);border:1px solid rgba(var(--sage-rgb),0.25)">
       <div class="banner-icon">🌱</div>
       <div class="banner-body">
         <div class="banner-title" style="color:var(--sage-light)">New week, fresh start</div>
@@ -7268,7 +7268,7 @@ function renderTodayTab() {
 
   // Week 1 teaser for self-care
   if (selectedSCTasks.length > 0 && userWeek < 2) {
-    html += `<div style="background:rgba(122,158,126,0.06);border:1px dashed rgba(122,158,126,0.2);border-radius:var(--r-lg);padding:16px;text-align:center;margin-top:8px">
+    html += `<div style="background:rgba(var(--sage-rgb),0.06);border:1px dashed rgba(var(--sage-rgb),0.2);border-radius:var(--r-lg);padding:16px;text-align:center;margin-top:8px">
       <div style="font-size:24px;margin-bottom:8px">💚</div>
       <div style="font-size:14px;color:var(--sage-light);font-family:Fraunces,serif;margin-bottom:4px">Self-care tasks coming next week</div>
       <div style="font-size:12px;color:var(--text-muted);line-height:1.6">You picked some great ones during setup. They'll show up here once you've settled into your daily habits.</div>
@@ -7329,7 +7329,7 @@ function renderTodayTab() {
 
   if (userWeek < 3) {
     // Week 1-2: Show a gentle teaser instead of the full wellness card
-    html += `<div style="background:rgba(122,158,126,0.06);border:1px dashed rgba(122,158,126,0.2);border-radius:var(--r-lg);padding:16px;text-align:center;margin-top:8px">
+    html += `<div style="background:rgba(var(--sage-rgb),0.06);border:1px dashed rgba(var(--sage-rgb),0.2);border-radius:var(--r-lg);padding:16px;text-align:center;margin-top:8px">
       <div style="font-size:24px;margin-bottom:8px">📓</div>
       <div style="font-size:14px;color:var(--sage-light);font-family:Fraunces,serif;margin-bottom:4px">Journaling unlocks soon</div>
       <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Focus on building your daily habits first. Journaling, small wins, and affirmations will appear here when you're ready.</div>
@@ -7340,7 +7340,7 @@ function renderTodayTab() {
   html += `<div class="section-label">📓 Wellness</div>`;
   const wellnessAllDone = wellnessDone === 3;
   const badgeColor = wellnessAllDone ? 'var(--sage-light)' : (wellnessDone > 0 ? 'var(--amber-light)' : 'var(--text-muted)');
-  const badgeBg = wellnessAllDone ? 'rgba(122,158,126,0.2)' : (wellnessDone > 0 ? 'rgba(186,156,124,0.2)' : 'rgba(255,255,255,0.06)');
+  const badgeBg = wellnessAllDone ? 'rgba(var(--sage-rgb),0.2)' : (wellnessDone > 0 ? 'rgba(186,156,124,0.2)' : 'rgba(255,255,255,0.06)');
   html += `<div class="card" onclick="switchTab('wellness')" style="cursor:pointer">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="font-size:15px;font-weight:500">Wellness</div>
@@ -7381,8 +7381,8 @@ function renderTodayTab() {
           <div class="toggle-label">${cc.name}</div>
           <div style="display:flex;gap:6px">
             <div onclick="logCustomCheckin('${cc.id}',true)" style="padding:5px 14px;border-radius:99px;cursor:pointer;font-size:12px;
-              background:${val === true ? 'rgba(122,158,126,0.25)' : 'rgba(255,255,255,0.04)'};
-              border:1px solid ${val === true ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};
+              background:${val === true ? 'rgba(var(--sage-rgb),0.25)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${val === true ? 'rgba(var(--sage-rgb),0.5)' : 'rgba(255,255,255,0.08)'};
               color:${val === true ? 'var(--sage-light)' : 'var(--text-muted)'}">Yes</div>
             <div onclick="logCustomCheckin('${cc.id}',false)" style="padding:5px 14px;border-radius:99px;cursor:pointer;font-size:12px;
               background:${val === false ? 'rgba(176,120,120,0.2)' : 'rgba(255,255,255,0.04)'};
@@ -7397,8 +7397,8 @@ function renderTodayTab() {
             ${[1,2,3,4,5].map(v => `<div onclick="logCustomCheckin('${cc.id}',${v})" style="
               width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
               cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s;
-              background:${val === v ? 'rgba(122,158,126,0.3)' : 'rgba(255,255,255,0.04)'};
-              border:1px solid ${val === v ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};
+              background:${val === v ? 'rgba(var(--sage-rgb),0.3)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${val === v ? 'rgba(var(--sage-rgb),0.5)' : 'rgba(255,255,255,0.08)'};
               color:${val === v ? 'var(--sage-light)' : 'var(--text-muted)'}">${v}</div>`).join('')}
           </div>
         </div>`;
@@ -7690,7 +7690,7 @@ function renderWeeklyTab() {
           <div class="week-badge">${pips}</div>
           <div style="display:flex;gap:4px">
             ${done > 0 ? `<div onclick="tapWeeklyHabit('${h.id}','dec',this)" style="width:26px;height:26px;border-radius:50%;background:var(--bg-elevated);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-secondary)">−</div>` : `<div style="width:26px"></div>`}
-            ${!atGoal ? `<div onclick="tapWeeklyHabit('${h.id}','inc',this)" style="width:26px;height:26px;border-radius:50%;background:rgba(122,158,126,0.15);border:1px solid rgba(122,158,126,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--sage-light)">+</div>` : `<div style="width:26px"></div>`}
+            ${!atGoal ? `<div onclick="tapWeeklyHabit('${h.id}','inc',this)" style="width:26px;height:26px;border-radius:50%;background:rgba(var(--sage-rgb),0.15);border:1px solid rgba(var(--sage-rgb),0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--sage-light)">+</div>` : `<div style="width:26px"></div>`}
           </div>
         </div>
       </div>`;
@@ -8005,15 +8005,15 @@ function renderWellnessTab() {
     <div style="font-family:Fraunces,serif;font-size:16px;font-weight:400;color:var(--cream);margin-bottom:12px;padding:0 2px">Skill-building tools</div>
 
     <!-- 5-4-3-2-1 Grounding -->
-    <div style="background:linear-gradient(135deg,rgba(122,158,126,0.12),rgba(122,158,126,0.05));border:1px solid rgba(122,158,126,0.25);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:10px" id="grounding-card">
+    <div style="background:linear-gradient(135deg,rgba(var(--sage-rgb),0.12),rgba(var(--sage-rgb),0.05));border:1px solid rgba(var(--sage-rgb),0.25);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:10px" id="grounding-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
         <span style="font-size:18px">🌿</span>
         <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sage-light)">5-4-3-2-1 Grounding${infoIcon('grounding')}</div>
-        <div style="margin-left:auto;font-size:11px;color:var(--sage);background:rgba(122,158,126,0.15);padding:2px 8px;border-radius:99px">senses</div>
+        <div style="margin-left:auto;font-size:11px;color:var(--sage);background:rgba(var(--sage-rgb),0.15);padding:2px 8px;border-radius:99px">senses</div>
       </div>
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;font-style:italic">Gently bring yourself back to the present moment</div>
       <div id="grounding-ui" style="text-align:center">
-        <button class="btn" style="background:rgba(122,158,126,0.25);border:1px solid rgba(122,158,126,0.4);color:var(--sage-light)" onclick="startGrounding()">Begin grounding exercise</button>
+        <button class="btn" style="background:rgba(var(--sage-rgb),0.25);border:1px solid rgba(var(--sage-rgb),0.4);color:var(--sage-light)" onclick="startGrounding()">Begin grounding exercise</button>
       </div>
     </div>
 
@@ -8400,7 +8400,7 @@ function renderGroundingStep() {
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:18px">Step ${groundingStep + 1} of 5</div>
       <div style="display:flex;gap:10px;justify-content:center">
         <button class="btn btn-ghost btn-sm" onclick="stopGrounding()">End early</button>
-        <button class="btn" style="background:rgba(122,158,126,0.25);border:1px solid rgba(122,158,126,0.4);color:var(--sage-light)" onclick="groundingStep++;renderGroundingStep()">
+        <button class="btn" style="background:rgba(var(--sage-rgb),0.25);border:1px solid rgba(var(--sage-rgb),0.4);color:var(--sage-light)" onclick="groundingStep++;renderGroundingStep()">
           ${groundingStep < 4 ? 'Next' : 'Finish'}
         </button>
       </div>
@@ -8785,14 +8785,14 @@ function renderProgressTab() {
     }
     const opacity = pctDone === 0 ? 0.06 : pctDone < 0.5 ? 0.25 : pctDone < 0.75 ? 0.5 : pctDone < 1 ? 0.75 : 1;
     const isToday2 = i === 0;
-    html += `<div title="${dStr}" style="aspect-ratio:1;border-radius:3px;background:rgba(122,158,126,${opacity});${isToday2 ? 'border:1px solid var(--sage);' : ''}"></div>`;
+    html += `<div title="${dStr}" style="aspect-ratio:1;border-radius:3px;background:rgba(var(--sage-rgb),${opacity});${isToday2 ? 'border:1px solid var(--sage);' : ''}"></div>`;
   }
   html += `</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
       <span style="font-size:10px;color:var(--text-muted)">30 days ago</span>
       <div style="display:flex;align-items:center;gap:3px">
         <span style="font-size:10px;color:var(--text-muted)">Less</span>
-        ${[0.06, 0.25, 0.5, 0.75, 1].map(o => `<div style="width:10px;height:10px;border-radius:2px;background:rgba(122,158,126,${o})"></div>`).join('')}
+        ${[0.06, 0.25, 0.5, 0.75, 1].map(o => `<div style="width:10px;height:10px;border-radius:2px;background:rgba(var(--sage-rgb),${o})"></div>`).join('')}
         <span style="font-size:10px;color:var(--text-muted)">More</span>
       </div>
       <span style="font-size:10px;color:var(--text-muted)">Today</span>
@@ -8836,7 +8836,7 @@ function renderProgressTab() {
 
   // Share week in review button
   html += `<div style="text-align:center;padding:8px 0 20px">
-    <button onclick="shareWeekInReview()" style="background:rgba(122,158,126,0.12);border:1px solid rgba(122,158,126,0.25);border-radius:var(--r-full);padding:10px 20px;color:var(--sage-light);font-size:13px;font-weight:500;cursor:pointer">
+    <button onclick="shareWeekInReview()" style="background:rgba(var(--sage-rgb),0.12);border:1px solid rgba(var(--sage-rgb),0.25);border-radius:var(--r-full);padding:10px 20px;color:var(--sage-light);font-size:13px;font-weight:500;cursor:pointer">
       Share my week 🌿
     </button>
   </div>`;
@@ -9158,8 +9158,8 @@ function renderSettingsTab() {
           const sel = curTime === opt;
           return `<div onclick="setHabitTime('${h.id}','${opt}')" style="
             padding:4px 10px;border-radius:99px;cursor:pointer;font-size:11px;
-            background:${sel ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)'};
-            border:1px solid ${sel ? 'rgba(122,158,126,0.4)' : 'rgba(255,255,255,0.08)'};
+            background:${sel ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+            border:1px solid ${sel ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
             color:${sel ? 'var(--sage-light)' : 'var(--text-muted)'}">${timeLabels[opt]}</div>`;
         }).join('')}
       </div>`;
@@ -9332,7 +9332,7 @@ function renderSettingsTab() {
       <div style="display:flex;flex-wrap:wrap;gap:8px">
         ${cat.tasks.map(t2 => {
           const on = selectedSC.includes(t2.id);
-          const ps = `display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;cursor:pointer;font-size:12px;background:${on ? 'rgba(122,158,126,0.18)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(122,158,126,0.45)' : 'rgba(255,255,255,0.08)'};color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
+          const ps = `display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;cursor:pointer;font-size:12px;background:${on ? 'rgba(var(--sage-rgb),0.18)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(var(--sage-rgb),0.45)' : 'rgba(255,255,255,0.08)'};color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
           return `<div onclick="toggleSelfCareTask('${t2.id}')" id="sc-pill-${t2.id}" style="${ps}"><span>${t2.icon}</span>${t2.label}</div>`;
         }).join('')}
       </div>
@@ -9346,8 +9346,8 @@ function renderSettingsTab() {
               const labels = {morning:'☀️ AM', evening:'🌙 PM', anytime:'Any'};
               return `<div onclick="setSCRoutine('${t2.id}','${opt}')" style="
                 padding:3px 8px;border-radius:99px;cursor:pointer;font-size:10px;
-                background:${sel ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)'};
-                border:1px solid ${sel ? 'rgba(122,158,126,0.4)' : 'rgba(255,255,255,0.08)'};
+                background:${sel ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+                border:1px solid ${sel ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
                 color:${sel ? 'var(--sage-light)' : 'var(--text-muted)'}">${labels[opt]}</div>`;
             }).join('')}
           </div>
@@ -9560,7 +9560,7 @@ function renderSettingsTab() {
       A gentle place to show up for yourself.
     </div>
     <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Version ${VERSION}</div>
-    <div style="background:rgba(122,158,126,0.06);border:1px solid rgba(122,158,126,0.12);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
+    <div style="background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
         <strong style="color:var(--cream)">bloom is a self-care companion, not a substitute for professional mental health care.</strong>
         It is not therapy, counseling, or medical advice. If you are struggling, please reach out to a licensed therapist or counselor. Tap the 🤍 in the header any time for immediate crisis resources.
@@ -9569,7 +9569,7 @@ function renderSettingsTab() {
         bloom is intended for users aged 16 and older.
       </div>
     </div>
-    <div style="background:rgba(122,158,126,0.06);border:1px solid rgba(122,158,126,0.12);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
+    <div style="background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
         <strong style="color:var(--cream)">It's okay to take a break from bloom.</strong>
         If tracking your habits or mood ever starts to feel like pressure instead of support, step away. bloom will be here when you come back — no guilt, no lost progress that matters. Your well-being always comes first.
@@ -9595,7 +9595,7 @@ function renderSettingsTab() {
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6">If we detect language that suggests you might be in crisis, your message is still posted — but we'll gently surface crisis resources. Your feelings are always valid here.</div>
       </div>
 
-      <div style="background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
+      <div style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
         <div style="font-weight:500;color:var(--sage-light);margin-bottom:4px">Allowed</div>
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Venting, frustration, and honest expression are welcome. This is a mental health app — we don't filter difficult emotions. Words like "hurt," "struggling," and "overwhelmed" belong here.</div>
       </div>
@@ -9653,7 +9653,7 @@ function renderSettingsTab() {
 
   // ── SHARE BLOOM ──────────────────────────────────────────────
   html += `
-  <div style="margin:8px 0 4px;padding:20px 16px;background:linear-gradient(135deg,rgba(122,158,126,0.12),rgba(122,158,126,0.04));border:1px solid rgba(122,158,126,0.2);border-radius:var(--r-xl);text-align:center">
+  <div style="margin:8px 0 4px;padding:20px 16px;background:linear-gradient(135deg,rgba(var(--sage-rgb),0.12),rgba(var(--sage-rgb),0.04));border:1px solid rgba(var(--sage-rgb),0.2);border-radius:var(--r-xl);text-align:center">
     <div style="font-size:32px;margin-bottom:10px">${bloomIcon(40)}</div>
     <div style="font-family:Fraunces,serif;font-size:17px;font-weight:300;color:var(--cream);margin-bottom:6px">Know someone who might need this?</div>
     <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px">bloom is free. Share it with someone you care about.</div>
@@ -10900,7 +10900,7 @@ function renderReintroStep() {
         <div style="display:flex;flex-wrap:wrap;gap:8px">
           ${cat.tasks.map(t => {
             const on = selected.includes(t.id);
-            const ps = `display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;font-size:13px;background:${on ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
+            const ps = `display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;font-size:13px;background:${on ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(var(--sage-rgb),0.5)' : 'rgba(255,255,255,0.08)'};color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
             return `<div onclick="reintroToggleSC('${t.id}')" id="ri-sc-${t.id}" style="${ps}"><span>${t.icon}</span>${t.label}</div>`;
           }).join('')}
         </div>
@@ -10943,8 +10943,8 @@ function reintroToggleSC(id) {
   if (el) {
     const on = state.prefs.selfCareTasks.includes(id);
     const isMed = id === 'sc_medication';
-    el.style.background = on ? (isMed ? 'rgba(106,154,176,0.2)' : 'rgba(122,158,126,0.2)') : 'rgba(255,255,255,0.04)';
-    el.style.borderColor = on ? (isMed ? 'rgba(106,154,176,0.4)' : 'rgba(122,158,126,0.5)') : 'rgba(255,255,255,0.08)';
+    el.style.background = on ? (isMed ? 'rgba(106,154,176,0.2)' : 'rgba(var(--sage-rgb),0.2)') : 'rgba(255,255,255,0.04)';
+    el.style.borderColor = on ? (isMed ? 'rgba(106,154,176,0.4)' : 'rgba(var(--sage-rgb),0.5)') : 'rgba(255,255,255,0.08)';
     el.style.color = on ? (isMed ? 'var(--sky-light)' : 'var(--sage-light)') : 'var(--text-secondary)';
   }
 }
@@ -11229,10 +11229,10 @@ function obBack() {
 function renderOBWelcomeAndName(body, footer) {
   body.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:12px">
-      <div style="margin-bottom:20px;filter:drop-shadow(0 4px 24px rgba(122,158,126,0.35))">${bloomIcon(96)}</div>
+      <div style="margin-bottom:20px;filter:drop-shadow(0 4px 24px rgba(var(--sage-rgb),0.35))">${bloomIcon(96)}</div>
       <div style="font-family:Fraunces,serif;font-size:42px;font-weight:300;color:var(--cream);line-height:1.1;margin-bottom:8px">bloom</div>
       <div style="font-family:Fraunces,serif;font-style:italic;font-size:16px;color:var(--text-secondary);margin-bottom:28px;letter-spacing:0.01em">a gentle self-care companion</div>
-      <div style="width:100%;background:rgba(122,158,126,0.07);border:1px solid rgba(122,158,126,0.18);border-radius:20px;padding:20px 24px;margin-bottom:28px">
+      <div style="width:100%;background:rgba(var(--sage-rgb),0.07);border:1px solid rgba(var(--sage-rgb),0.18);border-radius:20px;padding:20px 24px;margin-bottom:28px">
         <div style="font-family:Fraunces,serif;font-style:italic;font-size:17px;color:var(--sage-light);line-height:1.7">No guilt. No pressure.<br>Just you, showing up.</div>
       </div>
       <div style="width:100%;text-align:left;margin-bottom:8px">
@@ -11257,8 +11257,8 @@ function renderOBReadiness(body, footer) {
     <div style="display:flex;flex-direction:column;gap:12px">
       <div onclick="obSetReadiness('ready')" style="
         padding:16px;border-radius:var(--r-xl);cursor:pointer;
-        border:2px solid ${r === 'ready' ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};
-        background:${r === 'ready' ? 'rgba(122,158,126,0.1)' : 'var(--bg-card)'};
+        border:2px solid ${r === 'ready' ? 'rgba(var(--sage-rgb),0.5)' : 'rgba(255,255,255,0.08)'};
+        background:${r === 'ready' ? 'rgba(var(--sage-rgb),0.1)' : 'var(--bg-card)'};
         transition:all 0.2s">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
           <span style="font-size:22px">🌱</span>
@@ -11332,7 +11332,7 @@ function renderOBRoutine(body, footer) {
   if (!obData._startSmall) {
     html += `<div onclick="obStartSmall()" style="
       display:flex;align-items:center;gap:12px;
-      background:rgba(122,158,126,0.07);border:1px solid rgba(122,158,126,0.18);
+      background:rgba(var(--sage-rgb),0.07);border:1px solid rgba(var(--sage-rgb),0.18);
       border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px;cursor:pointer">
       <span style="font-size:20px">🌱</span>
       <div style="flex:1">
@@ -11343,7 +11343,7 @@ function renderOBRoutine(body, footer) {
   } else {
     html += `<div style="
       display:flex;align-items:center;gap:10px;
-      background:rgba(122,158,126,0.07);border:1px solid rgba(122,158,126,0.18);
+      background:rgba(var(--sage-rgb),0.07);border:1px solid rgba(var(--sage-rgb),0.18);
       border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px">
       <span style="font-size:16px">🌱</span>
       <div style="font-size:13px;color:var(--sage-light);font-style:italic;flex:1">Starting small — just water & nourishment.</div>
@@ -11384,7 +11384,7 @@ function renderOBRoutine(body, footer) {
   <div style="display:flex;flex-wrap:wrap;gap:8px">`;
   curatedTasks.forEach(t => {
     const on = selected.includes(t.id);
-    html += `<div onclick="obToggleSelfCare('${t.id}')" id="ob-sc-${t.id}" style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;background:${on ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};font-size:13px;color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s"><span>${t.icon}</span>${t.label}</div>`;
+    html += `<div onclick="obToggleSelfCare('${t.id}')" id="ob-sc-${t.id}" style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;background:${on ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(var(--sage-rgb),0.5)' : 'rgba(255,255,255,0.08)'};font-size:13px;color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s"><span>${t.icon}</span>${t.label}</div>`;
   });
   html += `</div>
   <div style="font-size:11px;color:var(--text-muted);margin-top:8px">More options available in Settings.</div>`;
@@ -11446,7 +11446,7 @@ function renderOBCustomize(body, footer) {
       Introduce features gradually, or start with everything.
     </div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <div id="ob-pace-gradual" onclick="obSetPace(true)" style="padding:10px 12px;border-radius:var(--r-md);cursor:pointer;border:2px solid rgba(122,158,126,0.4);background:rgba(122,158,126,0.08);transition:all 0.2s">
+      <div id="ob-pace-gradual" onclick="obSetPace(true)" style="padding:10px 12px;border-radius:var(--r-md);cursor:pointer;border:2px solid rgba(var(--sage-rgb),0.4);background:rgba(var(--sage-rgb),0.08);transition:all 0.2s">
         <div style="font-size:13px;font-weight:500;color:var(--sage-light)">Ease me in</div>
         <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Start simple, unlock more each week</div>
       </div>
@@ -11473,10 +11473,10 @@ function renderOBCustomize(body, footer) {
 function renderOBWelcome(body, footer) {
   body.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:12px">
-      <div style="margin-bottom:20px;filter:drop-shadow(0 4px 24px rgba(122,158,126,0.35))">${bloomIcon(96)}</div>
+      <div style="margin-bottom:20px;filter:drop-shadow(0 4px 24px rgba(var(--sage-rgb),0.35))">${bloomIcon(96)}</div>
       <div style="font-family:Fraunces,serif;font-size:42px;font-weight:300;color:var(--cream);line-height:1.1;margin-bottom:8px">bloom</div>
       <div style="font-family:Fraunces,serif;font-style:italic;font-size:16px;color:var(--text-secondary);margin-bottom:32px;letter-spacing:0.01em">a gentle self-care companion</div>
-      <div style="width:100%;background:rgba(122,158,126,0.07);border:1px solid rgba(122,158,126,0.18);border-radius:20px;padding:20px 24px">
+      <div style="width:100%;background:rgba(var(--sage-rgb),0.07);border:1px solid rgba(var(--sage-rgb),0.18);border-radius:20px;padding:20px 24px">
         <div style="font-family:Fraunces,serif;font-style:italic;font-size:17px;color:var(--sage-light);line-height:1.7">No guilt. No pressure.<br>Just you, showing up.</div>
       </div>
       <div style="margin-top:28px;display:flex;flex-direction:column;gap:10px;width:100%">
@@ -11533,7 +11533,7 @@ function renderOBHabits(body, footer) {
   if (!obData._startSmall) {
     html += `<div onclick="obStartSmall()" style="
       display:flex;align-items:center;gap:12px;
-      background:rgba(122,158,126,0.07);border:1px solid rgba(122,158,126,0.18);
+      background:rgba(var(--sage-rgb),0.07);border:1px solid rgba(var(--sage-rgb),0.18);
       border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px;cursor:pointer">
       <span style="font-size:20px">🌱</span>
       <div style="flex:1">
@@ -11545,7 +11545,7 @@ function renderOBHabits(body, footer) {
   } else {
     html += `<div style="
       display:flex;align-items:center;gap:10px;
-      background:rgba(122,158,126,0.07);border:1px solid rgba(122,158,126,0.18);
+      background:rgba(var(--sage-rgb),0.07);border:1px solid rgba(var(--sage-rgb),0.18);
       border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px">
       <span style="font-size:16px">🌱</span>
       <div style="font-size:13px;color:var(--sage-light);font-style:italic;flex:1">Starting small — just water & nourishment. You can add more anytime.</div>
@@ -11781,7 +11781,7 @@ function renderOBAudio(body, footer) {
     </div>
     <div style="background:var(--bg-card);border-radius:var(--r-lg);padding:14px 16px;cursor:pointer" onclick="obPreviewSound()" id="ob-preview-btn">
       <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:36px;height:36px;border-radius:50%;background:rgba(122,158,126,0.15);border:1px solid rgba(122,158,126,0.3);display:flex;align-items:center;justify-content:center;font-size:16px">▶</div>
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(var(--sage-rgb),0.15);border:1px solid rgba(var(--sage-rgb),0.3);display:flex;align-items:center;justify-content:center;font-size:16px">▶</div>
         <div>
           <div style="font-size:14px;font-weight:500;color:var(--cream)">Preview sound</div>
           <div style="font-size:12px;color:var(--text-secondary)">Tap to hear what habit completion sounds like</div>
@@ -11867,7 +11867,7 @@ function renderOBSelfCare(body, footer) {
     html += `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">`;
     curatedTasks.forEach(t => {
       const on = selected.includes(t.id);
-      const pillStyle = `display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;background:${on ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};font-size:13px;color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
+      const pillStyle = `display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;background:${on ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(var(--sage-rgb),0.5)' : 'rgba(255,255,255,0.08)'};font-size:13px;color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
       html += `<div onclick="obToggleSelfCare('${t.id}')" id="ob-sc-${t.id}" style="${pillStyle}"><span>${t.icon}</span>${t.label}</div>`;
     });
     html += `</div>`;
@@ -11898,7 +11898,7 @@ function renderOBSelfCare(body, footer) {
         <div style="display:flex;flex-wrap:wrap;gap:8px">
           ${cat.tasks.map(t => {
             const on = selected.includes(t.id);
-            const pillStyle = `display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;background:${on ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)'};font-size:13px;color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
+            const pillStyle = `display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;background:${on ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(var(--sage-rgb),0.5)' : 'rgba(255,255,255,0.08)'};font-size:13px;color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
             return `<div onclick="obToggleSelfCare('${t.id}')" id="ob-sc-${t.id}" style="${pillStyle}"><span>${t.icon}</span>${t.label}</div>`;
           }).join('')}
         </div>
@@ -11934,8 +11934,8 @@ function obToggleSelfCare(id) {
   const el = document.getElementById('ob-sc-' + id);
   if (!el) return;
   const on = obData.selfCareTasks.includes(id);
-  el.style.background = on ? 'rgba(122,158,126,0.2)' : 'rgba(255,255,255,0.04)';
-  el.style.borderColor = on ? 'rgba(122,158,126,0.5)' : 'rgba(255,255,255,0.08)';
+  el.style.background = on ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)';
+  el.style.borderColor = on ? 'rgba(var(--sage-rgb),0.5)' : 'rgba(255,255,255,0.08)';
   el.style.color = on ? 'var(--sage-light)' : 'var(--text-secondary)';
   if (id === 'sc_medication') {
     el.style.background = on ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)';
@@ -11963,7 +11963,7 @@ function renderOBInstall(body, footer) {
   const platform = isIOS ? '🍎 iPhone / iPad' : '🤖 Android';
   const stepsHtml = steps.map((s, i) => `
     <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05)${i === steps.length-1 ? ';border-bottom:none' : ''}">
-      <div style="width:32px;height:32px;border-radius:50%;background:rgba(122,158,126,0.15);border:1px solid rgba(122,158,126,0.3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--sage-light);flex-shrink:0">${i+1}</div>
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(var(--sage-rgb),0.15);border:1px solid rgba(var(--sage-rgb),0.3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--sage-light);flex-shrink:0">${i+1}</div>
       <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;padding-top:6px">${s.label}</div>
     </div>`).join('');
 
@@ -12053,7 +12053,7 @@ function renderOBReady(body, footer) {
             bloom is designed for users aged 16 and older.
           </div>
           <div id="ob-age-gate" style="display:flex;flex-direction:column;gap:8px">
-            <div onclick="obSetAge('16plus')" id="ob-age-16" style="padding:10px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid ${obData.ageGroup === '16plus' ? 'rgba(122,158,126,0.4)' : 'rgba(255,255,255,0.08)'};background:${obData.ageGroup === '16plus' ? 'rgba(122,158,126,0.08)' : 'transparent'};font-size:13px;color:var(--cream);transition:all 0.2s">
+            <div onclick="obSetAge('16plus')" id="ob-age-16" style="padding:10px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid ${obData.ageGroup === '16plus' ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};background:${obData.ageGroup === '16plus' ? 'rgba(var(--sage-rgb),0.08)' : 'transparent'};font-size:13px;color:var(--cream);transition:all 0.2s">
               I'm 16 or older
             </div>
             <div onclick="obSetAge('under16')" id="ob-age-u16" style="padding:10px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid ${obData.ageGroup === 'under16' ? 'rgba(176,120,120,0.4)' : 'rgba(255,255,255,0.08)'};background:${obData.ageGroup === 'under16' ? 'rgba(176,120,120,0.08)' : 'transparent'};font-size:13px;color:var(--cream);transition:all 0.2s">
@@ -12118,10 +12118,10 @@ function obSetPace(gradual) {
   const gradualEl = document.getElementById('ob-pace-gradual');
   const allEl = document.getElementById('ob-pace-all');
   if (gradualEl && allEl) {
-    gradualEl.style.borderColor = gradual ? 'rgba(122,158,126,0.4)' : 'rgba(255,255,255,0.08)';
-    gradualEl.style.background = gradual ? 'rgba(122,158,126,0.08)' : 'transparent';
-    allEl.style.borderColor = gradual ? 'rgba(255,255,255,0.08)' : 'rgba(122,158,126,0.4)';
-    allEl.style.background = gradual ? 'transparent' : 'rgba(122,158,126,0.08)';
+    gradualEl.style.borderColor = gradual ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)';
+    gradualEl.style.background = gradual ? 'rgba(var(--sage-rgb),0.08)' : 'transparent';
+    allEl.style.borderColor = gradual ? 'rgba(255,255,255,0.08)' : 'rgba(var(--sage-rgb),0.4)';
+    allEl.style.background = gradual ? 'transparent' : 'rgba(var(--sage-rgb),0.08)';
   }
 }
 
@@ -12459,8 +12459,8 @@ function buildTutorialOverlay(step) {
         </defs>
         <rect width="${W}" height="${H}" fill="rgba(0,0,0,0.78)" mask="url(#tut-mask)"/>
       </svg>
-      <div style="position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;border-radius:${r}px;border:2px solid rgba(122,158,126,0.6);pointer-events:none;box-shadow:0 0 0 3px rgba(122,158,126,0.15)${step.pulse ? ',0 0 20px rgba(122,158,126,0.3)' : ''}">
-        ${step.pulse ? `<div style="position:absolute;inset:-6px;border-radius:${r+6}px;border:2px solid rgba(122,158,126,0.3);animation:tutPulse 1.6s ease-in-out infinite"></div>` : ''}
+      <div style="position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;border-radius:${r}px;border:2px solid rgba(var(--sage-rgb),0.6);pointer-events:none;box-shadow:0 0 0 3px rgba(var(--sage-rgb),0.15)${step.pulse ? ',0 0 20px rgba(var(--sage-rgb),0.3)' : ''}">
+        ${step.pulse ? `<div style="position:absolute;inset:-6px;border-radius:${r+6}px;border:2px solid rgba(var(--sage-rgb),0.3);animation:tutPulse 1.6s ease-in-out infinite"></div>` : ''}
       </div>`;
   } else {
     backdropHTML = `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.78)"></div>`;
