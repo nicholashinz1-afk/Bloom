@@ -2202,6 +2202,11 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   .xp-float,
   .celebrate-toast { animation: none !important; }
   .confetti-piece { display: none !important; }
+  .habit-check.done .check-path { stroke-dashoffset: 0 !important; animation: none !important; }
+  .habit-check.done { animation: none !important; }
+  .scroll-progress { display: none !important; }
+  .water-bottle.filling { animation: none !important; }
+  .water-bottle svg animate { display: none; }
   #inline-breath-zone,
   #winddown-breath-circle { transition-duration: 0.01ms !important; }
   @keyframes breathCountNum { from, to { transform: none; } }
@@ -2280,6 +2285,256 @@ body.high-contrast {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Enhanced water bottles ─────────────────────────────── */
+.water-bottle {
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+}
+.water-bottle:not(.water-filled) {
+  opacity: 0.35;
+}
+.water-filled {
+  opacity: 1;
+}
+.water-bottle:active {
+  transform: scale(0.88);
+}
+.water-filled svg {
+  filter: drop-shadow(0 2px 6px rgba(106,154,176,0.3));
+}
+.water-bottle.filling {
+  animation: waterBounce 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes waterBounce {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(0.85) rotate(-3deg); }
+  60%  { transform: scale(1.12) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* ── Focus-visible rings (keyboard accessibility) ──────── */
+button:focus-visible,
+.btn:focus-visible,
+.nav-btn:focus-visible,
+.mood-btn:focus-visible,
+.sleep-btn:focus-visible,
+.food-chip:focus-visible,
+.habit-row:focus-visible,
+.water-bottle:focus-visible,
+.radio-option:focus-visible,
+.settings-header:focus-visible,
+.crisis-option:focus-visible,
+.buddy-nudge-btn:focus-visible,
+.buddy-setup-option:focus-visible,
+.community-toggle-btn:focus-visible,
+.banner-action:focus-visible,
+.stepper-btn:focus-visible,
+#crisis-heart:focus-visible {
+  outline: 2px solid var(--sage-light);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+/* Skip link visible focus */
+.skip-link:focus {
+  outline: 2px solid var(--sage-light);
+  outline-offset: 2px;
+}
+
+/* ── Animated checkmark stroke (habit completion) ──────── */
+.habit-check-svg {
+  width: 16px;
+  height: 16px;
+}
+.habit-check-svg .check-path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  stroke: var(--text-on-sage);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.habit-check.done .check-path {
+  animation: checkStroke 0.35s 0.05s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+@keyframes checkStroke {
+  to { stroke-dashoffset: 0; }
+}
+/* Subtle glow pulse on completion */
+.habit-check.done {
+  box-shadow: 0 0 0 0 rgba(122,158,126,0.4);
+  animation: checkGlow 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes checkGlow {
+  0%   { box-shadow: 0 0 0 0 rgba(122,158,126,0.5); transform: scale(0.85); }
+  50%  { box-shadow: 0 0 0 8px rgba(122,158,126,0); transform: scale(1.1); }
+  100% { box-shadow: 0 0 0 0 rgba(122,158,126,0); transform: scale(1); }
+}
+
+/* ── Input focus glow ──────────────────────────────────── */
+input[type="text"]:focus,
+input[type="time"]:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 3px rgba(122,158,126,0.15);
+}
+
+/* ── Validation shake ──────────────────────────────────── */
+.shake {
+  animation: inputShake 0.4s ease;
+}
+@keyframes inputShake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(5px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(3px); }
+}
+
+/* ── Swipe tab transition direction ────────────────────── */
+.tab-panel.slide-left {
+  animation: tabSlideLeft 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.tab-panel.slide-right {
+  animation: tabSlideRight 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+@keyframes tabSlideLeft {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes tabSlideRight {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Scroll progress bar ───────────────────────────────── */
+.scroll-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--sage), var(--sage-light));
+  border-radius: 0 1px 1px 0;
+  transition: width 0.1s linear;
+  z-index: 5;
+  opacity: 0;
+  transition: width 0.1s linear, opacity 0.3s ease;
+}
+.scroll-progress.visible { opacity: 1; }
+
+/* ── Enhanced habit row interaction ────────────────────── */
+.habit-row {
+  border-radius: var(--r-md);
+  margin: 0 -8px;
+  padding: 10px 8px;
+  transition: opacity 0.2s, background 0.15s;
+}
+.habit-row:active {
+  background: rgba(255,255,255,0.03);
+}
+
+/* ── Toast type variants ───────────────────────────────── */
+.toast-info {
+  border-color: rgba(106,154,176,0.4) !important;
+  background: rgba(106,154,176,0.1) !important;
+}
+.toast-info .celebrate-toast-sub { color: var(--sky-light) !important; }
+.toast-warning {
+  border-color: rgba(201,149,74,0.4) !important;
+  background: rgba(201,149,74,0.1) !important;
+}
+.toast-warning .celebrate-toast-sub { color: var(--amber-light) !important; }
+.toast-error {
+  border-color: rgba(176,120,120,0.4) !important;
+  background: rgba(176,120,120,0.12) !important;
+}
+.toast-error .celebrate-toast-sub { color: var(--rose-light) !important; }
+
+/* ── Stat counter transition ───────────────────────────── */
+.stat-val {
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.stat-val.bumped {
+  animation: statBump 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes statBump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* ── Button press ripple enhancement ───────────────────── */
+.btn:active {
+  transition-duration: 0.08s;
+}
+.btn-primary:active {
+  background: #6a8e6e;
+}
+
+/* ── Nav dot morph on active ───────────────────────────── */
+.nav-btn .nav-icon {
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+.nav-btn:active .nav-icon {
+  transform: scale(0.85);
+}
+
+/* ── Week dot pop-in ───────────────────────────────────── */
+.week-dot.full,
+.week-dot.partial {
+  animation: dotPop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes dotPop {
+  from { transform: scale(0.7); }
+  to   { transform: scale(1); }
+}
+
+/* ── Toggle switch bounce ──────────────────────────────── */
+.toggle.just-toggled::after {
+  animation: toggleBounce 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes toggleBounce {
+  0%   { transform: translateX(var(--toggle-x, 0)) scale(1); }
+  50%  { transform: translateX(var(--toggle-x, 0)) scale(1.15, 0.85); }
+  100% { transform: translateX(var(--toggle-x, 0)) scale(1); }
+}
+
+/* ── Mood button selected glow ─────────────────────────── */
+.mood-btn.selected {
+  box-shadow: 0 0 0 1px rgba(122,158,126,0.2), 0 2px 8px rgba(122,158,126,0.1);
+}
+
+/* ── Card hover for desktop users ──────────────────────── */
+@media (hover: hover) {
+  .habit-row:hover {
+    background: rgba(255,255,255,0.02);
+  }
+  .btn:hover {
+    filter: brightness(1.08);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 2px 12px rgba(122,158,126,0.25);
+  }
+  .nav-btn:hover {
+    color: var(--sage);
+  }
+  .crisis-option:hover {
+    background: rgba(255,255,255,0.03);
+  }
+  .food-chip:hover {
+    border-color: rgba(255,255,255,0.2);
+  }
+  .settings-header:hover {
+    background: rgba(255,255,255,0.02);
+  }
+  .buddy-nudge-btn:hover {
+    border-color: rgba(255,255,255,0.25);
+    color: var(--text-primary);
+  }
+  .water-bottle:hover {
+    transform: scale(1.04);
+  }
 }
 </style>
 </head>
@@ -3347,6 +3602,9 @@ function playSound(type, param) {
   }
 }
 
+// ── Animated checkmark SVG ───────────────────────────────────
+const CHECK_SVG = '<svg class="habit-check-svg" viewBox="0 0 16 16"><path class="check-path" d="M3.5 8.5L6.5 11.5L12.5 4.5"/></svg>';
+
 // ── Ripple on element ────────────────────────────────────────
 function addRipple(el, e) {
   if (!el) return;
@@ -3568,8 +3826,24 @@ function animateWaterBottle(index) {
   const bottle = bottles[index];
   if (!bottle) return;
   bottle.classList.add('filling');
-  haptic('light');
+  haptic('medium');
   setTimeout(() => bottle.classList.remove('filling'), 600);
+
+  // Droplet splash particles
+  const rect = bottle.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height * 0.4;
+  for (let j = 0; j < 6; j++) {
+    const drop = document.createElement('div');
+    const angle = (Math.PI * 0.3) + (Math.random() * Math.PI * 0.4); // upward arc
+    const dist = 15 + Math.random() * 25;
+    const tx = Math.cos(angle) * dist * (Math.random() > 0.5 ? 1 : -1);
+    const ty = -Math.sin(angle) * dist;
+    drop.className = 'particle';
+    drop.style.cssText = `left:${cx}px;top:${cy}px;width:5px;height:5px;background:#9ec4d8;border-radius:50%;--particle-end:translate(${tx}px,${ty}px);animation-duration:0.5s`;
+    document.body.appendChild(drop);
+    setTimeout(() => drop.remove(), 600);
+  }
 }
 
 // ── Mood bounce ──────────────────────────────────────────────
@@ -6306,6 +6580,89 @@ function enhanceToggles() {
 }
 
 // ============================================================
+//  SWIPE GESTURE NAVIGATION
+// ============================================================
+(function initSwipeNav() {
+  let startX = 0, startY = 0, swiping = false;
+  const content = document.getElementById('tab-content');
+  if (!content) return;
+
+  content.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    swiping = true;
+  }, { passive: true });
+
+  content.addEventListener('touchend', (e) => {
+    if (!swiping) return;
+    swiping = false;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * 0.7) return;
+
+    const activeNav = document.querySelector('.nav-btn.active');
+    if (!activeNav) return;
+    const cur = TAB_ORDER.indexOf(activeNav.id.replace('nav-', ''));
+    if (cur === -1) return;
+
+    let next;
+    if (dx < 0 && cur < TAB_ORDER.length - 1) next = cur + 1; // swipe left → next
+    else if (dx > 0 && cur > 0) next = cur - 1;               // swipe right → prev
+    else return;
+
+    const panel = document.getElementById('tab-' + TAB_ORDER[next]);
+    if (panel) {
+      panel.classList.remove('slide-left', 'slide-right');
+      panel.classList.add(dx < 0 ? 'slide-left' : 'slide-right');
+      setTimeout(() => panel.classList.remove('slide-left', 'slide-right'), 300);
+    }
+    switchTab(TAB_ORDER[next]);
+  }, { passive: true });
+})();
+
+// ============================================================
+//  SCROLL PROGRESS INDICATOR
+// ============================================================
+function initScrollProgress() {
+  document.querySelectorAll('.tab-scroll').forEach(scroller => {
+    if (scroller.querySelector('.scroll-progress')) return;
+    const bar = document.createElement('div');
+    bar.className = 'scroll-progress';
+    scroller.style.position = 'relative';
+    scroller.prepend(bar);
+    scroller.addEventListener('scroll', () => {
+      const pct = scroller.scrollTop / (scroller.scrollHeight - scroller.clientHeight);
+      const clamped = Math.min(1, Math.max(0, pct));
+      bar.style.width = (clamped * 100) + '%';
+      bar.classList.toggle('visible', clamped > 0.01 && clamped < 0.99);
+    }, { passive: true });
+  });
+}
+
+// ============================================================
+//  TOGGLE BOUNCE ENHANCEMENT
+// ============================================================
+const _origToggleClick = HTMLElement.prototype.click;
+document.addEventListener('click', (e) => {
+  const toggle = e.target.closest('.toggle');
+  if (!toggle) return;
+  toggle.style.setProperty('--toggle-x', toggle.classList.contains('on') ? '18px' : '0px');
+  toggle.classList.add('just-toggled');
+  setTimeout(() => toggle.classList.remove('just-toggled'), 350);
+});
+
+// ============================================================
+//  STAT COUNTER BUMP ANIMATION
+// ============================================================
+function animateStatBump(el) {
+  if (!el) return;
+  el.classList.remove('bumped');
+  void el.offsetWidth;
+  el.classList.add('bumped');
+  setTimeout(() => el.classList.remove('bumped'), 400);
+}
+
+// ============================================================
 //  TODAY TAB RENDER
 // ============================================================
 function renderTodayTop() {
@@ -6751,7 +7108,7 @@ function renderTodayTab() {
     const trigger = triggers[h.id + '_' + timeSlot] || triggers[h.id] || '';
     const triggerHtml = trigger ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px;font-style:italic">${trigger}</div>` : '';
     return `<div class="habit-row" onclick="tapDailyHabit('${h.id}', '${timeSlot}', this)">
-      <div class="habit-check${done ? ' done' : ''}">${done ? '✓' : h.icon}</div>
+      <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : h.icon}</div>
       <div class="habit-info"><div class="habit-name">${h.label}</div>${triggerHtml}</div>
       ${streakBadge}
       ${!done ? `<div class="habit-xp">+${xp}</div>` : ''}
@@ -6765,7 +7122,7 @@ function renderTodayTab() {
     const trigger = triggers['medication_' + timeSlot] || triggers['medication'] || '';
     const triggerHtml = trigger ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px;font-style:italic">${trigger}</div>` : '';
     return `<div class="habit-row" onclick="tapDailyHabit('medication', '${timeSlot}', this)">
-      <div class="habit-check${done ? ' done' : ''}" style="${!done ? 'border-color:rgba(106,154,176,0.3)' : ''}">${done ? '✓' : '💊'}</div>
+      <div class="habit-check${done ? ' done' : ''}" style="${!done ? 'border-color:rgba(106,154,176,0.3)' : ''}">${done ? CHECK_SVG : '💊'}</div>
       <div class="habit-info">
         <div class="habit-name" style="color:var(--sky-light)">Medication</div>
         ${triggerHtml}
@@ -6835,20 +7192,43 @@ function renderTodayTab() {
   html += `<div class="section-label">💧 Hydration & nourishment</div>`;
 
   // Water card
+  const waterPct = Math.round((waterCount / 3) * 100);
   html += `<div class="card">
-    <div class="card-title" style="margin-bottom:10px">💧 Water — ${waterCount}/3 bottles${infoIcon('hydration')}</div>
-    <div class="water-bottles" id="water-bottles-row">
-      ${[0,1,2].map(i => `
-      <div class="water-bottle" onclick="tapWater(${i})" style="opacity:${i < waterCount ? 1 : 0.3};transition:opacity 0.3s">
-        <svg viewBox="0 0 56 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18 8 L14 22 Q10 28 10 38 L10 82 Q10 90 18 90 L38 90 Q46 90 46 82 L46 38 Q46 28 42 22 L38 8 Z" fill="${i < waterCount ? '#6a9ab0' : '#252820'}" stroke="${i < waterCount ? '#9ec4d8' : '#3a3d30'}" stroke-width="1.5"/>
-          <path d="M18 8 L38 8 L36 2 L20 2 Z" fill="${i < waterCount ? '#9ec4d8' : '#3a3d30'}"/>
-          ${i < waterCount ? '<path d="M10 60 Q28 55 46 60 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" fill="#4a7a90" opacity="0.5"/>' : ''}
-          <text x="28" y="52" text-anchor="middle" font-size="18" fill="${i < waterCount ? '#e8f4f8' : '#5a5548'}">${i < waterCount ? '💧' : '○'}</text>
-        </svg>
-      </div>`).join('')}
+    <div class="card-title" style="margin-bottom:6px">💧 Hydration${infoIcon('hydration')}</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="flex:1;height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${waterPct}%;background:linear-gradient(90deg,#6a9ab0,#9ec4d8);border-radius:3px;transition:width 0.5s cubic-bezier(0.34,1.56,0.64,1)"></div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:${waterCount >= 3 ? 'var(--sky-light)' : 'var(--text-secondary)'};min-width:32px;text-align:right">${waterCount}/3</div>
     </div>
-    ${waterCount >= 3 ? '<div style="font-size:12px;color:var(--sage);margin-top:10px;text-align:center">Goal reached! +10 ☀️ 💧</div>' : `<div style="font-size:12px;color:var(--text-muted);margin-top:10px;text-align:center">Tap each bottle as you drink</div>`}
+    <div class="water-bottles" id="water-bottles-row">
+      ${[0,1,2].map(i => {
+        const filled = i < waterCount;
+        return `
+      <div class="water-bottle${filled ? ' water-filled' : ''}" onclick="tapWater(${i})" aria-label="Water bottle ${i+1} of 3${filled ? ', filled' : ', empty'}" role="checkbox" aria-checked="${filled}" tabindex="0">
+        <svg viewBox="0 0 56 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="waterGrad${i}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${filled ? '#9ec4d8' : '#3a3d30'}"/>
+              <stop offset="100%" stop-color="${filled ? '#4a7a90' : '#252820'}"/>
+            </linearGradient>
+          </defs>
+          <path d="M18 8 L14 22 Q10 28 10 38 L10 82 Q10 90 18 90 L38 90 Q46 90 46 82 L46 38 Q46 28 42 22 L38 8 Z" fill="url(#waterGrad${i})" stroke="${filled ? '#9ec4d8' : '#3a3d30'}" stroke-width="1.5"/>
+          <path d="M18 8 L38 8 L36 2 L20 2 Z" fill="${filled ? '#9ec4d8' : '#3a3d30'}"/>
+          ${filled ? `
+            <path d="M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" fill="rgba(106,154,176,0.4)">
+              <animate attributeName="d" values="M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 50 Q18 54 28 50 Q38 46 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" dur="3s" repeatCount="indefinite"/>
+            </path>
+            <path d="M10 58 Q20 54 28 58 Q36 62 46 58 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" fill="rgba(74,122,144,0.6)">
+              <animate attributeName="d" values="M10 58 Q20 54 28 58 Q36 62 46 58 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 58 Q20 62 28 58 Q36 54 46 58 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 58 Q20 54 28 58 Q36 62 46 58 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" dur="2.5s" repeatCount="indefinite"/>
+            </path>` : ''}
+          ${!filled ? '<circle cx="28" cy="52" r="8" fill="none" stroke="#3a3d30" stroke-width="1" stroke-dasharray="3,3"/>' : ''}
+        </svg>
+      </div>`}).join('')}
+    </div>
+    ${waterCount >= 3
+      ? '<div style="font-size:12px;color:var(--sky-light);margin-top:10px;text-align:center;animation:fadeSlideIn 0.3s ease">Hydrated! +10 ☀️</div>'
+      : `<div style="font-size:12px;color:var(--text-muted);margin-top:10px;text-align:center">${waterCount === 0 ? 'Tap a bottle as you drink' : `${3 - waterCount} more to go`}</div>`}
   </div>`;
 
   // Food card
@@ -6900,7 +7280,7 @@ function renderTodayTab() {
         if (!task) return;
         const done = scDone[id];
         out += `<div class="habit-row" onclick="tapSelfCare('${id}', this)">
-          <div class="habit-check${done ? ' done' : ''}">${done ? '✓' : task.icon}</div>
+          <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : task.icon}</div>
           <div class="habit-info"><div class="habit-name">${task.label}</div></div>
           ${!done ? '<div class="habit-xp">+10</div>' : ''}
         </div>`;
@@ -7057,7 +7437,7 @@ function habitRow(id, icon, name, sub, done, optedIn, xp) {
   const trigger = state.prefs?.habitTriggers?.[id] || '';
   const triggerHtml = trigger ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px;font-style:italic">${trigger}</div>` : '';
   return `<div class="habit-row" onclick="tapHabit('${id}', this)">
-    <div class="habit-check${done ? ' done' : ''}">${done ? '✓' : icon}</div>
+    <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : icon}</div>
     <div class="habit-info">
       <div class="habit-name">${name}</div>
       <div class="habit-sub">${sub}${done ? ' · Done ✓' : ''}</div>
@@ -7290,7 +7670,7 @@ function renderWeeklyTab() {
       const pips = Array.from({length: goal}, (_,i) =>
         `<div class="week-pip${i < done ? ' done' : ''}"></div>`).join('');
       html += `<div class="habit-row" style="cursor:default">
-        <div class="habit-check${atGoal ? ' done' : ''}" style="cursor:default">${atGoal ? '✓' : h.icon}</div>
+        <div class="habit-check${atGoal ? ' done' : ''}" style="cursor:default">${atGoal ? CHECK_SVG : h.icon}</div>
         <div class="habit-info">
           <div class="habit-name">${h.name}</div>
           <div class="habit-sub">${done}/${goal} this week</div>
@@ -7314,7 +7694,7 @@ function renderWeeklyTab() {
     tasks.forEach(t2 => {
       const done2 = wd.household?.[t2.id];
       html += `<div class="habit-row" onclick="tapHouseholdTask('${t2.id}', this)">
-        <div class="habit-check${done2 ? ' done' : ''}">${done2 ? '✓' : t2.icon || '🏠'}</div>
+        <div class="habit-check${done2 ? ' done' : ''}">${done2 ? CHECK_SVG : t2.icon || '🏠'}</div>
         <div class="habit-info">
           <div class="habit-name">${t2.name}</div>
           ${done2 ? '<div class="habit-sub" style="color:var(--sage)">Done this week ✓</div>' : '<div class="habit-sub">Tap when done</div>'}
@@ -13663,6 +14043,7 @@ function initApp() {
   if (navIcon) navIcon.innerHTML = bloomIcon(20);
   listenForSWUpdate();
   initAccessibility();
+  setTimeout(initScrollProgress, 100);
 }
 
 async function main() {
