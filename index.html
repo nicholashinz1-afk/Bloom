@@ -3581,16 +3581,80 @@ function bounceMoodBtn(val) {
 // ============================================================
 //  STREAK SYSTEM
 // ============================================================
+
+// Recover streak data from history when xpData looks reset or missing
+function recoverStreakFromHistory() {
+  const xp = state.xpData;
+  const history = state.historyData || {};
+  const historyDays = Object.keys(history).sort();
+  if (!historyDays.length) return;
+
+  // Count total days with any activity in history
+  const recoveredTotal = historyDays.length;
+
+  // If xpData already has a higher daysShowedUp, trust it
+  if (xp.daysShowedUp >= recoveredTotal) return;
+
+  // Calculate current consecutive run backwards from today/yesterday
+  const t = today();
+  const allDays = new Set(historyDays);
+  // Include today if todayData has any activity (even if not yet archived)
+  const td = state.todayData || {};
+  const todayHasActivity = (
+    td.m_teeth || td.e_teeth ||
+    Object.keys(td).some(k => (k.endsWith('_am') || k.endsWith('_pm') || k.endsWith('_any')) && td[k]) ||
+    td.mood !== undefined || td.sleep !== undefined ||
+    (td.water && td.water > 0) ||
+    (td.food && Object.values(td.food).some(Boolean)) ||
+    td.journalXPGiven ||
+    (td.selfCare && Object.values(td.selfCare).some(Boolean)) ||
+    td.nudge_opened ||
+    state.wellnessData?.journal?.[t]
+  );
+  if (todayHasActivity) allDays.add(t);
+
+  // Walk backwards from today counting consecutive days
+  let run = 0;
+  let d = new Date();
+  for (let i = 0; i < 400; i++) {
+    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (allDays.has(ds)) {
+      run++;
+    } else {
+      break;
+    }
+    d.setDate(d.getDate() - 1);
+  }
+
+  // Find the most recent date with activity for lastStreakDate
+  const lastDate = todayHasActivity ? t : historyDays[historyDays.length - 1];
+
+  // Recover — only increase, never decrease
+  xp.daysShowedUp = Math.max(xp.daysShowedUp || 0, recoveredTotal);
+  xp.currentRun = Math.max(xp.currentRun || 0, run);
+  xp.streak = xp.currentRun;
+  if (!xp.lastStreakDate || lastDate > xp.lastStreakDate) {
+    xp.lastStreakDate = lastDate;
+  }
+  saveState();
+}
+
 function updateStreak() {
   const xp = state.xpData;
   const td = state.todayData;
   const t = today();
 
+  // Recover streak from history if data looks reset (run before early return)
+  const historyDays = Object.keys(state.historyData || {}).length;
+  if (historyDays > 0 && (!xp.daysShowedUp || xp.daysShowedUp < historyDays)) {
+    recoverStreakFromHistory();
+  }
+
   if (xp.lastStreakDate === t) return;
 
   // Migrate existing users: if they have streak but no daysShowedUp, seed it
   if (!xp.daysShowedUp && xp.streak) {
-    xp.daysShowedUp = Math.max(xp.streak, Object.keys(state.historyData).length || xp.streak);
+    xp.daysShowedUp = Math.max(xp.streak, historyDays || xp.streak);
     // Mark all milestones up to current total as already shown
     const pastMilestones = [5, 10, 25, 50, 75, 100, 150, 200, 365].filter(m => m <= xp.daysShowedUp);
     save('bloom_shown_milestones', pastMilestones);
