@@ -23,6 +23,18 @@ async function kvGet(key) {
   } catch(e) { return null; }
 }
 
+async function kvSet(key, value, ttl) {
+  try {
+    const client = await getRedis();
+    const str = JSON.stringify(value);
+    if (ttl) {
+      await client.set(key, str, { EX: ttl });
+    } else {
+      await client.set(key, str);
+    }
+  } catch(e) { /* silent */ }
+}
+
 // Redis keys (matching diagnostics.js)
 const KEYS = {
   aiFeedback: 'bloom_diag:ai_feedback',
