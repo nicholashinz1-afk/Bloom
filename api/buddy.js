@@ -122,7 +122,6 @@ async function logModeration(source, result) {
     await client.set(dayKey, JSON.stringify(dayStats), { EX: 90 * 86400 });
   } catch(e) {}
 }
-}
 
 // ── OneSignal push notification helper ──────────────────────
 async function sendPush(playerId, title, message) {
