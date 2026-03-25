@@ -1,5 +1,5 @@
 // Bloom seasonal insights, weekly summary notification, custom check-ins
-import { state, today, getWeekDates, saveState } from './state.js';
+import { state, today, getWeekDates, saveState, getJournalEntries } from './state.js';
 import { save, load } from './storage.js';
 import { haptic } from './utils.js';
 import { sendLocalNotification } from './notifications.js';
@@ -135,7 +135,7 @@ function checkWeeklySummaryNotification() {
   const moodEmojis = ['😔','😕','😐','🙂','😊'];
   const moodLabel = avgMood !== null ? moodEmojis[Math.round(avgMood)] : '';
 
-  const journalCount = Object.keys(state.wellnessData?.journal || {}).filter(d => weekDates.includes(d)).length;
+  const journalCount = weekDates.filter(d => getJournalEntries(d).length > 0).length;
   const streak = state.xpData?.streak || 0;
 
   let summaryParts = [];

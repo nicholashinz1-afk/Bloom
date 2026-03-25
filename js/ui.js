@@ -1,7 +1,8 @@
+// Bloom UI — ripple, confetti, stagger animations
 import { state } from './state.js';
 import { THEMES } from './theme.js';
 
-export function addRipple(el, e) {
+function addRipple(el, e) {
   if (!el) return;
   const rect = el.getBoundingClientRect();
   const x = (e?.clientX ?? rect.left + rect.width/2) - rect.left;
@@ -17,7 +18,7 @@ export function addRipple(el, e) {
 }
 
 // ── Confetti burst ───────────────────────────────────────────
-export function launchConfetti(cx, cy, count = 40) {
+function launchConfetti(cx, cy, count = 40) {
   const themeKey = state.prefs?.theme || 'forest';
   const colors = (THEMES[themeKey] || THEMES.forest).confetti;
   const shapes = ['2px','50%','0'];
@@ -45,7 +46,7 @@ export function launchConfetti(cx, cy, count = 40) {
 }
 
 // ── Stagger card entrance animations ────────────────────────
-export function staggerCards(panel) {
+function staggerCards(panel) {
   if (!panel) return;
   const cards = panel.querySelectorAll('.card, .insight-card, .history-day');
   cards.forEach((c, i) => {
@@ -55,3 +56,5 @@ export function staggerCards(panel) {
     c.classList.add('card-enter');
   });
 }
+
+export { addRipple, launchConfetti, staggerCards };

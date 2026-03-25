@@ -2,31 +2,35 @@
 // Collects anonymous operational telemetry — no PII, no journal content
 // Admin dashboard protected by ADMIN_KEY env var
 
-import { kvGet, kvSet } from './_shared/redis.js';
+import { kvGet, kvSet, getRedis } from './_shared/redis.js';
 import { setCorsHeaders, handlePreflight, parseBody } from './_shared/cors.js';
 
 // ── Keys ──────────────────────────────────────────────────
 const KEYS = {
-  aiFeedback: 'bloom_diag:ai_feedback',
-  errors: 'bloom_diag:errors',
-  events: 'bloom_diag:events',
-  dailyStats: (d) => `bloom_diag:daily:${d}`,
+  aiFeedback: 'bloom_diag:ai_feedback',       // list of {context, value, ts}
+  errors: 'bloom_diag:errors',                 // list of {message, stack, url, ts}
+  events: 'bloom_diag:events',                 // list of {event, ts, meta}
+  dailyStats: (d) => `bloom_diag:daily:${d}`,  // aggregated daily counters
 };
 
 const NINETY_DAYS = 90 * 24 * 60 * 60;
 const MAX_LIST_SIZE = 5000;
 
+// Helper to append to a capped list in Redis
 async function appendToList(key, item, maxSize = MAX_LIST_SIZE) {
   const list = await kvGet(key) || [];
   list.push(item);
+  // Trim oldest if over max
   const trimmed = list.length > maxSize ? list.slice(-maxSize) : list;
   await kvSet(key, trimmed, NINETY_DAYS);
 }
 
+// Get today's date key
 function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// Increment a counter in daily stats
 async function incrementDaily(field) {
   const key = KEYS.dailyStats(todayKey());
   const stats = await kvGet(key) || {};
@@ -35,19 +39,24 @@ async function incrementDaily(field) {
 }
 
 // ── Validation ────────────────────────────────────────────
-const ALLOWED_EVENTS = [
-  'ai_feedback', 'error', 'session_start', 'feature_use',
-  'buddy_pair', 'buddy_unpair', 'backup_created', 'backup_restored',
-  'hard_day_activated', 'crisis_opened', 'journal_saved',
-  'wall_post', 'onboarding_complete', 'encrypted_backup',
-];
-
 function validateEvent(body) {
-  return body.type && ALLOWED_EVENTS.includes(body.type);
+  const { type } = body;
+  const allowed = [
+    'ai_feedback', 'error', 'session_start', 'feature_use',
+    'buddy_pair', 'buddy_unpair', 'backup_created', 'backup_restored',
+    'hard_day_activated', 'crisis_opened', 'journal_saved',
+    'wall_post', 'onboarding_complete', 'encrypted_backup',
+    'api_timing', 'health_check', 'error_boundary',
+    'idb_slow', 'idb_error', 'session_diagnostics', 'mood_pattern', 'ai_journey',
+  ];
+  if (!type || !allowed.includes(type)) return false;
+  return true;
 }
 
+// Strip any potential PII from error messages
 function sanitizeError(msg) {
   if (!msg || typeof msg !== 'string') return 'unknown';
+  // Remove anything that looks like a name, email, or path
   return msg
     .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[email]')
     .replace(/\/Users\/[^\s/]+/g, '/Users/[redacted]')
@@ -55,16 +64,17 @@ function sanitizeError(msg) {
     .slice(0, 500);
 }
 
-const ALLOWED_FEATURES = [
-  'journal', 'breathing', 'buddy', 'wall', 'mood_log',
-  'hard_day', 'weekly_insight', 'monthly_reflection',
-  'backup', 'encrypted_backup', 'mood_feelings',
-  'settings', 'crisis', 'ai_reflection',
-];
-
 export default async function handler(req, res) {
   setCorsHeaders(req, res);
   if (handlePreflight(req, res)) return;
+
+  // Health check
+  if (req.method === 'GET' && req.query?.check === 'health') {
+    const hasRedis = !!process.env.REDIS_URL;
+    let redisOk = false;
+    if (hasRedis) { try { await getRedis(); redisOk = true; } catch(e) {} }
+    return res.json({ ok: hasRedis && redisOk, service: 'diagnostics', ts: Date.now() });
+  }
 
   if (!process.env.REDIS_URL) {
     return res.status(503).json({ error: 'Storage not configured' });
@@ -109,14 +119,41 @@ export default async function handler(req, res) {
 
       case 'feature_use': {
         const { feature } = body;
-        if (!feature || !ALLOWED_FEATURES.includes(feature)) {
+        const allowedFeatures = [
+          'journal', 'breathing', 'buddy', 'wall', 'mood_log',
+          'hard_day', 'weekly_insight', 'monthly_reflection',
+          'backup', 'encrypted_backup', 'mood_feelings',
+          'settings', 'crisis', 'ai_reflection',
+          'weekly', 'wellness', 'progress', 'community', 'grounding', 'bodyscan', 'reframe',
+        ];
+        if (!feature || !allowedFeatures.includes(feature)) {
           return res.json({ ok: false });
         }
         await incrementDaily('feature:' + feature);
         return res.json({ ok: true });
       }
 
+      case 'session_start': {
+        // Track unique users per day using anonymous uid
+        const uid = body.uid;
+        if (uid && typeof uid === 'string') {
+          const dayKey = KEYS.dailyStats(todayKey());
+          const stats = await kvGet(dayKey) || {};
+          // Store unique uids as a comma-separated string (lightweight set)
+          const uidSet = stats._uids ? new Set(stats._uids.split(',')) : new Set();
+          uidSet.add(uid.slice(0, 20));
+          stats._uids = [...uidSet].join(',');
+          stats.unique_users = uidSet.size;
+          await kvSet(dayKey, stats, NINETY_DAYS);
+        }
+        // Also track as regular event
+        await appendToList(KEYS.events, { event: 'session_start', ts });
+        await incrementDaily('event:session_start');
+        return res.json({ ok: true });
+      }
+
       default: {
+        // Generic event tracking
         await appendToList(KEYS.events, {
           event: body.type,
           meta: typeof body.meta === 'object' ? JSON.stringify(body.meta).slice(0, 200) : undefined,
@@ -140,12 +177,14 @@ export default async function handler(req, res) {
     const { view } = req.query;
 
     if (view === 'dashboard') {
+      // Return aggregated dashboard data
       const [aiFeedback, errors, events] = await Promise.all([
         kvGet(KEYS.aiFeedback),
         kvGet(KEYS.errors),
         kvGet(KEYS.events),
       ]);
 
+      // Get last 30 days of daily stats
       const dailyStats = {};
       const now = new Date();
       for (let i = 0; i < 30; i++) {
@@ -156,6 +195,7 @@ export default async function handler(req, res) {
         if (stats) dailyStats[key] = stats;
       }
 
+      // Compute AI feedback summary
       const fb = aiFeedback || [];
       const fbLast7 = fb.filter(f => f.ts > Date.now() - 7 * 86400000);
       const fbLast30 = fb.filter(f => f.ts > Date.now() - 30 * 86400000);

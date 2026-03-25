@@ -2,9 +2,32 @@
 // Uses shared moderation, Redis, and CORS modules
 
 import { moderateMessage } from './_shared/moderation.js';
-import { kvGet, kvSet } from './_shared/redis.js';
+import { kvGet, kvSet, getRedis } from './_shared/redis.js';
 import { setCorsHeaders, handlePreflight, parseBody } from './_shared/cors.js';
 import { genId } from './_shared/utils.js';
+
+// Log moderation events to diagnostics
+async function logModeration(source, result) {
+  try {
+    const key = 'bloom_diag:events';
+    const client = await getRedis();
+    const raw = await client.get(key);
+    const events = raw ? JSON.parse(raw) : [];
+    events.push({
+      event: 'moderation',
+      meta: JSON.stringify({ source, ok: result.ok, reason: result.reason || null, flag: result.flag || null }),
+      ts: Date.now(),
+    });
+    if (events.length > 5000) events.splice(0, events.length - 5000);
+    await client.set(key, JSON.stringify(events), { EX: 90 * 86400 });
+    const dayKey = `bloom_diag:daily:${new Date().toISOString().slice(0, 10)}`;
+    const dayRaw = await client.get(dayKey);
+    const dayStats = dayRaw ? JSON.parse(dayRaw) : {};
+    const counterKey = result.ok ? (result.flag ? 'mod_flagged' : 'mod_allowed') : 'mod_blocked';
+    dayStats[counterKey] = (dayStats[counterKey] || 0) + 1;
+    await client.set(dayKey, JSON.stringify(dayStats), { EX: 90 * 86400 });
+  } catch(e) {}
+}
 
 async function getMessages() {
   return await kvGet('bloom_wall_messages') || [];
@@ -17,6 +40,14 @@ async function saveMessages(messages) {
 export default async function handler(req, res) {
   setCorsHeaders(req, res);
   if (handlePreflight(req, res)) return;
+
+  // Health check
+  if (req.method === 'GET' && req.query?.check === 'health') {
+    const hasRedis = !!process.env.REDIS_URL;
+    let redisOk = false;
+    if (hasRedis) { try { await getRedis(); redisOk = true; } catch(e) {} }
+    return res.json({ ok: hasRedis && redisOk, service: 'wall', ts: Date.now() });
+  }
 
   if (!process.env.REDIS_URL) {
     return res.status(503).json({ error: 'Wall storage not configured', messages: [] });
@@ -40,6 +71,7 @@ export default async function handler(req, res) {
       if (!text) return res.status(400).json({ error: 'Missing text' });
 
       const check = moderateMessage(text, { minLen: 3, maxLen: 140 });
+      await logModeration('wall_post', check);
       if (!check.ok) return res.json({ ok: false, reason: check.reason });
 
       const messages = await getMessages();

@@ -1,5 +1,5 @@
 // Bloom progress tab — stats, XP, levels, flower, history, insights
-import { state, today, getWeekDates, formatDateLabel, getDayIndex, dayOfWeek, saveState } from '../state.js';
+import { state, today, getWeekDates, formatDateLabel, getDayIndex, dayOfWeek, saveState, getJournalEntries } from '../state.js';
 import { save, load } from '../storage.js';
 import { haptic, escapeHtml } from '../utils.js';
 import { LEVELS } from '../constants.js';
@@ -248,7 +248,7 @@ function renderProgressTab() {
   }
 
   // Wellness stats
-  const journalCount = Object.keys(state.wellnessData?.journal || {}).filter(d => weekDates.includes(d)).length;
+  const journalCount = weekDates.filter(d => getJournalEntries(d).length > 0).length;
   const reflectCount = Object.keys(state.wellnessData?.reflections?.[weekStart()] || {}).length;
   const breathCount = state.wellnessData?.breathSessions || 0;
   const exerciseCount = state.weekData?.w_exercise || 0;
@@ -397,7 +397,7 @@ function openHistoryDetail(dateStr) {
 
   const habits = entry.habits || {};
   const habitNames = {
-    m_teeth:'Morning brush', e_teeth:'Evening brush', w_shower:'Shower', w_exercise:'Exercise', w_outside:'Go outside',
+    m_teeth:'Morning brush', e_teeth:'Evening brush', w_shower:'Shower', w_exercise:'Exercise', w_outside:'Go outside', w_therapy:'Go to therapy',
     brush_teeth_am:'Brush teeth (AM)', brush_teeth_pm:'Brush teeth (PM)',
     brush_hair_am:'Brush hair (AM)', brush_hair_pm:'Brush hair (PM)',
     wash_face_am:'Wash face (AM)', wash_face_pm:'Wash face (PM)',
@@ -422,7 +422,22 @@ function openHistoryDetail(dateStr) {
     html += '</div><div class="divider"></div>';
   }
 
-  if (entry.journal) {
+  if (entry.journalEntries && entry.journalEntries.length > 0) {
+    const sourceLabels = { open: 'open journal', winddown: 'evening', journal: '' };
+    html += `<div style="margin:12px 0">
+      <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Journal · ${entry.journalEntries.length} entry${entry.journalEntries.length !== 1 ? 'ies' : ''}</div>`;
+    entry.journalEntries.forEach((je, i) => {
+      const time = je.savedAt ? new Date(je.savedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+      const source = sourceLabels[je.source] || '';
+      const meta = [time, source].filter(Boolean).join(' · ');
+      html += `<div style="${i > 0 ? 'margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)' : ''}">
+        ${meta ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">${meta}</div>` : ''}
+        <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap">${je.text}</div>
+        ${je.ai ? `<div class="ai-response" style="margin-top:8px"><div class="ai-response-text">${je.ai}</div></div>` : ''}
+      </div>`;
+    });
+    html += `</div>`;
+  } else if (entry.journal) {
     html += `<div style="margin:12px 0">
       <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Journal</div>
       <div style="font-size:14px;color:var(--text-secondary);line-height:1.7">${entry.journal}</div>

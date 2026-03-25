@@ -1,5 +1,5 @@
 // Bloom init — OneSignal, service worker, migrations, backup reminder, safari checks
-import { state, today, loadState } from './state.js';
+import { state, today, loadState, migrateJournalFormat } from './state.js';
 import { save, load } from './storage.js';
 import { switchTab } from './router.js';
 import { toggleSettingsSection } from './tabs/settings.js';

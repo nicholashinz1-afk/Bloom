@@ -2,7 +2,7 @@
 // Imports all modules and boots the application
 
 // Core
-import { state, today, weekStart, loadState, saveState } from './state.js';
+import { state, today, weekStart, loadState, saveState, migrateJournalFormat } from './state.js';
 import { initDB, save, load, restoreFromDB, checkStorageQuota } from './storage.js';
 import { bloomIcon } from './icons.js';
 
@@ -12,7 +12,7 @@ import { switchTab, initAccessibility, initScrollProgress } from './router.js';
 import { renderTodayTab } from './tabs/today.js';
 import { renderDailyQuote, showWhatsNew } from './whatsnew.js';
 import { updateStreak, checkMilestones, checkWelcomeBack } from './streaks.js';
-import { sendTelemetry, trackEvent } from './telemetry.js';
+import { sendTelemetry, trackEvent, _bloomUid } from './telemetry.js';
 import { renderOnboarding } from './features/onboarding.js';
 import { tryRestoreFromURL } from './backup.js';
 import { checkAutoGenerateInsight } from './tabs/progress.js';
@@ -68,6 +68,7 @@ window.checkAutoGenerateInsight = checkAutoGenerateInsight;
 
 function initApp() {
   loadState();
+  migrateJournalFormat();
   migrateToNewDailyHabits();
   initTheme();
 
@@ -82,7 +83,7 @@ function initApp() {
   }
 
   checkForUpdate();
-  trackEvent('session_start');
+  sendTelemetry('session_start', { uid: _bloomUid });
   renderDailyQuote();
   applySeasonalTheme();
   checkNewWeek();

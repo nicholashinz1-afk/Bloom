@@ -34,15 +34,11 @@ async function saveOpenJournal() {
   const t = today();
   trackEvent('journal_saved');
 
-  // Save to journal (appends to any existing entry or creates new)
+  // Save as new journal entry
   if (!state.wellnessData.journal) state.wellnessData.journal = {};
-  const existing = state.wellnessData.journal[t];
-  if (existing) {
-    existing.text = existing.text + '\n\n' + text;
-    existing.ai = null;
-  } else {
-    state.wellnessData.journal[t] = { text, ai: null };
-  }
+  if (!Array.isArray(state.wellnessData.journal[t])) state.wellnessData.journal[t] = [];
+  state.wellnessData.journal[t].push({ text, ai: null, savedAt: new Date().toISOString(), prompt: null, source: 'open' });
+  const entryIndex = state.wellnessData.journal[t].length - 1;
   state.loadingJournalAI = true;
   saveState();
   archiveToday();
@@ -70,8 +66,8 @@ async function saveOpenJournal() {
   }
 
   state.loadingJournalAI = false;
-  if (ai) {
-    state.wellnessData.journal[t].ai = ai;
+  if (ai && state.wellnessData.journal[t][entryIndex]) {
+    state.wellnessData.journal[t][entryIndex].ai = ai;
     saveState();
     archiveToday();
     if (aiEl) {
@@ -325,10 +321,10 @@ function winddownSaveJournal() {
   if (!el || !el.value.trim()) return;
   const t = today();
   if (!state.wellnessData.journal) state.wellnessData.journal = {};
-  if (!state.wellnessData.journal[t]) state.wellnessData.journal[t] = {};
-  const existing = state.wellnessData.journal[t].text || '';
-  state.wellnessData.journal[t].text = existing ? existing + '\n\n(evening) ' + el.value.trim() : el.value.trim();
+  if (!Array.isArray(state.wellnessData.journal[t])) state.wellnessData.journal[t] = [];
+  state.wellnessData.journal[t].push({ text: el.value.trim(), ai: null, savedAt: new Date().toISOString(), prompt: null, source: 'winddown' });
   saveState();
+  archiveToday();
 }
 
 function startWinddownBreath() {

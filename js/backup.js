@@ -1,4 +1,4 @@
-import { state, today, saveState, loadState } from './state.js';
+import { state, today, saveState, loadState, getJournalEntries } from './state.js';
 import { save, load } from './storage.js';
 import { haptic, showToast } from './utils.js';
 import { sendTelemetry, trackEvent } from './telemetry.js';
@@ -213,10 +213,7 @@ export function exportTherapistPDF() {
   const moodsRecorded = moodData.filter(d => d.mood !== undefined && d.mood >= 0);
   const avgMood = moodsRecorded.length > 0 ? (moodsRecorded.reduce((s, d) => s + d.mood, 0) / moodsRecorded.length) : null;
   const lowDays = moodsRecorded.filter(d => d.mood <= 1).length;
-  const journalDays = last30.filter(d => {
-    const wd = state.wellnessData?.journal?.[d];
-    return wd && wd.text;
-  }).length;
+  const journalDays = last30.filter(d => getJournalEntries(d).length > 0).length;
 
   // Build simple text-based mood chart
   const chartRows = moodData.map(d => {
@@ -278,10 +275,23 @@ ${last30.map(d => {
 ═══════════════════════════════════════════════════════
 
 ${last30.map(d => {
-  const entry = state.wellnessData?.journal?.[d];
-  if (!entry || !entry.text) return null;
-  return `[${d}]\n${entry.text.slice(0, 300)}${entry.text.length > 300 ? '...' : ''}\n`;
+  const entries = getJournalEntries(d);
+  if (entries.length === 0) return null;
+  return entries.map((e, i) => {
+    const time = e.savedAt ? new Date(e.savedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+    const label = entries.length > 1 ? ` (entry ${i + 1}${time ? ', ' + time : ''})` : '';
+    return `[${d}${label}]\n${e.text.slice(0, 300)}${e.text.length > 300 ? '...' : ''}\n`;
+  }).join('\n');
 }).filter(Boolean).join('\n') || 'No journal entries in this period.'}
+
+═══════════════════════════════════════════════════════
+ COGNITIVE REFRAMES
+═══════════════════════════════════════════════════════
+
+${(state.wellnessData.reframeHistory || []).slice(-10).map(r => {
+  const date = r.savedAt ? new Date(r.savedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+  return `[${date}] Thought: "${r.thought}"\n  → Reframe: "${r.reframe}"\n`;
+}).join('\n') || 'No reframe exercises recorded.'}
 
 ═══════════════════════════════════════════════════════
 

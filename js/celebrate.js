@@ -61,6 +61,7 @@ export function undoHabitUncheck() {
   if (toast) { toast.classList.add('hide'); setTimeout(() => toast.remove(), 350); }
 }
 window.undoHabitUncheck = undoHabitUncheck;
+window.celebrate = celebrate;
 
 // ── Core celebration function ────────────────────────────────
 export let celebrateTimeout = null;

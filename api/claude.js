@@ -4,6 +4,12 @@
 import { parseBody } from './_shared/cors.js';
 
 export default async function handler(req, res) {
+  // Health check
+  if (req.method === 'GET' && req.query?.check === 'health') {
+    const hasKey = !!process.env.ANTHROPIC_API_KEY;
+    return res.json({ ok: hasKey, service: 'claude', ts: Date.now() });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

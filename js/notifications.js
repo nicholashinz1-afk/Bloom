@@ -1,5 +1,5 @@
 // Bloom notifications — affirmations, session management, reminders, push
-import { state, today, getDayIndex, dayOfWeek, getWeekDates, saveState } from './state.js';
+import { state, today, getDayIndex, dayOfWeek, getWeekDates, saveState, getJournalEntries } from './state.js';
 import { save, load } from './storage.js';
 import { haptic } from './utils.js';
 import { updateStreak } from './streaks.js';
@@ -333,7 +333,7 @@ function checkEveningNudge() {
     (td.food && Object.values(td.food).some(Boolean)) ||
     td.journalXPGiven ||
     anySelfCare ||
-    state.wellnessData?.journal?.[t]
+    getJournalEntries(t).length > 0
   );
 
   sent.evening_nudge = true;
@@ -411,7 +411,7 @@ function checkNudgeCredit() {
     (td.food && Object.values(td.food).some(Boolean)) ||
     td.journalXPGiven ||
     anySelfCare ||
-    state.wellnessData?.journal?.[t]
+    getJournalEntries(t).length > 0
   );
 
   if (!anyActivity) {

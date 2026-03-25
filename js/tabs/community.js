@@ -3,7 +3,7 @@ import { state } from '../state.js';
 import { save, load } from '../storage.js';
 import { haptic, escapeHtml } from '../utils.js';
 import { bloomIcon, buddyIcon } from '../icons.js';
-import { sendTelemetry, trackFeature } from '../telemetry.js';
+import { sendTelemetry, trackFeature, timedFetch } from '../telemetry.js';
 import { renderBuddyContent } from '../features/buddy.js';
 
 // Late-bound cross-module references (avoid circular imports)

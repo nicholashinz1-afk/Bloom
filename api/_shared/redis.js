@@ -7,14 +7,18 @@ import { createClient } from 'redis';
 
 let _client = null;
 
-async function getRedis() {
-  if (!_client) {
-    _client = createClient({ url: process.env.REDIS_URL });
-    _client.on('error', (err) => {
-      console.error('[redis] connection error:', err.message);
-    });
-    await _client.connect();
-  }
+export async function getRedis() {
+  if (_client && _client.isReady) return _client;
+  // Clean up stale client
+  if (_client) { try { await _client.disconnect(); } catch(e) {} }
+  _client = createClient({
+    url: process.env.REDIS_URL,
+    socket: {
+      reconnectStrategy: (retries) => retries < 3 ? Math.min(retries * 200, 1000) : false,
+    },
+  });
+  _client.on('error', () => {});
+  await _client.connect();
   return _client;
 }
 

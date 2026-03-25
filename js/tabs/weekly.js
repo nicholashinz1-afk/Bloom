@@ -16,6 +16,7 @@ function renderWeeklyTab() {
     { id: 'w_shower',   icon: '🚿', name: 'Shower' },
     { id: 'w_exercise', icon: '💪', name: 'Exercise' },
     { id: 'w_outside',  icon: '🌿', name: 'Go outside' },
+    { id: 'w_therapy',  icon: '🛋️', name: 'Go to therapy' },
   ].filter(h => prefs?.habits?.[h.id] !== false);
 
   if (weeklyHabits.length > 0) {

@@ -1,5 +1,5 @@
 // ── AI responses & Claude integration ────────────────────────
-import { sendTelemetry } from './telemetry.js';
+import { sendTelemetry, trackFeature, trackAIJourney, timedFetch } from './telemetry.js';
 import { state, today, getDayIndex } from './state.js';
 import { save, load } from './storage.js';
 import { escapeHtml } from './utils.js';
@@ -26,10 +26,14 @@ export function getScriptedResponse() {
 export const AI_FALLBACK_RESPONSE = "You showed up today, and that matters. Whatever you're carrying, you don't have to carry it alone.";
 
 export async function callClaude(prompt, systemPrompt) {
+  // Track AI reflection usage for journey analysis
+  const aiSource = prompt.includes('journal') ? 'journal' : prompt.includes('reflection') ? 'reflection' : prompt.includes('hard day') ? 'hard_day' : prompt.includes('weekly') || prompt.includes('week') ? 'weekly_insight' : prompt.includes('monthly') || prompt.includes('month') ? 'monthly_reflection' : 'other';
+  trackAIJourney(aiSource, aiSource);
+  trackFeature('ai_reflection');
   try {
     const name = state.prefs?.name;
     const nameContext = name ? ` The user's name is ${name} — use it occasionally but naturally, not in every sentence.` : '';
-    const res = await fetch('/api/claude', {
+    const res = await timedFetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

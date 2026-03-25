@@ -1,4 +1,4 @@
-import { state, today, saveState } from './state.js';
+import { state, today, saveState, getJournalEntries, getLatestJournalText } from './state.js';
 import { save, load } from './storage.js';
 import { haptic, playSound } from './utils.js';
 import { addXP } from './xp.js';
@@ -306,8 +306,9 @@ export function archiveToday() {
     habits: { ...state.todayData },
     mood: state.todayData.mood,
     sleep: state.todayData.sleep,
-    journal: state.wellnessData?.journal?.[t]?.text,
-    journalAI: state.wellnessData?.journal?.[t]?.ai,
+    journal: getLatestJournalText(t),
+    journalAI: getJournalEntries(t).map(e => e.ai).filter(Boolean).join('\n\n---\n\n'),
+    journalEntries: getJournalEntries(t),
   };
   save('bloom_history', state.historyData);
 }

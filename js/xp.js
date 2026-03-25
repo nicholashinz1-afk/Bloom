@@ -1,23 +1,27 @@
+// Bloom XP — levels, flower SVG, level-up celebrations, animations
 import { LEVELS } from './constants.js';
 import { THEMES } from './theme.js';
 import { state, saveState } from './state.js';
 import { haptic, playSound } from './utils.js';
 import { launchConfetti } from './ui.js';
 
-export function getLevel(xp) {
+// Late-bound cross-module references
+function updateProgressTab(...args) { if (typeof window.updateProgressTab === 'function') window.updateProgressTab(...args); }
+
+function getLevel(xp) {
   let lv = LEVELS[0];
   for (const l of LEVELS) { if (xp >= l.min) lv = l; else break; }
   return lv;
 }
 
-export function getNextLevel(xp) {
+function getNextLevel(xp) {
   for (let i = 0; i < LEVELS.length - 1; i++) {
     if (xp < LEVELS[i+1].min) return LEVELS[i+1];
   }
   return null;
 }
 
-export function showXPFloat(amount, el) {
+function showXPFloat(amount, el) {
   const rect = el.getBoundingClientRect();
   const div = document.createElement('div');
   div.className = 'xp-float';
@@ -28,7 +32,7 @@ export function showXPFloat(amount, el) {
   setTimeout(() => div.remove(), 1500);
 }
 
-export function burstParticles(el) {
+function burstParticles(el) {
   if (!el) return;
   const rect = el.getBoundingClientRect();
   const cx = rect.left + rect.width/2;
@@ -47,7 +51,7 @@ export function burstParticles(el) {
   }
 }
 
-export function burstHearts(el) {
+function burstHearts(el) {
   if (!el) return;
   const rect = el.getBoundingClientRect();
   const cx = rect.left + rect.width/2;
@@ -68,9 +72,11 @@ export function burstHearts(el) {
   }
 }
 
+// ── Haptic feedback ──────────────────────────────────────────
+
 // ── Level-up check + celebration ────────────────────────────
-export let lastLevel = null;
-export function checkLevelUp(oldXP, newXP) {
+let lastLevel = null;
+function checkLevelUp(oldXP, newXP) {
   const oldLv = getLevel(oldXP);
   const newLv = getLevel(newXP);
   if (newLv.name !== oldLv.name) {
@@ -78,11 +84,11 @@ export function checkLevelUp(oldXP, newXP) {
   }
 }
 
-export function getLevelIndex(level) {
+function getLevelIndex(level) {
   return LEVELS.findIndex(l => l.name === level.name);
 }
 
-export function buildFlowerSVG(levelIdx, animated = false) {
+function buildFlowerSVG(levelIdx, animated = false) {
   // Stages: 0=Seedling, 1=Sprout, 2=Blooming, 3=Thriving, 4=Radiant, 5=Glowing
   const i = Math.min(levelIdx, 5);
   const potColor = '#6b5a4a';
@@ -183,7 +189,7 @@ export function buildFlowerSVG(levelIdx, animated = false) {
   </svg>`;
 }
 
-export function showLevelUp(oldLevel, newLevel) {
+function showLevelUp(oldLevel, newLevel) {
   haptic('heavy');
   playSound('milestone');
 
@@ -219,7 +225,7 @@ export function showLevelUp(oldLevel, newLevel) {
 }
 
 // ── Enhanced addXP with level-up check ──────────────────────
-export function addXP(amount, sourceEl) {
+function addXP(amount, sourceEl) {
   const oldXP = state.xpData.total || 0;
   state.xpData.total = oldXP + amount;
   saveState();
@@ -229,7 +235,7 @@ export function addXP(amount, sourceEl) {
 }
 
 // ── Water fill animation ─────────────────────────────────────
-export function animateWaterBottle(index) {
+function animateWaterBottle(index) {
   const bottles = document.querySelectorAll('.water-bottle');
   const bottle = bottles[index];
   if (!bottle) return;
@@ -256,7 +262,7 @@ export function animateWaterBottle(index) {
 }
 
 // ── Mood bounce ──────────────────────────────────────────────
-export function bounceMoodBtn(val) {
+function bounceMoodBtn(val) {
   const btns = document.querySelectorAll('.mood-btn');
   btns.forEach((btn, i) => {
     if (i === val) {
@@ -268,12 +274,6 @@ export function bounceMoodBtn(val) {
   });
 }
 
-// Note: updateProgressTab is defined later in the app and will be available
-// at runtime. We reference it here; the caller must ensure it's in scope.
-// In the monolith, it's a global function. During modularization, it may
-// need to be passed in or imported from its own module.
-function updateProgressTab() {
-  if (typeof window.updateProgressTab === 'function') {
-    window.updateProgressTab();
-  }
-}
+export { getLevel, getNextLevel, showXPFloat, burstParticles, burstHearts,
+  checkLevelUp, getLevelIndex, buildFlowerSVG, showLevelUp, addXP,
+  animateWaterBottle, bounceMoodBtn };

@@ -3,6 +3,14 @@ import { today } from './state.js';
 import { VERSION } from './constants.js';
 import { showToast } from './utils.js';
 
+// Anonymous user ID for unique user counts (no PII — just a random token)
+let _bloomUid = load('bloom_uid', null);
+if (!_bloomUid) {
+  _bloomUid = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  saveKey('bloom_uid', _bloomUid);
+}
+export { _bloomUid };
+
 export function sendTelemetry(type, data) {
   try {
     fetch('/api/diagnostics', {
@@ -15,6 +23,100 @@ export function sendTelemetry(type, data) {
 
 export function trackFeature(feature) { sendTelemetry('feature_use', { feature }); }
 export function trackEvent(eventName, meta) { sendTelemetry(eventName, meta ? { meta } : {}); }
+
+// ── API response time tracking ────────────────────────────
+export async function timedFetch(url, options) {
+  const start = performance.now();
+  const endpoint = url.replace(/^\/api\//, '').split('?')[0];
+  try {
+    const res = await fetch(url, options);
+    const duration = Math.round(performance.now() - start);
+    sendTelemetry('api_timing', { meta: { endpoint, duration, status: res.status } });
+    return res;
+  } catch(err) {
+    const duration = Math.round(performance.now() - start);
+    sendTelemetry('api_timing', { meta: { endpoint, duration, status: 0, error: err.message?.slice(0, 100) } });
+    throw err;
+  }
+}
+
+// ── API health checks ─────────────────────────────────────
+export async function runHealthChecks() {
+  const endpoints = ['claude', 'buddy', 'wall', 'diagnostics'];
+  const results = {};
+  await Promise.all(endpoints.map(async (ep) => {
+    try {
+      const res = await fetch('/api/' + ep + '?check=health');
+      results[ep] = await res.json();
+    } catch(e) {
+      results[ep] = { ok: false, service: ep, error: e.message };
+    }
+  }));
+  sendTelemetry('health_check', { meta: results });
+  return results;
+}
+
+// Run health check on session start (after a short delay to not block load)
+setTimeout(() => runHealthChecks(), 5000);
+
+// ── Error boundary wrapper ────────────────────────────────
+export function errorBoundary(fn, context) {
+  return function(...args) {
+    try {
+      const result = fn.apply(this, args);
+      if (result && typeof result.catch === 'function') {
+        return result.catch(err => {
+          sendTelemetry('error_boundary', { meta: { context, message: String(err.message || err).slice(0, 300) } });
+          throw err;
+        });
+      }
+      return result;
+    } catch(err) {
+      sendTelemetry('error_boundary', { meta: { context, message: String(err.message || err).slice(0, 300) } });
+      throw err;
+    }
+  };
+}
+
+// ── Session start diagnostics ─────────────────────────────
+export function captureSessionDiagnostics() {
+  // Delay to ensure both navigation metrics and IndexedDB are ready
+  setTimeout(() => {
+    const nav = performance.getEntriesByType('navigation')[0];
+    const sessionMeta = {
+      loadTime: nav ? Math.round(nav.loadEventEnd - nav.startTime) : null,
+      domReady: nav ? Math.round(nav.domContentLoadedEventEnd - nav.startTime) : null,
+      returning: !!load('bloom_state', null),
+      tabVisible: !document.hidden,
+      online: navigator.onLine,
+      idbAvailable: !!window._bloomDb,
+    };
+    sendTelemetry('session_diagnostics', { meta: sessionMeta });
+  }, 5000);
+}
+captureSessionDiagnostics();
+
+// ── Mood pattern tracking ─────────────────────────────────
+export function trackMoodPattern(val) {
+  const history = load('bloom_history', {});
+  const recentDays = Object.keys(history).sort().slice(-7);
+  const recentMoods = recentDays.map(d => history[d]?.mood).filter(m => m !== undefined && m >= 0);
+  const meta = {
+    current: val,
+    recentAvg: recentMoods.length ? +(recentMoods.reduce((a, b) => a + b, 0) / recentMoods.length).toFixed(1) : null,
+    recentCount: recentMoods.length,
+    trend: recentMoods.length >= 3 ? (recentMoods[recentMoods.length - 1] - recentMoods[0] > 0 ? 'improving' : recentMoods[recentMoods.length - 1] - recentMoods[0] < 0 ? 'declining' : 'stable') : 'insufficient_data',
+    isLow: val >= 0 && val <= 1,
+    isUnknown: val === -1,
+  };
+  sendTelemetry('mood_pattern', { meta });
+}
+
+// ── AI reflection journey tracking ────────────────────────
+export function trackAIJourney(context, source) {
+  const state = window._bloomState; // access via window to avoid circular import
+  sendTelemetry('ai_journey', { meta: { context, source, hasName: !!(state?.prefs?.name), hardDay: !!state?.hardDayMode } });
+}
 
 window.onerror = function(message, source, lineno, colno, error) {
   const errLog = load('bloom_error_log', []);

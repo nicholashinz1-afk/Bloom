@@ -3,7 +3,7 @@ import { state, today } from '../state.js';
 import { save, load } from '../storage.js';
 import { haptic, escapeHtml } from '../utils.js';
 import { bloomIcon, buddyIcon } from '../icons.js';
-import { sendTelemetry, trackFeature } from '../telemetry.js';
+import { sendTelemetry, trackFeature, timedFetch } from '../telemetry.js';
 import { addXP } from '../xp.js';
 import { openSheet, closeAllSheets } from '../sheets.js';
 
@@ -44,7 +44,7 @@ function getHabitPct() {
 // ── Buddy API helpers ─────────────────────────────────────
 async function buddyApi(payload) {
   try {
-    const res = await fetch('/api/buddy', {
+    const res = await timedFetch('/api/buddy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

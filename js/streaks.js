@@ -1,12 +1,20 @@
-import { state, today, saveState } from './state.js';
+// Bloom streaks — streak logic, milestones, welcome back
+import { state, today, getJournalEntries } from './state.js';
 import { save, load } from './storage.js';
 import { haptic, playSound } from './utils.js';
 import { addXP } from './xp.js';
 import { sendTelemetry } from './telemetry.js';
-import { celebrate } from './celebrate.js';
-import { launchConfetti } from './ui.js';
 
-export function recoverStreakFromHistory() {
+// Late-bound
+function celebrate(...args) { return window.celebrate?.(...args); }
+function renderTodayTab(...args) { return window.renderTodayTab?.(...args); }
+
+// ============================================================
+//  STREAK SYSTEM
+// ============================================================
+
+// Recover streak data from history when xpData looks reset or missing
+function recoverStreakFromHistory() {
   const xp = state.xpData;
   const history = state.historyData || {};
   const historyDays = Object.keys(history).sort();
@@ -32,7 +40,7 @@ export function recoverStreakFromHistory() {
     td.journalXPGiven ||
     (td.selfCare && Object.values(td.selfCare).some(Boolean)) ||
     td.nudge_opened ||
-    state.wellnessData?.journal?.[t]
+    getJournalEntries(t).length > 0
   );
   if (todayHasActivity) allDays.add(t);
 
@@ -62,7 +70,7 @@ export function recoverStreakFromHistory() {
   saveState();
 }
 
-export function updateStreak() {
+function updateStreak() {
   const xp = state.xpData;
   const td = state.todayData;
   const t = today();
@@ -100,7 +108,7 @@ export function updateStreak() {
     td.journalXPGiven ||
     anySelfCare ||
     td.nudge_opened ||
-    state.wellnessData?.journal?.[t]
+    getJournalEntries(t).length > 0
   );
 
   const moodGrace = td.mood !== undefined && td.mood >= 0 && td.mood <= 2;
@@ -137,7 +145,7 @@ export function updateStreak() {
 }
 
 // ── Streak milestones ────────────────────────────────────────
-export function buildStreakTreeSVG(streak) {
+function buildStreakTreeSVG(streak) {
   // Growth stages: 3=sprout, 7=sapling, 14=young tree, 30=full tree, 60=grand tree, 100=ancient tree
   const trunk = '#6b5a4a';
   const trunkLight = '#8a7560';
@@ -238,7 +246,7 @@ export function buildStreakTreeSVG(streak) {
   </svg>`;
 }
 
-export function checkStreakMilestone(totalDays) {
+function checkStreakMilestone(totalDays) {
   const milestones = [5, 10, 25, 50, 75, 100, 150, 200, 365];
   if (!milestones.includes(totalDays)) return;
   // Prevent showing milestones the user already passed (e.g. after migration)
@@ -279,7 +287,7 @@ export function checkStreakMilestone(totalDays) {
 }
 
 // ── Welcome-back re-engagement after 2+ missed days ──────────
-export function checkWelcomeBack() {
+function checkWelcomeBack() {
   const xp = state.xpData;
   if (!xp.lastStreakDate) return;
   if (state._welcomeBackShown) return;
@@ -295,7 +303,7 @@ export function checkWelcomeBack() {
   }
 }
 
-export function dismissWelcomeBack(reason) {
+function dismissWelcomeBack(reason) {
   state.showWelcomeBack = false;
   if (reason) {
     if (!state.wellnessData._comebackReasons) state.wellnessData._comebackReasons = [];
@@ -307,12 +315,11 @@ export function dismissWelcomeBack(reason) {
   haptic('success');
   renderTodayTop();
 }
-window.dismissWelcomeBack = dismissWelcomeBack;
 
 // ── General milestone checks ─────────────────────────────────
-export function checkMilestones() {
+function checkMilestones() {
   const wellness = state.wellnessData;
-  const journalCount = Object.keys(wellness?.journal || {}).length;
+  const journalCount = Object.keys(wellness?.journal || {}).filter(d => getJournalEntries(d).length > 0).length;
   const milestones = load('bloom_milestones', {});
 
   // Journal entry milestones
@@ -334,7 +341,7 @@ export function checkMilestones() {
   });
 }
 
-export function showMilestone(emoji, title, sub) {
+function showMilestone(emoji, title, sub) {
   haptic('medium');
   playSound('milestone');
   launchConfetti(window.innerWidth/2, window.innerHeight/3, 50);
@@ -351,3 +358,10 @@ export function showMilestone(emoji, title, sub) {
   document.getElementById('levelup-close').addEventListener('click', () => div.remove());
   setTimeout(() => { if (div.parentNode) div.remove(); }, 8000);
 }
+
+
+export { recoverStreakFromHistory, updateStreak, buildStreakTreeSVG,
+  checkStreakMilestone, checkWelcomeBack, dismissWelcomeBack,
+  checkMilestones, showMilestone };
+window.dismissWelcomeBack = dismissWelcomeBack;
+window.checkMilestones = checkMilestones;

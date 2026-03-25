@@ -294,6 +294,7 @@ function renderSettingsTab() {
       { id: 'w_shower',   icon: '🚿', label: 'Shower' },
       { id: 'w_exercise', icon: '💪', label: 'Exercise' },
       { id: 'w_outside',  icon: '🌿', label: 'Go outside' },
+      { id: 'w_therapy',  icon: '🛋️', label: 'Go to therapy' },
     ].map(h => `<div class="toggle-row">
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-size:18px">${h.icon}</span>

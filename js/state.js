@@ -1,4 +1,4 @@
-// Bloom state — central app state + date helpers
+// Bloom state — central app state + date helpers + journal helpers
 import { save, load } from './storage.js';
 import { JOURNAL_PROMPTS, JOURNAL_PROMPTS_LOW } from './constants.js';
 
@@ -41,6 +41,9 @@ function getWeekDates() {
   return dates;
 }
 
+// ============================================================
+//  APP STATE
+// ============================================================
 let state = {};
 
 function loadState() {
@@ -65,10 +68,38 @@ function saveState() {
   save('bloom_wellness', state.wellnessData);
 }
 
-export function getJournalPrompt() {
+function getJournalPrompt() {
+  const offset = state.journalPromptOffset || 0;
   const mood = state.todayData?.mood;
-  if (mood !== undefined && mood >= 0 && mood <= 1) return JOURNAL_PROMPTS_LOW[getDayIndex() % JOURNAL_PROMPTS_LOW.length];
-  return JOURNAL_PROMPTS[getDayIndex() % JOURNAL_PROMPTS.length];
+  if (mood !== undefined && mood >= 0 && mood <= 1) return JOURNAL_PROMPTS_LOW[(getDayIndex() + offset) % JOURNAL_PROMPTS_LOW.length];
+  return JOURNAL_PROMPTS[(getDayIndex() + offset) % JOURNAL_PROMPTS.length];
 }
 
-export { state, today, dayOfWeek, weekStart, formatDateLabel, getDayIndex, getWeekDates, loadState, saveState };
+// ── Journal entry helpers (array-based storage) ─────────────
+function getJournalEntries(date) {
+  const raw = state.wellnessData?.journal?.[date];
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  // Legacy single-object format
+  return [{ text: raw.text, ai: raw.ai, savedAt: null, source: 'journal' }];
+}
+
+function getLatestJournalText(date) {
+  return getJournalEntries(date).map(e => e.text).filter(Boolean).join('\n\n');
+}
+
+function migrateJournalFormat() {
+  const journal = state.wellnessData?.journal;
+  if (!journal) return;
+  let migrated = false;
+  Object.keys(journal).forEach(date => {
+    const entry = journal[date];
+    if (entry && !Array.isArray(entry) && typeof entry === 'object' && entry.text !== undefined) {
+      journal[date] = [{ text: entry.text, ai: entry.ai || null, savedAt: null, prompt: null, source: 'journal' }];
+      migrated = true;
+    }
+  });
+  if (migrated) saveState();
+}
+
+export { state, today, dayOfWeek, weekStart, formatDateLabel, getDayIndex, getWeekDates, loadState, saveState, getJournalPrompt, getJournalEntries, getLatestJournalText, migrateJournalFormat };

@@ -1,5 +1,8 @@
-// ── Haptic feedback ──────────────────────────────────────────
-export function haptic(style = 'light') {
+// Bloom utils — haptics, audio engine, helpers
+import { state } from './state.js';
+import { DAILY_HABITS, MEDICATION_HABIT } from './constants.js';
+
+function haptic(style = 'light') {
   try {
     if (navigator.vibrate) {
       const patterns = { light: 8, medium: 15, heavy: 25, success: [10,50,10] };
@@ -11,20 +14,20 @@ export function haptic(style = 'light') {
 // ============================================================
 //  AUDIO ENGINE
 // ============================================================
-export let audioCtx = null;
+let audioCtx = null;
 
-export function getAudioCtx() {
+function getAudioCtx() {
   if (!audioCtx) {
     try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
   }
   return audioCtx;
 }
 
-export function isAudioEnabled() {
+function isAudioEnabled() {
   return state.prefs?.audio !== false;
 }
 
-export function playTone(freq, duration, type = 'sine', volume = 0.18, delay = 0) {
+function playTone(freq, duration, type = 'sine', volume = 0.18, delay = 0) {
   if (!isAudioEnabled()) return;
   const ctx = getAudioCtx();
   if (!ctx) return;
@@ -45,7 +48,7 @@ export function playTone(freq, duration, type = 'sine', volume = 0.18, delay = 0
 
 // ── Count completed habits today (for rising scale) ──────────
 // ── Warm marimba-style tone with natural decay ───────────────
-export function playWarmTone(freq, duration, volume = 0.18, delay = 0) {
+function playWarmTone(freq, duration, volume = 0.18, delay = 0) {
   const ctx = getAudioCtx();
   if (!ctx) return;
   try {
@@ -77,10 +80,7 @@ export function playWarmTone(freq, duration, volume = 0.18, delay = 0) {
   } catch(e) {}
 }
 
-import { state } from './state.js';
-import { DAILY_HABITS, MEDICATION_HABIT } from './constants.js';
-
-export function getDailyCompletionCount() {
+function getDailyCompletionCount() {
   const td = state.todayData || {};
   let count = 0;
   // New daily habits (preferred) or legacy teeth
@@ -108,6 +108,7 @@ export function getDailyCompletionCount() {
   if ((wd.w_shower || 0) > 0) count++;
   if ((wd.w_exercise || 0) > 0) count++;
   if ((wd.w_outside || 0) > 0) count++;
+  if ((wd.w_therapy || 0) > 0) count++;
   // Self-care tasks
   const sc = state.todayData?.selfCare || {};
   count += Object.values(sc).filter(Boolean).length;
@@ -118,7 +119,7 @@ export function getDailyCompletionCount() {
   return count;
 }
 
-export function playSound(type, param) {
+function playSound(type, param) {
   if (!isAudioEnabled()) return;
   if (audioCtx?.state === 'suspended') audioCtx.resume();
 
@@ -226,18 +227,20 @@ export function playSound(type, param) {
 }
 
 // ── Animated checkmark SVG ───────────────────────────────────
-export const CHECK_SVG = '<svg class="habit-check-svg" viewBox="0 0 16 16"><path class="check-path" d="M3.5 8.5L6.5 11.5L12.5 4.5"/></svg>';
+const CHECK_SVG = '<svg class="habit-check-svg" viewBox="0 0 16 16"><path class="check-path" d="M3.5 8.5L6.5 11.5L12.5 4.5"/></svg>';
 
-// ── HTML escaping ──────────────────────────────────────────
 export function escapeHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
-// ── Simple toast (stub for missing original) ────────────────
 export function showToast(msg) {
-  const div = document.createElement('div');
-  div.className = 'toast';
-  div.textContent = msg;
-  document.body.appendChild(div);
-  setTimeout(() => div.remove(), 3000);
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
 }
+
+export { haptic, getAudioCtx, isAudioEnabled, playTone, playWarmTone, getDailyCompletionCount, playSound, CHECK_SVG };

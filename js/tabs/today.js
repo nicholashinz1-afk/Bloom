@@ -1,5 +1,5 @@
 // Bloom today tab — daily habits, mood, water, food, self-care
-import { state, today, getDayIndex, getWeekDates, weekStart, saveState, getJournalPrompt } from '../state.js';
+import { state, today, getDayIndex, getWeekDates, weekStart, saveState, getJournalPrompt, getJournalEntries } from '../state.js';
 import { save, load } from '../storage.js';
 import { haptic, playSound, getDailyCompletionCount, isAudioEnabled } from '../utils.js';
 import { DAILY_HABITS, MEDICATION_HABIT, SELF_CARE_CATEGORIES, SELF_CARE_TASKS, XP_VALUES, LEVELS, CELEBRATIONS, HABIT_AFFIRMATIONS } from '../constants.js';
@@ -664,7 +664,7 @@ function renderTodayTab() {
   }
 
   // --- WELLNESS GATEWAY CARD (week 3+) ---
-  const journalToday = state.wellnessData?.journal?.[t];
+  const journalToday = getJournalEntries(t).length > 0;
   const winsToday = (state.wellnessData?.wins?.[t] || []).length > 0;
   const affirmationsExist = (state.todayData?.affirmations || []).length > 0;
   const wellnessDone = [journalToday, winsToday, affirmationsExist].filter(Boolean).length;

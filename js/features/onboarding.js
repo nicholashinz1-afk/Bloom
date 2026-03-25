@@ -15,10 +15,10 @@ function showBackupSheet(...args) { return window.showBackupSheet?.(...args); }
 let obStep = 0;
 let obData = {
   name: '',
-  habits: { m_teeth: true, e_teeth: true, w_shower: true, w_exercise: true, w_outside: true, track_meals: false },
+  habits: { m_teeth: true, e_teeth: true, w_shower: true, w_exercise: true, w_outside: true, w_therapy: false, track_meals: false },
   dailyHabits: { brush_teeth: true },
   habitTimes: { brush_teeth: 'any' },
-  goals: { w_shower: 3, w_exercise: 3, w_outside: 3 },
+  goals: { w_shower: 3, w_exercise: 3, w_outside: 3, w_therapy: 1 },
   householdTasks: [],
   notifications: { waterMode: 'smart', sundayReminder: true },
   audio: true,
@@ -181,6 +181,7 @@ function renderOBRoutine(body, footer) {
     { id: 'w_shower', icon: '🚿', name: 'Shower', type: 'weekly' },
     { id: 'w_exercise', icon: '💪', name: 'Exercise', type: 'weekly' },
     { id: 'w_outside', icon: '🌿', name: 'Go outside', type: 'weekly' },
+    { id: 'w_therapy', icon: '🛋️', name: 'Go to therapy', type: 'weekly' },
   ];
 
   let html = `<div class="ob-title">Your routine</div>
@@ -382,6 +383,7 @@ function renderOBHabits(body, footer) {
     { id: 'w_shower', icon: '🚿', name: 'Shower', type: 'weekly' },
     { id: 'w_exercise', icon: '💪', name: 'Exercise', type: 'weekly' },
     { id: 'w_outside', icon: '🌿', name: 'Go outside', type: 'weekly' },
+    { id: 'w_therapy', icon: '🛋️', name: 'Go to therapy', type: 'weekly' },
   ];
 
   let html = `<div class="ob-title">Choose your habits</div>

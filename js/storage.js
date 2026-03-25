@@ -150,6 +150,7 @@ async function restoreFromDB() {
   }
 }
 
+
 export { initDB, dbSet, dbGet, dbGetAll, save, load, showStorageWarning, trimHistory, checkStorageQuota, restoreFromDB };
 window.trimHistory = trimHistory;
 window.showStorageWarning = showStorageWarning;

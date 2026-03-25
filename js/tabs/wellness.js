@@ -1,18 +1,19 @@
 // Bloom wellness tab — journal, breathing, grounding, body scan, reframing, wins, affirmations
-import { state, today, getDayIndex, dayOfWeek, getWeekDates, formatDateLabel, getJournalPrompt, saveState } from '../state.js';
+import { state, today, getDayIndex, dayOfWeek, getWeekDates, weekStart, formatDateLabel, getJournalPrompt, getJournalEntries, getLatestJournalText, saveState } from '../state.js';
 import { save, load } from '../storage.js';
 import { haptic, escapeHtml, playSound } from '../utils.js';
 import { celebrate } from '../celebrate.js';
 import { REFLECTION_QUESTIONS } from '../constants.js';
 import { callClaude, renderAIResponseHTML, showThinking } from '../ai.js';
-import { sendTelemetry, trackFeature } from '../telemetry.js';
+import { sendTelemetry, trackFeature, timedFetch } from '../telemetry.js';
 import { bloomIcon } from '../icons.js';
 import { addXP } from '../xp.js';
-import { infoIcon } from '../sheets.js';
+import { infoIcon, openSheet, closeAllSheets } from '../sheets.js';
 
 // Late-bound cross-module references (avoid circular imports)
 function archiveToday(...args) { return window.archiveToday?.(...args); }
 function checkFirstTaskStreak(...args) { return window.checkFirstTaskStreak?.(...args); }
+function checkMilestones(...args) { return window.checkMilestones?.(...args); }
 
 function renderWellnessTab() {
   const scroll = document.getElementById('wellness-scroll');
@@ -27,38 +28,80 @@ function renderWellnessTab() {
   html += `<div style="font-family:Fraunces,serif;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.12em;padding:4px 4px 10px;display:flex;align-items:center;gap:8px"><span>Today</span><div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div></div>`;
 
   // --- JOURNAL ---
-  const journalEntry = state.wellnessData?.journal?.[t];
+  const journalEntries = getJournalEntries(t);
   const journalPrompt = getJournalPrompt();
+  const totalJournalDays = Object.keys(state.wellnessData?.journal || {}).filter(d => getJournalEntries(d).length > 0).length;
 
   html += `<div class="card" id="journal-card">
-    <div class="card-title">📓 Daily journal${infoIcon('journal')}</div>
-    <div class="journal-prompt">${journalPrompt}</div>`;
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="card-title" style="margin-bottom:0">📓 Daily journal${infoIcon('journal')}</div>
+      ${totalJournalDays > 0 ? `<div style="font-size:11px;color:var(--text-muted)">${totalJournalDays} day${totalJournalDays !== 1 ? 's' : ''} journaled</div>` : ''}
+    </div>
+    ${state.journalMode === 'free' ? '' : `<div class="journal-prompt">${journalPrompt}</div>`}`;
 
-  if (journalEntry && !state.editingJournal) {
-    html += `<div style="font-size:14px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap">${journalEntry.text}</div>`;
-    if (journalEntry.ai) {
-      html += `<div class="ai-response" style="margin-top:12px"><div class="ai-response-text">${journalEntry.ai}</div></div>`;
-    } else if (state.loadingJournalAI) {
-      html += `<div class="ai-response" style="margin-top:12px;display:flex;align-items:center;gap:10px">
-        <div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
-        <div style="font-size:12px;color:var(--sky);font-style:italic">bloom is reading what you wrote...</div>
+  // Show editing textarea
+  if (state.editingJournal) {
+    const editText = state.editingJournalIndex !== null && state.editingJournalIndex !== undefined
+      ? (journalEntries[state.editingJournalIndex]?.text || '')
+      : (state.journalDraft || '');
+    const placeholder = state.journalMode === 'free' ? 'No prompt, no pressure. Just write...' : 'What\'s on your mind today...';
+    html += `<textarea id="journal-textarea" placeholder="${placeholder}" rows="5" style="margin-bottom:10px">${editText}</textarea>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-primary" style="flex:1" onclick="saveJournal()">${state.editingJournalIndex !== null && state.editingJournalIndex !== undefined ? 'Update entry' : 'Save & reflect'}</button>
+      <button class="btn btn-ghost" onclick="cancelEditJournal()">Cancel</button>
+    </div>
+    <div style="font-size:12px;color:var(--sky);margin-top:10px;display:flex;align-items:center;gap:5px"><span>✦</span> bloom will respond to what you write</div>`;
+  } else if (journalEntries.length > 0) {
+    // Show saved entries
+    const sourceLabels = { open: 'open journal', winddown: 'evening', journal: '' };
+    journalEntries.forEach((entry, i) => {
+      const time = entry.savedAt ? new Date(entry.savedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+      const source = sourceLabels[entry.source] || '';
+      const meta = [time, source].filter(Boolean).join(' · ');
+      html += `<div style="padding:10px 0;${i > 0 ? 'border-top:1px solid rgba(255,255,255,0.06);margin-top:8px' : ''}">
+        ${meta ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">${meta}</div>` : ''}
+        <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap">${entry.text}</div>`;
+      if (entry.ai) {
+        html += `<div class="ai-response" style="margin-top:10px"><div class="ai-response-text">${entry.ai}</div></div>`;
+      } else if (state.loadingJournalAI && i === journalEntries.length - 1) {
+        html += `<div class="ai-response" style="margin-top:10px;display:flex;align-items:center;gap:10px">
+          <div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
+          <div style="font-size:12px;color:var(--sky);font-style:italic">bloom is reading what you wrote...</div>
+        </div>`;
+      }
+      html += `<button class="btn btn-ghost btn-sm" style="margin-top:8px;font-size:11px" onclick="editJournalEntry(${i})">Edit</button>`;
+      html += `</div>`;
+    });
+    // Entry count transparency
+    html += `<div style="font-size:11px;color:var(--text-muted);margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">${journalEntries.length} entry${journalEntries.length !== 1 ? 'ies' : ''} today · all entries are saved</div>`;
+    html += `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="newJournalEntry('same')">Same prompt again</button>
+      <button class="btn btn-ghost btn-sm" onclick="newJournalEntry('prompt')">New prompt</button>
+      <button class="btn btn-ghost btn-sm" onclick="newJournalEntry('free')">Just write</button>
+    </div>`;
+    if (totalJournalDays > 1 || (totalJournalDays === 1 && journalEntries.length === 0)) {
+      html += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
+        <button class="btn btn-ghost btn-sm" onclick="openJournalHistory()" style="font-size:11px;color:var(--text-muted)">📖 View past entries</button>
       </div>`;
     }
-    html += `<button class="btn btn-ghost btn-sm mt-4" onclick="editJournal()">Edit entry</button>`;
   } else {
-    html += `<textarea id="journal-textarea" placeholder="What's on your mind today..." rows="5" style="margin-bottom:10px">${journalEntry?.text || state.journalDraft || ''}</textarea>
+    // No entries yet — show textarea
+    html += `<textarea id="journal-textarea" placeholder="What's on your mind today..." rows="5" style="margin-bottom:10px">${state.journalDraft || ''}</textarea>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="btn btn-primary" style="flex:1" onclick="saveJournal()">Save & reflect</button>
-      ${journalEntry ? `<button class="btn btn-ghost" onclick="cancelEditJournal()">Cancel</button>` : ''}
     </div>
     <div style="font-size:12px;color:var(--sky);margin-top:10px;display:flex;align-items:center;gap:5px"><span>✦</span> bloom will respond to what you write</div>
     <div id="journal-ai-response" style="display:none;margin-top:12px"></div>`;
+    if (totalJournalDays > 0) {
+      html += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
+        <button class="btn btn-ghost btn-sm" onclick="openJournalHistory()" style="font-size:11px;color:var(--text-muted)">📖 View past entries</button>
+      </div>`;
+    }
   }
   html += `</div>`;
 
   // Journal empty state — warm first-day experience
-  const allJournalEntries = Object.keys(state.wellnessData?.journal || {});
-  if (allJournalEntries.length === 0 && !journalEntry) {
+  if (totalJournalDays === 0 && journalEntries.length === 0) {
     html += `<div style="text-align:center;padding:8px 16px 4px">
       <div style="font-family:Fraunces,serif;font-style:italic;font-size:13px;color:var(--text-muted);line-height:1.7">Your journal is here whenever you need it. No rules — just a space to be honest with yourself.</div>
     </div>`;
@@ -113,15 +156,17 @@ function renderWellnessTab() {
     <div style="text-align:center"><button class="btn" style="background:rgba(186,156,124,0.25);border:1px solid rgba(186,156,124,0.4);color:var(--amber-light)" onclick="openOpenJournal()">Open journal</button></div>
   </div>`;
 
-  // --- EVENING WIND-DOWN (always available, not just from evening routine) ---
-  html += `<div style="margin-top:10px;background:linear-gradient(135deg,rgba(106,154,176,0.12),rgba(106,154,176,0.05));border:1px solid rgba(106,154,176,0.25);border-radius:var(--r-lg);padding:18px 16px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <span style="font-size:18px">🌙</span>
-      <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sky-light)">Wind down</div>
-    </div>
-    <div style="font-size:13px;color:rgba(106,154,176,0.7);margin-bottom:14px;font-style:italic">Evening check-in, journal prompt, and breathing — all in one gentle flow</div>
-    <div style="text-align:center"><button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="openWindDown()">Start wind-down</button></div>
-  </div>`;
+  // --- EVENING WIND-DOWN (only shown from 7pm onward) ---
+  if (new Date().getHours() >= 19) {
+    html += `<div style="margin-top:10px;background:linear-gradient(135deg,rgba(106,154,176,0.12),rgba(106,154,176,0.05));border:1px solid rgba(106,154,176,0.25);border-radius:var(--r-lg);padding:18px 16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:18px">🌙</span>
+        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sky-light)">Wind down</div>
+      </div>
+      <div style="font-size:13px;color:rgba(106,154,176,0.7);margin-bottom:14px;font-style:italic">Evening check-in, journal prompt, and breathing — all in one gentle flow</div>
+      <div style="text-align:center"><button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="openWindDown()">Start wind-down</button></div>
+    </div>`;
+  }
 
   // ── WEEKLY ─────────────────────────────────────────────────
   html += `<div style="font-family:Fraunces,serif;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.12em;padding:16px 4px 10px;display:flex;align-items:center;gap:8px"><span>This week</span><div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div></div>`;
@@ -214,23 +259,24 @@ function renderWellnessTab() {
     });
     html += `</div>`;
   }
-  html += `<div id="breath-section" style="margin:8px 0 0">
-    <div style="background:linear-gradient(135deg,rgba(106,154,176,0.12),rgba(106,154,176,0.05));border:1px solid rgba(106,154,176,0.25);border-radius:var(--r-lg);padding:18px 16px" id="breath-card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <span style="font-size:18px">🌬</span>
-        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sky-light)">Take a breath${infoIcon('breathing')}</div>
-        <div style="margin-left:auto;font-size:11px;color:var(--sky);background:rgba(106,154,176,0.15);padding:2px 8px;border-radius:99px">4-7-8</div>
-      </div>
-      <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
-      <div id="breath-ui" style="text-align:center">
-        <button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="startBreathing()">Begin breathing exercise</button>
-      </div>
-    </div>
-  </div>`;
-
   // --- SKILL-BUILDING MODULES ---
   html += `<div style="margin-top:16px">
     <div style="font-family:Fraunces,serif;font-size:16px;font-weight:400;color:var(--cream);margin-bottom:12px;padding:0 2px">Skill-building tools</div>
+
+    <!-- Take a Breath -->
+    <div id="breath-section" style="margin-bottom:10px">
+      <div style="background:linear-gradient(135deg,rgba(106,154,176,0.12),rgba(106,154,176,0.05));border:1px solid rgba(106,154,176,0.25);border-radius:var(--r-lg);padding:18px 16px" id="breath-card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <span style="font-size:18px">🌬</span>
+          <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sky-light)">Take a breath${infoIcon('breathing')}</div>
+          <div style="margin-left:auto;font-size:11px;color:var(--sky);background:rgba(106,154,176,0.15);padding:2px 8px;border-radius:99px">4-7-8</div>
+        </div>
+        <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
+        <div id="breath-ui" style="text-align:center">
+          <button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="startBreathing()">Begin breathing exercise</button>
+        </div>
+      </div>
+    </div>
 
     <!-- 5-4-3-2-1 Grounding -->
     <div style="background:linear-gradient(135deg,rgba(var(--sage-rgb),0.12),rgba(var(--sage-rgb),0.05));border:1px solid rgba(var(--sage-rgb),0.25);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:10px" id="grounding-card">
@@ -268,6 +314,7 @@ function renderWellnessTab() {
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;font-style:italic">A kinder way to look at a difficult thought</div>
       <div id="reframe-ui" style="text-align:center">
         <button class="btn" style="background:rgba(201,149,74,0.25);border:1px solid rgba(201,149,74,0.4);color:var(--amber-light)" onclick="startReframe()">Try a gentle reframe</button>
+        ${(state.wellnessData.reframeHistory?.length > 0) ? `<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="openReframeHistory()" style="font-size:11px;color:var(--text-muted)">View past reframes (${state.wellnessData.reframeHistory.length})</button></div>` : ''}
       </div>
     </div>
   </div>`;
@@ -287,10 +334,26 @@ async function saveJournal() {
   const t = today();
 
   if (!state.wellnessData.journal) state.wellnessData.journal = {};
-  state.wellnessData.journal[t] = { text, ai: null };
+  if (!Array.isArray(state.wellnessData.journal[t])) state.wellnessData.journal[t] = [];
+
+  let entryIndex;
+  if (state.editingJournalIndex !== null && state.editingJournalIndex !== undefined) {
+    // Editing existing entry
+    state.wellnessData.journal[t][state.editingJournalIndex].text = text;
+    state.wellnessData.journal[t][state.editingJournalIndex].ai = null;
+    entryIndex = state.editingJournalIndex;
+  } else {
+    // New entry
+    const prompt = getJournalPrompt();
+    state.wellnessData.journal[t].push({ text, ai: null, savedAt: new Date().toISOString(), prompt, source: 'journal' });
+    entryIndex = state.wellnessData.journal[t].length - 1;
+  }
+
   state.editingJournal = false;
+  state.editingJournalIndex = null;
   state.journalDraft = '';
   state.loadingJournalAI = true;
+  trackFeature('journal');
   saveState();
   checkFirstTaskStreak();
   renderWellnessTab();
@@ -309,8 +372,8 @@ async function saveJournal() {
   );
 
   state.loadingJournalAI = false;
-  if (ai) {
-    state.wellnessData.journal[t].ai = ai;
+  if (ai && state.wellnessData.journal[t][entryIndex]) {
+    state.wellnessData.journal[t][entryIndex].ai = ai;
     saveState();
     archiveToday();
   }
@@ -319,6 +382,41 @@ async function saveJournal() {
 
 function editJournal() {
   state.editingJournal = true;
+  state.editingJournalIndex = null;
+  state.journalMode = 'prompt';
+  renderWellnessTab();
+  setTimeout(() => {
+    const ta = document.getElementById('journal-textarea');
+    if (ta) ta.focus();
+  }, 100);
+}
+
+function editJournalEntry(index) {
+  state.editingJournal = true;
+  state.editingJournalIndex = index;
+  state.journalMode = 'prompt';
+  renderWellnessTab();
+  setTimeout(() => {
+    const ta = document.getElementById('journal-textarea');
+    if (ta) ta.focus();
+  }, 100);
+}
+
+function newJournalEntry(mode) {
+  state.editingJournal = true;
+  state.editingJournalIndex = null;
+  state.journalDraft = '';
+  if (mode === 'prompt') {
+    // Cycle to a different prompt than the current one
+    if (!state.journalPromptOffset) state.journalPromptOffset = 0;
+    state.journalPromptOffset++;
+    state.journalMode = 'prompt';
+  } else if (mode === 'same') {
+    // Keep the same prompt
+    state.journalMode = 'prompt';
+  } else {
+    state.journalMode = 'free';
+  }
   renderWellnessTab();
   setTimeout(() => {
     const ta = document.getElementById('journal-textarea');
@@ -328,6 +426,8 @@ function editJournal() {
 
 function cancelEditJournal() {
   state.editingJournal = false;
+  state.editingJournalIndex = null;
+  state.journalMode = 'prompt';
   renderWellnessTab();
 }
 
@@ -383,12 +483,13 @@ async function generateWeeklyInsight(e) {
   const exerciseCount = wd.w_exercise || 0;
   const showerCount = wd.w_shower || 0;
   const outsideCount = wd.w_outside || 0;
-  const journalDays = weekDates.filter(d => state.wellnessData?.journal?.[d]).length;
+  const therapyCount = wd.w_therapy || 0;
+  const journalDays = weekDates.filter(d => getJournalEntries(d).length > 0).length;
   const waterDays = weekDates.filter(d => (state.historyData[d]?.habits?.waterXPGiven)).length;
   const breathSessions = state.wellnessData?.breathSessions || 0;
 
   // Journal excerpts
-  const journals = weekDates.map(d => state.wellnessData?.journal?.[d]?.text).filter(Boolean);
+  const journals = weekDates.map(d => getLatestJournalText(d)).filter(Boolean);
 
   // Small wins this week
   const weekWins = weekDates.flatMap(d => state.wellnessData?.wins?.[d] || []);
@@ -397,6 +498,7 @@ async function generateWeeklyInsight(e) {
     exerciseCount > 0 ? `exercised ${exerciseCount} time${exerciseCount > 1 ? 's' : ''}` : null,
     showerCount > 0 ? `showered ${showerCount} time${showerCount > 1 ? 's' : ''}` : null,
     outsideCount > 0 ? `went outside ${outsideCount} time${outsideCount > 1 ? 's' : ''}` : null,
+    therapyCount > 0 ? `went to therapy ${therapyCount} time${therapyCount > 1 ? 's' : ''}` : null,
     journalDays > 0 ? `journaled ${journalDays} day${journalDays > 1 ? 's' : ''}` : null,
     breathSessions > 0 ? `did ${breathSessions} breathing session${breathSessions > 1 ? 's' : ''}` : null,
   ].filter(Boolean).join(', ');
@@ -785,6 +887,10 @@ Give a gentle cognitive reframe in 2-3 sentences. Validate their feeling first, 
 
     if (!state.wellnessData.reframeSessions) state.wellnessData.reframeSessions = 0;
     state.wellnessData.reframeSessions++;
+    // Save to reframe history
+    if (!state.wellnessData.reframeHistory) state.wellnessData.reframeHistory = [];
+    state.wellnessData.reframeHistory.push({ thought, reframe, savedAt: new Date().toISOString() });
+    if (state.wellnessData.reframeHistory.length > 50) state.wellnessData.reframeHistory = state.wellnessData.reframeHistory.slice(-50);
     saveState();
 
     ui.innerHTML = `
@@ -811,16 +917,111 @@ Give a gentle cognitive reframe in 2-3 sentences. Validate their feeling first, 
 }
 
 
-export { renderWellnessTab, saveJournal, editJournal, cancelEditJournal,
+function openReframeHistory() {
+  const history = state.wellnessData.reframeHistory || [];
+  if (history.length === 0) return;
+
+  let html = `<div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:var(--cream);margin-bottom:4px">Past Reframes</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">${history.length} reframe${history.length !== 1 ? 's' : ''} saved</div>`;
+
+  history.slice().reverse().forEach(item => {
+    const date = item.savedAt ? new Date(item.savedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+    html += `<div style="background:rgba(201,149,74,0.06);border:1px solid rgba(201,149,74,0.12);border-radius:var(--r-md);padding:14px;margin-bottom:10px">
+      ${date ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">${date}</div>` : ''}
+      <div style="font-size:13px;color:var(--text-secondary);font-style:italic;margin-bottom:10px;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:var(--r-md)">"${escapeHtml(item.thought)}"</div>
+      <div style="font-size:11px;color:var(--amber);margin-bottom:4px">A gentler way to see it:</div>
+      <div style="font-family:Fraunces,serif;font-style:italic;font-size:13px;color:var(--cream);line-height:1.7">${escapeHtml(item.reframe)}</div>
+    </div>`;
+  });
+
+  document.getElementById('reframe-history-content').innerHTML = html;
+  openSheet('reframe-history-sheet');
+}
+
+function openJournalHistory() {
+  const todayStr = today();
+  // Collect all dates with journal entries from both wellnessData and historyData
+  const journalDates = new Set();
+  const wellnessJournal = state.wellnessData?.journal || {};
+  Object.keys(wellnessJournal).forEach(d => {
+    if (getJournalEntries(d).length > 0) journalDates.add(d);
+  });
+  Object.keys(state.historyData || {}).forEach(d => {
+    const entry = state.historyData[d];
+    if (entry.journalEntries?.length > 0 || entry.journal) journalDates.add(d);
+  });
+
+  const dates = [...journalDates]
+    .filter(d => d !== todayStr)
+    .sort((a, b) => b.localeCompare(a));
+
+  let html = `<div style="font-family:Fraunces,serif;font-size:22px;font-weight:300;color:var(--cream);margin-bottom:16px">📖 Journal history</div>`;
+
+  if (dates.length === 0) {
+    html += `<div style="text-align:center;padding:24px 0">
+      <div style="font-size:13px;color:var(--text-muted);font-style:italic">Your past journal entries will appear here.</div>
+    </div>`;
+  } else {
+    let lastMonth = '';
+    dates.forEach(d => {
+      const date = new Date(d + 'T00:00:00');
+      const monthLabel = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      if (monthLabel !== lastMonth) {
+        lastMonth = monthLabel;
+        html += `<div style="font-size:12px;color:var(--text-muted);margin:12px 0 6px;font-weight:500">${monthLabel}</div>`;
+      }
+
+      // Get entries from wellnessData first, fall back to historyData
+      let entries = getJournalEntries(d);
+      let preview = '';
+      let count = entries.length;
+      if (count > 0) {
+        preview = entries[0].text || '';
+      } else {
+        const hist = state.historyData[d];
+        if (hist?.journalEntries?.length > 0) {
+          count = hist.journalEntries.length;
+          preview = hist.journalEntries[0].text || '';
+        } else if (hist?.journal) {
+          count = 1;
+          preview = hist.journal;
+        }
+      }
+      if (preview.length > 60) preview = preview.substring(0, 60) + '...';
+
+      const dateLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      const hasHistory = !!state.historyData[d];
+
+      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px;cursor:pointer" onclick="${hasHistory ? `closeAllSheets();setTimeout(()=>openHistoryDetail('${d}'),300)` : ''}">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:22px;width:30px;text-align:center">📝</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;color:var(--cream)">${dateLabel}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${count} entry${count !== 1 ? 'ies' : ''}${preview ? ' · ' : ''}<span style="font-style:italic">${preview}</span></div>
+          </div>
+          ${hasHistory ? '<div style="color:var(--text-muted);font-size:16px">›</div>' : ''}
+        </div>
+      </div>`;
+    });
+  }
+
+  document.getElementById('journal-history-content').innerHTML = html;
+  openSheet('journal-history-sheet');
+}
+
+export { renderWellnessTab, saveJournal, editJournal, editJournalEntry, newJournalEntry, cancelEditJournal,
   startBreathing, stopBreathing, continueBreathing,
   startGrounding, stopGrounding, startBodyScan, stopBodyScan,
-  startReframe, processReframe, saveReflection,
+  startReframe, processReframe, openReframeHistory, saveReflection,
   generateWeeklyInsight, generateWeeklySummary,
-  addWin, addAffirmation, removeAffirmation, toggleAffirmationPool, scrollToBreath };
+  addWin, addAffirmation, removeAffirmation, toggleAffirmationPool, scrollToBreath,
+  openJournalHistory };
 
 window.renderWellnessTab = renderWellnessTab;
 window.saveJournal = saveJournal;
 window.editJournal = editJournal;
+window.editJournalEntry = editJournalEntry;
+window.newJournalEntry = newJournalEntry;
 window.cancelEditJournal = cancelEditJournal;
 window.startBreathing = startBreathing;
 window.stopBreathing = stopBreathing;
@@ -833,6 +1034,7 @@ window.renderBodyScanStep = renderBodyScanStep;
 window.stopBodyScan = stopBodyScan;
 window.startReframe = startReframe;
 window.processReframe = processReframe;
+window.openReframeHistory = openReframeHistory;
 window.saveReflection = saveReflection;
 window.generateWeeklyInsight = generateWeeklyInsight;
 window.generateWeeklySummary = generateWeeklySummary;
@@ -843,3 +1045,4 @@ window.toggleAffirmationPool = toggleAffirmationPool;
 window.scrollToBreath = scrollToBreath;
 window.runBreathCountdown = runBreathCountdown;
 window.renderBreathPhase = renderBreathPhase;
+window.openJournalHistory = openJournalHistory;
