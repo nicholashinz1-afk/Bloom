@@ -28,6 +28,19 @@ const SPAM_PATTERNS = [
   /@|#|\$\$|[<>]/,
 ];
 
+// Crude / off-topic — not blocked, but soft-flagged so the client can grey it out
+// These pass through but get marked so the community sees a content warning
+const CRUDE_PATTERNS = [
+  /\b(hog|dong|wiener|schlong|pp|peen|johnson|boner)\b/i,
+  /\bcrank\b.*\b(hog|one|it)\b/i,
+  /\b(jerk|jack|wank|beat)\s*(off|it|ing)\b/i,
+  /\b(dick|cock|penis|balls|nuts|tits|boobs|ass|booty)\b/i,
+  /\b(horny|sexy|bang|hookup|hook up|smash|69)\b/i,
+  /\b(porn|onlyfans|nsfw|nude|naked)\b/i,
+  /\b(shit|fuck|damn|hell|crap|piss)\b/i,
+  /\b(stfu|gtfo|lmao.*ass|dumbass|badass|jackass)\b/i,
+];
+
 // Self-harm language — not blocked, but flagged so the client can offer resources
 const SELF_HARM_PATTERNS = [
   /\b(kill myself|end my life|want to die|don'?t want to (be here|live|exist))\b/i,
@@ -58,6 +71,11 @@ function moderateMessage(text) {
   // Flag self-harm language — allow the message but signal the client to show resources
   for (const pat of SELF_HARM_PATTERNS) {
     if (pat.test(lower)) return { ok: true, flag: 'self-harm' };
+  }
+
+  // Soft-flag crude/off-topic — allow but mark for content warning display
+  for (const pat of CRUDE_PATTERNS) {
+    if (pat.test(lower)) return { ok: true, flag: 'crude' };
   }
 
   return { ok: true };
@@ -181,6 +199,8 @@ export default async function handler(req, res) {
         ts: Date.now(),
         fp: fp || 'anon',
       };
+      // Auto-flag crude content so it renders with a content warning
+      if (check.flag === 'crude') msg.moderated = 'auto';
       messages.push(msg);
       const trimmed = messages.sort((a, b) => b.ts - a.ts).slice(0, 200);
       await saveMessages(trimmed);
@@ -218,6 +238,34 @@ export default async function handler(req, res) {
         }
       }
       return res.json({ ok: true });
+    }
+
+    // Admin moderation — mark a message as moderated or remove it entirely
+    if (action === 'moderate') {
+      const adminKey = process.env.ADMIN_KEY;
+      const provided = body.adminKey;
+      if (!adminKey || provided !== adminKey) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+
+      const { id, type } = body; // type: 'warn' | 'remove' | 'clear'
+      if (!id) return res.status(400).json({ error: 'Missing id' });
+
+      const messages = await getMessages();
+      if (type === 'remove') {
+        const filtered = messages.filter(m => m.id !== id);
+        await saveMessages(filtered);
+        return res.json({ ok: true, action: 'removed' });
+      }
+      if (type === 'clear') {
+        const msg = messages.find(m => m.id === id);
+        if (msg) { delete msg.moderated; await saveMessages(messages); }
+        return res.json({ ok: true, action: 'cleared' });
+      }
+      // Default: warn — grey out with content warning
+      const msg = messages.find(m => m.id === id);
+      if (msg) { msg.moderated = 'admin'; await saveMessages(messages); }
+      return res.json({ ok: true, action: 'warned' });
     }
 
     return res.status(400).json({ error: 'Unknown action' });
