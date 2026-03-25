@@ -114,8 +114,9 @@ export function trackMoodPattern(val) {
 
 // ── AI reflection journey tracking ────────────────────────
 export function trackAIJourney(context, source) {
-  const state = window._bloomState; // access via window to avoid circular import
-  sendTelemetry('ai_journey', { meta: { context, source, hasName: !!(state?.prefs?.name), hardDay: !!state?.hardDayMode } });
+  // Access state lazily via late-bound reference to avoid circular imports
+  const s = window._getBloomState?.() || {};
+  sendTelemetry('ai_journey', { meta: { context, source, hasName: !!(s?.prefs?.name), hardDay: !!s?.hardDayMode } });
 }
 
 window.onerror = function(message, source, lineno, colno, error) {
