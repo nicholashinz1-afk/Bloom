@@ -10043,7 +10043,12 @@ function renderSettingsTab() {
       </div>
 
       <div style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
-        <div style="font-weight:500;color:var(--amber-light);margin-bottom:4px">Flagged (allowed)</div>
+        <div style="font-weight:500;color:var(--amber-light);margin-bottom:4px">Content warning (allowed)</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Some messages may be flagged as potentially inappropriate for this space — crude language, off-topic content, etc. These messages are still posted but appear blurred with a content warning. You can choose to view them or leave them hidden. This keeps the wall focused on encouragement while respecting that the message was shared.</div>
+      </div>
+
+      <div style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
+        <div style="font-weight:500;color:var(--amber-light);margin-bottom:4px">Crisis support (allowed)</div>
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6">If we detect language that suggests you might be in crisis, your message is still posted — but we'll gently surface crisis resources. Your feelings are always valid here.</div>
       </div>
 
@@ -10052,7 +10057,7 @@ function renderSettingsTab() {
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Venting, frustration, and honest expression are welcome. This is a mental health app — we don't filter difficult emotions. Words like "hurt," "struggling," and "overwhelmed" belong here.</div>
       </div>
 
-      <p style="margin-top:12px;font-size:12px;color:var(--text-muted)">Bloom is designed to hold space for hard feelings, not suppress them. If you see something concerning on the wall, use the "flag" button to report it.</p>
+      <p style="margin-top:12px;font-size:12px;color:var(--text-muted)">Bloom is designed to hold space for hard feelings, not suppress them. If you see something concerning on the wall, use the "flag" button to report it. Messages with repeated moderation flags may result in restricted access to community features.</p>
     </div>
   `);
 
@@ -14091,7 +14096,9 @@ function renderCommunityTab() {
   html += `<div style="text-align:center;padding:12px 16px 20px">
     <div style="font-size:11px;color:var(--text-muted);line-height:1.7">
       This is a safe, moderated space. Messages are anonymous and screened automatically.
+      <br>Some messages may appear blurred if flagged — you can choose to view them.
       <br>Be kind. Be real. Be gentle with each other.
+      <br><span style="opacity:0.6">Learn more in Settings → How moderation works</span>
     </div>
   </div>`;
 
@@ -14141,7 +14148,8 @@ function renderWallMessageCard(msg) {
           <span style="font-size:14px">${hearted ? '💛' : '🤍'}</span>
           <span style="font-size:12px;color:${hearted ? 'var(--amber-light)' : 'var(--text-muted)'}">${msg.hearts || 0}</span>
         </button>
-        <button onclick="reportWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);opacity:0.5;padding:4px" title="Report">flag</button>
+        <button onclick="reportWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);opacity:0.5;padding:4px" title="Report">flag</button>${msg.moderated ? `
+        <button onclick="hideWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);opacity:0.5;padding:4px" title="Re-hide message">hide</button>` : ''}
       </div>
       <div style="font-size:11px;color:var(--text-muted)">${timeAgo}</div>
     </div>
@@ -14150,6 +14158,11 @@ function renderWallMessageCard(msg) {
 
 function revealWallMessage(id) {
   wallRevealedIds[id] = true;
+  renderWallMessages();
+}
+
+function hideWallMessage(id) {
+  delete wallRevealedIds[id];
   renderWallMessages();
 }
 
