@@ -1,4 +1,5 @@
-import { save as saveKey, load, today } from './storage.js';
+import { save as saveKey, load } from './storage.js';
+import { today } from './state.js';
 import { VERSION } from './constants.js';
 import { showToast } from './utils.js';
 

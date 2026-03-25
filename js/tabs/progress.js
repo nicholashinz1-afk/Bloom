@@ -3,7 +3,8 @@ import { state, today, getWeekDates, formatDateLabel, getDayIndex, dayOfWeek, sa
 import { save, load } from '../storage.js';
 import { haptic, escapeHtml } from '../utils.js';
 import { LEVELS } from '../constants.js';
-import { getLevel, getNextLevel, buildFlowerSVG, buildStreakTreeSVG } from '../xp.js';
+import { getLevel, getNextLevel, buildFlowerSVG } from '../xp.js';
+import { buildStreakTreeSVG } from '../streaks.js';
 import { getMoodPattern, getMoodHabitCorrelation, shareWeekInReview } from '../features/mood.js';
 import { callClaude, renderAIResponseHTML, showThinking } from '../ai.js';
 import { bloomIcon } from '../icons.js';

@@ -1,6 +1,6 @@
-import { LEVELS, THEMES } from './constants.js';
-import { state } from './state.js';
-import { saveState } from './storage.js';
+import { LEVELS } from './constants.js';
+import { THEMES } from './theme.js';
+import { state, saveState } from './state.js';
 import { haptic, playSound } from './utils.js';
 import { launchConfetti } from './ui.js';
 
