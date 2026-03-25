@@ -356,7 +356,10 @@
     <div class="card" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <h2>Encouragement Wall Moderation</h2>
-        <button onclick="loadWallMessages()" style="padding:6px 14px;background:var(--sage);color:#0a1a0b;border:none;border-radius:var(--r-md);font-size:12px;font-weight:600;cursor:pointer">Refresh</button>
+        <div style="display:flex;gap:8px">
+          <button onclick="rescanWallMessages()" style="padding:6px 14px;background:rgba(201,149,74,0.2);color:var(--amber-light);border:1px solid rgba(201,149,74,0.3);border-radius:var(--r-md);font-size:12px;font-weight:500;cursor:pointer">Re-scan all</button>
+          <button onclick="loadWallMessages()" style="padding:6px 14px;background:var(--sage);color:#0a1a0b;border:none;border-radius:var(--r-md);font-size:12px;font-weight:600;cursor:pointer">Refresh</button>
+        </div>
       </div>
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
         Review and moderate wall messages. Warned messages appear greyed out with a content warning for users.
@@ -959,6 +962,27 @@ async function moderateWallMsg(id, type) {
       await loadWallMessages();
     } else {
       alert('Moderation failed: ' + (data.error || 'Unknown error'));
+    }
+  } catch(e) {
+    alert('Network error: ' + e.message);
+  }
+}
+
+async function rescanWallMessages() {
+  if (!confirm('Re-scan all wall messages against current moderation filters?\n\nThis will flag any existing messages that match the crude/off-topic filter and record strikes against their authors.')) return;
+  try {
+    const res = await fetch('/api/wall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'rescan', adminKey }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      alert(`Scan complete: ${data.scanned} messages scanned, ${data.flagged} newly flagged.`);
+      loadWallMessages();
+      loadFlaggedUsers();
+    } else {
+      alert('Rescan failed: ' + (data.error || 'Unknown error'));
     }
   } catch(e) {
     alert('Network error: ' + e.message);
