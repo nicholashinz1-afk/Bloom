@@ -38,7 +38,7 @@ function renderTodayTop() {
       <span style="font-size:22px">🫂</span>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:500;color:var(--sky-light)">Having a hard day?</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Tap for support — your streak is protected</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Tap for support — showing up is what matters</div>
       </div>
       <div style="font-size:18px;color:var(--text-muted)">›</div>
     </div>`;

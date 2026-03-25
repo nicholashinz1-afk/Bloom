@@ -32,14 +32,14 @@ let obData = {
 // Adaptive onboarding — path depends on readiness
 function getOBPath() {
   if (obData.readiness === 'ready') {
-    // Full setup: Welcome+Name → Readiness → Habits+SelfCare → Appearance+Sound+Notifications → Ready
-    return ['welcome', 'readiness', 'routine', 'customize', 'ready'];
+    // Full setup: Welcome+Name → Readiness → Habits+SelfCare → Appearance+Sound+Notifications → Install → Ready
+    return ['welcome', 'readiness', 'routine', 'customize', 'install', 'ready'];
   } else if (obData.readiness === 'gentle') {
-    // Minimal: Welcome+Name → Readiness → Ready (smart defaults, gentle mode)
-    return ['welcome', 'readiness', 'ready'];
+    // Minimal: Welcome+Name → Readiness → Install → Ready (smart defaults, gentle mode)
+    return ['welcome', 'readiness', 'install', 'ready'];
   } else if (obData.readiness === 'exploring') {
-    // Quick: Welcome+Name → Readiness → Appearance → Ready
-    return ['welcome', 'readiness', 'customize', 'ready'];
+    // Quick: Welcome+Name → Readiness → Appearance → Install → Ready
+    return ['welcome', 'readiness', 'customize', 'install', 'ready'];
   }
   // Before readiness is chosen
   return ['welcome', 'readiness'];
@@ -62,6 +62,7 @@ function renderOnboarding() {
     case 'readiness':  renderOBReadiness(body, footer); break;
     case 'routine':    renderOBRoutine(body, footer); break;
     case 'customize':  renderOBCustomize(body, footer); break;
+    case 'install':    renderOBInstall(body, footer); break;
     case 'ready':      renderOBReady(body, footer); break;
   }
 }
