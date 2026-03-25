@@ -324,6 +324,29 @@ export default async function handler(req, res) {
       return res.json({ ok: true, action: 'warned' });
     }
 
+    // Admin: rescan all existing messages against current filters
+    if (action === 'rescan') {
+      const adminKey = process.env.ADMIN_KEY;
+      const provided = body.adminKey;
+      if (!adminKey || provided !== adminKey) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+
+      const messages = await getMessages();
+      let flagged = 0;
+      for (const msg of messages) {
+        if (msg.moderated) continue; // already moderated, skip
+        const check = moderateMessage(msg.text);
+        if (check.flag === 'crude') {
+          msg.moderated = 'auto';
+          flagged++;
+          if (msg.fp) await recordStrike(msg.fp, 'crude', 'wall-rescan', msg.text);
+        }
+      }
+      if (flagged > 0) await saveMessages(messages);
+      return res.json({ ok: true, scanned: messages.length, flagged });
+    }
+
     // Admin: view flagged users with strike history
     if (action === 'flagged-users') {
       const adminKey = process.env.ADMIN_KEY;
