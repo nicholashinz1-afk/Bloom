@@ -3980,55 +3980,8 @@ function updateStreak() {
     // No recovery banner — missing a day is just missing a day
   }
 
-  // Update individual habit streaks
-  updateHabitStreaks();
   saveState();
   updateProgressTab();
-}
-
-// ── Individual habit streaks ─────────────────────────────────
-function updateHabitStreaks() {
-  const td = state.todayData;
-  const t = today();
-  if (!state.xpData.habitStreaks) state.xpData.habitStreaks = {};
-  const hs = state.xpData.habitStreaks;
-
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
-
-  const habits = [
-    { id: 'm_teeth', done: td.m_teeth },
-    { id: 'e_teeth', done: td.e_teeth },
-  ];
-
-  // Add new daily habit streaks
-  const dhP2 = state.prefs?.dailyHabits || {};
-  const htP2 = state.prefs?.habitTimes || {};
-  [...DAILY_HABITS, MEDICATION_HABIT].forEach(h => {
-    if (!dhP2[h.id]) return;
-    const time = htP2[h.id] || h.defaultTime || 'any';
-    if (time === 'am' || time === 'both') habits.push({ id: h.id + '_am', done: td[h.id + '_am'] });
-    if (time === 'pm' || time === 'both') habits.push({ id: h.id + '_pm', done: td[h.id + '_pm'] });
-    if (time === 'any') habits.push({ id: h.id + '_any', done: td[h.id + '_any'] });
-  });
-
-  habits.forEach(h => {
-    if (!hs[h.id]) hs[h.id] = { streak: 0, lastDate: null };
-    const entry = hs[h.id];
-    if (h.done && entry.lastDate !== t) {
-      if (entry.lastDate === yStr || !entry.lastDate) {
-        entry.streak++;
-      } else if (entry.lastDate !== t) {
-        entry.streak = 1;
-      }
-      entry.lastDate = t;
-    }
-  });
-}
-
-function getHabitStreak(habitId) {
-  return state.xpData.habitStreaks?.[habitId]?.streak || 0;
 }
 
 // ── Streak milestones ────────────────────────────────────────
@@ -7107,15 +7060,12 @@ function renderTodayTab() {
     const key = h.id + '_' + timeSlot;
     const done = td[key];
     const xp = h.xp || 15;
-    const habitStreak = getHabitStreak(key);
-    const streakBadge = habitStreak >= 2 ? `<div style="font-size:11px;color:var(--amber);background:rgba(201,149,74,0.1);padding:2px 7px;border-radius:99px;margin-right:6px">🔥${habitStreak}</div>` : '';
     const triggers = state.prefs?.habitTriggers || {};
     const trigger = triggers[h.id + '_' + timeSlot] || triggers[h.id] || '';
     const triggerHtml = trigger ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px;font-style:italic">${trigger}</div>` : '';
     return `<div class="habit-row" onclick="tapDailyHabit('${h.id}', '${timeSlot}', this)">
       <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : h.icon}</div>
       <div class="habit-info"><div class="habit-name">${h.label}</div>${triggerHtml}</div>
-      ${streakBadge}
       ${!done ? `<div class="habit-xp">+${xp}</div>` : ''}
     </div>`;
   }
@@ -7437,8 +7387,6 @@ function habitRow(id, icon, name, sub, done, optedIn, xp) {
       </div>
     </div>`;
   }
-  const habitStreak = getHabitStreak(id);
-  const streakBadge = habitStreak >= 2 ? `<div style="font-size:11px;color:var(--amber);background:rgba(201,149,74,0.1);padding:2px 7px;border-radius:99px;margin-right:6px">🔥${habitStreak}</div>` : '';
   const trigger = state.prefs?.habitTriggers?.[id] || '';
   const triggerHtml = trigger ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px;font-style:italic">${trigger}</div>` : '';
   return `<div class="habit-row" onclick="tapHabit('${id}', this)">
@@ -7448,7 +7396,6 @@ function habitRow(id, icon, name, sub, done, optedIn, xp) {
       <div class="habit-sub">${sub}${done ? ' · Done ✓' : ''}</div>
       ${triggerHtml}
     </div>
-    ${streakBadge}
     ${!done ? `<div class="habit-xp">+${xp}</div>` : ''}
   </div>`;
 }
@@ -9937,7 +9884,6 @@ function tapDailyHabit(id, timeSlot, el) {
     const xpVal = XP_VALUES[key] || 15;
     addXP(xpVal, el);
     checkFirstTaskStreak();
-    updateHabitStreaks();
     celebrate(id, el);
   } else {
     const xpVal = XP_VALUES[key] || 15;
