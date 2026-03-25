@@ -93,11 +93,13 @@ function buildUXPrompt(data) {
 
   return `You are the UX Admin Agent for Bloom, a mental health self-care PWA. Analyze the following telemetry data and provide a UX audit.
 
+Today's date is ${new Date().toISOString().slice(0, 10)}. The daily activity below is listed in CHRONOLOGICAL order (oldest first, newest/today last). When comparing days, remember that the LAST date listed is the most recent. An increase in events from an earlier date to a later date is a GROWTH SPIKE, not a drop-off.
+
 Bloom has these tabs: Today (daily habits, mood), Weekly (weekly habits), Wellness (breathing, grounding, body scan, reframing), Progress (XP, streaks, insights), Community (buddy, wall), Settings.
 
 Key design principles: no consecutive streaks (total days only), hard day mode, no shame/pressure.
 
-## Daily Activity (last 30 days)
+## Daily Activity (last 30 days, chronological — oldest first)
 ${dailySummary.join('\n') || 'No data'}
 
 ## Feature Usage (30-day totals)
