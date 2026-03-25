@@ -3139,9 +3139,10 @@ const JOURNAL_PROMPTS_LOW = [
 
 
 function getJournalPrompt() {
+  const offset = state.journalPromptOffset || 0;
   const mood = state.todayData?.mood;
-  if (mood !== undefined && mood >= 0 && mood <= 1) return JOURNAL_PROMPTS_LOW[getDayIndex() % JOURNAL_PROMPTS_LOW.length];
-  return JOURNAL_PROMPTS[getDayIndex() % JOURNAL_PROMPTS.length];
+  if (mood !== undefined && mood >= 0 && mood <= 1) return JOURNAL_PROMPTS_LOW[(getDayIndex() + offset) % JOURNAL_PROMPTS_LOW.length];
+  return JOURNAL_PROMPTS[(getDayIndex() + offset) % JOURNAL_PROMPTS.length];
 }
 
 // ── Journal entry helpers (array-based storage) ─────────────
@@ -7947,14 +7948,15 @@ function renderWellnessTab() {
       <div class="card-title" style="margin-bottom:0">📓 Daily journal${infoIcon('journal')}</div>
       ${totalJournalDays > 0 ? `<div style="font-size:11px;color:var(--text-muted)">${totalJournalDays} day${totalJournalDays !== 1 ? 's' : ''} journaled</div>` : ''}
     </div>
-    <div class="journal-prompt">${journalPrompt}</div>`;
+    ${state.journalMode === 'free' ? '' : `<div class="journal-prompt">${journalPrompt}</div>`}`;
 
   // Show editing textarea
   if (state.editingJournal) {
     const editText = state.editingJournalIndex !== null && state.editingJournalIndex !== undefined
       ? (journalEntries[state.editingJournalIndex]?.text || '')
       : (state.journalDraft || '');
-    html += `<textarea id="journal-textarea" placeholder="What's on your mind today..." rows="5" style="margin-bottom:10px">${editText}</textarea>
+    const placeholder = state.journalMode === 'free' ? 'No prompt, no pressure. Just write...' : 'What\'s on your mind today...';
+    html += `<textarea id="journal-textarea" placeholder="${placeholder}" rows="5" style="margin-bottom:10px">${editText}</textarea>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="btn btn-primary" style="flex:1" onclick="saveJournal()">${state.editingJournalIndex !== null && state.editingJournalIndex !== undefined ? 'Update entry' : 'Save & reflect'}</button>
       <button class="btn btn-ghost" onclick="cancelEditJournal()">Cancel</button>
@@ -7983,7 +7985,11 @@ function renderWellnessTab() {
     });
     // Entry count transparency
     html += `<div style="font-size:11px;color:var(--text-muted);margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">${journalEntries.length} entry${journalEntries.length !== 1 ? 'ies' : ''} today · all entries are saved</div>`;
-    html += `<button class="btn btn-ghost btn-sm mt-4" onclick="editJournal()">Write another entry</button>`;
+    html += `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="newJournalEntry('same')">Same prompt again</button>
+      <button class="btn btn-ghost btn-sm" onclick="newJournalEntry('prompt')">New prompt</button>
+      <button class="btn btn-ghost btn-sm" onclick="newJournalEntry('free')">Just write</button>
+    </div>`;
   } else {
     // No entries yet — show textarea
     html += `<textarea id="journal-textarea" placeholder="What's on your mind today..." rows="5" style="margin-bottom:10px">${state.journalDraft || ''}</textarea>
@@ -8274,6 +8280,7 @@ async function saveJournal() {
 function editJournal() {
   state.editingJournal = true;
   state.editingJournalIndex = null;
+  state.journalMode = 'prompt';
   renderWellnessTab();
   setTimeout(() => {
     const ta = document.getElementById('journal-textarea');
@@ -8284,6 +8291,29 @@ function editJournal() {
 function editJournalEntry(index) {
   state.editingJournal = true;
   state.editingJournalIndex = index;
+  state.journalMode = 'prompt';
+  renderWellnessTab();
+  setTimeout(() => {
+    const ta = document.getElementById('journal-textarea');
+    if (ta) ta.focus();
+  }, 100);
+}
+
+function newJournalEntry(mode) {
+  state.editingJournal = true;
+  state.editingJournalIndex = null;
+  state.journalDraft = '';
+  if (mode === 'prompt') {
+    // Cycle to a different prompt than the current one
+    if (!state.journalPromptOffset) state.journalPromptOffset = 0;
+    state.journalPromptOffset++;
+    state.journalMode = 'prompt';
+  } else if (mode === 'same') {
+    // Keep the same prompt
+    state.journalMode = 'prompt';
+  } else {
+    state.journalMode = 'free';
+  }
   renderWellnessTab();
   setTimeout(() => {
     const ta = document.getElementById('journal-textarea');
@@ -8294,6 +8324,7 @@ function editJournalEntry(index) {
 function cancelEditJournal() {
   state.editingJournal = false;
   state.editingJournalIndex = null;
+  state.journalMode = 'prompt';
   renderWellnessTab();
 }
 
