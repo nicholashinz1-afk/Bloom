@@ -1,103 +1,10 @@
-// Vercel serverless function for bloom buddy
-// Uses Vercel KV (Upstash Redis) via REST API — same pattern as wall.js
+// Vercel serverless function for bloom buddy system
+// Multi-buddy pairing, messaging, nudges, and notifications
 
-// ── Content moderation (shared with wall) ──────────────────
-// Philosophy: allow venting/self-expression, offer resources for self-harm,
-// block language that targets or harms *others*
-
-// Directed harm — messages intended to hurt another person
-const DIRECTED_HARM = [
-  /\bkill\s*your\s*self\b/i,
-  /\bkys\b/i,
-  /\bgo\s*die\b/i,
-  /\bend\s*it\s*all\b/i,
-  /\byou\s*should\s*(die|kill|hurt)\b/i,
-  /\bnobody\s*(loves|cares about|likes)\s*you\b/i,
-  /\byou\s*deserve\s*to\s*(die|suffer|hurt)\b/i,
-  /\bi('ll|m going to|m gonna)\s*(kill|hurt|find)\s*you\b/i,
-];
-
-// Slurs & targeted abuse — language used to dehumanize others
-const TARGETED_ABUSE = [
-  /\b(bitch|cunt|faggot|retard|tranny|n[i1]gg[ae3]r)\b/i,
-];
-
-// Spam / link / injection prevention
-const SPAM_PATTERNS = [
-  /\b(http|www\.|\.\bcom\b|\.\borg\b|\.\bnet\b)\b/i,
-  /@|#|\$\$|[<>]/,
-];
-
-// Self-harm language — not blocked, but flagged so the client can offer resources
-const SELF_HARM_PATTERNS = [
-  /\b(kill myself|end my life|want to die|don'?t want to (be here|live|exist))\b/i,
-  /\b(suicide|suicidal|self[- ]?harm|cut myself|hurt myself)\b/i,
-];
-
-function moderateMessage(text) {
-  const lower = text.toLowerCase().trim();
-  if (lower.length < 1 || lower.length > 200) return { ok: false, reason: 'length' };
-
-  // Block directed harm toward others
-  for (const pat of DIRECTED_HARM) {
-    if (pat.test(lower)) return { ok: false, reason: 'harmful' };
-  }
-
-  // Block targeted slurs/abuse
-  for (const pat of TARGETED_ABUSE) {
-    if (pat.test(lower)) return { ok: false, reason: 'harmful' };
-  }
-
-  // Block spam/links
-  for (const pat of SPAM_PATTERNS) {
-    if (pat.test(lower)) return { ok: false, reason: 'filtered' };
-  }
-
-  if (!/[a-zA-Z]/.test(text)) return { ok: false, reason: 'no-text' };
-
-  // Flag self-harm language — allow the message but signal the client to show resources
-  for (const pat of SELF_HARM_PATTERNS) {
-    if (pat.test(lower)) return { ok: true, flag: 'self-harm' };
-  }
-
-  return { ok: true };
-}
-
-// ── Redis client helpers ────────────────────────────────────
-import { createClient } from 'redis';
-
-let _redisClient = null;
-async function getRedis() {
-  if (!_redisClient) {
-    _redisClient = createClient({ url: process.env.REDIS_URL });
-    _redisClient.on('error', () => {});
-    await _redisClient.connect();
-  }
-  return _redisClient;
-}
-
-async function kvGet(key) {
-  try {
-    const client = await getRedis();
-    const val = await client.get(key);
-    if (val === null) return null;
-    return JSON.parse(val);
-  } catch(e) { return null; }
-}
-
-async function kvSet(key, value) {
-  try {
-    const client = await getRedis();
-    await client.set(key, JSON.stringify(value));
-  } catch(e) {}
-}
-
-async function kvDel(key) {
-  try {
-    const client = await getRedis();
-    await client.del(key);
-  } catch(e) {}
-}
+import { moderateMessage } from './_shared/moderation.js';
+import { kvGet, kvSet, kvDel } from './_shared/redis.js';
+import { setCorsHeaders, handlePreflight, parseBody } from './_shared/cors.js';
+import { genId, genInviteCode } from './_shared/utils.js';
 
 // ── OneSignal push notification helper ──────────────────────
 async function sendPush(playerId, title, message) {
@@ -124,33 +31,19 @@ async function sendPush(playerId, title, message) {
     });
     const result = await resp.json();
     if (result.errors) console.log('[buddy] sendPush error:', JSON.stringify(result.errors));
-  } catch(e) {
+  } catch (e) {
     console.log('[buddy] sendPush failed:', e.message);
   }
 }
 
-// ── ID generation ───────────────────────────────────────────
-function genId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
-
-function genInviteCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O/0/1/I confusion
-  let code = '';
-  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  return code;
-}
-
 // ── Admin: can have multiple buddies ────────────────────────
-// Set ADMIN_BUDDY_ID env var in Vercel to your bloom_buddy_id from localStorage
 const ADMIN_BUDDY_ID = process.env.ADMIN_BUDDY_ID || null;
 
 function isAdmin(buddyId) {
   return ADMIN_BUDDY_ID && buddyId === ADMIN_BUDDY_ID;
 }
 
-// ── Lookup helpers (supports multi-buddy for admin) ─────────
-// Lookup stores: { pairs: [{ pairId, partnerId }] }
+// ── Lookup helpers (supports multi-buddy) ─────────────────
 async function getLookup(buddyId) {
   const raw = await kvGet(`bloom_buddy_lookup:${buddyId}`);
   if (!raw) return { pairs: [] };
@@ -180,7 +73,6 @@ function getFirstPair(lookup) {
 }
 
 function canAddBuddy(buddyId, lookup) {
-  // Everyone can have multiple buddies (capped at 10 to prevent abuse)
   return lookup.pairs.length < 10;
 }
 
@@ -189,15 +81,8 @@ const MILESTONES = [7, 14, 30, 60, 100];
 
 // ── Main handler ────────────────────────────────────────────
 export default async function handler(req, res) {
-  const allowedOrigins = ['https://bloomhabits.app', 'http://localhost:3000'];
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  setCorsHeaders(req, res);
+  if (handlePreflight(req, res)) return;
 
   if (!process.env.REDIS_URL) {
     return res.status(503).json({ error: 'Storage not configured' });
@@ -207,7 +92,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+  const body = parseBody(req);
   const { action, buddyId } = body;
 
   if (!action) return res.status(400).json({ error: 'Missing action' });
@@ -235,7 +120,6 @@ export default async function handler(req, res) {
     if (!buddyId) return res.status(400).json({ error: 'Missing buddyId' });
 
     const profile = await kvGet(`bloom_buddy:${buddyId}`) || {};
-    const prevMood = profile.mood;
     const prevStreak = profile.streak || 0;
 
     profile.mood = mood !== undefined ? mood : profile.mood;
@@ -313,7 +197,6 @@ export default async function handler(req, res) {
     const profile = await kvGet(`bloom_buddy:${buddyId}`);
     if (!profile) return res.status(400).json({ error: 'Register first' });
 
-    // Check if at buddy limit
     const lookup = await getLookup(buddyId);
     if (!canAddBuddy(buddyId, lookup)) return res.json({ ok: false, reason: 'max-buddies' });
 
@@ -335,7 +218,6 @@ export default async function handler(req, res) {
     const invite = await kvGet(`bloom_buddy_invite:${code.toUpperCase()}`);
     if (!invite) return res.json({ ok: false, reason: 'invalid' });
 
-    // Check expiry (48h)
     if (Date.now() - invite.createdAt > 172800000) {
       await kvDel(`bloom_buddy_invite:${code.toUpperCase()}`);
       return res.json({ ok: false, reason: 'expired' });
@@ -352,25 +234,20 @@ export default async function handler(req, res) {
     const invite = await kvGet(`bloom_buddy_invite:${code.toUpperCase()}`);
     if (!invite) return res.json({ ok: false, reason: 'invalid' });
 
-    // Check expiry
     if (Date.now() - invite.createdAt > 172800000) {
       await kvDel(`bloom_buddy_invite:${code.toUpperCase()}`);
       return res.json({ ok: false, reason: 'expired' });
     }
 
-    // Can't pair with yourself
     if (invite.buddyId === buddyId) return res.json({ ok: false, reason: 'self-pair' });
 
-    // Check buddy limits
     const myLookup = await getLookup(buddyId);
     if (!canAddBuddy(buddyId, myLookup)) return res.json({ ok: false, reason: 'max-buddies' });
     const theirLookup = await getLookup(invite.buddyId);
     if (!canAddBuddy(invite.buddyId, theirLookup)) return res.json({ ok: false, reason: 'inviter-max-buddies' });
 
-    // Check not already paired with this person
     if (myLookup.pairs.some(p => p.partnerId === invite.buddyId)) return res.json({ ok: false, reason: 'already-buddies' });
 
-    // Create pair
     const pairId = genId();
     await kvSet(`bloom_buddy_pair:${pairId}`, {
       user1: invite.buddyId,
@@ -378,21 +255,14 @@ export default async function handler(req, res) {
       createdAt: Date.now(),
     });
 
-    // Add to lookup entries
     await addPairToLookup(buddyId, pairId, invite.buddyId);
     await addPairToLookup(invite.buddyId, pairId, buddyId);
-
-    // Initialize empty message thread
     await kvSet(`bloom_buddy_msgs:${pairId}`, []);
-
-    // Delete the invite code
     await kvDel(`bloom_buddy_invite:${code.toUpperCase()}`);
 
-    // Get profiles for response
     const myProfile = await kvGet(`bloom_buddy:${buddyId}`) || {};
     const theirProfile = await kvGet(`bloom_buddy:${invite.buddyId}`) || {};
 
-    // Notify both
     if (theirProfile.oneSignalId) {
       await sendPush(theirProfile.oneSignalId, 'bloom buddy', `You've been paired with ${myProfile.name || 'a bloom buddy'}! Open Bloom to say hi`);
     }
@@ -413,7 +283,6 @@ export default async function handler(req, res) {
     const { prefs } = body;
     if (!buddyId) return res.status(400).json({ error: 'Missing buddyId' });
 
-    // Check buddy limit
     const myLookup = await getLookup(buddyId);
     if (!canAddBuddy(buddyId, myLookup)) return res.json({ ok: false, reason: 'max-buddies' });
 
@@ -421,30 +290,24 @@ export default async function handler(req, res) {
     if (!profile) return res.status(400).json({ error: 'Register first' });
 
     const queue = await kvGet('bloom_buddy_queue') || [];
-
-    // Remove stale entries (older than 7 days) and self
     const now = Date.now();
     const fresh = queue.filter(q => q.buddyId !== buddyId && (now - q.ts) < 604800000);
 
-    // Try to find a compatible match
     const myPrefs = prefs || {};
     let bestMatch = null;
     let bestScore = -1;
 
     for (const candidate of fresh) {
-      // Check they can accept another buddy and aren't already my buddy
       const cLookup = await getLookup(candidate.buddyId);
       if (!canAddBuddy(candidate.buddyId, cLookup)) continue;
       if (myLookup.pairs.some(p => p.partnerId === candidate.buddyId)) continue;
 
-      // Skip blocked users (3+ reports)
       const cProfile = await kvGet(`bloom_buddy:${candidate.buddyId}`);
       if (cProfile?.blocked) continue;
 
       let score = 0;
       const cp = candidate.prefs || {};
       if (myPrefs.frequency && cp.frequency && myPrefs.frequency === cp.frequency) score += 2;
-      // focus can be a string (legacy) or array (multi-select)
       const myFocus = Array.isArray(myPrefs.focus) ? myPrefs.focus : (myPrefs.focus ? [myPrefs.focus] : []);
       const cpFocus = Array.isArray(cp.focus) ? cp.focus : (cp.focus ? [cp.focus] : []);
       const overlap = myFocus.filter(f => cpFocus.includes(f)).length;
@@ -455,7 +318,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Admin fallback: if no match found and admin exists, auto-pair with admin
+    // Admin fallback
     if (!bestMatch && ADMIN_BUDDY_ID && buddyId !== ADMIN_BUDDY_ID) {
       const adminLookup = await getLookup(ADMIN_BUDDY_ID);
       const alreadyBuddies = myLookup.pairs.some(p => p.partnerId === ADMIN_BUDDY_ID);
@@ -468,11 +331,9 @@ export default async function handler(req, res) {
     }
 
     if (bestMatch) {
-      // Remove matched user from queue if they were in it
       const updatedQueue = fresh.filter(q => q.buddyId !== bestMatch.buddyId);
       await kvSet('bloom_buddy_queue', updatedQueue);
 
-      // Create pair
       const pairId = genId();
       await kvSet(`bloom_buddy_pair:${pairId}`, {
         user1: bestMatch.buddyId,
@@ -485,7 +346,6 @@ export default async function handler(req, res) {
 
       const partnerProfile = await kvGet(`bloom_buddy:${bestMatch.buddyId}`) || {};
 
-      // Notify both
       if (partnerProfile.oneSignalId) {
         await sendPush(partnerProfile.oneSignalId, 'bloom buddy', `You've been matched with ${profile.name || 'a bloom buddy'}! Open Bloom to say hi`);
       }
@@ -501,7 +361,6 @@ export default async function handler(req, res) {
         partnerName: partnerProfile.name || 'bloom buddy',
       });
     } else {
-      // No match found — add to queue
       fresh.push({ buddyId, name: profile.name, prefs: myPrefs, ts: now });
       await kvSet('bloom_buddy_queue', fresh);
       return res.json({ ok: true, matched: false, queued: true });
@@ -540,7 +399,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Backward compat: also include first buddy as "partner" for existing clients
     const first = buddies[0] || null;
     return res.json({
       ok: true,
@@ -558,11 +416,9 @@ export default async function handler(req, res) {
     if (!buddyId) return res.status(400).json({ error: 'Missing buddyId' });
 
     const lookup = await getLookup(buddyId);
-    // Use provided pairId or fall back to first pair
     const targetPairId = pairId || getFirstPair(lookup)?.pairId;
     if (!targetPairId) return res.json({ ok: true, messages: [] });
 
-    // Verify this user is part of this pair
     if (!lookup.pairs.some(p => p.pairId === targetPairId)) return res.json({ ok: true, messages: [] });
 
     const messages = await kvGet(`bloom_buddy_msgs:${targetPairId}`) || [];
@@ -574,7 +430,7 @@ export default async function handler(req, res) {
     const { text, pairId } = body;
     if (!buddyId || !text) return res.status(400).json({ error: 'Missing buddyId or text' });
 
-    const check = moderateMessage(text);
+    const check = moderateMessage(text, { maxLen: 200 });
     if (!check.ok) return res.json({ ok: false, reason: check.reason });
 
     const lookup = await getLookup(buddyId);
@@ -585,7 +441,6 @@ export default async function handler(req, res) {
 
     const messages = await kvGet(`bloom_buddy_msgs:${targetPair.pairId}`) || [];
 
-    // Rate limit: 10 messages per hour
     const oneHourAgo = Date.now() - 3600000;
     const recentFromMe = messages.filter(m => m.from === buddyId && m.ts > oneHourAgo);
     if (recentFromMe.length >= 10) return res.json({ ok: false, reason: 'rate-limit' });
@@ -601,7 +456,6 @@ export default async function handler(req, res) {
     const trimmed = messages.slice(-50);
     await kvSet(`bloom_buddy_msgs:${targetPair.pairId}`, trimmed);
 
-    // Notify partner
     const partner = await kvGet(`bloom_buddy:${targetPair.partnerId}`);
     const myProfile = await kvGet(`bloom_buddy:${buddyId}`);
     if (partner?.oneSignalId) {
@@ -619,13 +473,13 @@ export default async function handler(req, res) {
     if (!buddyId || !nudgeType) return res.status(400).json({ error: 'Missing buddyId or nudgeType' });
 
     const NUDGES = {
-      'thinking': 'Thinking of you 💭',
-      'gotthis': 'You\'ve got this 💪',
-      'proud': 'Proud of you 🌟',
-      'easytoday': 'Take it easy 🤗',
-      'checkin': 'Just checking in 👋',
-      'youmatter': 'You matter 💛',
-      'love': '🌸',
+      'thinking': 'Thinking of you \u{1F4AD}',
+      'gotthis': 'You\'ve got this \u{1F4AA}',
+      'proud': 'Proud of you \u{1F31F}',
+      'easytoday': 'Take it easy \u{1F917}',
+      'checkin': 'Just checking in \u{1F44B}',
+      'youmatter': 'You matter \u{1F49B}',
+      'love': '\u{1F338}',
     };
 
     const nudgeText = NUDGES[nudgeType];
@@ -639,7 +493,6 @@ export default async function handler(req, res) {
 
     const messages = await kvGet(`bloom_buddy_msgs:${targetPair.pairId}`) || [];
 
-    // Rate limit: 5 nudges per hour
     const oneHourAgo = Date.now() - 3600000;
     const recentNudges = messages.filter(m => m.from === buddyId && m.type === 'nudge' && m.ts > oneHourAgo);
     if (recentNudges.length >= 5) return res.json({ ok: false, reason: 'rate-limit' });
@@ -655,7 +508,6 @@ export default async function handler(req, res) {
     const trimmed = messages.slice(-50);
     await kvSet(`bloom_buddy_msgs:${targetPair.pairId}`, trimmed);
 
-    // Notify partner
     const partner = await kvGet(`bloom_buddy:${targetPair.partnerId}`);
     const myProfile = await kvGet(`bloom_buddy:${buddyId}`);
     if (partner?.oneSignalId) {
@@ -676,13 +528,11 @@ export default async function handler(req, res) {
       : getFirstPair(lookup);
     if (!targetPair) return res.json({ ok: true });
 
-    // Notify partner before deleting
     const partner = await kvGet(`bloom_buddy:${targetPair.partnerId}`);
     if (partner?.oneSignalId) {
       await sendPush(partner.oneSignalId, 'bloom buddy', 'Your bloom buddy has moved on. You can find a new buddy anytime.');
     }
 
-    // Clean up pair data and remove from both lookups
     await kvDel(`bloom_buddy_pair:${targetPair.pairId}`);
     await kvDel(`bloom_buddy_msgs:${targetPair.pairId}`);
     await removePairFromLookup(buddyId, targetPair.pairId);
@@ -691,6 +541,7 @@ export default async function handler(req, res) {
     return res.json({ ok: true });
   }
 
+  // ── REPORT-BUDDY: flag a buddy for abuse ────────────────
   if (action === 'report-buddy') {
     const { pairId } = body;
     if (!buddyId || !pairId) return res.status(400).json({ error: 'Missing buddyId or pairId' });
@@ -699,18 +550,14 @@ export default async function handler(req, res) {
     const targetPair = lookup.pairs.find(p => p.pairId === pairId);
     if (!targetPair) return res.json({ ok: true });
 
-    // Increment report count on the partner's profile
     const partner = await kvGet(`bloom_buddy:${targetPair.partnerId}`);
     if (partner) {
       partner.reports = (partner.reports || 0) + 1;
       partner.lastReportTs = Date.now();
-      await kvSet(`bloom_buddy:${targetPair.partnerId}`, partner);
-
-      // If 3+ reports from different users, block from auto-matching
       if (partner.reports >= 3) {
         partner.blocked = true;
-        await kvSet(`bloom_buddy:${targetPair.partnerId}`, partner);
       }
+      await kvSet(`bloom_buddy:${targetPair.partnerId}`, partner);
     }
 
     return res.json({ ok: true });

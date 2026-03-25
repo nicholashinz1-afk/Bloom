@@ -1,3 +1,8 @@
+// Vercel serverless function — Anthropic API proxy
+// Keeps ANTHROPIC_API_KEY server-side only
+
+import { parseBody } from './_shared/cors.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -10,7 +15,7 @@ export default async function handler(req, res) {
 
   let body;
   try {
-    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    body = parseBody(req);
   } catch {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
