@@ -295,6 +295,8 @@ export function showPartialCompletionToast(type) {
 window.archiveToday = archiveToday;
 window.checkFirstTaskStreak = checkFirstTaskStreak;
 window.getCompletionRate = getCompletionRate;
+window.checkAllDone = checkAllDone;
+window.showAffirmation = showAffirmation;
 
 export function archiveToday() {
   const t = today();
