@@ -3000,7 +3000,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.10.0';
+const VERSION = '2.10.1';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -13139,6 +13139,9 @@ async function buddyApi(payload) {
   }
 }
 
+// Track last-registered values so we skip redundant register calls
+let _lastBuddyRegister = { name: null, playerId: null };
+
 async function syncBuddyStatus() {
   if (buddyState.status !== 'paired' && buddyState.status !== 'searching') return;
   const id = ensureBuddyId();
@@ -13152,13 +13155,17 @@ async function syncBuddyStatus() {
     habitPct: getHabitPct(),
     oneSignalId: playerId,
   });
-  // Also keep register up to date with name/playerId
-  await buddyApi({
-    action: 'register',
-    buddyId: id,
-    name: getBuddyDisplayName(),
-    oneSignalId: playerId,
-  });
+  // Only re-register if name or playerId actually changed
+  const name = getBuddyDisplayName();
+  if (name !== _lastBuddyRegister.name || playerId !== _lastBuddyRegister.playerId) {
+    await buddyApi({
+      action: 'register',
+      buddyId: id,
+      name,
+      oneSignalId: playerId,
+    });
+    _lastBuddyRegister = { name, playerId };
+  }
 }
 
 function scheduleBuddySync() {
@@ -13242,12 +13249,16 @@ function stopBuddyPolling() {
 async function buddyRegisterAndSync() {
   const id = ensureBuddyId();
   const playerId = load('bloom_onesignal_pid', null);
+  const name = getBuddyDisplayName();
+  // Skip if we already registered with the same name/playerId this session
+  if (name === _lastBuddyRegister.name && playerId === _lastBuddyRegister.playerId) return;
   await buddyApi({
     action: 'register',
     buddyId: id,
-    name: getBuddyDisplayName(),
+    name,
     oneSignalId: playerId,
   });
+  _lastBuddyRegister = { name, playerId };
 }
 
 async function buddyCreateInvite() {
@@ -14527,12 +14538,13 @@ function initApp() {
   updateStreak();
   checkMilestones();
   initOneSignal();
-  // Buddy: always register so admin fallback works, and check for server-side pairs
-  buddyRegisterAndSync();
-  fetchBuddyData();
-  if (buddyState.status !== 'none') {
-    syncBuddyStatus();
-  }
+  // Buddy: register once, then sync if paired (sync includes conditional re-register)
+  buddyRegisterAndSync().then(() => {
+    fetchBuddyData();
+    if (buddyState.status !== 'none') {
+      syncBuddyStatus();
+    }
+  });
   const pendingBuddyInvite = load('bloom_pending_buddy_invite', null);
   if (pendingBuddyInvite) {
     save('bloom_pending_buddy_invite', null);
