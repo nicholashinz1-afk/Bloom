@@ -4575,6 +4575,7 @@ async function saveOpenJournal() {
   if (!ta || !ta.value.trim()) return;
   const text = ta.value.trim();
   const t = today();
+  trackFeature('journal');
   trackEvent('journal_saved');
 
   // Save as new journal entry
@@ -4756,6 +4757,7 @@ async function showMonthlyReflectionPrompt() {
   const avgMood = moods.length ? (moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1) : 'unknown';
   const journalCount = prevDates.filter(d => state.historyData[d]?.journal).length;
 
+  trackFeature('monthly_reflection');
   const ai = await callClaude(
     `Write a warm monthly reflection for a wellness app user. Month: ${monthName}. Average mood: ${avgMood}/4. Journal entries: ${journalCount}. Write 3-4 sentences that feel like a caring friend reflecting on their month — personal, encouraging, honest. Never shame.`,
     'You are Bloom. 3-4 sentences. Warm, personal, never clinical. If mood data suggests a very difficult month, gently acknowledge that and remind them the 🤍 crisis heart is always there if they need support beyond what bloom can offer.'
@@ -4849,6 +4851,7 @@ function renderWindDownStep() {
 }
 
 function winddownSetMood(val) {
+  trackFeature('mood_log');
   state.todayData.mood = val;
   saveState();
   archiveToday();
@@ -4863,6 +4866,7 @@ function winddownNext() {
 function winddownSaveJournal() {
   const el = document.getElementById('winddown-journal');
   if (!el || !el.value.trim()) return;
+  trackFeature('journal');
   const t = today();
   if (!state.wellnessData.journal) state.wellnessData.journal = {};
   if (!Array.isArray(state.wellnessData.journal[t])) state.wellnessData.journal[t] = [];
@@ -8508,6 +8512,7 @@ async function generateWeeklyInsight(e) {
     breathSessions > 0 ? `did ${breathSessions} breathing session${breathSessions > 1 ? 's' : ''}` : null,
   ].filter(Boolean).join(', ');
 
+  trackFeature('weekly_insight');
   const ai = await callClaude(
     `Write a weekly insight for a mental wellness app user. This week: ${avgMood ? `average mood ${avgMood}/4` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}. Small wins they logged: ${weekWins.length > 0 ? weekWins.slice(0,5).join(', ') : 'none this week'}.
 
@@ -10765,6 +10770,7 @@ function copyBackupLink() {
 }
 
 async function exportEncryptedJSON() {
+  trackFeature('encrypted_backup');
   const passphrase = prompt('Choose a passphrase to encrypt your backup.\n\nYou will need this passphrase to restore your data. Keep it safe!');
   if (!passphrase) return;
   if (passphrase.length < 4) { alert('Passphrase must be at least 4 characters.'); return; }
@@ -10796,6 +10802,7 @@ async function exportEncryptedJSON() {
 }
 
 function exportJSON() {
+  trackFeature('backup');
   const data = {
     version: VERSION,
     exported: new Date().toISOString(),
@@ -14275,6 +14282,7 @@ function showWallStatus(text, color) {
 
 async function heartWallMessage(id) {
   if (wallHearted[id]) return;
+  trackFeature('wall');
   wallHearted[id] = true;
   save('bloom_wall_hearted', wallHearted);
   haptic('light');
