@@ -8051,7 +8051,7 @@ function renderTodayTab() {
           html += `<div class="habit-row" style="${scMutedStyle}" onclick="tapSelfCare('${id}', this)">
             <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : task.icon}</div>
             <div class="habit-info"><div class="habit-name">${task.label}</div></div>
-            ${!done ? '<div class="habit-xp" style="background:rgba(200,170,120,0.1);border-color:rgba(200,170,120,0.25);color:rgba(200,170,120,0.8)">+10</div>' : ''}
+            ${!done ? '<div class="habit-xp" style="background:rgba(200,170,120,0.1);border-color:rgba(200,170,120,0.25);color:rgba(200,170,120,0.8)">+20</div>' : ''}
           </div>`;
         });
       }
@@ -8061,7 +8061,7 @@ function renderTodayTab() {
         html += `<div class="habit-row" onclick="tapCustomSelfCare('${sc.id}', this)">
           <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : (sc.icon || '✨')}</div>
           <div class="habit-info"><div class="habit-name">${sc.name}</div></div>
-          ${!done ? '<div class="habit-xp" style="background:rgba(200,170,120,0.1);border-color:rgba(200,170,120,0.25);color:rgba(200,170,120,0.8)">+10</div>' : ''}
+          ${!done ? '<div class="habit-xp" style="background:rgba(200,170,120,0.1);border-color:rgba(200,170,120,0.25);color:rgba(200,170,120,0.8)">+20</div>' : ''}
         </div>`;
       });
       html += `</div>`; // close self-care wrapper
@@ -8315,11 +8315,11 @@ function tapSelfCare(id, el) {
   state.todayData.selfCare[id] = !wasDone;
 
   if (!wasDone) {
-    addXP(10, el);
+    addXP(20, el);
     checkFirstTaskStreak();
     celebrate(getSelfCareCelebType(id), el);
   } else {
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - 10);
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - 20);
     haptic('light');
     saveState();
     updateProgressTab();
@@ -15724,11 +15724,11 @@ function tapCustomSelfCare(id, el) {
   state.todayData.selfCare[id] = !wasDone;
 
   if (!wasDone) {
-    addXP(10, el);
+    addXP(20, el);
     checkFirstTaskStreak();
     celebrate('sc_body', el);
   } else {
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - 10);
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - 20);
     haptic('light');
     saveState();
     updateProgressTab();
