@@ -1300,6 +1300,42 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 
 /* ============================================================
+   COLLAPSIBLE WELLNESS CARDS
+   ============================================================ */
+.wellness-collapse-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.wellness-collapse-header .collapse-chevron {
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+.wellness-collapse-header.collapsed .collapse-chevron {
+  transform: rotate(-90deg);
+}
+.wellness-collapse-body {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+  max-height: 2000px;
+  opacity: 1;
+}
+.wellness-collapse-body.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+.wellness-collapse-summary {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 4px 0 0;
+  line-height: 1.5;
+}
+
+/* ============================================================
    SKILL-BUILDING 2x2 GRID
    ============================================================ */
 .skill-grid {
@@ -9065,9 +9101,19 @@ function renderWellnessTab() {
   // --- WEEKLY REFLECTION (Sun + Mon only) ---
   if (dow === 6 || dow === 0) {
     const refData = state.wellnessData?.reflections?.[ws] || {};
+    const answeredCount = REFLECTION_QUESTIONS.filter((_,i) => refData[i]?.text).length;
+    const refCollapsed = answeredCount > 0 && (state._wellnessCollapsed?.reflection ?? true);
+    const refSummary = answeredCount === REFLECTION_QUESTIONS.length
+      ? `Reflection complete — ${answeredCount}/${REFLECTION_QUESTIONS.length} answered ✓`
+      : `${answeredCount}/${REFLECTION_QUESTIONS.length} answered — tap to continue`;
     html += `<div class="card" id="reflection-card">
-      <div class="card-title">🪞 Weekly reflection${infoIcon('reflection')}</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.5">Available Saturday & Sunday — bloom will respond to each answer.</div>`;
+      <div class="wellness-collapse-header${refCollapsed ? ' collapsed' : ''}" id="wc-header-reflection" onclick="toggleWellnessCard('reflection')">
+        <div class="card-title" style="margin-bottom:0">🪞 Weekly reflection${infoIcon('reflection')}</div>
+        <span class="collapse-chevron">▾</span>
+      </div>
+      ${answeredCount > 0 ? `<div class="wellness-collapse-summary" id="wc-summary-reflection" style="display:${refCollapsed ? 'block' : 'none'}">${refSummary}</div>` : ''}
+      <div class="wellness-collapse-body${refCollapsed ? ' collapsed' : ''}" id="wc-body-reflection">
+        <div style="font-size:12px;color:var(--text-muted);margin:10px 0 14px;line-height:1.5">Available Saturday & Sunday — bloom will respond to each answer.</div>`;
     REFLECTION_QUESTIONS.forEach((q, qi) => {
       const answer = refData[qi];
       html += `<div class="reflection-q">
@@ -9090,7 +9136,7 @@ function renderWellnessTab() {
       html += `</div>`;
       if (qi < REFLECTION_QUESTIONS.length - 1) html += '<div class="divider"></div>';
     });
-    html += `</div>`;
+    html += `</div></div>`;
   } else {
     html += `<div class="card" style="opacity:0.5">
       <div class="card-title">🪞 Weekly reflection${infoIcon('reflection')}</div>
@@ -9104,13 +9150,20 @@ function renderWellnessTab() {
   const ws2 = weekStart();
   const hasThisWeekInsight = latestInsight?.weekKey === ws2;
 
+  const insightCollapsed = hasThisWeekInsight && (state._wellnessCollapsed?.insight ?? false);
+  const insightPreview = hasThisWeekInsight ? latestInsight.text.slice(0, 80).trim() + '...' : '';
   html += `<div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div class="wellness-collapse-header${insightCollapsed ? ' collapsed' : ''}" id="wc-header-insight" onclick="toggleWellnessCard('insight')" style="margin-bottom:${insightCollapsed ? '0' : '10px'}">
       <div class="card-title" style="margin-bottom:0">💫 Weekly insight</div>
-      <button class="btn btn-ghost btn-sm" onclick="generateWeeklyInsight(event)">
-        ${hasThisWeekInsight ? 'Refresh' : 'Generate'}
-      </button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();generateWeeklyInsight(event)">
+          ${hasThisWeekInsight ? 'Refresh' : 'Generate'}
+        </button>
+        <span class="collapse-chevron">▾</span>
+      </div>
     </div>
+    ${hasThisWeekInsight ? `<div class="wellness-collapse-summary" id="wc-summary-insight" style="display:${insightCollapsed ? 'block' : 'none'}">Week of ${latestInsight.weekLabel} — ${insightPreview}</div>` : ''}
+    <div class="wellness-collapse-body${insightCollapsed ? ' collapsed' : ''}" id="wc-body-insight">
     ${hasThisWeekInsight
       ? `<div class="insight-card" style="margin-bottom:0">
           <div class="insight-week-label">Week of ${latestInsight.weekLabel}</div>
@@ -9132,15 +9185,22 @@ function renderWellnessTab() {
           </div>`).join('')}
       </div>
     </details>` : ''}
+    </div>
   </div>`;
 
   // --- MONTHLY REFLECTIONS ---
   const monthlyReflections = state.wellnessData?.monthlyReflections || [];
   if (monthlyReflections.length > 0) {
+    const monthlyCollapsed = state._wellnessCollapsed?.monthly ?? true;
+    const latestMonth = monthlyReflections[monthlyReflections.length - 1];
+    const monthlyPreview = `${monthlyReflections.length} reflection${monthlyReflections.length !== 1 ? 's' : ''} — latest: ${latestMonth.month}`;
     html += `<div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="wellness-collapse-header${monthlyCollapsed ? ' collapsed' : ''}" id="wc-header-monthly" onclick="toggleWellnessCard('monthly')">
         <div class="card-title" style="margin-bottom:0">🗓 Monthly reflections</div>
-      </div>`;
+        <span class="collapse-chevron">▾</span>
+      </div>
+      <div class="wellness-collapse-summary" id="wc-summary-monthly" style="display:${monthlyCollapsed ? 'block' : 'none'}">${monthlyPreview}</div>
+      <div class="wellness-collapse-body${monthlyCollapsed ? ' collapsed' : ''}" id="wc-body-monthly">`;
     monthlyReflections.slice(-3).reverse().forEach(r => {
       html += `<div class="insight-card" style="margin-bottom:10px">
         <div class="insight-week-label">${r.month}</div>
@@ -9148,7 +9208,7 @@ function renderWellnessTab() {
         <div class="ai-disclaimer">This is a reflection, not professional advice.</div>
       </div>`;
     });
-    html += `</div>`;
+    html += `</div></div>`;
   }
   // --- RANDOM SELF-CARE ACT ---
   const selfCareAct = state.todayData.selfCareAct || null;
@@ -9470,6 +9530,20 @@ function removeAffirmation(i) {
 function toggleAffirmationPool() {
   const pool = document.getElementById('affirmation-pool');
   if (pool) pool.style.display = pool.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleWellnessCard(id) {
+  const header = document.getElementById('wc-header-' + id);
+  const body = document.getElementById('wc-body-' + id);
+  const summary = document.getElementById('wc-summary-' + id);
+  if (!header || !body) return;
+  const isCollapsed = body.classList.contains('collapsed');
+  body.classList.toggle('collapsed');
+  header.classList.toggle('collapsed');
+  if (summary) summary.style.display = isCollapsed ? 'none' : 'block';
+  // Persist collapse state
+  if (!state._wellnessCollapsed) state._wellnessCollapsed = {};
+  state._wellnessCollapsed[id] = !isCollapsed;
 }
 
 // ============================================================
