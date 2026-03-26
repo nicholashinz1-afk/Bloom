@@ -7946,9 +7946,12 @@ function renderTodayTab() {
     return isTodayScheduled(weeklyHabitDays[h.id] || 'any');
   });
 
-  // Household tasks
-  const householdTasks = state.prefs?.householdTasks || [];
+  // Household tasks — filter by scheduled day
+  const allHouseholdTasks = state.prefs?.householdTasks || [];
+  const htDayPrefs = state.prefs?.householdTaskDays || {};
+  const htGoalPrefs = state.prefs?.householdTaskGoals || {};
   const htDone = state.weekData?.household || {};
+  const householdTasks = allHouseholdTasks.filter(t => isTodayScheduled(htDayPrefs[t.id] || 'any'));
 
   const hasAnytime = anyHabits.length > 0 || medInAny || todayWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled;
 
@@ -7990,9 +7993,22 @@ function renderTodayTab() {
         const done = td['ht_' + t.id] || htDone[t.id];
         const htMuted = mutedAfterIndex > 0;
         const htMutedStyle = htMuted && !done ? 'opacity:0.45;' : '';
+        const htGoal = htGoalPrefs[t.id] || 1;
+        // Count completions this week from history
+        let htWeekCount = 0;
+        getWeekDates().forEach(d => {
+          const hist = state.historyData[d];
+          if (hist?.habits?.['ht_' + t.id]) htWeekCount++;
+          if (d === today() && td['ht_' + t.id]) htWeekCount++;
+        });
+        if (htDone[t.id] && !td['ht_' + t.id]) htWeekCount = Math.max(htWeekCount, 1);
+        htWeekCount = Math.max(htWeekCount, htDone[t.id] ? 1 : 0);
         html += `<div class="habit-row" style="${htMutedStyle}" onclick="tapHouseholdToday('${t.id}', this)">
           <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : (t.icon || '🏠')}</div>
-          <div class="habit-info"><div class="habit-name">${t.name}</div></div>
+          <div class="habit-info">
+            <div class="habit-name">${t.name}</div>
+            <div style="font-size:11px;color:${htWeekCount >= htGoal ? 'var(--sage)' : 'var(--text-muted)'};margin-top:1px">${htWeekCount}/${htGoal} this week${htWeekCount >= htGoal ? ' ✓' : ''}</div>
+          </div>
           ${!done ? '<div class="habit-xp">+15</div>' : ''}
         </div>`;
       });
@@ -10493,20 +10509,79 @@ function renderSettingsTab() {
     <div class="divider"></div>
     <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;font-weight:500">Household tasks</div>`;
 
+  const htDays = prefs.householdTaskDays || {};
   defaultTasks.forEach(t2 => {
     const active = tasks.some(t3 => t3.id === t2.id);
-    weeklyHtml += `<div class="toggle-row">
+    weeklyHtml += `<div class="toggle-row" style="flex-wrap:wrap">
       <div><div class="toggle-label">${t2.icon} ${t2.name}</div></div>
-      <div class="toggle${active ? ' on' : ''}" onclick="toggleHouseholdPref('${t2.id}','${t2.name}','${t2.icon}')"></div>
-    </div>`;
+      <div class="toggle${active ? ' on' : ''}" onclick="toggleHouseholdPref('${t2.id}','${t2.name}','${t2.icon}')"></div>`;
+    if (active) {
+      const dayMask = htDays[t2.id] || 'any';
+      const isAnyDay = dayMask === 'any' || typeof dayMask !== 'number';
+      weeklyHtml += `<div style="display:flex;gap:3px;width:100%;margin-top:6px;margin-left:28px">
+        ${DAY_LABELS.map((lbl, i) => {
+          const sel = !isAnyDay && (dayMask & DAY_BITS[i]) !== 0;
+          return `<div onclick="toggleHouseholdTaskDay('${t2.id}',${DAY_BITS[i]})" style="
+            width:30px;text-align:center;padding:4px 0;border-radius:99px;cursor:pointer;font-size:10px;
+            background:${sel ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+            border:1px solid ${sel ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+            color:${sel ? 'var(--sage-light)' : 'var(--text-muted)'}">${lbl.substring(0,1)}</div>`;
+        }).join('')}
+        <div onclick="setHouseholdTaskDay('${t2.id}','any')" style="
+          padding:4px 8px;border-radius:99px;cursor:pointer;font-size:10px;
+          background:${isAnyDay ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+          border:1px solid ${isAnyDay ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+          color:${isAnyDay ? 'var(--sage-light)' : 'var(--text-muted)'}">Any</div>
+      </div>`;
+      if (isAnyDay) {
+        const htg = (prefs.householdTaskGoals || {})[t2.id] || 1;
+        weeklyHtml += `<div style="margin-top:6px;margin-left:28px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--text-muted)">Goal:</span>
+          <div class="stepper">
+            <div class="stepper-btn" onclick="adjustHouseholdGoal('${t2.id}',-1)">−</div>
+            <div class="stepper-val" id="htgoal-${t2.id}">${htg}x</div>
+            <div class="stepper-btn" onclick="adjustHouseholdGoal('${t2.id}',1)">+</div>
+          </div>
+        </div>`;
+      }
+    }
+    weeklyHtml += `</div>`;
   });
 
   const customTasks = tasks.filter(t2 => !defaultTasks.some(d => d.id === t2.id));
   customTasks.forEach(t2 => {
-    weeklyHtml += `<div class="toggle-row">
+    weeklyHtml += `<div class="toggle-row" style="flex-wrap:wrap">
       <div><div class="toggle-label">✏️ ${t2.name}</div></div>
-      <div onclick="removeCustomTask('${t2.id}')" style="font-size:12px;color:var(--rose-light);cursor:pointer">Remove</div>
+      <div onclick="removeCustomTask('${t2.id}')" style="font-size:12px;color:var(--rose-light);cursor:pointer">Remove</div>`;
+    const dayMask2 = htDays[t2.id] || 'any';
+    const isAnyDay2 = dayMask2 === 'any' || typeof dayMask2 !== 'number';
+    weeklyHtml += `<div style="display:flex;gap:3px;width:100%;margin-top:6px;margin-left:28px">
+      ${DAY_LABELS.map((lbl, i) => {
+        const sel = !isAnyDay2 && (dayMask2 & DAY_BITS[i]) !== 0;
+        return `<div onclick="toggleHouseholdTaskDay('${t2.id}',${DAY_BITS[i]})" style="
+          width:30px;text-align:center;padding:4px 0;border-radius:99px;cursor:pointer;font-size:10px;
+          background:${sel ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+          border:1px solid ${sel ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+          color:${sel ? 'var(--sage-light)' : 'var(--text-muted)'}">${lbl.substring(0,1)}</div>`;
+      }).join('')}
+      <div onclick="setHouseholdTaskDay('${t2.id}','any')" style="
+        padding:4px 8px;border-radius:99px;cursor:pointer;font-size:10px;
+        background:${isAnyDay2 ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+        border:1px solid ${isAnyDay2 ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+        color:${isAnyDay2 ? 'var(--sage-light)' : 'var(--text-muted)'}">Any</div>
     </div>`;
+    if (isAnyDay2) {
+      const htg2 = (prefs.householdTaskGoals || {})[t2.id] || 1;
+      weeklyHtml += `<div style="margin-top:6px;margin-left:28px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;color:var(--text-muted)">Goal:</span>
+        <div class="stepper">
+          <div class="stepper-btn" onclick="adjustHouseholdGoal('${t2.id}',-1)">−</div>
+          <div class="stepper-val" id="htgoal-${t2.id}">${htg2}x</div>
+          <div class="stepper-btn" onclick="adjustHouseholdGoal('${t2.id}',1)">+</div>
+        </div>
+      </div>`;
+    }
+    weeklyHtml += `</div>`;
   });
 
   weeklyHtml += `<div style="display:flex;gap:8px;margin-top:12px">
@@ -11081,18 +11156,25 @@ function reRenderSettingsPreservingScroll() {
   });
   renderSettingsTab();
   renderTodayTab();
-  // Restore open sections and scroll position
-  setTimeout(() => {
+  // Immediately restore open sections WITHOUT transition to prevent flicker
+  openSections.forEach(sec => {
+    const sh = document.getElementById('sh-' + sec);
+    const sb = document.getElementById('sb-' + sec);
+    if (sb) {
+      sb.style.transition = 'none';
+      sb.classList.add('open');
+    }
+    if (sh) sh.classList.add('open');
+  });
+  if (settingsScroll) settingsScroll.scrollTop = savedScrollTop;
+  // Re-enable transitions after layout settles
+  requestAnimationFrame(() => {
     openSections.forEach(sec => {
-      const sh = document.getElementById('sh-' + sec);
       const sb = document.getElementById('sb-' + sec);
-      if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
+      if (sb) sb.style.transition = '';
     });
-    // Restore scroll after sections have opened and layout settled
-    setTimeout(() => {
-      if (settingsScroll) settingsScroll.scrollTop = savedScrollTop;
-    }, 10);
-  }, 10);
+    if (settingsScroll) settingsScroll.scrollTop = savedScrollTop;
+  });
 }
 
 function toggleDailyHabitPref(id) {
@@ -11140,6 +11222,37 @@ function setWeeklyHabitDay(id, val) {
   state.prefs.weeklyHabitDays[id] = val;
   save('bloom_prefs', state.prefs);
   reRenderSettingsPreservingScroll();
+}
+
+function toggleHouseholdTaskDay(id, dayBit) {
+  if (!state.prefs.householdTaskDays) state.prefs.householdTaskDays = {};
+  const cur = state.prefs.householdTaskDays[id] || 'any';
+  let newVal;
+  if (cur === 'any' || typeof cur !== 'number') {
+    newVal = dayBit;
+  } else {
+    newVal = cur ^ dayBit;
+    if (newVal === 0) newVal = 'any';
+  }
+  state.prefs.householdTaskDays[id] = newVal;
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
+}
+
+function setHouseholdTaskDay(id, val) {
+  if (!state.prefs.householdTaskDays) state.prefs.householdTaskDays = {};
+  state.prefs.householdTaskDays[id] = val;
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
+}
+
+function adjustHouseholdGoal(key, delta) {
+  if (!state.prefs.householdTaskGoals) state.prefs.householdTaskGoals = {};
+  const cur = state.prefs.householdTaskGoals[key] || 1;
+  state.prefs.householdTaskGoals[key] = Math.max(1, Math.min(7, cur + delta));
+  save('bloom_prefs', state.prefs);
+  const el = document.getElementById('htgoal-' + key);
+  if (el) el.textContent = state.prefs.householdTaskGoals[key] + 'x';
 }
 
 function setHabitTime(id, time) {
