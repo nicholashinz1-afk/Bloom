@@ -14499,30 +14499,21 @@ function renderBuddyPairingOptions() {
       <strong style="color:var(--cream)">Before you pair up:</strong> Buddies are for mutual encouragement — not therapy or crisis support. Never share personal info (phone, address, socials). If anything feels off, use the safety button on any buddy card, or tap 🤍 for crisis resources.
     </div>
 
-    <div class="buddy-setup-option" onclick="buddyCreateInvite()">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="font-size:24px">📬</div>
-        <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream)">Invite someone I know</div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Share a code with a friend or partner</div>
-        </div>
-      </div>
-    </div>
+    <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;margin-bottom:10px" onclick="buddyCreateInvite()">
+      📬 Invite a friend
+    </button>
+    <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:16px">Fastest way to pair — share a code with someone you trust</div>
 
-    <div class="buddy-setup-option" onclick="openBuddyMatchSheet()">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="font-size:24px">🔀</div>
-        <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream)">Match me with someone</div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Get paired with someone on a similar journey</div>
-        </div>
-      </div>
-    </div>
+    <button class="btn btn-ghost" style="width:100%;padding:12px;font-size:14px;margin-bottom:6px" onclick="openBuddyMatchSheet()">
+      🔀 Match me with someone
+    </button>
+    <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:16px">Usually paired within a few hours</div>
 
-    <div class="card" style="margin-top:12px">
+    <div class="card" style="margin-top:8px">
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;text-align:center">Have an invite code?</div>
       <div style="display:flex;gap:8px;align-items:center">
-        <input type="text" id="buddy-code-input" placeholder="Enter code" maxlength="6" style="flex:1;text-transform:uppercase;text-align:center;font-size:16px;letter-spacing:3px;padding:10px;font-family:Fraunces,serif">
+        <input type="text" id="buddy-code-input" placeholder="Enter code" maxlength="6" autofocus style="flex:1;text-transform:uppercase;text-align:center;font-size:16px;letter-spacing:3px;padding:10px;font-family:Fraunces,serif">
+        <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.readText().then(t=>{const i=document.getElementById('buddy-code-input');if(i)i.value=t.trim().substring(0,6).toUpperCase()})" style="min-width:50px;font-size:11px">Paste</button>
         <button class="btn btn-primary btn-sm" onclick="buddyAcceptInvite(document.getElementById('buddy-code-input').value)" style="min-width:60px">Join</button>
       </div>
     </div>
