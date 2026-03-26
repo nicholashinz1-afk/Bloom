@@ -7766,6 +7766,46 @@ function renderTodayTab() {
     </div>`;
   }
 
+  // --- FOUNDATIONS: Water + Food (compact combined card) ---
+  const thm = THEMES[state.prefs?.theme || 'forest'] || THEMES.forest;
+  html += `<div class="card" style="padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:12px;color:var(--text-muted)">💧 Water</div>
+      <div style="font-size:11px;color:${waterCount >= 3 ? 'var(--sage-light)' : 'var(--text-muted)'}">${waterCount >= 3 ? 'Hydrated ✓' : waterCount + '/3'}</div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:14px" id="water-bottles-row">
+      ${[0,1,2].map(i => {
+        const filled = i < waterCount;
+        return `<div class="water-bottle${filled ? ' water-filled' : ''}" onclick="tapWater(${i})" style="width:40px" aria-label="Bottle ${i+1}${filled ? ', filled' : ''}" role="checkbox" aria-checked="${filled}" tabindex="0">
+          <svg viewBox="0 0 56 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="wg${i}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${filled ? thm.primaryLight : '#3a3d30'}"/>
+              <stop offset="100%" stop-color="${filled ? thm.primaryDim : '#252820'}"/>
+            </linearGradient></defs>
+            <path d="M18 8 L14 22 Q10 28 10 38 L10 82 Q10 90 18 90 L38 90 Q46 90 46 82 L46 38 Q46 28 42 22 L38 8 Z" fill="url(#wg${i})" stroke="${filled ? thm.primaryLight : '#3a3d30'}" stroke-width="1.5"/>
+            <path d="M18 8 L38 8 L36 2 L20 2 Z" fill="${filled ? thm.primaryLight : '#3a3d30'}"/>
+            ${filled ? `<path d="M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" fill="rgba(var(--sage-rgb),0.4)">
+              <animate attributeName="d" values="M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 50 Q18 54 28 50 Q38 46 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" dur="3s" repeatCount="indefinite"/>
+            </path>` : ''}
+            ${!filled ? '<circle cx="28" cy="52" r="8" fill="none" stroke="#3a3d30" stroke-width="1" stroke-dasharray="3,3"/>' : ''}
+          </svg>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:12px;color:var(--text-muted)">🍽 Nourishment</div>
+        ${mainDone >= 2 ? '<div style="font-size:11px;color:var(--sage-light)">+10 ☀️ ✓</div>' : ''}
+      </div>
+      <div class="food-chips">
+        ${foodItems.map(f => {
+          const isFelt = f.id === 'felt_nourished';
+          return `<div class="food-chip${foodDone[f.id] ? ' selected' : ''}${isFelt ? ' food-chip-felt' : ''}" onclick="tapFood('${f.id}')">${f.label}</div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>`;
+
   // --- DAILY HABITS (grouped by time: AM / PM / Any) ---
   const dhPrefs = prefs?.dailyHabits || {};
   const htPrefs = prefs?.habitTimes || {};
@@ -7937,17 +7977,15 @@ function renderTodayTab() {
       });
     }
 
-    // Self-care items with thin divider
+    // Self-care items — visually distinct with warm accent
     if (scEnabled) {
       const scDone = td.selfCare || {};
       const hasItemsAbove3 = anyHabits.length > 0 || medInAny || todayWeeklyHabits.length > 0 || householdTasks.length > 0;
       if (hasItemsAbove3) {
-        html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0;padding-top:6px">
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;margin-left:4px">✨ Self-care</div>
-        </div>`;
-      } else {
-        html += `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;margin-left:4px">✨ Self-care</div>`;
+        html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:8px 0"></div>`;
       }
+      html += `<div style="background:rgba(200,170,120,0.04);border-left:2px solid rgba(200,170,120,0.25);border-radius:0 var(--r-md) var(--r-md) 0;padding:8px 10px;margin:4px -2px">
+        <div style="font-size:11px;color:rgba(200,170,120,0.7);margin-bottom:6px;font-weight:500">✨ Something nice for you</div>`;
       selectedSCTasks.forEach(id => {
         const task = SELF_CARE_TASKS.find(t2 => t2.id === id);
         if (!task) return;
@@ -7957,12 +7995,13 @@ function renderTodayTab() {
         html += `<div class="habit-row" style="${scMutedStyle}" onclick="tapSelfCare('${id}', this)">
           <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : task.icon}</div>
           <div class="habit-info"><div class="habit-name">${task.label}</div></div>
-          ${!done ? '<div class="habit-xp">+10</div>' : ''}
+          ${!done ? '<div class="habit-xp" style="background:rgba(200,170,120,0.1);border-color:rgba(200,170,120,0.25);color:rgba(200,170,120,0.8)">+10</div>' : ''}
         </div>`;
       });
+      html += `</div>`; // close self-care wrapper
     }
 
-    html += `</div>`;
+    html += `</div>`; // close Anytime card
   }
 
   // --- Legacy support: show old teeth habits if user hasn't migrated yet ---
@@ -7999,67 +8038,7 @@ function renderTodayTab() {
   const mainDone = mainItems.filter(f => foodDone[f.id]).length;
   const foodCount = Object.values(foodDone).filter(Boolean).length;
 
-  html += `<div class="section-label">💧 Hydration & nourishment</div>`;
-
-  // Water card
-  const waterPct = Math.round((waterCount / 3) * 100);
-  const thm = THEMES[state.prefs?.theme || 'forest'] || THEMES.forest;
-  html += `<div class="card">
-    <div class="card-title" style="margin-bottom:6px">💧 Hydration${infoIcon('hydration')}</div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-      <div style="flex:1;height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden">
-        <div style="height:100%;width:${waterPct}%;background:linear-gradient(90deg,var(--sage),var(--sage-light));border-radius:3px;transition:width 0.5s cubic-bezier(0.34,1.56,0.64,1)"></div>
-      </div>
-      <div style="font-size:12px;font-weight:600;color:${waterCount >= 3 ? 'var(--sage-light)' : 'var(--text-secondary)'};min-width:32px;text-align:right">${waterCount}/3</div>
-    </div>
-    <div class="water-bottles" id="water-bottles-row">
-      ${[0,1,2].map(i => {
-        const filled = i < waterCount;
-        return `
-      <div class="water-bottle${filled ? ' water-filled' : ''}" onclick="tapWater(${i})" aria-label="Water bottle ${i+1} of 3${filled ? ', filled' : ', empty'}" role="checkbox" aria-checked="${filled}" tabindex="0">
-        <svg viewBox="0 0 56 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="waterGrad${i}" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="${filled ? thm.primaryLight : '#3a3d30'}"/>
-              <stop offset="100%" stop-color="${filled ? thm.primaryDim : '#252820'}"/>
-            </linearGradient>
-          </defs>
-          <path d="M18 8 L14 22 Q10 28 10 38 L10 82 Q10 90 18 90 L38 90 Q46 90 46 82 L46 38 Q46 28 42 22 L38 8 Z" fill="url(#waterGrad${i})" stroke="${filled ? thm.primaryLight : '#3a3d30'}" stroke-width="1.5"/>
-          <path d="M18 8 L38 8 L36 2 L20 2 Z" fill="${filled ? thm.primaryLight : '#3a3d30'}"/>
-          ${filled ? `
-            <path d="M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" fill="rgba(var(--sage-rgb),0.4)">
-              <animate attributeName="d" values="M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 50 Q18 54 28 50 Q38 46 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 50 Q18 46 28 50 Q38 54 46 50 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" dur="3s" repeatCount="indefinite"/>
-            </path>
-            <path d="M10 58 Q20 54 28 58 Q36 62 46 58 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" fill="rgba(var(--sage-rgb),0.25)">
-              <animate attributeName="d" values="M10 58 Q20 54 28 58 Q36 62 46 58 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 58 Q20 62 28 58 Q36 54 46 58 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z;M10 58 Q20 54 28 58 Q36 62 46 58 L46 82 Q46 90 38 90 L18 90 Q10 90 10 82 Z" dur="2.5s" repeatCount="indefinite"/>
-            </path>` : ''}
-          ${!filled ? '<circle cx="28" cy="52" r="8" fill="none" stroke="#3a3d30" stroke-width="1" stroke-dasharray="3,3"/>' : ''}
-        </svg>
-      </div>`}).join('')}
-    </div>
-    ${waterCount >= 3
-      ? '<div style="font-size:12px;color:var(--sage-light);margin-top:10px;text-align:center;animation:fadeSlideIn 0.3s ease">Hydrated! +10 ☀️</div>'
-      : `<div style="font-size:12px;color:var(--text-muted);margin-top:10px;text-align:center">${waterCount === 0 ? 'Tap a bottle as you drink' : `${3 - waterCount} more to go`}</div>`}
-  </div>`;
-
-  // Food card
-  html += `<div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <div class="card-title" style="margin-bottom:0">🍽 Nourishment${mainDone >= 2 ? ' ✓' : ''}${infoIcon('nourishment')}</div>
-    </div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;line-height:1.5;font-style:italic">
-      ${trackMeals
-        ? 'Not tracking what you eat — just a kind reminder that every meal is taking care of yourself.'
-        : 'A gentle check-in. Nourishing yourself matters, however that looks today.'}
-    </div>
-    <div class="food-chips">
-      ${foodItems.map(f => {
-        const isFelt = f.id === 'felt_nourished';
-        return `<div class="food-chip${foodDone[f.id] ? ' selected' : ''}${isFelt ? ' food-chip-felt' : ''}" onclick="tapFood('${f.id}')">${f.label}</div>`;
-      }).join('')}
-    </div>
-    ${mainDone >= 2 ? '<div style="font-size:12px;color:var(--sage);margin-top:10px">+10 ☀️ earned 🌿</div>' : '<div style="font-size:12px;color:var(--text-muted);margin-top:10px">Check off 2 or more for +10 ☀️</div>'}
-  </div>`;
+  // (Water + food now rendered above habits as combined compact card)
 
   // --- SELF-CARE TASKS (grouped by morning/evening/anytime routines) ---
   // Self-care week 1 teaser (tasks now render in Anytime section above)
