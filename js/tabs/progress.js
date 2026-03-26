@@ -442,6 +442,7 @@ function openHistoryDetail(dateStr) {
       const meta = [time, source].filter(Boolean).join(' · ');
       html += `<div style="${i > 0 ? 'margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)' : ''}">
         ${meta ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">${meta}</div>` : ''}
+        ${je.prompt ? `<div class="journal-prompt" style="font-size:13px;margin-bottom:6px">${je.prompt}</div>` : ''}
         <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap">${je.text}</div>
         ${je.ai ? `<div class="ai-response" style="margin-top:8px"><div class="ai-response-text">${je.ai}</div></div>` : ''}
       </div>`;
