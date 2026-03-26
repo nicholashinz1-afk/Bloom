@@ -61,7 +61,12 @@ async function gatherData() {
     if (stats) dailyStats[key] = stats;
   }
 
-  return { aiFeedback: aiFeedback || [], errors: errors || [], events: events || [], dailyStats };
+  // Window events to last 30 days for consistency with dailyStats
+  const thirtyDaysAgo = Date.now() - 30 * 86400000;
+  const windowedEvents = (events || []).filter(e => e.ts > thirtyDaysAgo);
+  const windowedErrors = (errors || []).filter(e => e.ts > thirtyDaysAgo);
+
+  return { aiFeedback: aiFeedback || [], errors: windowedErrors, events: windowedEvents, dailyStats };
 }
 
 // ── Agent definitions ─────────────────────────────────────
@@ -75,7 +80,7 @@ function buildUXPrompt(data) {
     Object.entries(stats).forEach(([k, v]) => {
       if (k.startsWith('feature:')) {
         const name = k.replace('feature:', '');
-        featureTotals[name] = (featureTotals[name] || 0) + v;
+        featureTotals[name] = (featureTotals[name] || 0) + (typeof v === 'number' ? v : 0);
       }
     });
     return `${date}: ${total} events`;
@@ -222,7 +227,7 @@ function buildClinicalPrompt(data) {
     Object.entries(stats).forEach(([k, v]) => {
       if (clinicalFeatureKeys.includes(k)) {
         const name = k.replace('feature:', '');
-        clinicalFeatures[name] = (clinicalFeatures[name] || 0) + v;
+        clinicalFeatures[name] = (clinicalFeatures[name] || 0) + (typeof v === 'number' ? v : 0);
       }
     });
   });
