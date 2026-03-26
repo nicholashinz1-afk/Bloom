@@ -1,9 +1,7 @@
-// Bloom settings tab — preferences, habit config, data management, accessibility
 import { state, today, weekStart, saveState } from '../state.js';
 import { save, load } from '../storage.js';
 import { haptic, playSound, escapeHtml } from '../utils.js';
 import { celebrate } from '../celebrate.js';
-import { addXP, getLevel } from '../xp.js';
 import { DAILY_HABITS, MEDICATION_HABIT, SELF_CARE_CATEGORIES, SELF_CARE_TASKS, VERSION } from '../constants.js';
 import { THEMES, setTheme } from '../theme.js';
 import { bloomIcon } from '../icons.js';
@@ -12,11 +10,7 @@ import { showBackupSheet } from '../backup.js';
 import { openSheet, closeAllSheets } from '../sheets.js';
 import { switchTab } from '../router.js';
 import { renderTodayTab } from './today.js';
-
-// Late-bound cross-module references (avoid circular imports)
-function archiveToday(...args) { return window.archiveToday?.(...args); }
-function checkFirstTaskStreak(...args) { return window.checkFirstTaskStreak?.(...args); }
-
+import { scheduleAllPushNotifications } from '../notifications.js';
 function renderSettingsTab() {
   const scroll = document.getElementById('settings-scroll');
   if (!scroll) return;
@@ -604,7 +598,12 @@ function renderSettingsTab() {
       </div>
 
       <div style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
-        <div style="font-weight:500;color:var(--amber-light);margin-bottom:4px">Flagged (allowed)</div>
+        <div style="font-weight:500;color:var(--amber-light);margin-bottom:4px">Content warning (allowed)</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Some messages may be flagged as potentially inappropriate for this space — crude language, off-topic content, etc. These messages are still posted but appear blurred with a content warning. You can choose to view them or leave them hidden. This keeps the wall focused on encouragement while respecting that the message was shared.</div>
+      </div>
+
+      <div style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
+        <div style="font-weight:500;color:var(--amber-light);margin-bottom:4px">Crisis support (allowed)</div>
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6">If we detect language that suggests you might be in crisis, your message is still posted — but we'll gently surface crisis resources. Your feelings are always valid here.</div>
       </div>
 
@@ -613,7 +612,7 @@ function renderSettingsTab() {
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Venting, frustration, and honest expression are welcome. This is a mental health app — we don't filter difficult emotions. Words like "hurt," "struggling," and "overwhelmed" belong here.</div>
       </div>
 
-      <p style="margin-top:12px;font-size:12px;color:var(--text-muted)">Bloom is designed to hold space for hard feelings, not suppress them. If you see something concerning on the wall, use the "flag" button to report it.</p>
+      <p style="margin-top:12px;font-size:12px;color:var(--text-muted)">Bloom is designed to hold space for hard feelings, not suppress them. If you see something concerning on the wall, use the "flag" button to report it. Messages with repeated moderation flags may result in restricted access to community features.</p>
     </div>
   `);
 
@@ -1162,6 +1161,7 @@ function setWaterMode(mode) {
   save('bloom_prefs', state.prefs);
   renderSettingsTab();
   setTimeout(() => { const sh = document.getElementById('sh-notifications'); const sb = document.getElementById('sb-notifications'); if(sh&&sb){sh.classList.add('open');sb.classList.add('open');} }, 50);
+  setTimeout(() => scheduleAllPushNotifications(), 1000);
 }
 
 function setMedRemindMode(mode) {
@@ -1170,6 +1170,7 @@ function setMedRemindMode(mode) {
   save('bloom_prefs', state.prefs);
   renderSettingsTab();
   setTimeout(() => { const sh = document.getElementById('sh-notifications'); const sb = document.getElementById('sb-notifications'); if(sh&&sb){sh.classList.add('open');sb.classList.add('open');} }, 50);
+  setTimeout(() => scheduleAllPushNotifications(), 1000);
 }
 
 function toggleNotif(key) {
@@ -1177,6 +1178,8 @@ function toggleNotif(key) {
   state.prefs.notifications[key] = !state.prefs.notifications[key];
   save('bloom_prefs', state.prefs);
   renderSettingsTab();
+  // Re-schedule push notifications when preferences change
+  setTimeout(() => scheduleAllPushNotifications(), 1000);
 }
 
 function shareApp() {
@@ -1207,9 +1210,7 @@ function resetToday() {
   renderTodayTab();
 }
 
-export { renderSettingsTab, settingsSection, toggleSettingsGroup,
-  toggleSettingsSection, openSettingsSection };
-
+export { renderSettingsTab, settingsSection, toggleSettingsGroup, toggleSettingsSection, openSettingsSection };
 window.renderSettingsTab = renderSettingsTab;
 window.toggleSettingsGroup = toggleSettingsGroup;
 window.toggleSettingsSection = toggleSettingsSection;

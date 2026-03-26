@@ -2,10 +2,6 @@
 import { state } from './state.js';
 import { haptic } from './utils.js';
 
-const DB_NAME = 'bloom_db';
-const DB_VERSION = 1;
-let db = null;
-
 function initDB() {
   return new Promise((resolve) => {
     try {
@@ -150,6 +146,8 @@ async function restoreFromDB() {
   }
 }
 
+// ============================================================
+//  DATE HELPERS
 
 export { initDB, dbSet, dbGet, dbGetAll, save, load, showStorageWarning, trimHistory, checkStorageQuota, restoreFromDB };
 window.trimHistory = trimHistory;

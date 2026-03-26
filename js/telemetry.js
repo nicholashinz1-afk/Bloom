@@ -3,7 +3,6 @@ import { today } from './state.js';
 import { VERSION } from './constants.js';
 import { showToast } from './utils.js';
 
-// Anonymous user ID for unique user counts (no PII — just a random token)
 let _bloomUid = load('bloom_uid', null);
 if (!_bloomUid) {
   _bloomUid = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
@@ -11,7 +10,7 @@ if (!_bloomUid) {
 }
 export { _bloomUid };
 
-export function sendTelemetry(type, data) {
+function sendTelemetry(type, data) {
   try {
     fetch('/api/diagnostics', {
       method: 'POST',
@@ -21,11 +20,11 @@ export function sendTelemetry(type, data) {
   } catch(e) {}
 }
 
-export function trackFeature(feature) { sendTelemetry('feature_use', { feature }); }
-export function trackEvent(eventName, meta) { sendTelemetry(eventName, meta ? { meta } : {}); }
+function trackFeature(feature) { sendTelemetry('feature_use', { feature }); }
+function trackEvent(eventName, meta) { sendTelemetry(eventName, meta ? { meta } : {}); }
 
 // ── API response time tracking ────────────────────────────
-export async function timedFetch(url, options) {
+async function timedFetch(url, options) {
   const start = performance.now();
   const endpoint = url.replace(/^\/api\//, '').split('?')[0];
   try {
@@ -41,7 +40,7 @@ export async function timedFetch(url, options) {
 }
 
 // ── API health checks ─────────────────────────────────────
-export async function runHealthChecks() {
+async function runHealthChecks() {
   const endpoints = ['claude', 'buddy', 'wall', 'diagnostics'];
   const results = {};
   await Promise.all(endpoints.map(async (ep) => {
@@ -60,7 +59,7 @@ export async function runHealthChecks() {
 setTimeout(() => runHealthChecks(), 5000);
 
 // ── Error boundary wrapper ────────────────────────────────
-export function errorBoundary(fn, context) {
+function errorBoundary(fn, context) {
   return function(...args) {
     try {
       const result = fn.apply(this, args);
@@ -78,8 +77,42 @@ export function errorBoundary(fn, context) {
   };
 }
 
+// ── IndexedDB performance metrics ──────────────────────────
+const _origDbSet = typeof dbSet === 'function' ? dbSet : null;
+const _origDbGet = typeof dbGet === 'function' ? dbGet : null;
+
+if (_origDbSet) {
+  dbSet = async function(key, value) {
+    const start = performance.now();
+    try {
+      const result = await _origDbSet(key, value);
+      const duration = Math.round(performance.now() - start);
+      if (duration > 500) sendTelemetry('idb_slow', { meta: { op: 'set', key, duration } });
+      return result;
+    } catch(err) {
+      sendTelemetry('idb_error', { meta: { op: 'set', key, error: String(err.message || err).slice(0, 200) } });
+      throw err;
+    }
+  };
+}
+
+if (_origDbGet) {
+  dbGet = async function(key) {
+    const start = performance.now();
+    try {
+      const result = await _origDbGet(key);
+      const duration = Math.round(performance.now() - start);
+      if (duration > 500) sendTelemetry('idb_slow', { meta: { op: 'get', key, duration } });
+      return result;
+    } catch(err) {
+      sendTelemetry('idb_error', { meta: { op: 'get', key, error: String(err.message || err).slice(0, 200) } });
+      throw err;
+    }
+  };
+}
+
 // ── Session start diagnostics ─────────────────────────────
-export function captureSessionDiagnostics() {
+(function captureSessionDiagnostics() {
   // Delay to ensure both navigation metrics and IndexedDB are ready
   setTimeout(() => {
     const nav = performance.getEntriesByType('navigation')[0];
@@ -89,15 +122,14 @@ export function captureSessionDiagnostics() {
       returning: !!load('bloom_state', null),
       tabVisible: !document.hidden,
       online: navigator.onLine,
-      idbAvailable: !!window._bloomDb,
+      idbAvailable: !!db,
     };
     sendTelemetry('session_diagnostics', { meta: sessionMeta });
   }, 5000);
-}
-captureSessionDiagnostics();
+})();
 
 // ── Mood pattern tracking ─────────────────────────────────
-export function trackMoodPattern(val) {
+function trackMoodPattern(val) {
   const history = load('bloom_history', {});
   const recentDays = Object.keys(history).sort().slice(-7);
   const recentMoods = recentDays.map(d => history[d]?.mood).filter(m => m !== undefined && m >= 0);
@@ -113,17 +145,15 @@ export function trackMoodPattern(val) {
 }
 
 // ── AI reflection journey tracking ────────────────────────
-export function trackAIJourney(context, source) {
-  // Access state lazily via late-bound reference to avoid circular imports
-  const s = window._getBloomState?.() || {};
-  sendTelemetry('ai_journey', { meta: { context, source, hasName: !!(s?.prefs?.name), hardDay: !!s?.hardDayMode } });
+function trackAIJourney(context, source) {
+  sendTelemetry('ai_journey', { meta: { context, source, hasName: !!(state.prefs?.name), hardDay: !!state.hardDayMode } });
 }
 
 window.onerror = function(message, source, lineno, colno, error) {
   const errLog = load('bloom_error_log', []);
   errLog.push({ message: String(message).slice(0, 300), url: source, line: lineno, ts: Date.now() });
   if (errLog.length > 50) errLog.splice(0, errLog.length - 50);
-  saveKey('bloom_error_log', errLog);
+  save('bloom_error_log', errLog);
   sendTelemetry('error', {
     message: String(message).slice(0, 300),
     stack: error?.stack ? String(error.stack).slice(0, 500) : '',
@@ -136,11 +166,11 @@ window.addEventListener('unhandledrejection', function(event) {
   const errLog = load('bloom_error_log', []);
   errLog.push({ message: 'Unhandled promise: ' + msg, ts: Date.now() });
   if (errLog.length > 50) errLog.splice(0, errLog.length - 50);
-  saveKey('bloom_error_log', errLog);
+  save('bloom_error_log', errLog);
   sendTelemetry('error', { message: 'Unhandled promise: ' + msg, stack: event.reason?.stack ? String(event.reason.stack).slice(0, 500) : '' });
 });
 
-export function exportDiagnostics() {
+function exportDiagnostics() {
   const diag = {
     exported: new Date().toISOString(), version: VERSION,
     userAgent: navigator.userAgent, platform: navigator.platform,
@@ -165,5 +195,13 @@ function _dlDiag(d) {
   URL.revokeObjectURL(u); showToast('Diagnostics exported!');
 }
 
-// Attach to window for HTML onclick access
+// ============================================================
+//  AI CALLS
+// ============================================================
+// ── Scripted warm responses for very low moods (0-1) ──────
+
 window.exportDiagnostics = exportDiagnostics;
+
+export { sendTelemetry, trackFeature, trackEvent, timedFetch, runHealthChecks,
+  errorBoundary, trackMoodPattern, trackAIJourney,
+  exportDiagnostics };

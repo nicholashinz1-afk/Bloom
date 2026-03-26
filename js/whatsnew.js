@@ -1,4 +1,3 @@
-// Bloom what's new — version announcements, re-intro, guided tour, daily quote
 import { state, getDayIndex } from './state.js';
 import { save, load } from './storage.js';
 import { VERSION, WHATS_NEW, SELF_CARE_CATEGORIES, DAILY_QUOTES } from './constants.js';
@@ -6,12 +5,6 @@ import { THEMES, setTheme } from './theme.js';
 import { switchTab } from './router.js';
 import { bloomIcon } from './icons.js';
 import { haptic } from './utils.js';
-
-// Late-bound cross-module references (avoid circular imports)
-function renderTodayTab(...args) { return window.renderTodayTab?.(...args); }
-function openSheet(...args) { return window.openSheet?.(...args); }
-function closeAllSheets(...args) { return window.closeAllSheets?.(...args); }
-
 function showWhatsNew(force = false) {
   if (!load('bloom_tutorial_done') && !force) return;
   if (!force && load('bloom_version') === VERSION) return;
@@ -377,10 +370,10 @@ function renderDailyQuote() {
   el.textContent = DAILY_QUOTES[idx];
 }
 
-
-export { showWhatsNew, renderDailyQuote, dismissReintro, startReintro,
-  startWhatsNewTour, cancelWhatsNewTour, showTourSpotlight };
-
+// ============================================================
+//  ONBOARDING
+// ============================================================
+export { showWhatsNew, renderDailyQuote, dismissReintro, startReintro, startWhatsNewTour, cancelWhatsNewTour, showTourSpotlight };
 window.dismissReintro = dismissReintro;
 window.startReintro = startReintro;
 window.reintroSetTheme = reintroSetTheme;

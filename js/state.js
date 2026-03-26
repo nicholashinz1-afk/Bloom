@@ -1,4 +1,4 @@
-// Bloom state — central app state + date helpers + journal helpers
+// Bloom state — central app state, date helpers, journal helpers
 import { save, load } from './storage.js';
 import { JOURNAL_PROMPTS, JOURNAL_PROMPTS_LOW } from './constants.js';
 
@@ -102,7 +102,49 @@ function migrateJournalFormat() {
   if (migrated) saveState();
 }
 
-// Expose state getter for cross-module access (used by telemetry to avoid circular imports)
-window._getBloomState = () => state;
+function backfillJournalPrompts() {
+  let changed = false;
+  // Backfill wellnessData journal
+  const journal = state.wellnessData?.journal;
+  if (journal) {
+    Object.keys(journal).forEach(date => {
+      const entries = journal[date];
+      if (!Array.isArray(entries)) return;
+      const dayIndex = Math.floor(new Date(date + 'T12:00:00').getTime() / 86400000);
+      let offset = 0;
+      entries.forEach(entry => {
+        if (entry.prompt === null && entry.source !== 'open' && entry.source !== 'winddown') {
+          entry.prompt = JOURNAL_PROMPTS[(dayIndex + offset) % JOURNAL_PROMPTS.length];
+          offset++;
+          changed = true;
+        } else if (entry.prompt) {
+          offset++;
+        }
+      });
+    });
+  }
+  // Backfill historyData journal entries
+  const history = state.historyData;
+  if (history) {
+    Object.keys(history).forEach(date => {
+      const entries = history[date]?.journalEntries;
+      if (!Array.isArray(entries)) return;
+      const dayIndex = Math.floor(new Date(date + 'T12:00:00').getTime() / 86400000);
+      let offset = 0;
+      entries.forEach(entry => {
+        if (entry.prompt === null && entry.source !== 'open' && entry.source !== 'winddown') {
+          entry.prompt = JOURNAL_PROMPTS[(dayIndex + offset) % JOURNAL_PROMPTS.length];
+          offset++;
+          changed = true;
+        } else if (entry.prompt) {
+          offset++;
+        }
+      });
+    });
+  }
+  if (changed) saveState();
+}
 
-export { state, today, dayOfWeek, weekStart, formatDateLabel, getDayIndex, getWeekDates, loadState, saveState, getJournalPrompt, getJournalEntries, getLatestJournalText, migrateJournalFormat };
+export { state, today, dayOfWeek, weekStart, formatDateLabel, getDayIndex, getWeekDates,
+  loadState, saveState, getJournalPrompt, getJournalEntries, getLatestJournalText,
+  migrateJournalFormat, backfillJournalPrompts };

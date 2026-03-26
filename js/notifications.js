@@ -1,12 +1,11 @@
-// Bloom notifications — affirmations, session management, reminders, push
-import { state, today, getDayIndex, dayOfWeek, getWeekDates, saveState, getJournalEntries } from './state.js';
+import { state, today, getDayIndex, dayOfWeek, getWeekDates, saveState } from './state.js';
 import { save, load } from './storage.js';
 import { haptic } from './utils.js';
 import { updateStreak } from './streaks.js';
 import { DAILY_HABITS, MEDICATION_HABIT, DAILY_QUOTES } from './constants.js';
 import { bloomIcon } from './icons.js';
+import { sendTelemetry, trackFeature, trackEvent, timedFetch } from './telemetry.js';
 
-// Late-bound cross-module references (avoid circular imports)
 function renderTodayTab(...args) { return window.renderTodayTab?.(...args); }
 function switchTab(...args) { return window.switchTab?.(...args); }
 function openSheet(...args) { return window.openSheet?.(...args); }
@@ -126,6 +125,8 @@ function handleVisibilityChange() {
       switchTab('today');
       // Show session refresh indicator
       showSessionRefreshIndicator();
+      // Re-schedule push notifications for any remaining reminders today
+      setTimeout(() => scheduleAllPushNotifications(), 3000);
     }
     save('bloom_last_active', Date.now());
   }
@@ -384,13 +385,37 @@ async function testPushNotification() {
   }
 
   statusEl.textContent = 'Sending test notification...';
-  await sendLocalNotification(
-    'It worked! 🌿',
-    'Push notifications are set up and ready. You\'ll get gentle reminders when you need them.',
-    'test-notification'
-  );
-  statusEl.textContent = '✓ Notification sent — check your notification tray!';
-  setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 5000);
+
+  // Try real OneSignal push first, fall back to local
+  const playerId = getPlayerIdForPush();
+  let pushSent = false;
+  if (playerId) {
+    const sendAt = new Date(Date.now() + 10000).toISOString(); // 10 seconds from now
+    const result = await notifyApi({
+      action: 'schedule',
+      playerId,
+      title: 'It worked! 🌿',
+      message: 'Real push notifications are set up. You\'ll get reminders even when the app is closed.',
+      sendAt,
+      tag: 'test',
+    });
+    pushSent = result.ok;
+  }
+
+  if (pushSent) {
+    statusEl.textContent = '✓ Real push notification scheduled — it should arrive in ~10 seconds, even if you close the app!';
+  } else {
+    // Fallback to local notification
+    await sendLocalNotification(
+      'It worked! 🌿',
+      'Push notifications are set up and ready. You\'ll get gentle reminders when you need them.',
+      'test-notification'
+    );
+    statusEl.textContent = playerId
+      ? '⚠ Push service unavailable — local notification sent instead. Check your notification tray!'
+      : '⚠ OneSignal not connected — local notification sent. Reminders only work when the app is open.';
+  }
+  setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 8000);
 }
 
 // If the evening nudge fired and user opens the app, give them credit
@@ -425,8 +450,261 @@ function checkNudgeCredit() {
   }
 }
 
-// Check reminders every 15 minutes
+// Check reminders every 15 minutes (fallback for when app is open)
 setInterval(() => { checkScheduledReminders(); checkWaterReminders(); checkMedicationReminders(); checkEveningNudge(); }, 15 * 60 * 1000);
+
+// ── OneSignal Push Scheduling (real push notifications) ──────
+// Schedules notifications server-side so they fire even when the app is closed.
+// Local notifications above serve as a fallback when the app is open.
+
+const _scheduledPushIds = Object.assign({}, load('bloom_scheduled_push_ids', {})); // tag → notificationId for cancellation
+
+async function notifyApi(payload) {
+  try {
+    const res = await fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    return await res.json();
+  } catch (e) {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+function getPlayerIdForPush() {
+  return load('bloom_onesignal_pid', null);
+}
+
+// Build an ISO datetime string for today at a given hour (local time)
+function todayAtHour(hour, minute) {
+  const d = new Date();
+  d.setHours(hour, minute || 0, 0, 0);
+  return d.toISOString();
+}
+
+// Cancel a previously scheduled push notification by tag
+async function cancelScheduledPush(tag) {
+  const nid = _scheduledPushIds[tag];
+  if (!nid) return;
+  delete _scheduledPushIds[tag];
+  // Also remove from persistent storage
+  const stored = load('bloom_scheduled_push_ids', {});
+  delete stored[tag];
+  save('bloom_scheduled_push_ids', stored);
+  await notifyApi({ action: 'cancel', notificationId: nid });
+}
+
+// Cancel multiple scheduled push notifications by tag prefix
+async function cancelScheduledPushesByPrefix(prefix) {
+  const tags = Object.keys(_scheduledPushIds).filter(t => t.startsWith(prefix));
+  if (tags.length === 0) return;
+  const ids = tags.map(t => {
+    const nid = _scheduledPushIds[t];
+    delete _scheduledPushIds[t];
+    return nid;
+  }).filter(Boolean);
+  // Update persistent storage
+  const stored = load('bloom_scheduled_push_ids', {});
+  tags.forEach(t => delete stored[t]);
+  save('bloom_scheduled_push_ids', stored);
+  if (ids.length > 0) {
+    await notifyApi({ action: 'cancel-batch', notificationIds: ids });
+  }
+}
+
+// Schedule all of today's push notifications via OneSignal
+async function scheduleAllPushNotifications() {
+  const playerId = getPlayerIdForPush();
+  if (!playerId) return;
+  if (!state.prefs?.notifications?.habitReminders) return;
+  if (Notification.permission !== 'granted') return;
+
+  const now = new Date();
+  const hour = now.getHours();
+  const t = today();
+  const sentKey = `bloom_reminders_${t}`;
+  const sent = load(sentKey, {});
+  const notifications = [];
+
+  // ── Habit reminders (teeth brushing) ──
+  HABIT_REMINDERS.forEach(r => {
+    if (r.hour > hour && !sent[r.id] && !r.check()) {
+      notifications.push({
+        title: r.title,
+        message: r.body,
+        sendAt: todayAtHour(r.hour),
+        tag: `habit_${r.id}`,
+      });
+    }
+  });
+
+  // ── Medication reminders ──
+  const medOn = state.prefs?.dailyHabits?.medication;
+  const medRemindMode = state.prefs?.notifications?.medicationReminders || 'auto';
+  if (medOn && medRemindMode !== 'off') {
+    const medTime = state.prefs?.habitTimes?.medication || 'am';
+    const td = state.todayData;
+    const schedule = [];
+    if (medTime === 'am' || medTime === 'both') {
+      schedule.push({ slot: 'am', firstHour: 9, done: () => td.medication_am });
+    }
+    if (medTime === 'pm' || medTime === 'both') {
+      schedule.push({ slot: 'pm', firstHour: 20, done: () => td.medication_pm });
+    }
+    if (medTime === 'any') {
+      schedule.push({ slot: 'any', firstHour: 12, done: () => td.medication_any });
+    }
+    schedule.forEach(s => {
+      if (s.firstHour > hour && !s.done() && !sent[`med_first_${s.slot}`]) {
+        const msg = MED_REMINDER_MESSAGES[Math.floor(Math.random() * MED_REMINDER_MESSAGES.length)];
+        notifications.push({
+          title: msg.title,
+          message: msg.body,
+          sendAt: todayAtHour(s.firstHour),
+          tag: `med_${s.slot}`,
+        });
+      }
+    });
+  }
+
+  // ── Water reminders ──
+  const waterMode = state.prefs?.notifications?.waterMode || 'smart';
+  if (waterMode !== 'off') {
+    const waterCount = state.todayData.water || 0;
+    if (waterCount < 3) {
+      if (waterMode === 'smart') {
+        [12, 16, 20].forEach(h => {
+          if (h > hour && !sent[`water_s${h}`]) {
+            notifications.push({
+              title: 'Hydration check 💧',
+              message: 'A gentle nudge to drink some water. Even a few sips count.',
+              sendAt: todayAtHour(h),
+              tag: `water_s${h}`,
+            });
+          }
+        });
+      } else if (waterMode === 'hourly') {
+        for (let h = Math.max(12, hour + 1); h <= 21; h++) {
+          if (!sent[`water_h${h}`]) {
+            const msg = WATER_MESSAGES[Math.floor(Math.random() * WATER_MESSAGES.length)];
+            notifications.push({
+              title: msg.title,
+              message: msg.body,
+              sendAt: todayAtHour(h),
+              tag: `water_h${h}`,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // ── Evening nudge ──
+  if (hour < 19 && !sent.evening_nudge) {
+    const td = state.todayData || {};
+    const anyActivity = td.m_teeth || td.e_teeth || td.mood !== undefined ||
+      (td.water && td.water > 0) || td.journalXPGiven;
+    if (!anyActivity) {
+      const msg = EVENING_NUDGE_MESSAGES[Math.floor(Math.random() * EVENING_NUDGE_MESSAGES.length)];
+      notifications.push({
+        title: msg.title,
+        message: msg.body,
+        sendAt: todayAtHour(19, 15),
+        tag: 'evening_nudge',
+      });
+    }
+  }
+
+  // ── Weekly reflection (schedule for Saturday 10am if applicable) ──
+  const dow = now.getDay();
+  if ((dow === 5 || dow === 6) && state.prefs?.notifications?.sundayReminder !== false) {
+    // Schedule for Saturday 10am if it's Friday, or now+1h if Saturday
+    const ws = weekStart();
+    const lastNotified = load('bloom_reflection_notif', null);
+    if (lastNotified !== ws) {
+      const reflectDate = new Date();
+      if (dow === 5) { reflectDate.setDate(reflectDate.getDate() + 1); reflectDate.setHours(10, 0, 0, 0); }
+      else { reflectDate.setHours(Math.max(hour + 1, 10), 0, 0, 0); }
+      if (reflectDate > now) {
+        notifications.push({
+          title: 'Time to reflect 🪞',
+          message: 'Your weekly reflection is ready. Take a few minutes for yourself.',
+          sendAt: reflectDate.toISOString(),
+          tag: 'weekly_reflection',
+        });
+      }
+    }
+  }
+
+  // ── Weekly summary (Sunday 6pm) ──
+  if (dow <= 0 || dow === 6) {
+    if (state.prefs?.notifications?.weeklySummary && !sent.weekly_summary) {
+      const summaryDate = new Date();
+      if (dow === 6) { summaryDate.setDate(summaryDate.getDate() + 1); }
+      summaryDate.setHours(18, 0, 0, 0);
+      if (summaryDate > now) {
+        notifications.push({
+          title: 'Your weekly bloom summary 🌿',
+          message: 'See how your week went — check your progress in the app.',
+          sendAt: summaryDate.toISOString(),
+          tag: 'weekly_summary',
+        });
+      }
+    }
+  }
+
+  if (notifications.length === 0) return;
+
+  // Cancel any previously scheduled notifications for today before re-scheduling
+  const prevIds = load('bloom_scheduled_push_ids', {});
+  const prevIdList = Object.values(prevIds).filter(Boolean);
+  if (prevIdList.length > 0) {
+    await notifyApi({ action: 'cancel-batch', notificationIds: prevIdList });
+  }
+
+  // Schedule the batch
+  const result = await notifyApi({
+    action: 'schedule-batch',
+    playerId,
+    notifications,
+  });
+
+  if (result.ok && result.results) {
+    const newIds = {};
+    result.results.forEach(r => {
+      if (r.ok && r.tag && r.notificationId) {
+        newIds[r.tag] = r.notificationId;
+        _scheduledPushIds[r.tag] = r.notificationId;
+      }
+    });
+    save('bloom_scheduled_push_ids', newIds);
+  }
+}
+
+// Called when a habit is completed — cancel its scheduled push
+function onHabitCompletedCancelPush(habitId) {
+  // Map habit IDs to push tags
+  if (habitId === 'm_teeth' || habitId === 'brush_teeth_am') {
+    cancelScheduledPush('habit_m_teeth');
+  } else if (habitId === 'e_teeth' || habitId === 'brush_teeth_pm') {
+    cancelScheduledPush('habit_e_teeth');
+  } else if (habitId === 'medication_am') {
+    cancelScheduledPush('med_am');
+  } else if (habitId === 'medication_pm') {
+    cancelScheduledPush('med_pm');
+  } else if (habitId === 'medication_any') {
+    cancelScheduledPush('med_any');
+  }
+}
+
+function onWaterGoalReachedCancelPush() {
+  cancelScheduledPushesByPrefix('water_');
+}
+
+function onAnyActivityCancelEveningNudge() {
+  cancelScheduledPush('evening_nudge');
+}
 
 // ── Weekly reflection availability check ─────────────────────
 function checkWeeklyReflectionAvailable() {
@@ -537,7 +815,9 @@ export { checkDailyAffirmation, showDailyAffirmation, dismissAffirmation,
   checkMedicationReminders, checkWaterReminders, checkScheduledReminders,
   checkEveningNudge, testPushNotification, checkNudgeCredit,
   checkWeeklyReflectionAvailable, checkNewWeek, showNewWeekGoalsSheet,
-  toggleNewWeekTask, addNewWeekCustomTask, saveNewWeekGoals };
+  toggleNewWeekTask, addNewWeekCustomTask, saveNewWeekGoals,
+  scheduleAllPushNotifications, onHabitCompletedCancelPush,
+  onWaterGoalReachedCancelPush, onAnyActivityCancelEveningNudge };
 
 window.dismissAffirmation = dismissAffirmation;
 window.testPushNotification = testPushNotification;
@@ -545,3 +825,7 @@ window.saveNewWeekGoals = saveNewWeekGoals;
 window.toggleNewWeekTask = toggleNewWeekTask;
 window.addNewWeekCustomTask = addNewWeekCustomTask;
 window.showNewWeekGoalsSheet = showNewWeekGoalsSheet;
+window.scheduleAllPushNotifications = scheduleAllPushNotifications;
+window.onHabitCompletedCancelPush = onHabitCompletedCancelPush;
+window.onWaterGoalReachedCancelPush = onWaterGoalReachedCancelPush;
+window.onAnyActivityCancelEveningNudge = onAnyActivityCancelEveningNudge;

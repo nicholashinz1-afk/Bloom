@@ -1,14 +1,9 @@
-// Bloom community tab — encouragement wall + buddy list
 import { state } from '../state.js';
 import { save, load } from '../storage.js';
-import { haptic, escapeHtml } from '../utils.js';
+import { haptic } from '../utils.js';
 import { bloomIcon, buddyIcon } from '../icons.js';
 import { sendTelemetry, trackFeature, timedFetch } from '../telemetry.js';
 import { renderBuddyContent } from '../features/buddy.js';
-
-// Late-bound cross-module references (avoid circular imports)
-function openCrisisSheet(...args) { return window.openCrisisSheet?.(...args); }
-
 let wallMessages = [];
 let wallLoading = false;
 let wallPosting = false;
@@ -86,21 +81,7 @@ function renderCommunityTab() {
     </div>`;
   } else {
     wallMessages.forEach(msg => {
-      const timeAgo = getTimeAgo(msg.ts);
-      const hearted = wallHearted[msg.id];
-      html += `<div class="card wall-message" style="padding:14px 16px;margin-bottom:8px">
-        <div style="font-size:14px;color:var(--cream);line-height:1.6;font-family:Fraunces,serif;font-style:italic">"${escapeHtml(msg.text)}"</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-          <div style="display:flex;align-items:center;gap:12px">
-            <button onclick="heartWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:99px;transition:all 0.2s;${hearted ? 'background:rgba(201,149,74,0.15)' : ''}" ${hearted ? 'disabled' : ''}>
-              <span style="font-size:14px">${hearted ? '💛' : '🤍'}</span>
-              <span style="font-size:12px;color:${hearted ? 'var(--amber-light)' : 'var(--text-muted)'}">${msg.hearts || 0}</span>
-            </button>
-            <button onclick="reportWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);opacity:0.5;padding:4px" title="Report">flag</button>
-          </div>
-          <div style="font-size:11px;color:var(--text-muted)">${timeAgo}</div>
-        </div>
-      </div>`;
+      html += renderWallMessageCard(msg);
     });
   }
   html += `</div>`;
@@ -109,7 +90,9 @@ function renderCommunityTab() {
   html += `<div style="text-align:center;padding:12px 16px 20px">
     <div style="font-size:11px;color:var(--text-muted);line-height:1.7">
       This is a safe, moderated space. Messages are anonymous and screened automatically.
+      <br>Some messages may appear blurred if flagged — you can choose to view them.
       <br>Be kind. Be real. Be gentle with each other.
+      <br><span style="opacity:0.6">Learn more in Settings → How moderation works</span>
     </div>
   </div>`;
 
@@ -130,6 +113,53 @@ function renderCommunityTab() {
   renderBuddyContent();
 }
 
+// Track which moderated messages the user has chosen to reveal this session
+let wallRevealedIds = {};
+
+function renderWallMessageCard(msg) {
+  const timeAgo = getTimeAgo(msg.ts);
+  const hearted = wallHearted[msg.id];
+  const isModerated = msg.moderated && !wallRevealedIds[msg.id];
+
+  if (isModerated) {
+    return `<div class="card wall-message" style="padding:14px 16px;margin-bottom:8px;position:relative;opacity:0.45">
+      <div style="font-size:14px;color:var(--cream);line-height:1.6;font-family:Fraunces,serif;font-style:italic;filter:blur(4px);user-select:none" aria-hidden="true">"${escapeHtml(msg.text)}"</div>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center">
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:8px">This message may not be appropriate for this space.</div>
+        <button onclick="revealWallMessage('${msg.id}')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 14px;font-size:11px;color:var(--text-muted);cursor:pointer">Show anyway</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:10px">
+        <div style="font-size:11px;color:var(--text-muted)">${timeAgo}</div>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="card wall-message" style="padding:14px 16px;margin-bottom:8px">
+    <div style="font-size:14px;color:var(--cream);line-height:1.6;font-family:Fraunces,serif;font-style:italic">"${escapeHtml(msg.text)}"</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button onclick="heartWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:99px;transition:all 0.2s;${hearted ? 'background:rgba(201,149,74,0.15)' : ''}" ${hearted ? 'disabled' : ''}>
+          <span style="font-size:14px">${hearted ? '💛' : '🤍'}</span>
+          <span style="font-size:12px;color:${hearted ? 'var(--amber-light)' : 'var(--text-muted)'}">${msg.hearts || 0}</span>
+        </button>
+        <button onclick="reportWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);opacity:0.5;padding:4px" title="Report">flag</button>${msg.moderated ? `
+        <button onclick="hideWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);opacity:0.5;padding:4px" title="Re-hide message">hide</button>` : ''}
+      </div>
+      <div style="font-size:11px;color:var(--text-muted)">${timeAgo}</div>
+    </div>
+  </div>`;
+}
+
+function revealWallMessage(id) {
+  wallRevealedIds[id] = true;
+  renderWallMessages();
+}
+
+function hideWallMessage(id) {
+  delete wallRevealedIds[id];
+  renderWallMessages();
+}
+
 function renderWallMessages() {
   const container = document.getElementById('wall-messages');
   if (!container) return;
@@ -142,21 +172,7 @@ function renderWallMessages() {
     </div>`;
   } else {
     wallMessages.forEach(msg => {
-      const timeAgo = getTimeAgo(msg.ts);
-      const hearted = wallHearted[msg.id];
-      html += `<div class="card wall-message" style="padding:14px 16px;margin-bottom:8px">
-        <div style="font-size:14px;color:var(--cream);line-height:1.6;font-family:Fraunces,serif;font-style:italic">"${escapeHtml(msg.text)}"</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-          <div style="display:flex;align-items:center;gap:12px">
-            <button onclick="heartWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:99px;transition:all 0.2s;${hearted ? 'background:rgba(201,149,74,0.15)' : ''}" ${hearted ? 'disabled' : ''}>
-              <span style="font-size:14px">${hearted ? '💛' : '🤍'}</span>
-              <span style="font-size:12px;color:${hearted ? 'var(--amber-light)' : 'var(--text-muted)'}">${msg.hearts || 0}</span>
-            </button>
-            <button onclick="reportWallMessage('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);opacity:0.5;padding:4px" title="Report">flag</button>
-          </div>
-          <div style="font-size:11px;color:var(--text-muted)">${timeAgo}</div>
-        </div>
-      </div>`;
+      html += renderWallMessageCard(msg);
     });
   }
   container.innerHTML = html;
@@ -182,6 +198,7 @@ async function postToWall() {
 
   btn.disabled = true;
   btn.textContent = '...';
+  trackFeature('wall');
   try {
     const res = await timedFetch('/api/wall', {
       method: 'POST',
@@ -193,6 +210,7 @@ async function postToWall() {
       input.value = '';
       updateWallCharCount();
       haptic('medium');
+      trackEvent('wall_post');
       showWallStatus('Your words are out there now, making someone\'s day a little brighter.', 'var(--sage)');
       // Refresh messages only, preserve textarea
       await fetchWallMessages();
@@ -227,6 +245,7 @@ function showWallStatus(text, color) {
 
 async function heartWallMessage(id) {
   if (wallHearted[id]) return;
+  trackFeature('wall');
   wallHearted[id] = true;
   save('bloom_wall_hearted', wallHearted);
   haptic('light');
@@ -272,11 +291,20 @@ function getTimeAgo(ts) {
   return `${Math.floor(days / 7)}w ago`;
 }
 
-export { renderCommunityTab, fetchWallMessages, renderWallMessages, getTimeAgo };
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
+// ============================================================
+//  SEASONAL / CYCLICAL MOOD AWARENESS
+// ============================================================
+export { renderCommunityTab, fetchWallMessages, renderWallMessages, escapeHtml as wallEscapeHtml, getTimeAgo };
 window.renderCommunityTab = renderCommunityTab;
 window.postToWall = postToWall;
 window.heartWallMessage = heartWallMessage;
 window.reportWallMessage = reportWallMessage;
 window.updateWallCharCount = updateWallCharCount;
 window.fetchWallMessages = fetchWallMessages;
+window.hideWallMessage = hideWallMessage;
+window.revealWallMessage = revealWallMessage;
+window.renderWallMessageCard = renderWallMessageCard;

@@ -1,13 +1,6 @@
 import { state } from '../state.js';
 import { save, load } from '../storage.js';
 import { switchTab } from '../router.js';
-
-// Each step defines:
-//   tab        — which tab to switch to
-//   spotlight  — CSS selector of element to highlight (or null for full dim)
-//   cardPos    — 'top'|'mid'|'bottom' — where the card appears
-//   title/text — content
-//   pulse      — if true, add a pulse ring to the spotlight element
 const TUTORIAL_STEPS = [
   {
     tab: 'today',
@@ -244,20 +237,6 @@ function checkShowTutorial() {
   }
 }
 
-window.startTutorial = startTutorial;
-window.tutorialNext = tutorialNext;
-window.tutorialBack = tutorialBack;
-window.endTutorial = endTutorial;
-
-export {
-  TUTORIAL_STEPS,
-  tutorialStep,
-  tutorialSpotlightEl,
-  startTutorial,
-  renderTutorialStep,
-  buildTutorialOverlay,
-  tutorialNext,
-  tutorialBack,
-  endTutorial,
-  checkShowTutorial,
-};
+export { TUTORIAL_STEPS, startTutorial, renderTutorialStep, buildTutorialOverlay, tutorialNext, tutorialBack, endTutorial, checkShowTutorial };
+window.startTutorial = startTutorial; window.tutorialNext = tutorialNext;
+window.tutorialBack = tutorialBack; window.endTutorial = endTutorial;

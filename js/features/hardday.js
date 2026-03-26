@@ -1,4 +1,4 @@
-import { state, today, saveState } from '../state.js';
+import { state, today, saveState, getJournalEntries } from '../state.js';
 import { save, load } from '../storage.js';
 import { haptic, playSound } from '../utils.js';
 import { callClaude, renderAIResponseHTML, showThinking, getScriptedResponse } from '../ai.js';
@@ -6,16 +6,11 @@ import { sendTelemetry, trackFeature, trackEvent } from '../telemetry.js';
 import { addXP } from '../xp.js';
 import { openSheet, closeAllSheets } from '../sheets.js';
 import { checkMilestones } from '../streaks.js';
-
-// Late-bound cross-module references (avoid circular imports)
 function renderWellnessTab(...args) { return window.renderWellnessTab?.(...args); }
 function switchTab(...args) { return window.switchTab?.(...args); }
 function openCrisisSheet(...args) { return window.openCrisisSheet?.(...args); }
-
-// Late-bound references to avoid circular imports
 function archiveToday() { if (window.archiveToday) window.archiveToday(); }
-function renderTodayTab() { if (window.renderTodayTab) window.renderTodayTab(); }
-
+function renderTodayTab(...args) { return window.renderTodayTab?.(...args); }
 function openOpenJournal() {
   closeAllSheets();
   openSheet('open-journal-sheet');
@@ -101,7 +96,8 @@ function activateHardDayMode() {
   saveState();
   archiveToday();
   playSound('hard_day');
-  trackEvent('hard_day_activated');
+  trackFeature('hard_day');
+  trackEvent('hard_day_activated', { mood: state.todayData.mood, habitsCompleted: Object.keys(state.todayData).filter(k => (k.endsWith('_am') || k.endsWith('_pm') || k.endsWith('_any')) && state.todayData[k]).length });
   // Dim the UI to feel calmer
   document.body.classList.add('hard-day-active');
   closeAllSheets();
@@ -362,6 +358,11 @@ function startWinddownBreath() {
   breathPhase();
 }
 
+// ── Seasonal theme ───────────────────────────────────────────
+export { openOpenJournal, saveOpenJournal, toggleGentleMode, activateHardDayMode,
+  getWhatHelpedLastTime, renderHardDaySheet, checkMonthlyReflection,
+  showMonthlyReflectionPrompt, openWindDown, renderWindDownStep,
+  winddownSetMood, winddownNext, winddownSaveJournal, startWinddownBreath };
 window.openOpenJournal = openOpenJournal;
 window.saveOpenJournal = saveOpenJournal;
 window.toggleGentleMode = toggleGentleMode;
@@ -372,22 +373,3 @@ window.winddownNext = winddownNext;
 window.winddownSaveJournal = winddownSaveJournal;
 window.startWinddownBreath = startWinddownBreath;
 window.renderWindDownStep = renderWindDownStep;
-
-export {
-  openOpenJournal,
-  saveOpenJournal,
-  toggleGentleMode,
-  activateHardDayMode,
-  getWhatHelpedLastTime,
-  renderHardDaySheet,
-  checkMonthlyReflection,
-  showMonthlyReflectionPrompt,
-  winddownStep,
-  WINDDOWN_AFFIRMATIONS,
-  openWindDown,
-  renderWindDownStep,
-  winddownSetMood,
-  winddownNext,
-  winddownSaveJournal,
-  startWinddownBreath,
-};

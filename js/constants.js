@@ -1,11 +1,10 @@
 // Bloom constants — all static data, quotes, habit definitions, levels, celebrations
-export const VERSION = '2.10.3';
+export const VERSION = '2.11.0';
 
 export const WHATS_NEW = [
-  { text: 'Journal entries now save individually — write multiple times a day and each entry is preserved with its own AI response. You\'ll see a count of how many entries you\'ve saved.', spotlight: null, tab: 'wellness', featured: true },
-  { text: 'Go to therapy — a new weekly habit you can track in the Weekly tab. Set how many sessions per week and get celebrated for showing up. Because asking for help is strength.', spotlight: null, tab: 'weekly', featured: true },
-  { text: 'Reframe history — your past cognitive reframes are now saved and viewable anytime from the Wellness tab. Revisit the kinder perspectives you\'ve found.', spotlight: null, tab: 'wellness' },
-  { text: 'Therapist export now includes individual journal entries with timestamps and your cognitive reframe history — more context for your care team.', spotlight: null },
+  { text: 'Retroactive tracking — tap any past day in your history to fill in habits and self-care you forgot to log. Your progress still counts, even when you remember it late.', spotlight: null, tab: 'weekly', featured: true },
+  { text: 'Self-care now shows in history — your past self-care activities are now visible when viewing any past day, not just daily habits.', spotlight: null, tab: 'weekly' },
+  { text: 'Refreshed journal prompts — new prompts to help you reflect in different ways, meeting you wherever you are.', spotlight: null, tab: 'wellness' },
 ];
 
 // ============================================================
@@ -100,39 +99,6 @@ export const JOURNAL_PROMPTS_LOW = [
 ];
 
 
-function getJournalPrompt() {
-  const offset = state.journalPromptOffset || 0;
-  const mood = state.todayData?.mood;
-  if (mood !== undefined && mood >= 0 && mood <= 1) return JOURNAL_PROMPTS_LOW[(getDayIndex() + offset) % JOURNAL_PROMPTS_LOW.length];
-  return JOURNAL_PROMPTS[(getDayIndex() + offset) % JOURNAL_PROMPTS.length];
-}
-
-// ── Journal entry helpers (array-based storage) ─────────────
-function getJournalEntries(date) {
-  const raw = state.wellnessData?.journal?.[date];
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
-  // Legacy single-object format
-  return [{ text: raw.text, ai: raw.ai, savedAt: null, source: 'journal' }];
-}
-
-function getLatestJournalText(date) {
-  return getJournalEntries(date).map(e => e.text).filter(Boolean).join('\n\n');
-}
-
-function migrateJournalFormat() {
-  const journal = state.wellnessData?.journal;
-  if (!journal) return;
-  let migrated = false;
-  Object.keys(journal).forEach(date => {
-    const entry = journal[date];
-    if (entry && !Array.isArray(entry) && typeof entry === 'object' && entry.text !== undefined) {
-      journal[date] = [{ text: entry.text, ai: entry.ai || null, savedAt: null, prompt: null, source: 'journal' }];
-      migrated = true;
-    }
-  });
-  if (migrated) saveState();
-}
 
 export const REFLECTION_QUESTIONS = [
   "What went well this week, even in small ways?",
@@ -161,6 +127,9 @@ export const HABIT_AFFIRMATIONS = {
   win: ["That counts.", "Look at that.", "A win is a win."],
 };
 
+// ============================================================
+//  DATA STORE (localStorage + IndexedDB mirror)
+// ============================================================
 
 export const LEVELS = [
   { name: 'Seedling',  min: 0,    emoji: '🌱' },
@@ -170,6 +139,7 @@ export const LEVELS = [
   { name: 'Radiant',   min: 1800, emoji: '✨' },
   { name: 'Glowing',   min: 3200, emoji: '🌟' },
 ];
+
 
 export const DAILY_HABITS = [
   { id: 'brush_teeth',  icon: '🦷', label: 'Brush teeth',       xp: 15, defaultTime: 'any' },
@@ -728,7 +698,6 @@ function celebrate(type, sourceEl) {
 // XP balanced around mental well-being:
 // - Medication & inner care (journal, reflection) are highest — these are core therapeutic actions
 // - Basic self-care (hygiene, nourishment, hydration) are equal — every one matters on hard days
-// - Physical activity is valued but not disproportionately above self-care
 
 export const XP_VALUES = {
   m_teeth: 15, e_teeth: 15, w_shower: 20, w_exercise: 20,
@@ -744,3 +713,4 @@ export const XP_VALUES = {
   // Medication adherence — one of the most impactful mental health actions
   medication_am: 20, medication_pm: 20, medication_any: 20,
 };
+

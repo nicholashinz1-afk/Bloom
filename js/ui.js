@@ -1,7 +1,5 @@
-// Bloom UI — ripple, confetti, stagger animations
 import { state } from './state.js';
 import { THEMES } from './theme.js';
-
 function addRipple(el, e) {
   if (!el) return;
   const rect = el.getBoundingClientRect();
@@ -56,5 +54,8 @@ function staggerCards(panel) {
     c.classList.add('card-enter');
   });
 }
+
+// ── Level-up check + celebration ────────────────────────────
+let lastLevel = null;
 
 export { addRipple, launchConfetti, staggerCards };

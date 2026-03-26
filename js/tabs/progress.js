@@ -1,19 +1,15 @@
-// Bloom progress tab — stats, XP, levels, flower, history, insights
 import { state, today, getWeekDates, formatDateLabel, getDayIndex, dayOfWeek, saveState, getJournalEntries } from '../state.js';
 import { save, load } from '../storage.js';
 import { haptic, escapeHtml } from '../utils.js';
-import { LEVELS } from '../constants.js';
+import { LEVELS, DAILY_HABITS, MEDICATION_HABIT, SELF_CARE_TASKS } from '../constants.js';
 import { getLevel, getNextLevel, buildFlowerSVG } from '../xp.js';
 import { buildStreakTreeSVG } from '../streaks.js';
 import { getMoodPattern, getMoodHabitCorrelation, shareWeekInReview } from '../features/mood.js';
 import { callClaude, renderAIResponseHTML, showThinking } from '../ai.js';
 import { bloomIcon } from '../icons.js';
-import { infoIcon } from '../sheets.js';
+import { infoIcon, openSheet } from '../sheets.js';
 import { getSeasonalInsights } from '../seasonal.js';
-
-// Late-bound cross-module references (avoid circular imports)
-function openSheet(...args) { return window.openSheet?.(...args); }
-
+import { trackFeature } from '../telemetry.js';
 function renderProgressTab() {
   const scroll = document.getElementById('progress-scroll');
   if (!scroll) return;
@@ -121,6 +117,7 @@ function renderProgressTab() {
     { key: 'w_exercise', icon: '💪', label: 'Exercise',  daily: false },
     { key: 'w_shower',   icon: '🚿', label: 'Shower',    daily: false },
     { key: 'w_outside',  icon: '🌿', label: 'Go outside', daily: false },
+    { key: 'w_therapy',  icon: '🛋️', label: 'Go to therapy', daily: false },
   ].filter(h => state.prefs?.habits?.[h.key] !== false).forEach(h => habitRows.push(h));
 
   habitRows.forEach(h => {
@@ -161,72 +158,132 @@ function renderProgressTab() {
 
   html += `</div>`;
 
-  // Mood chart
-  html += `<div class="card">
-    <div class="card-title">Mood this week</div>
-    <div class="mood-chart" id="mood-chart-bars">`;
-
+  // Mood gradient chart
   const moodColors = ['#b07878','#c9954a','#9a9080','#7a9e7e','#a8c5ab'];
-  weekDates.forEach((d,i) => {
+  const moodEmojisWeek = ['😔','😕','😐','🙂','😊'];
+  const noMoodColor = 'rgba(255,255,255,0.04)';
+
+  const weekMoodStops = weekDates.map((d, i) => {
     const hist = state.historyData[d] || {};
     const mood = hist.mood;
-    const h = (mood !== undefined && mood >= 0) ? ((mood+1)/5*100) : (mood === -1 ? 12 : 8);
-    const color = (mood !== undefined && mood >= 0) ? moodColors[mood] : (mood === -1 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)');
-    html += `<div class="mood-chart-bar" style="height:${h}%;background:${color};border-radius:4px 4px 0 0"></div>`;
-  });
+    const pct = (i / 6 * 100).toFixed(1);
+    if (mood === undefined || mood < 0) return `${noMoodColor} ${pct}%`;
+    return `${moodColors[mood]} ${pct}%`;
+  }).join(', ');
 
-  html += `</div>
-    <div class="mood-chart-labels">`;
-  weekDates.forEach((_,i) => { html += `<div class="mood-chart-label">${dayLabels[i]}</div>`; });
-  html += `</div></div>`;
-
-  // Sleep-mood overlay on the mood chart
-  html += `<div style="margin-top:-8px;padding:0 4px">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <div style="width:10px;height:3px;background:var(--sky);border-radius:2px"></div>
-      <span style="font-size:10px;color:var(--text-muted)">Sleep quality</span>
-    </div>
-    <div style="display:flex;gap:4px;justify-content:space-between">`;
-  weekDates.forEach(d => {
+  html += `<div class="card">
+    <div class="card-title">Mood this week</div>
+    <div style="height:24px;border-radius:12px;background:linear-gradient(to right, ${weekMoodStops});box-shadow:0 1px 4px rgba(0,0,0,0.15);margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px;padding:0 4px">`;
+  weekDates.forEach((d, i) => {
     const hist = state.historyData[d] || {};
-    const sleep = hist.sleep;
-    const h2 = sleep !== undefined ? ((sleep+1)/5*100) : 0;
-    html += `<div style="flex:1;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden">
-      <div style="height:100%;width:${h2}%;background:var(--sky);border-radius:2px;transition:width 0.3s"></div>
+    const mood = hist.mood;
+    const emoji = (mood !== undefined && mood >= 0) ? moodEmojisWeek[mood] : (mood === -1 ? '🤷' : '');
+    html += `<div style="flex:1;text-align:center">
+      <div style="font-size:14px;line-height:1;margin-bottom:4px;min-height:14px">${emoji}</div>
+      <div style="font-size:9px;color:var(--text-muted)">${dayLabels[i]}</div>
     </div>`;
   });
   html += `</div></div>`;
 
-  // 30-day activity heatmap
+  // Sleep quality chart — matches mood chart visual pattern
+  const sleepEmojis = ['😴','😪','😑','😌','🌟'];
+  const sleepLabels2 = ['Rough','Poor','Okay','Good','Great'];
+
   html += `<div class="card">
-    <div class="card-title">Last 30 days</div>
-    <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px">`;
+    <div class="card-title">Sleep this week</div>
+    <div style="display:flex;align-items:flex-end;gap:8px;height:80px;padding:0 4px">`;
+
+  weekDates.forEach((d, i) => {
+    const hist = state.historyData[d] || {};
+    const sleep = hist.sleep;
+    const hasSleep = sleep !== undefined;
+    const barHeight = hasSleep ? ((sleep + 1) / 5 * 100) : 8;
+    const barColor = hasSleep ? 'var(--sky)' : 'rgba(255,255,255,0.05)';
+    const emoji = hasSleep ? sleepEmojis[sleep] : '';
+    const label = hasSleep ? sleepLabels2[sleep] : '';
+
+    html += `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end">
+      ${hasSleep ? `<div style="font-size:11px;line-height:1" title="${label}">${emoji}</div>` : ''}
+      <div style="width:100%;height:${barHeight}%;background:${barColor};border-radius:4px 4px 0 0;transition:height 0.5s cubic-bezier(0.34,1.56,0.64,1);min-height:4px"></div>
+    </div>`;
+  });
+
+  html += `</div>
+    <div style="display:flex;gap:8px;padding:4px 4px 0">`;
+  weekDates.forEach((_, i) => {
+    html += `<div style="flex:1;text-align:center;font-size:9px;color:var(--text-muted)">${dayLabels[i]}</div>`;
+  });
+  html += `</div></div>`;
+
+  // 30-day gradient flow overview
+  const thirtyDays = [];
   for (let i = 29; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const hist = state.historyData[dStr] || {};
-    let pctDone = 0;
+    let habitPct = 0;
     if (hist.habits) {
       const vals = Object.values(hist.habits).filter(v => typeof v === 'boolean');
       const doneCount = vals.filter(Boolean).length;
-      pctDone = vals.length > 0 ? doneCount / vals.length : 0;
+      habitPct = vals.length > 0 ? doneCount / vals.length : 0;
     }
-    const opacity = pctDone === 0 ? 0.06 : pctDone < 0.5 ? 0.25 : pctDone < 0.75 ? 0.5 : pctDone < 1 ? 0.75 : 1;
-    const isToday2 = i === 0;
-    html += `<div title="${dStr}" style="aspect-ratio:1;border-radius:3px;background:rgba(var(--sage-rgb),${opacity});${isToday2 ? 'border:1px solid var(--sage);' : ''}"></div>`;
+    thirtyDays.push({ dStr, mood: hist.mood, sleep: hist.sleep, habitPct });
   }
-  html += `</div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
-      <span style="font-size:10px;color:var(--text-muted)">30 days ago</span>
-      <div style="display:flex;align-items:center;gap:3px">
-        <span style="font-size:10px;color:var(--text-muted)">Less</span>
-        ${[0.06, 0.25, 0.5, 0.75, 1].map(o => `<div style="width:10px;height:10px;border-radius:2px;background:rgba(var(--sage-rgb),${o})"></div>`).join('')}
-        <span style="font-size:10px;color:var(--text-muted)">More</span>
-      </div>
-      <span style="font-size:10px;color:var(--text-muted)">Today</span>
-    </div>
+
+  // Build gradient strings for each metric
+  const noDataColor = 'rgba(255,255,255,0.04)';
+  const moodStops = thirtyDays.map((day, i) => {
+    const pct = (i / 29 * 100).toFixed(1);
+    if (day.mood === undefined || day.mood < 0) return `${noDataColor} ${pct}%`;
+    return `${moodColors[day.mood]} ${pct}%`;
+  }).join(', ');
+
+  const sleepStops = thirtyDays.map((day, i) => {
+    const pct = (i / 29 * 100).toFixed(1);
+    if (day.sleep === undefined) return `${noDataColor} ${pct}%`;
+    const opacity = 0.25 + (day.sleep / 4) * 0.75;
+    return `rgba(106,154,176,${opacity.toFixed(2)}) ${pct}%`;
+  }).join(', ');
+
+  const habitStops = thirtyDays.map((day, i) => {
+    const pct = (i / 29 * 100).toFixed(1);
+    if (day.habitPct === 0) return `${noDataColor} ${pct}%`;
+    const opacity = 0.25 + day.habitPct * 0.75;
+    return `rgba(122,158,126,${opacity.toFixed(2)}) ${pct}%`;
+  }).join(', ');
+
+  const flowRows = [
+    { label: 'Mood', gradient: moodStops, swatch: '#a8c5ab' },
+    { label: 'Sleep', gradient: sleepStops, swatch: '#6a9ab0' },
+    { label: 'Habits', gradient: habitStops, swatch: '#7a9e7e' },
+  ];
+
+  html += `<div class="card">
+    <div class="card-title">Your 30-day flow</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:14px">How your mood, sleep, and habits have flowed over the past month</div>`;
+
+  flowRows.forEach(row => {
+    html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="width:42px;font-size:11px;color:var(--text-secondary);flex-shrink:0">${row.label}</div>
+      <div style="flex:1;height:14px;border-radius:7px;background:linear-gradient(to right, ${row.gradient});box-shadow:0 1px 4px rgba(0,0,0,0.15)"></div>
+    </div>`;
+  });
+
+  html += `<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;padding-left:52px">
+    <span style="font-size:9px;color:var(--text-muted)">30 days ago</span>
+    <span style="font-size:9px;color:var(--text-muted)">Today</span>
   </div>`;
+
+  html += `<div style="display:flex;gap:14px;justify-content:center;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.04)">`;
+  flowRows.forEach(row => {
+    html += `<div style="display:flex;align-items:center;gap:5px">
+      <div style="width:8px;height:8px;border-radius:4px;background:${row.swatch}"></div>
+      <span style="font-size:10px;color:var(--text-muted)">${row.label}</span>
+    </div>`;
+  });
+  html += `</div></div>`;
 
   // Mood-habit correlation insights + seasonal awareness
   const insightData = getMoodHabitCorrelation();
@@ -287,6 +344,7 @@ async function generateRollingInsight() {
     (wd.w_exercise || 0) > 0 ? 'exercised' : null,
     (wd.w_shower || 0) > 0 ? 'showered' : null,
     (wd.w_outside || 0) > 0 ? 'gone outside' : null,
+    (wd.w_therapy || 0) > 0 ? 'went to therapy' : null,
   ].filter(Boolean);
 
   const ai = await callClaude(
@@ -382,8 +440,13 @@ function openHistoryDetail(dateStr) {
   // If no historyData entry, build a minimal one from wellnessData journal
   if (!entry) {
     const journalEntries = getJournalEntries(dateStr);
-    if (journalEntries.length === 0) return;
-    entry = { journalEntries };
+    if (journalEntries.length === 0) {
+      // Create empty entry so user can retroactively fill in habits/self-care
+      state.historyData[dateStr] = { habits: {} };
+      entry = state.historyData[dateStr];
+    } else {
+      entry = { journalEntries };
+    }
   } else if (!entry.journalEntries?.length && !entry.journal) {
     // historyData exists but has no journal — pull from wellnessData
     const journalEntries = getJournalEntries(dateStr);
@@ -418,15 +481,64 @@ function openHistoryDetail(dateStr) {
     brush_teeth_any:'Brush teeth', brush_hair_any:'Brush hair', wash_face_any:'Wash face',
     get_dressed_any:'Get dressed', floss_any:'Floss', skincare_any:'Skincare',
   };
-  const habitKeys = Object.keys(habits).filter(k => k in habitNames);
+
+  // Build union of stored habit keys + user's currently configured habits
+  const userHabitKeys = new Set();
+  const dhPrefs = state.prefs?.dailyHabits || {};
+  const htPrefs = state.prefs?.habitTimes || {};
+  const allConfiguredHabits = [...DAILY_HABITS].filter(h => dhPrefs[h.id]);
+  if (dhPrefs.medication) allConfiguredHabits.push(MEDICATION_HABIT);
+  allConfiguredHabits.forEach(h => {
+    const time = htPrefs[h.id] || h.defaultTime || 'any';
+    if (time === 'both') {
+      userHabitKeys.add(h.id + '_am');
+      userHabitKeys.add(h.id + '_pm');
+    } else if (time === 'am') {
+      userHabitKeys.add(h.id + '_am');
+    } else if (time === 'pm') {
+      userHabitKeys.add(h.id + '_pm');
+    } else {
+      userHabitKeys.add(h.id + '_any');
+    }
+  });
+  // Also include any keys already stored in this entry's history
+  Object.keys(habits).forEach(k => { if (k in habitNames) userHabitKeys.add(k); });
+
+  const habitKeys = [...userHabitKeys].filter(k => k in habitNames);
 
   if (habitKeys.length > 0) {
-    html += '<div style="margin:12px 0">';
+    html += `<div style="margin:12px 0">
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Daily habits</div>
+        <div style="font-size:11px;color:var(--text-muted);font-style:italic">Tap to update</div>
+      </div>`;
     habitKeys.forEach(h => {
-      const done = habits[h];
-      html += `<div style="display:flex;align-items:center;gap:8px;padding:5px 0">
-        <div style="width:20px;height:20px;border-radius:50%;background:${done?'var(--sage)':'var(--rose-dim)'};display:flex;align-items:center;justify-content:center;font-size:10px">${done?'✓':'×'}</div>
-        <div style="font-size:14px;color:${done?'var(--text-primary)':'var(--text-muted)'}">${habitNames[h]}</div>
+      const done = !!habits[h];
+      html += `<div onclick="toggleHistoryHabit('${dateStr}','${h}',this)" style="display:flex;align-items:center;gap:8px;padding:7px 0;cursor:pointer;-webkit-tap-highlight-color:rgba(255,255,255,0.05)">
+        <div style="width:20px;height:20px;border-radius:50%;background:${done?'var(--sage)':'rgba(255,255,255,0.08)'};border:${done?'none':'1.5px solid rgba(255,255,255,0.15)'};display:flex;align-items:center;justify-content:center;font-size:10px;color:${done?'var(--bg)':'var(--text-muted)'};transition:all 0.2s">${done?'✓':''}</div>
+        <div style="font-size:14px;color:${done?'var(--text-primary)':'var(--text-muted)'};transition:color 0.2s">${habitNames[h]}</div>
+      </div>`;
+    });
+    html += '</div><div class="divider"></div>';
+  }
+
+  // Self-care section: union of stored keys + user's currently enabled tasks
+  const storedSelfCare = habits.selfCare || {};
+  const enabledTasks = state.prefs?.selfCareTasks || [];
+  const selfCareKeySet = new Set([...Object.keys(storedSelfCare), ...enabledTasks]);
+  const selfCareTaskMap = {};
+  SELF_CARE_TASKS.forEach(t => { selfCareTaskMap[t.id] = t; });
+  const selfCareKeys = [...selfCareKeySet].filter(k => k in selfCareTaskMap);
+
+  if (selfCareKeys.length > 0) {
+    html += `<div style="margin:12px 0">
+      <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Self-care</div>`;
+    selfCareKeys.forEach(id => {
+      const task = selfCareTaskMap[id];
+      const done = !!storedSelfCare[id];
+      html += `<div onclick="toggleHistorySelfCare('${dateStr}','${id}',this)" style="display:flex;align-items:center;gap:8px;padding:7px 0;cursor:pointer;-webkit-tap-highlight-color:rgba(255,255,255,0.05)">
+        <div style="width:20px;height:20px;border-radius:50%;background:${done?'var(--sage)':'rgba(255,255,255,0.08)'};border:${done?'none':'1.5px solid rgba(255,255,255,0.15)'};display:flex;align-items:center;justify-content:center;font-size:10px;color:${done?'var(--bg)':'var(--text-muted)'};transition:all 0.2s">${done?'✓':''}</div>
+        <div style="font-size:14px;color:${done?'var(--text-primary)':'var(--text-muted)'};transition:color 0.2s">${task.icon} ${task.label}</div>
       </div>`;
     });
     html += '</div><div class="divider"></div>';
@@ -458,13 +570,65 @@ function openHistoryDetail(dateStr) {
 
   document.getElementById('history-sheet-content').innerHTML = html;
   openSheet('history-sheet');
+  state._historySheetDirty = false;
 }
 
+// Retroactive habit toggle for past days
+function toggleHistoryHabit(dateStr, key, el) {
+  if (!state.historyData[dateStr]) state.historyData[dateStr] = { habits: {} };
+  if (!state.historyData[dateStr].habits) state.historyData[dateStr].habits = {};
+  const habits = state.historyData[dateStr].habits;
+  const wasDone = !!habits[key];
+  habits[key] = !wasDone;
+
+  const xpVal = XP_VALUES[key] || 15;
+  if (!wasDone) {
+    state.xpData.total = (state.xpData.total || 0) + xpVal;
+    if (el) showXPFloat(xpVal, el);
+  } else {
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
+    if (el) showXPFloat(-xpVal, el);
+  }
+
+  haptic('light');
+  state._historySheetDirty = true;
+  saveState();
+  updateProgressTab();
+  openHistoryDetail(dateStr);
+}
+
+// Retroactive self-care toggle for past days
+function toggleHistorySelfCare(dateStr, taskId, el) {
+  if (!state.historyData[dateStr]) state.historyData[dateStr] = { habits: {} };
+  if (!state.historyData[dateStr].habits) state.historyData[dateStr].habits = {};
+  if (!state.historyData[dateStr].habits.selfCare) state.historyData[dateStr].habits.selfCare = {};
+  const sc = state.historyData[dateStr].habits.selfCare;
+  const wasDone = !!sc[taskId];
+  sc[taskId] = !wasDone;
+
+  const xpVal = 10;
+  if (!wasDone) {
+    state.xpData.total = (state.xpData.total || 0) + xpVal;
+    if (el) showXPFloat(xpVal, el);
+  } else {
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
+    if (el) showXPFloat(-xpVal, el);
+  }
+
+  haptic('light');
+  state._historySheetDirty = true;
+  saveState();
+  updateProgressTab();
+  openHistoryDetail(dateStr);
+}
 
 export { renderProgressTab, renderHistoryTab, openHistoryDetail,
-  generateRollingInsight, checkAutoGenerateInsight, updateProgressTab };
-
+  generateRollingInsight, checkAutoGenerateInsight, updateProgressTab,
+  toggleHistoryHabit, toggleHistorySelfCare };
 window.renderProgressTab = renderProgressTab;
 window.renderHistoryTab = renderHistoryTab;
 window.openHistoryDetail = openHistoryDetail;
 window.generateRollingInsight = generateRollingInsight;
+window.updateProgressTab = updateProgressTab;
+window.toggleHistoryHabit = toggleHistoryHabit;
+window.toggleHistorySelfCare = toggleHistorySelfCare;

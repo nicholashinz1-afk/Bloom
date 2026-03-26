@@ -1,13 +1,15 @@
-// Bloom sheets — bottom sheet management, science tooltips, crisis sheet
 import { state } from './state.js';
 import { save } from './storage.js';
 import { trapFocusInSheet, releaseFocusTrap } from './router.js';
 import { sendTelemetry, trackFeature } from './telemetry.js';
-
 function openSheet(id) {
   document.getElementById('sheet-backdrop').classList.add('open');
   const sheet = document.getElementById(id);
   sheet.classList.add('open');
+  // Push history state so Android back gesture closes the sheet instead of leaving the app
+  if (!history.state?.sheetOpen) {
+    history.pushState({ sheetOpen: true }, '');
+  }
   // Move focus into the sheet for keyboard/screen reader users
   sheet.setAttribute('tabindex', '-1');
   setTimeout(() => {
@@ -19,12 +21,73 @@ function openSheet(id) {
 }
 
 function closeAllSheets() {
+  const wasOpen = document.querySelector('.bottom-sheet.open');
   document.querySelectorAll('.bottom-sheet.open').forEach(s => releaseFocusTrap(s));
   document.getElementById('sheet-backdrop').classList.remove('open');
   document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('open'));
+  // Pop the history state we pushed (unless back button already did)
+  if (wasOpen && history.state?.sheetOpen) {
+    history.back();
+  }
+  // Re-render wellness tab if history was edited retroactively
+  if (state._historySheetDirty) {
+    state._historySheetDirty = false;
+    renderWeeklyTab();
+  }
 }
 
-function openCrisisSheet() { openSheet('crisis-sheet'); trackFeature('crisis'); }
+// Android back button / back gesture closes sheets instead of leaving app
+window.addEventListener('popstate', () => {
+  const openSheet = document.querySelector('.bottom-sheet.open');
+  if (openSheet) {
+    document.querySelectorAll('.bottom-sheet.open').forEach(s => releaseFocusTrap(s));
+    document.getElementById('sheet-backdrop').classList.remove('open');
+    document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('open'));
+    if (state._historySheetDirty) {
+      state._historySheetDirty = false;
+      renderWeeklyTab();
+    }
+  }
+});
+
+// Swipe-down-to-close for all bottom sheets
+(function initSheetSwipeDismiss() {
+  let startY = 0, startX = 0, currentSheet = null, sheetStartScroll = 0;
+
+  document.addEventListener('touchstart', (e) => {
+    const sheet = e.target.closest('.bottom-sheet.open');
+    if (!sheet) return;
+    startY = e.touches[0].clientY;
+    startX = e.touches[0].clientX;
+    currentSheet = sheet;
+    sheetStartScroll = sheet.scrollTop;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!currentSheet) return;
+    const dy = e.touches[0].clientY - startY;
+    const dx = Math.abs(e.touches[0].clientX - startX);
+    // Only track vertical swipe down when sheet is scrolled to top
+    if (dy > 0 && sheetStartScroll <= 0 && dy > dx) {
+      const clamped = Math.min(dy, 300);
+      currentSheet.style.transform = `translateY(${clamped}px)`;
+      currentSheet.style.transition = 'none';
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    if (!currentSheet) return;
+    const dy = e.changedTouches[0].clientY - startY;
+    currentSheet.style.transition = '';
+    currentSheet.style.transform = '';
+    if (dy > 80 && sheetStartScroll <= 0) {
+      closeAllSheets();
+    }
+    currentSheet = null;
+  }, { passive: true });
+})();
+
+function openCrisisSheet() { openSheet('crisis-sheet'); trackFeature('crisis'); trackEvent('crisis_opened'); }
 
 // ============================================================
 //  SCIENCE / INFO TOOLTIPS
@@ -252,9 +315,10 @@ function infoIcon(sectionId) {
   return `<span onclick="showInfoTip('${sectionId}',event)" style="cursor:pointer;font-size:12px;color:var(--text-muted);opacity:0.5;margin-left:6px;vertical-align:middle" title="Why this matters">ⓘ</span>`;
 }
 
-export { openSheet, closeAllSheets, openCrisisSheet, SCIENCE_SECTIONS,
-  showInfoTip, openScienceSheet, infoIcon };
-
+// ============================================================
+//  WHAT'S NEW
+// ============================================================
+export { openSheet, closeAllSheets, openCrisisSheet, SCIENCE_SECTIONS, showInfoTip, openScienceSheet, infoIcon };
 window.openSheet = openSheet;
 window.closeAllSheets = closeAllSheets;
 window.openCrisisSheet = openCrisisSheet;

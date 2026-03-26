@@ -2,7 +2,6 @@ import { state, getWeekDates, formatDateLabel, today } from '../state.js';
 import { DAILY_HABITS, MEDICATION_HABIT } from '../constants.js';
 import { bloomIcon } from '../icons.js';
 import { CHECK_SVG } from '../utils.js';
-
 function renderWeeklyTab() {
   const scroll = document.getElementById('weekly-scroll');
   if (!scroll) return;
@@ -101,6 +100,7 @@ function renderWeeklyTab() {
 
   if (dates.length > 0) {
     html += `<div class="section-label">📅 Recent history</div>`;
+    html += `<div style="font-size:12px;color:var(--text-muted);margin-top:-4px;margin-bottom:10px;line-height:1.5">Tap any day to view or update things you forgot to log.</div>`;
     let currentMonth = '';
     dates.forEach(d => {
       const dt = new Date(d + 'T00:00:00');
@@ -111,17 +111,22 @@ function renderWeeklyTab() {
       }
       const day = history[d];
       const moodE = day.mood !== undefined ? (day.mood === -1 ? '🤷' : moodEmojis[day.mood]) : '·';
-      const habitsArr = day.habits ? Object.entries(day.habits).filter(([_,v]) => v) : [];
-      const habitsStr = habitsArr.length > 0 ? `${habitsArr.length} habits` : '';
+      const _histHabitNames = { m_teeth:1, e_teeth:1, w_shower:1, w_exercise:1, w_outside:1, w_therapy:1, brush_teeth_am:1, brush_teeth_pm:1, brush_hair_am:1, brush_hair_pm:1, wash_face_am:1, wash_face_pm:1, get_dressed_am:1, get_dressed_pm:1, floss_am:1, floss_pm:1, skincare_am:1, skincare_pm:1, medication_am:1, medication_pm:1, medication_any:1, brush_teeth_any:1, brush_hair_any:1, wash_face_any:1, get_dressed_any:1, floss_any:1, skincare_any:1 };
+      const habitCount = day.habits ? Object.entries(day.habits).filter(([k,v]) => v === true && k in _histHabitNames).length : 0;
+      const scData = day.habits?.selfCare || {};
+      const scCount = Object.values(scData).filter(Boolean).length;
+      const habitsStr = habitCount > 0 ? `${habitCount} habit${habitCount !== 1 ? 's' : ''}` : '';
+      const scStr = scCount > 0 ? `${scCount} self-care` : '';
       const journal = day.journal ? '📝' : '';
 
-      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px">
+      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px;cursor:pointer" onclick="openHistoryDetail('${d}')">
         <div style="display:flex;align-items:center;gap:12px">
           <div style="font-size:22px;width:30px;text-align:center">${moodE}</div>
           <div style="flex:1">
             <div style="font-size:13px;color:var(--cream)">${dt.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'})}</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${[habitsStr, journal].filter(Boolean).join(' · ') || 'No data'}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${[habitsStr, scStr, journal].filter(Boolean).join(' · ') || 'No data'}</div>
           </div>
+          <div style="color:var(--text-muted);font-size:16px">›</div>
         </div>
       </div>`;
     });
@@ -130,6 +135,8 @@ function renderWeeklyTab() {
   scroll.innerHTML = html;
 }
 
-window.renderWeeklyTab = renderWeeklyTab;
-
+// ============================================================
+//  WELLNESS TAB
+// ============================================================
 export { renderWeeklyTab };
+window.renderWeeklyTab = renderWeeklyTab;

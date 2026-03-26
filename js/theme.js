@@ -1,10 +1,8 @@
-// ── Seasonal theme & color themes ────────────────────────────
 import { state } from './state.js';
 import { save } from './storage.js';
 import { bloomIcon } from './icons.js';
-
-// ── Seasonal theme ───────────────────────────────────────────
-export function getSeasonalAccent() {
+function renderSettingsTab(...args) { return window.renderSettingsTab?.(...args); }
+function getSeasonalAccent() {
   const month = new Date().getMonth(); // 0-11
   if (month >= 2 && month <= 4) return { name: 'spring', color: '#a8c5ab', hint: 'rgba(168,197,171,0.08)' };
   if (month >= 5 && month <= 7) return { name: 'summer', color: '#e0b87a', hint: 'rgba(224,184,122,0.08)' };
@@ -12,7 +10,7 @@ export function getSeasonalAccent() {
   return { name: 'winter', color: '#9ec4d8', hint: 'rgba(158,196,216,0.08)' };
 }
 
-export function applySeasonalTheme() {
+function applySeasonalTheme() {
   const season = getSeasonalAccent();
   document.documentElement.style.setProperty('--seasonal', season.color);
   document.documentElement.style.setProperty('--seasonal-hint', season.hint);
@@ -21,7 +19,7 @@ export function applySeasonalTheme() {
 // ============================================================
 //  COLOR THEMES
 // ============================================================
-export const THEMES = {
+const THEMES = {
   forest: {
     name: 'Forest', emoji: '🌿', description: 'Deep green, grounded',
     bg: '#0d1610', bgMid: '#111a13', bgCard: '#162019', bgElevated: '#1c2a1f',
@@ -79,12 +77,12 @@ export const THEMES = {
   },
 };
 
-export function hexToRgb(hex) {
+function hexToRgb(hex) {
   const h = hex.replace('#', '');
   return [parseInt(h.substring(0,2),16), parseInt(h.substring(2,4),16), parseInt(h.substring(4,6),16)].join(',');
 }
 
-export function applyTheme(themeKey) {
+function applyTheme(themeKey) {
   const t = THEMES[themeKey] || THEMES.forest;
   const r = document.documentElement.style;
   r.setProperty('--bg',             t.bg);
@@ -109,11 +107,11 @@ export function applyTheme(themeKey) {
   document.body.classList.add('theme-' + themeKey);
 }
 
-export function initTheme() {
+function initTheme() {
   applyTheme(state.prefs?.theme || 'forest');
 }
 
-export function setTheme(key) {
+function setTheme(key) {
   if (!state.prefs) state.prefs = {};
   state.prefs.theme = key;
   save('bloom_prefs', state.prefs);
@@ -131,10 +129,9 @@ export function setTheme(key) {
   }, 50);
 }
 
-// Late-bound reference to avoid circular dependency
-function renderSettingsTab() {
-  if (window.renderSettingsTab) window.renderSettingsTab();
-}
+// ============================================================
+//  DAILY AFFIRMATION
+// ============================================================
 
-// Window bindings for onclick handlers
+export { getSeasonalAccent, applySeasonalTheme, THEMES, hexToRgb, applyTheme, initTheme, setTheme };
 window.setTheme = setTheme;

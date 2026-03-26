@@ -1,13 +1,9 @@
-// Bloom XP — levels, flower SVG, level-up celebrations, animations
 import { LEVELS } from './constants.js';
 import { THEMES } from './theme.js';
 import { state, saveState } from './state.js';
 import { haptic, playSound } from './utils.js';
 import { launchConfetti } from './ui.js';
-
-// Late-bound cross-module references
 function updateProgressTab(...args) { if (typeof window.updateProgressTab === 'function') window.updateProgressTab(...args); }
-
 function getLevel(xp) {
   let lv = LEVELS[0];
   for (const l of LEVELS) { if (xp >= l.min) lv = l; else break; }
@@ -25,7 +21,8 @@ function showXPFloat(amount, el) {
   const rect = el.getBoundingClientRect();
   const div = document.createElement('div');
   div.className = 'xp-float';
-  div.textContent = `+${amount} ☀️`;
+  div.textContent = amount >= 0 ? `+${amount} ☀️` : `${amount} ☀️`;
+  if (amount < 0) div.style.color = 'var(--rose-dim)';
   div.style.left = (rect.left + rect.width/2 - 30) + 'px';
   div.style.top = (rect.top - 10) + 'px';
   document.body.appendChild(div);
@@ -74,8 +71,6 @@ function burstHearts(el) {
 
 // ── Haptic feedback ──────────────────────────────────────────
 
-// ── Level-up check + celebration ────────────────────────────
-let lastLevel = null;
 function checkLevelUp(oldXP, newXP) {
   const oldLv = getLevel(oldXP);
   const newLv = getLevel(newXP);
@@ -274,6 +269,10 @@ function bounceMoodBtn(val) {
   });
 }
 
-export { getLevel, getNextLevel, showXPFloat, burstParticles, burstHearts,
-  checkLevelUp, getLevelIndex, buildFlowerSVG, showLevelUp, addXP,
-  animateWaterBottle, bounceMoodBtn };
+// ============================================================
+//  STREAK SYSTEM
+// ============================================================
+
+// Recover streak data from history when xpData looks reset or missing
+
+export { getLevel, getNextLevel, showXPFloat, burstParticles, burstHearts, checkLevelUp, getLevelIndex, buildFlowerSVG, showLevelUp, addXP, animateWaterBottle, bounceMoodBtn };

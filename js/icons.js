@@ -1,4 +1,3 @@
-// Bloom icons — SVG generators
 function bloomIcon(size = 24) {
   // Four teardrop petals in 2x2 grid — sage, rose, sky, amber
   // Replicates the clean original icon style
@@ -24,5 +23,6 @@ function buddyIcon(size = 24) {
     <circle cx="64" cy="50" r="16" fill="#e0b87a"/>
   </svg>`;
 }
+
 
 export { bloomIcon, buddyIcon };

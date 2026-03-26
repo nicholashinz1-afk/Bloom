@@ -1,4 +1,3 @@
-// Bloom wellness tab — journal, breathing, grounding, body scan, reframing, wins, affirmations
 import { state, today, getDayIndex, dayOfWeek, getWeekDates, weekStart, formatDateLabel, getJournalPrompt, getJournalEntries, getLatestJournalText, saveState } from '../state.js';
 import { save, load } from '../storage.js';
 import { haptic, escapeHtml, playSound } from '../utils.js';
@@ -9,8 +8,6 @@ import { sendTelemetry, trackFeature, timedFetch } from '../telemetry.js';
 import { bloomIcon } from '../icons.js';
 import { addXP } from '../xp.js';
 import { infoIcon, openSheet, closeAllSheets } from '../sheets.js';
-
-// Late-bound cross-module references (avoid circular imports)
 function archiveToday(...args) { return window.archiveToday?.(...args); }
 function checkFirstTaskStreak(...args) { return window.checkFirstTaskStreak?.(...args); }
 function checkMilestones(...args) { return window.checkMilestones?.(...args); }
@@ -923,7 +920,6 @@ Give a gentle cognitive reframe in 2-3 sentences. Validate their feeling first, 
   });
 }
 
-
 function openReframeHistory() {
   const history = state.wellnessData.reframeHistory || [];
   if (history.length === 0) return;
@@ -944,6 +940,10 @@ function openReframeHistory() {
   document.getElementById('reframe-history-content').innerHTML = html;
   openSheet('reframe-history-sheet');
 }
+
+// ============================================================
+//  PROGRESS TAB
+// ============================================================
 
 function openJournalHistory() {
   const todayStr = today();
@@ -997,16 +997,15 @@ function openJournalHistory() {
       if (preview.length > 60) preview = preview.substring(0, 60) + '...';
 
       const dateLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-      const hasHistory = !!state.historyData[d];
 
-      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px;cursor:pointer" onclick="${hasHistory ? `closeAllSheets();setTimeout(()=>openHistoryDetail('${d}'),300)` : ''}">
+      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px;cursor:pointer" onclick="closeAllSheets();setTimeout(()=>openHistoryDetail('${d}'),300)">
         <div style="display:flex;align-items:center;gap:12px">
           <div style="font-size:22px;width:30px;text-align:center">📝</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;color:var(--cream)">${dateLabel}</div>
             <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${count} entry${count !== 1 ? 'ies' : ''}${preview ? ' · ' : ''}<span style="font-style:italic">${preview}</span></div>
           </div>
-          ${hasHistory ? '<div style="color:var(--text-muted);font-size:16px">›</div>' : ''}
+          <div style="color:var(--text-muted);font-size:16px">›</div>
         </div>
       </div>`;
     });
@@ -1016,14 +1015,14 @@ function openJournalHistory() {
   openSheet('journal-history-sheet');
 }
 
+
 export { renderWellnessTab, saveJournal, editJournal, editJournalEntry, newJournalEntry, cancelEditJournal,
   startBreathing, stopBreathing, continueBreathing,
   startGrounding, stopGrounding, startBodyScan, stopBodyScan,
-  startReframe, processReframe, openReframeHistory, saveReflection,
+  startReframe, processReframe, saveReflection,
   generateWeeklyInsight, generateWeeklySummary,
   addWin, addAffirmation, removeAffirmation, toggleAffirmationPool, scrollToBreath,
-  openJournalHistory };
-
+  openJournalHistory, openReframeHistory };
 window.renderWellnessTab = renderWellnessTab;
 window.saveJournal = saveJournal;
 window.editJournal = editJournal;
@@ -1041,7 +1040,6 @@ window.renderBodyScanStep = renderBodyScanStep;
 window.stopBodyScan = stopBodyScan;
 window.startReframe = startReframe;
 window.processReframe = processReframe;
-window.openReframeHistory = openReframeHistory;
 window.saveReflection = saveReflection;
 window.generateWeeklyInsight = generateWeeklyInsight;
 window.generateWeeklySummary = generateWeeklySummary;
@@ -1053,3 +1051,4 @@ window.scrollToBreath = scrollToBreath;
 window.runBreathCountdown = runBreathCountdown;
 window.renderBreathPhase = renderBreathPhase;
 window.openJournalHistory = openJournalHistory;
+window.openReframeHistory = openReframeHistory;

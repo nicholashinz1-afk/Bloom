@@ -4,15 +4,12 @@ import { haptic, playSound } from './utils.js';
 import { addXP } from './xp.js';
 import { celebrate, showUndoToast } from './celebrate.js';
 import { XP_VALUES, HABIT_AFFIRMATIONS, DAILY_HABITS, MEDICATION_HABIT } from './constants.js';
-import { sendTelemetry } from './telemetry.js';
+import { sendTelemetry, trackFeature } from './telemetry.js';
 import { updateStreak } from './streaks.js';
-
-// Late-bound cross-module references (avoid circular imports)
 function renderTodayTab(...args) { return window.renderTodayTab?.(...args); }
 function renderWeeklyTab(...args) { return window.renderWeeklyTab?.(...args); }
 function updateProgressTab(...args) { return window.updateProgressTab?.(...args); }
-
-export function toggleHabit(habitId, el) {
+function toggleHabit(habitId, el) {
   const wasDone = state.todayData[habitId];
   state.todayData[habitId] = !wasDone;
 
@@ -21,6 +18,9 @@ export function toggleHabit(habitId, el) {
     addXP(xpVal, el);
     checkFirstTaskStreak();
     celebrate(habitId, el);
+    // Cancel the scheduled push notification for this habit
+    onHabitCompletedCancelPush(habitId);
+    onAnyActivityCancelEveningNudge();
   } else {
     const xpVal = XP_VALUES[habitId] || 10;
     state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
@@ -34,9 +34,8 @@ export function toggleHabit(habitId, el) {
   renderTodayTab();
   checkAllDone();
 }
-window.toggleHabit = toggleHabit;
 
-export function toggleWeeklyHabit(habitId, action, el) {
+function toggleWeeklyHabit(habitId, action, el) {
   const wd = state.weekData;
   if (!wd[habitId]) wd[habitId] = 0;
   const goal = state.prefs?.goals?.[habitId] || 3;
@@ -61,9 +60,8 @@ export function toggleWeeklyHabit(habitId, action, el) {
   saveState();
   renderWeeklyTab();
 }
-window.toggleWeeklyHabit = toggleWeeklyHabit;
 
-export function toggleHouseholdTask(taskId, el) {
+function toggleHouseholdTask(taskId, el) {
   const wd = state.weekData;
   if (!wd.household) wd.household = {};
   wd.household[taskId] = !wd.household[taskId];
@@ -81,12 +79,11 @@ export function toggleHouseholdTask(taskId, el) {
   saveState();
   renderWeeklyTab();
 }
-window.toggleHouseholdTask = toggleHouseholdTask;
 
 // ============================================================
 //  FIRST TASK DAILY WELCOME OVERLAY
 // ============================================================
-export function checkFirstTaskStreak() {
+function checkFirstTaskStreak() {
   const t = today();
   if (load('bloom_first_task_date', null) === t) return; // already shown today
   save('bloom_first_task_date', t);
@@ -166,8 +163,8 @@ export function checkFirstTaskStreak() {
 // ============================================================
 //  AFFIRMATION SYSTEM (now just drives the banner, celebration handles the toast)
 // ============================================================
-export let affirmTimeout = null;
-export function showAffirmation(habitId) {
+let affirmTimeout = null;
+function showAffirmation(habitId) {
   const pool = [...(HABIT_AFFIRMATIONS[habitId] || ['Well done.'])];
   const custom = state.wellnessData?.affirmations || [];
   if (custom.length > 0 && Math.random() < 0.3) pool.push(...custom);
@@ -182,7 +179,7 @@ export function showAffirmation(habitId) {
   renderTodayTop();
 }
 
-export function getCompletionRate() {
+function getCompletionRate() {
   const prefs = state.prefs;
   const td = state.todayData;
   const dhPrefs2 = prefs?.dailyHabits || {};
@@ -206,7 +203,7 @@ export function getCompletionRate() {
   return totalHabits > 0 ? { done: doneHabits, total: totalHabits, pct: doneHabits / totalHabits } : { done: 0, total: 0, pct: 0 };
 }
 
-export function checkAllDone() {
+function checkAllDone() {
   const prefs = state.prefs;
   const td = state.todayData;
   const dhPrefs2 = prefs?.dailyHabits || {};
@@ -253,7 +250,7 @@ export function checkAllDone() {
   renderTodayTop();
 }
 
-export function showPartialCompletionToast(type) {
+function showPartialCompletionToast(type) {
   const msgs = type === 'strong_day' ? [
     { title: 'Strong day!', sub: '75% done. You\'re really showing up.' },
     { title: 'Almost there.', sub: 'Most of your habits are checked off.' },
@@ -292,13 +289,7 @@ export function showPartialCompletionToast(type) {
 // ============================================================
 //  TODAY ARCHIVE (for history)
 // ============================================================
-window.archiveToday = archiveToday;
-window.checkFirstTaskStreak = checkFirstTaskStreak;
-window.getCompletionRate = getCompletionRate;
-window.checkAllDone = checkAllDone;
-window.showAffirmation = showAffirmation;
-
-export function archiveToday() {
+function archiveToday() {
   const t = today();
   if (!state.historyData[t]) state.historyData[t] = {};
   state.historyData[t] = {
@@ -312,3 +303,25 @@ export function archiveToday() {
   };
   save('bloom_history', state.historyData);
 }
+
+// ============================================================
+//  TELEMETRY & ERROR CAPTURE
+// ============================================================
+// Anonymous user ID for unique user counts (no PII — just a random token)
+let _bloomUid = load('bloom_uid', null);
+if (!_bloomUid) {
+  _bloomUid = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  save('bloom_uid', _bloomUid);
+}
+window.toggleHabit = toggleHabit;
+window.toggleWeeklyHabit = toggleWeeklyHabit;
+window.toggleHouseholdTask = toggleHouseholdTask;
+window.activateHabit = activateHabit;
+window.getCompletionRate = getCompletionRate;
+window.checkFirstTaskStreak = checkFirstTaskStreak;
+window.archiveToday = archiveToday;
+window.checkAllDone = checkAllDone;
+
+export { toggleHabit, toggleWeeklyHabit, toggleHouseholdTask,
+  checkFirstTaskStreak, showAffirmation, getCompletionRate,
+  checkAllDone, showPartialCompletionToast, archiveToday };

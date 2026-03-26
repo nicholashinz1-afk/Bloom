@@ -1,6 +1,5 @@
 import { state, today, getWeekDates, formatDateLabel } from '../state.js';
-import { getLevel } from '../xp.js';
-
+import { DAILY_HABITS, MEDICATION_HABIT } from '../constants.js';
 function getMoodPattern() {
   const history = state.historyData;
   const dates = Object.keys(history).sort().slice(-14); // last 2 weeks
@@ -223,6 +222,7 @@ function downloadCanvasImage(canvas) {
   a.click();
 }
 
-window.shareWeekInReview = shareWeekInReview;
+// ── Hard day mode ────────────────────────────────────────────
 
 export { getMoodPattern, getMoodHabitCorrelation, shareWeekInReview, downloadCanvasImage };
+window.shareWeekInReview = shareWeekInReview;

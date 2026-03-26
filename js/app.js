@@ -2,7 +2,7 @@
 // Imports all modules and boots the application
 
 // Core
-import { state, today, weekStart, loadState, saveState, migrateJournalFormat } from './state.js';
+import { state, today, weekStart, loadState, saveState, migrateJournalFormat, backfillJournalPrompts } from './state.js';
 import { initDB, save, load, restoreFromDB, checkStorageQuota } from './storage.js';
 import { bloomIcon } from './icons.js';
 
@@ -69,6 +69,7 @@ window.checkAutoGenerateInsight = checkAutoGenerateInsight;
 function initApp() {
   loadState();
   migrateJournalFormat();
+  backfillJournalPrompts();
   migrateToNewDailyHabits();
   initTheme();
 

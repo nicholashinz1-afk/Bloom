@@ -1,17 +1,13 @@
-// Bloom onboarding — multi-step setup flow
 import { state, loadState, today, weekStart } from '../state.js';
 import { save, load } from '../storage.js';
 import { DAILY_HABITS, MEDICATION_HABIT, SELF_CARE_CATEGORIES } from '../constants.js';
 import { THEMES, initTheme } from '../theme.js';
 import { haptic, playSound } from '../utils.js';
 import { bloomIcon } from '../icons.js';
-
-// Late-bound cross-module references (avoid circular imports)
 function saveState(...args) { return window.saveState?.(...args); }
 function initApp(...args) { return window.initApp?.(...args); }
 function switchTab(...args) { return window.switchTab?.(...args); }
 function showBackupSheet(...args) { return window.showBackupSheet?.(...args); }
-
 let obStep = 0;
 let obData = {
   name: '',
@@ -32,7 +28,7 @@ let obData = {
 // Adaptive onboarding — path depends on readiness
 function getOBPath() {
   if (obData.readiness === 'ready') {
-    // Full setup: Welcome+Name → Readiness → Habits+SelfCare → Appearance+Sound+Notifications → Install → Ready
+    // Full setup: Welcome+Name → Readiness → Habits+SelfCare → Appearance+Sound+Notifications → Ready
     return ['welcome', 'readiness', 'routine', 'customize', 'install', 'ready'];
   } else if (obData.readiness === 'gentle') {
     // Minimal: Welcome+Name → Readiness → Install → Ready (smart defaults, gentle mode)
@@ -1016,6 +1012,7 @@ function completeOnboarding() {
   document.getElementById('onboarding').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   initApp();
+  trackEvent('onboarding_complete');
 
   // Gentle path: auto-activate gentle mode on first load
   if (obData.readiness === 'gentle') {
@@ -1026,27 +1023,16 @@ function completeOnboarding() {
 
 // ============================================================
 //  ONESIGNAL
-
+// ============================================================
 export { renderOnboarding, completeOnboarding };
-
 window.renderOnboarding = renderOnboarding;
-window.obNext = obNext;
-window.obBack = obBack;
-window.obSetReadiness = obSetReadiness;
-window.obToggleHabit = obToggleHabit;
-window.obStartSmall = obStartSmall;
-window.obUndoStartSmall = obUndoStartSmall;
-window.obAdjustGoal = obAdjustGoal;
-window.obToggleTask = obToggleTask;
-window.obRemoveTask = obRemoveTask;
-window.obAddCustomTask = obAddCustomTask;
-window.obSetWaterMode = obSetWaterMode;
-window.obToggleSundayReminder = obToggleSundayReminder;
-window.obToggleAudio = obToggleAudio;
-window.obPreviewSound = obPreviewSound;
-window.obSetTheme = obSetTheme;
-window.obToggleSelfCare = obToggleSelfCare;
+window.obNext = obNext; window.obBack = obBack;
+window.obSetReadiness = obSetReadiness; window.obToggleHabit = obToggleHabit;
+window.obStartSmall = obStartSmall; window.obUndoStartSmall = obUndoStartSmall;
+window.obAdjustGoal = obAdjustGoal; window.obToggleTask = obToggleTask;
+window.obRemoveTask = obRemoveTask; window.obAddCustomTask = obAddCustomTask;
+window.obSetWaterMode = obSetWaterMode; window.obToggleSundayReminder = obToggleSundayReminder;
+window.obToggleAudio = obToggleAudio; window.obPreviewSound = obPreviewSound;
+window.obSetTheme = obSetTheme; window.obToggleSelfCare = obToggleSelfCare;
 window.completeOnboarding = completeOnboarding;
-window.obSetAge = obSetAge;
-window.obSetPace = obSetPace;
-window.obShowBackup = obShowBackup;
+window.obSetAge = obSetAge; window.obSetPace = obSetPace; window.obShowBackup = obShowBackup;

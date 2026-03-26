@@ -4,16 +4,10 @@ import { CELEBRATIONS } from './constants.js';
 import { haptic, playSound } from './utils.js';
 import { launchConfetti } from './ui.js';
 import { addXP, showXPFloat, burstHearts, burstParticles } from './xp.js';
-
-// Late-bound cross-module references (avoid circular imports)
 function renderTodayTab(...args) { return window.renderTodayTab?.(...args); }
 function archiveToday(...args) { return window.archiveToday?.(...args); }
 function checkAllDone(...args) { return window.checkAllDone?.(...args); }
-
-export let undoTimeout = null;
-export let undoData = null;
-
-export function showUndoToast(habitKey, xpVal) {
+function showUndoToast(habitKey, xpVal) {
   undoData = { key: habitKey, xp: xpVal };
   const existing = document.getElementById('undo-toast');
   if (existing) existing.remove();
@@ -44,9 +38,8 @@ export function showUndoToast(habitKey, xpVal) {
     setTimeout(() => toast.remove(), 350);
   }, 5000);
 }
-window.showUndoToast = showUndoToast;
 
-export function undoHabitUncheck() {
+function undoHabitUncheck() {
   if (!undoData) return;
   const { key, xp } = undoData;
   state.todayData[key] = true;
@@ -60,12 +53,10 @@ export function undoHabitUncheck() {
   const toast = document.getElementById('undo-toast');
   if (toast) { toast.classList.add('hide'); setTimeout(() => toast.remove(), 350); }
 }
-window.undoHabitUncheck = undoHabitUncheck;
-window.celebrate = celebrate;
 
 // ── Core celebration function ────────────────────────────────
-export let celebrateTimeout = null;
-export function celebrate(type, sourceEl) {
+let celebrateTimeout = null;
+function celebrate(type, sourceEl) {
   const data = CELEBRATIONS[type];
   if (!data) return;
 
@@ -179,3 +170,15 @@ export function celebrate(type, sourceEl) {
     setTimeout(() => toast.remove(), 350);
   }, 2800);
 }
+
+// ============================================================
+//  HABIT LOGIC
+// ============================================================
+// XP balanced around mental well-being:
+// - Medication & inner care (journal, reflection) are highest — these are core therapeutic actions
+// - Basic self-care (hygiene, nourishment, hydration) are equal — every one matters on hard days
+
+window.undoHabitUncheck = undoHabitUncheck;
+window.celebrate = celebrate;
+
+export { showUndoToast, undoHabitUncheck, celebrate, celebrateTimeout };

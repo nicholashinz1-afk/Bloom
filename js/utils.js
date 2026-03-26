@@ -234,7 +234,6 @@ export function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
-
 export function showToast(msg) {
   const t = document.createElement('div');
   t.className = 'toast';
@@ -242,5 +241,4 @@ export function showToast(msg) {
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3000);
 }
-
 export { haptic, getAudioCtx, isAudioEnabled, playTone, playWarmTone, getDailyCompletionCount, playSound, CHECK_SVG };

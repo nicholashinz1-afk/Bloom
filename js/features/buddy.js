@@ -1,16 +1,10 @@
-// Bloom buddy — peer-to-peer mutual support system (client-side)
-import { state, today } from '../state.js';
+import { state, today, getJournalEntries } from '../state.js';
 import { save, load } from '../storage.js';
 import { haptic, escapeHtml } from '../utils.js';
 import { bloomIcon, buddyIcon } from '../icons.js';
 import { sendTelemetry, trackFeature, timedFetch } from '../telemetry.js';
 import { addXP } from '../xp.js';
 import { openSheet, closeAllSheets } from '../sheets.js';
-
-// Late-bound cross-module references (avoid circular imports)
-function switchTab(...args) { return window.switchTab?.(...args); }
-function openCrisisSheet(...args) { return window.openCrisisSheet?.(...args); }
-
 let bloomBuddyId = load('bloom_buddy_id', null);
 // Generate buddy ID immediately so it shows in Settings
 if (!bloomBuddyId) {
@@ -55,6 +49,9 @@ async function buddyApi(payload) {
   }
 }
 
+// Track last-registered values so we skip redundant register calls
+let _lastBuddyRegister = { name: null, playerId: null };
+
 async function syncBuddyStatus() {
   if (buddyState.status !== 'paired' && buddyState.status !== 'searching') return;
   const id = ensureBuddyId();
@@ -68,13 +65,17 @@ async function syncBuddyStatus() {
     habitPct: getHabitPct(),
     oneSignalId: playerId,
   });
-  // Also keep register up to date with name/playerId
-  await buddyApi({
-    action: 'register',
-    buddyId: id,
-    name: getBuddyDisplayName(),
-    oneSignalId: playerId,
-  });
+  // Only re-register if name or playerId actually changed
+  const name = getBuddyDisplayName();
+  if (name !== _lastBuddyRegister.name || playerId !== _lastBuddyRegister.playerId) {
+    await buddyApi({
+      action: 'register',
+      buddyId: id,
+      name,
+      oneSignalId: playerId,
+    });
+    _lastBuddyRegister = { name, playerId };
+  }
 }
 
 function scheduleBuddySync() {
@@ -158,15 +159,20 @@ function stopBuddyPolling() {
 async function buddyRegisterAndSync() {
   const id = ensureBuddyId();
   const playerId = load('bloom_onesignal_pid', null);
+  const name = getBuddyDisplayName();
+  // Skip if we already registered with the same name/playerId this session
+  if (name === _lastBuddyRegister.name && playerId === _lastBuddyRegister.playerId) return;
   await buddyApi({
     action: 'register',
     buddyId: id,
-    name: getBuddyDisplayName(),
+    name,
     oneSignalId: playerId,
   });
+  _lastBuddyRegister = { name, playerId };
 }
 
 async function buddyCreateInvite() {
+  trackFeature('buddy');
   await buddyRegisterAndSync();
   const data = await buddyApi({ action: 'create-invite', buddyId: ensureBuddyId() });
   if (data.ok) {
@@ -181,6 +187,7 @@ async function buddyCreateInvite() {
 
 async function buddyAcceptInvite(code) {
   if (!code || code.length < 4) return;
+  trackFeature('buddy');
   await buddyRegisterAndSync();
   const data = await buddyApi({
     action: 'accept-invite',
@@ -193,6 +200,7 @@ async function buddyAcceptInvite(code) {
     haptic('medium');
     switchTab('community');
     fetchBuddyData();
+    trackEvent('buddy_pair');
     showBuddyStatus('You\'re paired! Say hi to your new buddy.', 'var(--sage)');
   } else {
     const reasons = {
@@ -208,6 +216,7 @@ async function buddyAcceptInvite(code) {
 }
 
 async function buddyFindMatch(prefs) {
+  trackFeature('buddy');
   await buddyRegisterAndSync();
   const data = await buddyApi({
     action: 'find-match',
@@ -220,6 +229,7 @@ async function buddyFindMatch(prefs) {
     haptic('medium');
     closeAllSheets();
     fetchBuddyData();
+    trackEvent('buddy_pair');
   } else if (data.ok && data.queued) {
     buddyState = { status: 'searching' };
     save('bloom_buddy_state', buddyState);
@@ -261,6 +271,7 @@ function checkBuddyMessageSafety(text) {
 }
 
 async function buddySendMessage(pairId) {
+  trackFeature('buddy');
   const input = document.getElementById('buddy-input-' + pairId);
   if (!input || !input.value.trim()) return;
   const text = input.value.trim();
@@ -305,6 +316,7 @@ async function buddySendMessage(pairId) {
 }
 
 async function buddySendNudge(nudgeType, pairId) {
+  trackFeature('buddy');
   const data = await buddyApi({
     action: 'nudge',
     buddyId: ensureBuddyId(),
@@ -324,6 +336,7 @@ async function buddySendNudge(nudgeType, pairId) {
 }
 
 async function buddySendLove(pairId) {
+  trackFeature('buddy');
   // Send a non-verbal bloom — just a 🌸, no words needed
   const data = await buddyApi({
     action: 'nudge',
@@ -344,6 +357,7 @@ async function buddySendLove(pairId) {
 }
 
 async function buddyUnpair(pairId) {
+  trackFeature('buddy');
   // Check cooldown — prevent re-pairing for 24h after unpair
   const lastUnpair = load('bloom_buddy_last_unpair', 0);
   const cooldownMs = 24 * 60 * 60 * 1000; // 24 hours
@@ -363,6 +377,7 @@ async function buddyUnpair(pairId) {
   }
   save('bloom_buddy_state', buddyState);
   save('bloom_buddy_list', buddyCachedBuddies);
+  trackEvent('buddy_unpair');
   renderBuddyContent();
 }
 
@@ -921,7 +936,9 @@ function renderBuddyMatchForm() {
   `;
 }
 
-
+// ============================================================
+//  ENCOURAGEMENT WALL (Community)
+// ============================================================
 export { bloomBuddyId, buddyState, buddyCachedBuddies, buddyCachedMessages,
   ensureBuddyId, getBuddyDisplayName, getHabitPct, buddyApi,
   syncBuddyStatus, scheduleBuddySync, fetchBuddyData, fetchBuddyMessages,
@@ -931,13 +948,10 @@ export { bloomBuddyId, buddyState, buddyCachedBuddies, buddyCachedMessages,
   buddySendMessage, buddySendNudge, buddySendLove, buddyUnpair,
   checkBuddyCooldown, getBuddyCooldownRemaining, buddySafetyAction,
   buddyReportAndUnpair, checkBuddyActivityTimeout, toggleMultiBuddy,
-  showBuddyStatus, showBuddyStatusForPair, buddyTimeAgo,
-  getBuddyLastSeen, markBuddyMessagesRead, getBuddyUnreadCount,
   renderBuddyContent, renderBuddySetup, renderBuddyOnboarding,
   renderBuddyPairingOptions, renderBuddyInviteView, renderBuddySearching,
   renderBuddyCard, renderBuddyMessagesForPair, renderBuddyMatchForm,
   openBuddyMatchSheet, selectBuddyPref };
-
 window.buddyRegisterAndSync = buddyRegisterAndSync;
 window.buddyCreateInvite = buddyCreateInvite;
 window.buddyAcceptInvite = buddyAcceptInvite;

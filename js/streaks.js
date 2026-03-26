@@ -1,19 +1,10 @@
-// Bloom streaks — streak logic, milestones, welcome back
-import { state, today, getJournalEntries } from './state.js';
+import { state, today } from './state.js';
 import { save, load } from './storage.js';
 import { haptic, playSound } from './utils.js';
 import { addXP } from './xp.js';
 import { sendTelemetry } from './telemetry.js';
-
-// Late-bound
 function celebrate(...args) { return window.celebrate?.(...args); }
 function renderTodayTab(...args) { return window.renderTodayTab?.(...args); }
-
-// ============================================================
-//  STREAK SYSTEM
-// ============================================================
-
-// Recover streak data from history when xpData looks reset or missing
 function recoverStreakFromHistory() {
   const xp = state.xpData;
   const history = state.historyData || {};
@@ -319,7 +310,7 @@ function dismissWelcomeBack(reason) {
 // ── General milestone checks ─────────────────────────────────
 function checkMilestones() {
   const wellness = state.wellnessData;
-  const journalCount = Object.keys(wellness?.journal || {}).filter(d => getJournalEntries(d).length > 0).length;
+  const journalCount = Object.keys(wellness?.journal || {}).length;
   const milestones = load('bloom_milestones', {});
 
   // Journal entry milestones
@@ -359,9 +350,7 @@ function showMilestone(emoji, title, sub) {
   setTimeout(() => { if (div.parentNode) div.remove(); }, 8000);
 }
 
-
-export { recoverStreakFromHistory, updateStreak, buildStreakTreeSVG,
-  checkStreakMilestone, checkWelcomeBack, dismissWelcomeBack,
-  checkMilestones, showMilestone };
+// ── Mood pattern analysis ────────────────────────────────────
+export { recoverStreakFromHistory, updateStreak, buildStreakTreeSVG, checkStreakMilestone, checkWelcomeBack, dismissWelcomeBack, checkMilestones, showMilestone };
 window.dismissWelcomeBack = dismissWelcomeBack;
 window.checkMilestones = checkMilestones;

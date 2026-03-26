@@ -1,14 +1,10 @@
-// Bloom seasonal insights, weekly summary notification, custom check-ins
-import { state, today, getWeekDates, saveState, getJournalEntries } from './state.js';
+import { state, today, getWeekDates, getJournalEntries, saveState } from './state.js';
 import { save, load } from './storage.js';
 import { haptic } from './utils.js';
 import { sendLocalNotification } from './notifications.js';
-
-// Late-bound to avoid circular imports
 function renderTodayTab() { if (window.renderTodayTab) window.renderTodayTab(); }
 function renderSettingsTab() { if (window.renderSettingsTab) window.renderSettingsTab(); }
 function checkFirstTaskStreak() { if (window.checkFirstTaskStreak) window.checkFirstTaskStreak(); }
-
 function getSeasonalInsights() {
   const history = state.historyData;
   const dates = Object.keys(history).sort();
@@ -206,9 +202,9 @@ function logCustomCheckin(id, value) {
   renderTodayTab();
 }
 
+
 export { getSeasonalInsights, checkWeeklySummaryNotification,
   getCustomCheckins, addCustomCheckin, removeCustomCheckin, logCustomCheckin };
-
 window.addCustomCheckin = addCustomCheckin;
 window.removeCustomCheckin = removeCustomCheckin;
 window.logCustomCheckin = logCustomCheckin;

@@ -1,12 +1,8 @@
-// ── AI responses & Claude integration ────────────────────────
 import { sendTelemetry, trackFeature, trackAIJourney, timedFetch } from './telemetry.js';
-import { state, today, getDayIndex } from './state.js';
+import { getDayIndex } from './state.js';
 import { save, load } from './storage.js';
 import { escapeHtml } from './utils.js';
-
-// Scripted low-mood responses — these are used as fallbacks or
-// when the user is most vulnerable. They prioritize safety and warmth.
-export const SCRIPTED_LOW_MOOD_RESPONSES = [
+const SCRIPTED_LOW_MOOD_RESPONSES = [
   "What you're feeling right now is real, and it matters. You don't have to push through anything — just being here is enough.",
   "Hard moments don't last forever, even when they feel endless. You showed up today, and that counts for something.",
   "There's no right way to feel right now. Whatever is heavy, you don't have to carry it alone — the 🤍 is there whenever you need it.",
@@ -17,15 +13,15 @@ export const SCRIPTED_LOW_MOOD_RESPONSES = [
   "You're carrying something heavy right now. You don't have to figure it all out today. Just this moment is enough.",
 ];
 
-export function getScriptedResponse() {
+function getScriptedResponse() {
   const name = state.prefs?.name;
   const response = SCRIPTED_LOW_MOOD_RESPONSES[Math.floor(Math.random() * SCRIPTED_LOW_MOOD_RESPONSES.length)];
   return response;
 }
 
-export const AI_FALLBACK_RESPONSE = "You showed up today, and that matters. Whatever you're carrying, you don't have to carry it alone.";
+const AI_FALLBACK_RESPONSE = "You showed up today, and that matters. Whatever you're carrying, you don't have to carry it alone.";
 
-export async function callClaude(prompt, systemPrompt) {
+async function callClaude(prompt, systemPrompt) {
   // Track AI reflection usage for journey analysis
   const aiSource = prompt.includes('journal') ? 'journal' : prompt.includes('reflection') ? 'reflection' : prompt.includes('hard day') ? 'hard_day' : prompt.includes('weekly') || prompt.includes('week') ? 'weekly_insight' : prompt.includes('monthly') || prompt.includes('month') ? 'monthly_reflection' : 'other';
   trackAIJourney(aiSource, aiSource);
@@ -49,7 +45,7 @@ export async function callClaude(prompt, systemPrompt) {
 }
 
 // Safety filter for AI-generated text — catches clinical/diagnostic/medication language
-export function filterAIResponse(text) {
+function filterAIResponse(text) {
   const unsafePatterns = [
     /\b(diagnos(e[ds]?|ing|is)|disorder|syndrome|patholog)\b/i,
     /\b(prescri(be|ption)|medica(te|tion)|dosage|mg|milligram|SSRI|SNRI|benzodiazepine|antidepressant|antipsychotic|anxiolytic)\b/i,
@@ -65,7 +61,7 @@ export function filterAIResponse(text) {
 }
 
 // Render AI response with disclaimer and feedback buttons
-export function renderAIResponseHTML(text, context) {
+function renderAIResponseHTML(text, context) {
   const ctx = context || 'reflection';
   return `<div class="ai-response">
     <div class="ai-response-text">${escapeHtml(text)}</div>
@@ -78,7 +74,7 @@ export function renderAIResponseHTML(text, context) {
   </div>`;
 }
 
-export function aiResponseFeedback(context, value, btn) {
+function aiResponseFeedback(context, value, btn) {
   const container = document.getElementById('ai-fb-' + context);
   if (!container) return;
   // Log locally
@@ -91,14 +87,14 @@ export function aiResponseFeedback(context, value, btn) {
   container.innerHTML = '<div class="ai-feedback-thanks">Thanks for the feedback.</div>';
 }
 
-export function showThinking(containerId) {
+function showThinking(containerId) {
   const el = document.getElementById(containerId);
   if (!el) return;
   el.innerHTML = '<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>';
   el.style.display = 'block';
 }
 
-export function showAIResponse(containerId, text) {
+function showAIResponse(containerId, text) {
   const el = document.getElementById(containerId);
   if (!el) return;
   if (!text) {
@@ -109,5 +105,11 @@ export function showAIResponse(containerId, text) {
   el.style.display = 'block';
 }
 
-// Window bindings for onclick handlers
+// ============================================================
+//  TABS
+
 window.aiResponseFeedback = aiResponseFeedback;
+
+export { SCRIPTED_LOW_MOOD_RESPONSES, getScriptedResponse, AI_FALLBACK_RESPONSE,
+  callClaude, filterAIResponse, renderAIResponseHTML, aiResponseFeedback,
+  showThinking, showAIResponse };

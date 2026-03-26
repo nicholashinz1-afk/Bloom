@@ -1,7 +1,6 @@
-// Bloom today tab — daily habits, mood, water, food, self-care
 import { state, today, getDayIndex, getWeekDates, weekStart, saveState, getJournalPrompt, getJournalEntries } from '../state.js';
 import { save, load } from '../storage.js';
-import { haptic, playSound, getDailyCompletionCount, isAudioEnabled } from '../utils.js';
+import { haptic, playSound, getDailyCompletionCount, isAudioEnabled, CHECK_SVG, escapeHtml } from '../utils.js';
 import { DAILY_HABITS, MEDICATION_HABIT, SELF_CARE_CATEGORIES, SELF_CARE_TASKS, XP_VALUES, LEVELS, CELEBRATIONS, HABIT_AFFIRMATIONS } from '../constants.js';
 import { getLevel, getNextLevel, addXP, buildFlowerSVG, showXPFloat, burstParticles, burstHearts, bounceMoodBtn, animateWaterBottle } from '../xp.js';
 import { celebrate, showUndoToast } from '../celebrate.js';
@@ -14,12 +13,10 @@ import { infoIcon, openSheet } from '../sheets.js';
 import { toggleHabit, toggleWeeklyHabit, toggleHouseholdTask, checkFirstTaskStreak, showAffirmation, getCompletionRate, checkAllDone } from '../habits.js';
 import { openOpenJournal, toggleGentleMode, activateHardDayMode, openWindDown } from '../features/hardday.js';
 import { updateStreak } from '../streaks.js';
-
-// Late-bound cross-module references (avoid circular imports)
+import { onHabitCompletedCancelPush, onWaterGoalReachedCancelPush, onAnyActivityCancelEveningNudge } from '../notifications.js';
 function switchTab(...args) { return window.switchTab?.(...args); }
 function openCrisisSheet(...args) { return window.openCrisisSheet?.(...args); }
 function archiveToday(...args) { return window.archiveToday?.(...args); }
-
 function renderTodayTop() {
   const container = document.getElementById('today-top');
   if (!container) return;
@@ -67,6 +64,7 @@ function renderTodayTop() {
         </div>
         <div class="banner-actions">
           <div class="banner-action" onclick="dismissWelcomeBack(null)">Let's go</div>
+          <div class="banner-action" onclick="dismissWelcomeBack(null);switchTab('weekly');setTimeout(()=>{const h=document.querySelector('.section-label');if(h&&h.textContent.includes('history'))h.scrollIntoView({behavior:'smooth',block:'start'})},150)" style="opacity:0.7">Fill in past days</div>
         </div>
       </div>
     </div>`;
@@ -852,7 +850,7 @@ function toggleFeeling(word) {
   if (!state.todayData.feelings) state.todayData.feelings = [];
   const idx = state.todayData.feelings.indexOf(word);
   if (idx >= 0) state.todayData.feelings.splice(idx, 1);
-  else state.todayData.feelings.push(word);
+  else { state.todayData.feelings.push(word); trackFeature('mood_feelings'); }
   saveState();
   archiveToday();
   // Update pill in-place without full re-render
@@ -909,6 +907,7 @@ function logMood(val) {
   archiveToday();
   haptic('light');
   checkFirstTaskStreak();
+  onAnyActivityCancelEveningNudge();
   renderTodayTab();
   const btnIndex = val === -1 ? 5 : val;
   bounceMoodBtn(btnIndex);
@@ -944,7 +943,9 @@ function tapWater(i) {
     playSound(bottleSounds[i] || 'water');
   }
   checkFirstTaskStreak();
+  onAnyActivityCancelEveningNudge();
   const newCount = state.todayData.water;
+  if (newCount >= 3) onWaterGoalReachedCancelPush();
   if (newCount >= 3 && !state.todayData.waterXPGiven) {
     state.todayData.waterXPGiven = true;
     addXP(10, null);
@@ -996,12 +997,11 @@ function activateHabit(id) {
 
 // ============================================================
 //  WEEKLY TAB
-
+// ============================================================
 export { renderTodayTab, renderTodayTop, logMood, logSleep, tapWater, tapFood,
   tapHabit, tapWeeklyHabit, tapHouseholdTask, tapSelfCare, activateHabit,
   toggleInlineBreathe, stopInlineBreathing, inlineContinueBreathing,
   triggerLowMoodAI, getFeelingWords, toggleFeeling, showCrisisFeelingsNudge };
-
 window.renderTodayTab = renderTodayTab;
 window.logMood = logMood;
 window.logSleep = logSleep;

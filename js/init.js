@@ -1,12 +1,10 @@
-// Bloom init — OneSignal, service worker, migrations, backup reminder, safari checks
-import { state, today, loadState, migrateJournalFormat } from './state.js';
+import { state, today, loadState, migrateJournalFormat, backfillJournalPrompts } from './state.js';
 import { save, load } from './storage.js';
 import { switchTab } from './router.js';
-import { toggleSettingsSection } from './tabs/settings.js';
-import { showBackupSheet } from './backup.js';
-import { buddyRegisterAndSync } from './features/buddy.js';
 import { DAILY_HABITS, MEDICATION_HABIT, VERSION } from './constants.js';
-
+function toggleSettingsSection(...args) { return window.toggleSettingsSection?.(...args); }
+function showBackupSheet(...args) { return window.showBackupSheet?.(...args); }
+function buddyRegisterAndSync(...args) { return window.buddyRegisterAndSync?.(...args); }
 function initOneSignal() {
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
@@ -26,6 +24,8 @@ function initOneSignal() {
           save('bloom_onesignal_pid', e.current.id);
           // Always re-register so the server has the current player ID
           buddyRegisterAndSync();
+          // Schedule push notifications now that we have a player ID
+          setTimeout(() => scheduleAllPushNotifications(), 2000);
         }
       });
       const pid = OneSignal.User.PushSubscription.id;
@@ -52,11 +52,17 @@ function initOneSignal() {
   document.head.appendChild(script);
 }
 
+// ============================================================
+//  SERVICE WORKER
+// ============================================================
 function registerServiceWorker() {
   // OneSignalSDKWorker.js handles the service worker.
   // We do not register a competing blob: service worker.
 }
 
+// ============================================================
+//  BACKUP REMINDER
+// ============================================================
 function isSafariBrowser() {
   const ua = navigator.userAgent;
   return /Safari/.test(ua) && !/Chrome/.test(ua) && !/CriOS/.test(ua) && !/FxiOS/.test(ua);
@@ -114,6 +120,19 @@ function checkBackupReminder() {
     }, 5000);
   }
 }
+
+// ============================================================
+//  APP INIT
+// ============================================================
+// ============================================================
+//  TUTORIAL SYSTEM — spotlight edition
+// ============================================================
+
+// Each step defines:
+//   tab        — which tab to switch to
+//   spotlight  — CSS selector of element to highlight (or null for full dim)
+//   cardPos    — 'top'|'mid'|'bottom' — where the card appears
+//   title/text — content
 
 function migrateToNewDailyHabits() {
   if (!state.prefs) return;
@@ -207,6 +226,10 @@ function migrateToNewDailyHabits() {
   p._migratedDailyHabits = true;
   save('bloom_prefs', p);
 }
+
+// ============================================================
+//  BLOOM BUDDY
+// ============================================================
 
 async function checkForUpdate() {
   try {
