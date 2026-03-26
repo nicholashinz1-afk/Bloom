@@ -865,7 +865,6 @@ async function loadAgentHistory() {
 }
 
 // Load agent history when switching to agents tab
-const origSwitchTab = switchAdminTab;
 switchAdminTab = function(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -930,11 +929,12 @@ function renderWallAdmin() {
     if (msg.moderated === 'admin') badges += '<span class="wall-badge admin">admin-warned</span> ';
     if (msg.reports > 0) badges += '<span class="wall-badge reported">' + msg.reports + ' report' + (msg.reports > 1 ? 's' : '') + '</span> ';
 
+    const safeId = escapeHtml(msg.id);
     const actions = msg.moderated
-      ? `<button class="clear" onclick="moderateWallMsg('${msg.id}','clear')">Clear warning</button>
-         <button class="remove" onclick="moderateWallMsg('${msg.id}','remove')">Remove</button>`
-      : `<button class="warn" onclick="moderateWallMsg('${msg.id}','warn')">Warn</button>
-         <button class="remove" onclick="moderateWallMsg('${msg.id}','remove')">Remove</button>`;
+      ? `<button class="clear" onclick="moderateWallMsg('${safeId}','clear')">Clear warning</button>
+         <button class="remove" onclick="moderateWallMsg('${safeId}','remove')">Remove</button>`
+      : `<button class="warn" onclick="moderateWallMsg('${safeId}','warn')">Warn</button>
+         <button class="remove" onclick="moderateWallMsg('${safeId}','remove')">Remove</button>`;
 
     return `<div class="${classes.join(' ')}">
       <div class="wall-msg-text">"${escapeHtml(msg.text)}"</div>
@@ -1021,9 +1021,10 @@ function renderFlaggedUsers() {
     const classes = ['flagged-user'];
     if (user.banned) classes.push('is-banned');
 
+    const safeFp = escapeHtml(user.fp);
     const banBtn = user.banned
-      ? `<button class="clear" onclick="toggleBanUser('${user.fp}', false)">Unban</button>`
-      : `<button class="remove" onclick="toggleBanUser('${user.fp}', true)">Ban from social</button>`;
+      ? `<button class="clear" onclick="toggleBanUser('${safeFp}', false)">Unban</button>`
+      : `<button class="remove" onclick="toggleBanUser('${safeFp}', true)">Ban from social</button>`;
 
     return `<div class="${classes.join(' ')}">
       <div class="flagged-user-header">
