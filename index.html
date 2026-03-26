@@ -9156,7 +9156,8 @@ function renderWellnessTab() {
           <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--cream);line-height:1.6;margin-bottom:4px">${selfCareAct.text}</div>
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:14px">${selfCareAct.category}</div>
           ${selfCareAct.done
-            ? `<div style="font-size:13px;color:var(--sage-light);font-family:Fraunces,serif;font-style:italic">Done — you did something kind for yourself today 💚</div>`
+            ? `<div style="font-size:13px;color:var(--sage-light);font-family:Fraunces,serif;font-style:italic;margin-bottom:10px">Done — you did something kind for yourself 💚</div>
+               <button class="btn btn-ghost btn-sm" onclick="shuffleSelfCareAct()">Another one 🔀</button>`
             : `<div style="display:flex;gap:10px;justify-content:center">
                 <button class="btn btn-sm" style="background:rgba(var(--sage-rgb),0.25);border:1px solid rgba(var(--sage-rgb),0.4);color:var(--sage-light)" onclick="completeSelfCareAct()">Done ✓</button>
                 <button class="btn btn-ghost btn-sm" onclick="shuffleSelfCareAct()">Shuffle 🔀</button>
