@@ -11805,6 +11805,39 @@ function renderSettingsTab() {
     <button class="btn btn-ghost btn-sm" onclick="showWhatsNew(true)">📋 View release notes</button>
   `);
 
+  // ── ACCESSIBILITY ───────────────────────────────────────────
+  html += settingsSection('accessibility', '♿ Accessibility', `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+      <div style="font-weight:500;color:var(--cream);margin-bottom:8px;font-size:14px">Our commitment</div>
+
+      <p style="margin-bottom:12px">Bloom is meant for everyone. Mental health tools should never be gated behind the ability to see a screen perfectly, use a mouse, or navigate without assistance. We're actively working to make Bloom as accessible as possible.</p>
+
+      <div style="font-weight:500;color:var(--cream);margin-bottom:6px;margin-top:16px;font-size:13px">What works today</div>
+      <ul style="padding-left:18px;margin-bottom:14px;font-size:12px;color:var(--text-secondary);line-height:1.8">
+        <li>Screen reader support — semantic headings, labeled form inputs, ARIA roles on all interactive elements</li>
+        <li>Keyboard navigation — all tabs, sheets, and core features reachable without a mouse; focus trapped in dialogs</li>
+        <li>Touch targets — minimum 44px on all buttons and interactive elements</li>
+        <li>Color contrast — text meets WCAG AA 4.5:1 contrast ratio</li>
+        <li>Reduced motion — respects your device's "reduce motion" setting, disables all animations</li>
+        <li>Crisis resources — the 🤍 button is always keyboard and screen reader accessible</li>
+      </ul>
+
+      <div style="font-weight:500;color:var(--cream);margin-bottom:6px;font-size:13px">What we're still working on</div>
+      <ul style="padding-left:18px;margin-bottom:14px;font-size:12px;color:var(--text-secondary);line-height:1.8">
+        <li>High contrast theme option for users with low vision</li>
+        <li>Larger text mode beyond browser zoom</li>
+        <li>Full screen reader testing across VoiceOver, NVDA, and TalkBack</li>
+        <li>ARIA live region announcements for all dynamic content updates</li>
+      </ul>
+
+      <div style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-md);padding:10px 14px;margin-top:12px">
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.7">
+          <strong style="color:var(--sage-light)">Found a barrier?</strong> If something in Bloom doesn't work with your assistive technology or makes the app harder to use, please let us know. Accessibility isn't a feature — it's a responsibility. Report issues at our GitHub repository.
+        </div>
+      </div>
+    </div>
+  `);
+
   // ── MODERATION TRANSPARENCY ──────────────────────────────────
   html += settingsSection('moderation', '🛡️ How moderation works', `
     <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
