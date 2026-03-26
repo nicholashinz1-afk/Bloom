@@ -7838,11 +7838,40 @@ function renderTodayTab() {
     html += `</div>`;
   }
 
-  // --- ANYTIME SECTION ---
-  if (anyHabits.length > 0 || medInAny) {
+  // --- ANYTIME SECTION (includes self-care below divider) ---
+  const selectedSCTasks = (state.prefs?.selfCareTasks || []).filter(id => !id.startsWith('sc_medication'));
+  const scEnabled = selectedSCTasks.length > 0 && (userWeek >= 2 || state.prefs?.progressiveDisclosureDisabled);
+  const hasAnytime = anyHabits.length > 0 || medInAny || scEnabled;
+
+  if (hasAnytime) {
     html += `<div class="section-label"><span style="color:#f0c040">☀️</span> Anytime today</div><div class="card mb-0">`;
     anyHabits.forEach(h => { html += dailyHabitRow(h, 'any', isMuted(h)); });
     if (medInAny) html += medHabitRow('any', medMuted);
+
+    // Self-care items with thin divider
+    if (scEnabled) {
+      const scDone = td.selfCare || {};
+      if (anyHabits.length > 0 || medInAny) {
+        html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0;padding-top:6px">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;margin-left:4px">✨ Self-care</div>
+        </div>`;
+      } else {
+        html += `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;margin-left:4px">✨ Self-care</div>`;
+      }
+      selectedSCTasks.forEach(id => {
+        const task = SELF_CARE_TASKS.find(t2 => t2.id === id);
+        if (!task) return;
+        const done = scDone[id];
+        const scMuted = mutedAfterIndex > 0;
+        const scMutedStyle = scMuted && !done ? 'opacity:0.45;' : '';
+        html += `<div class="habit-row" style="${scMutedStyle}" onclick="tapSelfCare('${id}', this)">
+          <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : task.icon}</div>
+          <div class="habit-info"><div class="habit-name">${task.label}</div></div>
+          ${!done ? '<div class="habit-xp">+10</div>' : ''}
+        </div>`;
+      });
+    }
+
     html += `</div>`;
   }
 
@@ -7943,63 +7972,12 @@ function renderTodayTab() {
   </div>`;
 
   // --- SELF-CARE TASKS (grouped by morning/evening/anytime routines) ---
-  // Progressive disclosure: self-care appears week 2+
-  const selectedSCTasks = (state.prefs?.selfCareTasks || []).filter(id => !id.startsWith('sc_medication'));
-  const routines = state.prefs?.selfCareRoutines || {};
-
-  // Week 1 teaser for self-care
-  if (selectedSCTasks.length > 0 && userWeek < 2) {
-    html += `<div style="background:rgba(var(--sage-rgb),0.06);border:1px dashed rgba(var(--sage-rgb),0.2);border-radius:var(--r-lg);padding:16px;text-align:center;margin-top:8px">
-      <div style="font-size:24px;margin-bottom:8px">💚</div>
-      <div style="font-size:14px;color:var(--sage-light);font-family:Fraunces,serif;margin-bottom:4px">Self-care tasks coming next week</div>
-      <div style="font-size:12px;color:var(--text-muted);line-height:1.6">You picked some great ones during setup. They'll show up here once you've settled into your daily habits.</div>
-      <div onclick="disableProgressiveDisclosure()" style="font-size:12px;color:var(--text-secondary);cursor:pointer;margin-top:8px;text-decoration:underline">Show me everything now</div>
+  // Self-care week 1 teaser (tasks now render in Anytime section above)
+  if (selectedSCTasks.length > 0 && userWeek < 2 && !state.prefs?.progressiveDisclosureDisabled) {
+    html += `<div style="background:rgba(var(--sage-rgb),0.06);border:1px dashed rgba(var(--sage-rgb),0.2);border-radius:var(--r-lg);padding:14px;text-align:center;margin-top:8px">
+      <div style="font-size:12px;color:var(--sage-light)">✨ Self-care tasks unlock next week</div>
+      <div onclick="disableProgressiveDisclosure()" style="font-size:11px;color:var(--text-secondary);cursor:pointer;margin-top:4px;text-decoration:underline">Show me everything now</div>
     </div>`;
-  }
-
-  if (selectedSCTasks.length > 0 && userWeek >= 2) {
-    const scDone = td.selfCare || {};
-
-    // Group tasks by routine
-    const morningTasks = selectedSCTasks.filter(id => routines[id] === 'morning');
-    const eveningTasks = selectedSCTasks.filter(id => routines[id] === 'evening');
-    const anytimeTasks = selectedSCTasks.filter(id => !routines[id] || routines[id] === 'anytime');
-
-    function renderSCTaskRows(taskIds) {
-      let out = '';
-      taskIds.forEach(id => {
-        const task = SELF_CARE_TASKS.find(t2 => t2.id === id);
-        if (!task) return;
-        const done = scDone[id];
-        out += `<div class="habit-row" onclick="tapSelfCare('${id}', this)">
-          <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : task.icon}</div>
-          <div class="habit-info"><div class="habit-name">${task.label}</div></div>
-          ${!done ? '<div class="habit-xp">+10</div>' : ''}
-        </div>`;
-      });
-      return out;
-    }
-
-    // Morning routine
-    if (morningTasks.length > 0) {
-      html += `<div class="section-label">☀️ Morning routine</div><div class="card">${renderSCTaskRows(morningTasks)}</div>`;
-    }
-
-    // Evening routine
-    if (eveningTasks.length > 0) {
-      html += `<div class="section-label">🌙 Evening routine</div><div class="card">${renderSCTaskRows(eveningTasks)}
-        <div class="habit-row" onclick="openWindDown()" style="border-top:1px solid rgba(255,255,255,0.05);margin-top:4px;padding-top:8px">
-          <div class="habit-check" style="color:var(--sky)">🌙</div>
-          <div class="habit-info"><div class="habit-name" style="color:var(--sky-light)">Evening wind-down flow</div><div style="font-size:11px;color:var(--text-muted)">Mood, journal, breathe, goodnight</div></div>
-          <div style="font-size:16px;color:var(--text-muted)">›</div>
-        </div>
-      </div>`;
-    }
-
-    // Anytime / ungrouped self-care
-    if (anytimeTasks.length > 0) {
-      html += `<div class="section-label">💚 Self-care</div><div class="card">${renderSCTaskRows(anytimeTasks)}</div>`;
-    }
   }
 
   // --- WELLNESS GATEWAY CARD (week 3+) ---
