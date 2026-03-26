@@ -7767,6 +7767,22 @@ function renderTodayTab() {
   }
 
   // --- FOUNDATIONS: Water + Food (compact combined card) ---
+  const waterCount = td.water || 0;
+  const trackMeals = state.prefs?.habits?.track_meals;
+  const foodDone = td.food || {};
+  const foodItems = trackMeals ? [
+    { id: 'breakfast', label: '🌅 Breakfast' },
+    { id: 'lunch',     label: '☀️ Lunch' },
+    { id: 'dinner',    label: '🌙 Dinner' },
+    { id: 'felt_nourished', label: '💚 Felt nourished' },
+  ] : [
+    { id: 'ate_meal',       label: '🍽 Ate a meal' },
+    { id: 'had_veggies',    label: '🥦 Had veggies' },
+    { id: 'felt_nourished', label: '💚 Felt nourished' },
+  ];
+  const mainItems = foodItems.filter(f => f.id !== 'felt_nourished');
+  const mainDone = mainItems.filter(f => foodDone[f.id]).length;
+  const foodCount = Object.values(foodDone).filter(Boolean).length;
   const thm = THEMES[state.prefs?.theme || 'forest'] || THEMES.forest;
   html += `<div class="card" style="padding:14px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -8016,29 +8032,7 @@ function renderTodayTab() {
     html += `</div>`;
   }
 
-  // --- NOURISHMENT ---
-  const waterCount = td.water || 0;
-  const trackMeals = state.prefs?.habits?.track_meals;
-  const foodDone = td.food || {};
-
-  // Build food items based on mode
-  const foodItems = trackMeals ? [
-    { id: 'breakfast', label: '🌅 Breakfast' },
-    { id: 'lunch',     label: '☀️ Lunch' },
-    { id: 'dinner',    label: '🌙 Dinner' },
-    { id: 'felt_nourished', label: '💚 Felt nourished' },
-  ] : [
-    { id: 'ate_meal',       label: '🍽 Ate a meal' },
-    { id: 'had_veggies',    label: '🥦 Had veggies' },
-    { id: 'felt_nourished', label: '💚 Felt nourished' },
-  ];
-
-  // XP threshold — 2 of the main items (not counting felt_nourished separately)
-  const mainItems = foodItems.filter(f => f.id !== 'felt_nourished');
-  const mainDone = mainItems.filter(f => foodDone[f.id]).length;
-  const foodCount = Object.values(foodDone).filter(Boolean).length;
-
-  // (Water + food now rendered above habits as combined compact card)
+  // (Water + food rendered above habits as combined compact card)
 
   // --- SELF-CARE TASKS (grouped by morning/evening/anytime routines) ---
   // Self-care week 1 teaser (tasks now render in Anytime section above)
