@@ -10668,6 +10668,7 @@ function resetToday() {
 async function showBackupSheet() {
   openSheet('backup-sheet');
   await generateBackupLink();
+  trackFeature('backup');
   trackEvent('backup_created');
 }
 

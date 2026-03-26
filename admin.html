@@ -475,7 +475,7 @@ function renderOverview() {
   // Calculate today's total events from dailyStats
   const today = new Date().toISOString().slice(0, 10);
   const todayStats = d.dailyStats[today] || {};
-  const todayTotal = Object.entries(todayStats).filter(([k]) => !k.startsWith('_')).reduce((a, [,b]) => a + b, 0);
+  const todayTotal = Object.entries(todayStats).filter(([k]) => !k.startsWith('_') && k !== 'unique_users').reduce((a, [,b]) => a + (typeof b === 'number' ? b : 0), 0);
   const todayUniqueUsers = todayStats.unique_users || 0;
 
   // Calculate running unique users (30-day)
@@ -671,7 +671,7 @@ function renderFeatures() {
     Object.entries(day).forEach(([k, v]) => {
       if (k.startsWith('feature:')) {
         const name = k.replace('feature:', '');
-        featureTotals[name] = (featureTotals[name] || 0) + v;
+        featureTotals[name] = (featureTotals[name] || 0) + (typeof v === 'number' ? v : 0);
       }
     });
   });
