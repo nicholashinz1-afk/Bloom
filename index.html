@@ -3634,8 +3634,9 @@ function getDailyCompletionCount() {
     [...DAILY_HABITS, MEDICATION_HABIT].forEach(h => {
       if (!dhP[h.id]) return;
       const time = htP[h.id] || h.defaultTime || 'any';
-      if ((time === 'am' || time === 'both') && td[h.id + '_am']) count++;
-      if ((time === 'pm' || time === 'both') && td[h.id + '_pm']) count++;
+      if ((time === 'am' || time === 'all') && td[h.id + '_am']) count++;
+      if ((time === 'afternoon' || time === 'all') && td[h.id + '_afternoon']) count++;
+      if ((time === 'pm' || time === 'all') && td[h.id + '_pm']) count++;
       if (time === 'any' && td[h.id + '_any']) count++;
     });
   } else {
@@ -4673,7 +4674,6 @@ async function saveOpenJournal() {
 
 function toggleGentleMode() {
   state.todayData.gentleMode = !state.todayData.gentleMode;
-  state._showAllHabitsOnHardDay = false;
   saveState();
   archiveToday();
   renderTodayTab();
@@ -5287,16 +5287,20 @@ function checkMedicationReminders() {
 
   // Build schedule: { slotKey, firstHour, followupHour, checkFn }
   const schedule = [];
-  if (medTime === 'am' || medTime === 'both') {
+  if (medTime === 'am' || medTime === 'all') {
     schedule.push({ slot: 'am', firstHour: 9, followupHour: 11, done: () => td.medication_am });
   }
-  if (medTime === 'pm' || medTime === 'both') {
+  if (medTime === 'afternoon' || medTime === 'all') {
+    schedule.push({ slot: 'afternoon', firstHour: 14, followupHour: 16, done: () => td.medication_afternoon });
+  }
+  if (medTime === 'pm' || medTime === 'all') {
     schedule.push({ slot: 'pm', firstHour: 20, followupHour: 22, done: () => td.medication_pm });
   }
   if (medTime === 'any') {
     schedule.push({ slot: 'any', firstHour: 12, followupHour: 14, done: () => td.medication_any });
   }
 
+  const slotDisplayName = { am: 'AM', afternoon: 'Afternoon', pm: 'PM' };
   schedule.forEach(s => {
     if (s.done()) return;
     const msg = MED_REMINDER_MESSAGES[Math.floor(Math.random() * MED_REMINDER_MESSAGES.length)];
@@ -5315,7 +5319,7 @@ function checkMedicationReminders() {
       if (hour >= s.followupHour && !sent[followKey]) {
         sent[followKey] = true;
         save(sentKey, sent);
-        sendLocalNotification('Still here 💊', 'No rush — just another gentle nudge about your ' + (s.slot === 'any' ? '' : s.slot.toUpperCase() + ' ') + 'medication.', 'reminder-med-' + s.slot + '-f');
+        sendLocalNotification('Still here 💊', 'No rush — just another gentle nudge about your ' + (s.slot === 'any' ? '' : (slotDisplayName[s.slot] || s.slot) + ' ') + 'medication.', 'reminder-med-' + s.slot + '-f');
       }
     }
   });
@@ -5629,10 +5633,13 @@ async function scheduleAllPushNotifications() {
     const medTime = state.prefs?.habitTimes?.medication || 'am';
     const td = state.todayData;
     const schedule = [];
-    if (medTime === 'am' || medTime === 'both') {
+    if (medTime === 'am' || medTime === 'all') {
       schedule.push({ slot: 'am', firstHour: 9, done: () => td.medication_am });
     }
-    if (medTime === 'pm' || medTime === 'both') {
+    if (medTime === 'afternoon' || medTime === 'all') {
+      schedule.push({ slot: 'afternoon', firstHour: 14, done: () => td.medication_afternoon });
+    }
+    if (medTime === 'pm' || medTime === 'all') {
       schedule.push({ slot: 'pm', firstHour: 20, done: () => td.medication_pm });
     }
     if (medTime === 'any') {
@@ -6455,14 +6462,14 @@ const XP_VALUES = {
   w_outside: 20, w_therapy: 25, water_goal: 15, food: 15, journal: 20,
   household: 15, reflection: 20,
   // Daily habits — all self-care is equally valued
-  brush_teeth_am: 15, brush_teeth_pm: 15, brush_teeth_any: 15,
-  brush_hair_am: 15, brush_hair_pm: 15, brush_hair_any: 15,
-  wash_face_am: 15, wash_face_pm: 15, wash_face_any: 15,
-  get_dressed_am: 15, get_dressed_pm: 15, get_dressed_any: 15,
-  floss_am: 15, floss_pm: 15, floss_any: 15,
-  skincare_am: 15, skincare_pm: 15, skincare_any: 15,
+  brush_teeth_am: 15, brush_teeth_afternoon: 15, brush_teeth_pm: 15, brush_teeth_any: 15,
+  brush_hair_am: 15, brush_hair_afternoon: 15, brush_hair_pm: 15, brush_hair_any: 15,
+  wash_face_am: 15, wash_face_afternoon: 15, wash_face_pm: 15, wash_face_any: 15,
+  get_dressed_am: 15, get_dressed_afternoon: 15, get_dressed_pm: 15, get_dressed_any: 15,
+  floss_am: 15, floss_afternoon: 15, floss_pm: 15, floss_any: 15,
+  skincare_am: 15, skincare_afternoon: 15, skincare_pm: 15, skincare_any: 15,
   // Medication adherence — one of the most impactful mental health actions
-  medication_am: 20, medication_pm: 20, medication_any: 20,
+  medication_am: 20, medication_afternoon: 20, medication_pm: 20, medication_any: 20,
 };
 
 function toggleHabit(habitId, el) {
@@ -6646,8 +6653,9 @@ function getCompletionRate() {
   if (activeNewHabits.length > 0 || dhPrefs2.medication) {
     [...activeNewHabits, ...(dhPrefs2.medication ? [MEDICATION_HABIT] : [])].forEach(h => {
       const time = htPrefs2[h.id] || h.defaultTime || 'any';
-      if (time === 'am' || time === 'both') { totalHabits++; if (td[h.id + '_am']) doneHabits++; }
-      if (time === 'pm' || time === 'both') { totalHabits++; if (td[h.id + '_pm']) doneHabits++; }
+      if (time === 'am' || time === 'all') { totalHabits++; if (td[h.id + '_am']) doneHabits++; }
+      if (time === 'afternoon' || time === 'all') { totalHabits++; if (td[h.id + '_afternoon']) doneHabits++; }
+      if (time === 'pm' || time === 'all') { totalHabits++; if (td[h.id + '_pm']) doneHabits++; }
       if (time === 'any') { totalHabits++; if (td[h.id + '_any']) doneHabits++; }
     });
   } else {
@@ -6672,8 +6680,9 @@ function checkAllDone() {
   if (activeNewHabits.length > 0 || dhPrefs2.medication) {
     [...activeNewHabits, ...(dhPrefs2.medication ? [MEDICATION_HABIT] : [])].forEach(h => {
       const time = htPrefs2[h.id] || h.defaultTime || 'any';
-      if (time === 'am' || time === 'both') { if (!td[h.id + '_am']) allHabitsDone = false; }
-      if (time === 'pm' || time === 'both') { if (!td[h.id + '_pm']) allHabitsDone = false; }
+      if (time === 'am' || time === 'all') { if (!td[h.id + '_am']) allHabitsDone = false; }
+      if (time === 'afternoon' || time === 'all') { if (!td[h.id + '_afternoon']) allHabitsDone = false; }
+      if (time === 'pm' || time === 'all') { if (!td[h.id + '_pm']) allHabitsDone = false; }
       if (time === 'any') { if (!td[h.id + '_any']) allHabitsDone = false; }
     });
   } else {
@@ -7662,33 +7671,42 @@ function renderTodayTab() {
   let allDailyHabits = DAILY_HABITS.filter(h => dhPrefs[h.id]);
   const medEnabled = !!dhPrefs.medication;
 
-  // Adaptive difficulty: if mood is low (0 or 1) or gentle mode, show reduced list
+  // Adaptive difficulty: if mood is low (0 or 1) or gentle mode, mute non-priority habits
   const isReducedDay = isLowMoodDay || isGentleMode;
-  const showAllHabits = state._showAllHabitsOnHardDay;
-  if (isReducedDay && !showAllHabits && allDailyHabits.length > 2) {
+  let mutedAfterIndex = -1; // -1 means no muting
+  if (isReducedDay && allDailyHabits.length > 2) {
+    mutedAfterIndex = 2; // First 2 are priority, rest are muted but still accessible
     if (isLowMoodDay) {
       html += `<div style="background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.15);border-radius:var(--r-md);padding:12px 16px;margin-bottom:12px">
         <div style="font-size:13px;color:var(--sky-light);font-weight:500;margin-bottom:4px">Easy does it today</div>
-        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:8px">Showing your top priorities. The rest can wait.</div>
-        <div onclick="state._showAllHabitsOnHardDay=true;renderTodayTab()" style="font-size:12px;color:var(--text-secondary);cursor:pointer;text-decoration:underline">Show all habits</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Your top priorities are highlighted. Everything else is still here if you need it.</div>
       </div>`;
     }
-    allDailyHabits = allDailyHabits.slice(0, 2);
   }
+
+  // Build a set of priority habit IDs (first N in the list) for muting
+  const priorityHabitIds = new Set(mutedAfterIndex > 0 ? allDailyHabits.slice(0, mutedAfterIndex).map(h => h.id) : []);
 
   // Collect AM habits
   const amHabits = allDailyHabits.filter(h => {
     const t2 = htPrefs[h.id] || 'any';
-    return t2 === 'am' || t2 === 'both';
+    return t2 === 'am' || t2 === 'all';
   });
-  const medInAm = medEnabled && (htPrefs.medication === 'am' || htPrefs.medication === 'both');
+  const medInAm = medEnabled && (htPrefs.medication === 'am' || htPrefs.medication === 'all');
+
+  // Collect Afternoon habits
+  const afternoonHabits = allDailyHabits.filter(h => {
+    const t2 = htPrefs[h.id] || 'any';
+    return t2 === 'afternoon' || t2 === 'all';
+  });
+  const medInAfternoon = medEnabled && (htPrefs.medication === 'afternoon' || htPrefs.medication === 'all');
 
   // Collect PM habits
   const pmHabits = allDailyHabits.filter(h => {
     const t2 = htPrefs[h.id] || 'any';
-    return t2 === 'pm' || t2 === 'both';
+    return t2 === 'pm' || t2 === 'all';
   });
-  const medInPm = medEnabled && (htPrefs.medication === 'pm' || htPrefs.medication === 'both');
+  const medInPm = medEnabled && (htPrefs.medication === 'pm' || htPrefs.medication === 'all');
 
   // Collect Any habits — default when no time preference is set
   const anyHabits = allDailyHabits.filter(h => {
@@ -7697,27 +7715,29 @@ function renderTodayTab() {
   });
   const medInAny = medEnabled && (!htPrefs.medication || htPrefs.medication === 'any');
 
-  function dailyHabitRow(h, timeSlot) {
+  function dailyHabitRow(h, timeSlot, muted) {
     const key = h.id + '_' + timeSlot;
     const done = td[key];
     const xp = h.xp || 15;
     const triggers = state.prefs?.habitTriggers || {};
     const trigger = triggers[h.id + '_' + timeSlot] || triggers[h.id] || '';
     const triggerHtml = trigger ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px;font-style:italic">${trigger}</div>` : '';
-    return `<div class="habit-row" onclick="tapDailyHabit('${h.id}', '${timeSlot}', this)">
+    const mutedStyle = muted && !done ? 'opacity:0.45;' : '';
+    return `<div class="habit-row" style="${mutedStyle}" onclick="tapDailyHabit('${h.id}', '${timeSlot}', this)">
       <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : h.icon}</div>
       <div class="habit-info"><div class="habit-name">${h.label}</div>${triggerHtml}</div>
       ${!done ? `<div class="habit-xp">+${xp}</div>` : ''}
     </div>`;
   }
 
-  function medHabitRow(timeSlot) {
+  function medHabitRow(timeSlot, muted) {
     const key = 'medication_' + timeSlot;
     const done = td[key];
     const triggers = state.prefs?.habitTriggers || {};
     const trigger = triggers['medication_' + timeSlot] || triggers['medication'] || '';
     const triggerHtml = trigger ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px;font-style:italic">${trigger}</div>` : '';
-    return `<div class="habit-row" onclick="tapDailyHabit('medication', '${timeSlot}', this)">
+    const mutedStyle = muted && !done ? 'opacity:0.45;' : '';
+    return `<div class="habit-row" style="${mutedStyle}" onclick="tapDailyHabit('medication', '${timeSlot}', this)">
       <div class="habit-check${done ? ' done' : ''}" style="${!done ? 'border-color:rgba(106,154,176,0.3)' : ''}">${done ? CHECK_SVG : '💊'}</div>
       <div class="habit-info">
         <div class="habit-name" style="color:var(--sky-light)">Medication</div>
@@ -7727,27 +7747,40 @@ function renderTodayTab() {
     </div>`;
   }
 
+  // Helper: is this habit muted on a reduced day?
+  function isMuted(h) { return mutedAfterIndex > 0 && !priorityHabitIds.has(h.id); }
+  // Medication is muted if it's not in the priority set and we're in reduced mode
+  const medMuted = mutedAfterIndex > 0 && !priorityHabitIds.has('medication');
+
   // --- MORNING SECTION ---
   if (amHabits.length > 0 || medInAm) {
     html += `<div class="section-label">🌅 Morning</div><div class="card mb-0">`;
-    amHabits.forEach(h => { html += dailyHabitRow(h, 'am'); });
-    if (medInAm) html += medHabitRow('am');
+    amHabits.forEach(h => { html += dailyHabitRow(h, 'am', isMuted(h)); });
+    if (medInAm) html += medHabitRow('am', medMuted);
+    html += `</div>`;
+  }
+
+  // --- AFTERNOON SECTION ---
+  if (afternoonHabits.length > 0 || medInAfternoon) {
+    html += `<div class="section-label">🌤️ Afternoon</div><div class="card mb-0">`;
+    afternoonHabits.forEach(h => { html += dailyHabitRow(h, 'afternoon', isMuted(h)); });
+    if (medInAfternoon) html += medHabitRow('afternoon', medMuted);
     html += `</div>`;
   }
 
   // --- EVENING SECTION ---
   if (pmHabits.length > 0 || medInPm) {
     html += `<div class="section-label">🌙 Evening</div><div class="card mb-0">`;
-    pmHabits.forEach(h => { html += dailyHabitRow(h, 'pm'); });
-    if (medInPm) html += medHabitRow('pm');
+    pmHabits.forEach(h => { html += dailyHabitRow(h, 'pm', isMuted(h)); });
+    if (medInPm) html += medHabitRow('pm', medMuted);
     html += `</div>`;
   }
 
   // --- ANYTIME SECTION ---
   if (anyHabits.length > 0 || medInAny) {
     html += `<div class="section-label"><span style="color:#f0c040">☀️</span> Anytime today</div><div class="card mb-0">`;
-    anyHabits.forEach(h => { html += dailyHabitRow(h, 'any'); });
-    if (medInAny) html += medHabitRow('any');
+    anyHabits.forEach(h => { html += dailyHabitRow(h, 'any', isMuted(h)); });
+    if (medInAny) html += medHabitRow('any', medMuted);
     html += `</div>`;
   }
 
@@ -9405,8 +9438,9 @@ function renderProgressTab() {
   [...DAILY_HABITS, ...(dhP3.medication ? [MEDICATION_HABIT] : [])].forEach(h => {
     if (!dhP3[h.id]) return;
     const time = htP3[h.id] || h.defaultTime || 'any';
-    if (time === 'am' || time === 'both') habitRows.push({ key: h.id + '_am', icon: h.icon, label: h.label + ' (AM)', daily: true });
-    if (time === 'pm' || time === 'both') habitRows.push({ key: h.id + '_pm', icon: h.icon, label: h.label + ' (PM)', daily: true });
+    if (time === 'am' || time === 'all') habitRows.push({ key: h.id + '_am', icon: h.icon, label: h.label + ' (AM)', daily: true });
+    if (time === 'afternoon' || time === 'all') habitRows.push({ key: h.id + '_afternoon', icon: h.icon, label: h.label + ' (Afternoon)', daily: true });
+    if (time === 'pm' || time === 'all') habitRows.push({ key: h.id + '_pm', icon: h.icon, label: h.label + ' (PM)', daily: true });
     if (time === 'any') habitRows.push({ key: h.id + '_any', icon: h.icon, label: h.label, daily: true });
   });
   // Legacy teeth if no new habits
@@ -9773,13 +9807,13 @@ function openHistoryDetail(dateStr) {
   const habits = entry.habits || {};
   const habitNames = {
     m_teeth:'Morning brush', e_teeth:'Evening brush', w_shower:'Shower', w_exercise:'Exercise', w_outside:'Go outside', w_therapy:'Go to therapy',
-    brush_teeth_am:'Brush teeth (AM)', brush_teeth_pm:'Brush teeth (PM)',
-    brush_hair_am:'Brush hair (AM)', brush_hair_pm:'Brush hair (PM)',
-    wash_face_am:'Wash face (AM)', wash_face_pm:'Wash face (PM)',
-    get_dressed_am:'Get dressed (AM)', get_dressed_pm:'Get dressed (PM)',
-    floss_am:'Floss (AM)', floss_pm:'Floss (PM)',
-    skincare_am:'Skincare (AM)', skincare_pm:'Skincare (PM)',
-    medication_am:'Medication (AM)', medication_pm:'Medication (PM)', medication_any:'Medication',
+    brush_teeth_am:'Brush teeth (AM)', brush_teeth_afternoon:'Brush teeth (Afternoon)', brush_teeth_pm:'Brush teeth (PM)',
+    brush_hair_am:'Brush hair (AM)', brush_hair_afternoon:'Brush hair (Afternoon)', brush_hair_pm:'Brush hair (PM)',
+    wash_face_am:'Wash face (AM)', wash_face_afternoon:'Wash face (Afternoon)', wash_face_pm:'Wash face (PM)',
+    get_dressed_am:'Get dressed (AM)', get_dressed_afternoon:'Get dressed (Afternoon)', get_dressed_pm:'Get dressed (PM)',
+    floss_am:'Floss (AM)', floss_afternoon:'Floss (Afternoon)', floss_pm:'Floss (PM)',
+    skincare_am:'Skincare (AM)', skincare_afternoon:'Skincare (Afternoon)', skincare_pm:'Skincare (PM)',
+    medication_am:'Medication (AM)', medication_afternoon:'Medication (Afternoon)', medication_pm:'Medication (PM)', medication_any:'Medication',
     brush_teeth_any:'Brush teeth', brush_hair_any:'Brush hair', wash_face_any:'Wash face',
     get_dressed_any:'Get dressed', floss_any:'Floss', skincare_any:'Skincare',
   };
@@ -9792,11 +9826,14 @@ function openHistoryDetail(dateStr) {
   if (dhPrefs.medication) allConfiguredHabits.push(MEDICATION_HABIT);
   allConfiguredHabits.forEach(h => {
     const time = htPrefs[h.id] || h.defaultTime || 'any';
-    if (time === 'both') {
+    if (time === 'all') {
       userHabitKeys.add(h.id + '_am');
+      userHabitKeys.add(h.id + '_afternoon');
       userHabitKeys.add(h.id + '_pm');
     } else if (time === 'am') {
       userHabitKeys.add(h.id + '_am');
+    } else if (time === 'afternoon') {
+      userHabitKeys.add(h.id + '_afternoon');
     } else if (time === 'pm') {
       userHabitKeys.add(h.id + '_pm');
     } else {
@@ -10132,8 +10169,8 @@ function renderSettingsTab() {
   // ── DAILY HABITS ─────────────────────────────────────────────
   const dh = prefs.dailyHabits || {};
   const ht = prefs.habitTimes || {};
-  const timeLabels = { am: '☀️ AM', pm: '🌙 PM', both: '☀️🌙 Both', any: '✦ Any' };
-  const timeOptions = ['am', 'pm', 'both', 'any'];
+  const timeLabels = { am: '☀️ AM', afternoon: '🌤️ Mid', pm: '🌙 PM', all: '☀️🌤️🌙 All', any: '✦ Any' };
+  const timeOptions = ['am', 'afternoon', 'pm', 'all', 'any'];
 
   function dailyHabitSettingsRow(h) {
     const on = !!dh[h.id];
@@ -10225,15 +10262,18 @@ function renderSettingsTab() {
       </div>`;
     }
 
-    // Daily habits — respect AM/PM/Both/Anytime time settings
+    // Daily habits — respect AM/Afternoon/PM/All/Anytime time settings
     const allDaily = [...DAILY_HABITS.filter(h => dh[h.id]), ...(dh.medication ? [MEDICATION_HABIT] : [])];
     allDaily.forEach(h => {
       const time = ht[h.id] || h.defaultTime || 'any';
-      if (time === 'both') {
+      if (time === 'all') {
         triggerHtml += triggerInput(h.id + '_am', h.label + ' (morning)', h.icon, 'e.g. After waking up...');
+        triggerHtml += triggerInput(h.id + '_afternoon', h.label + ' (afternoon)', h.icon, 'e.g. After lunch...');
         triggerHtml += triggerInput(h.id + '_pm', h.label + ' (evening)', h.icon, 'e.g. Before bed...');
       } else if (time === 'am') {
         triggerHtml += triggerInput(h.id + '_am', h.label + ' (morning)', h.icon, 'e.g. After waking up...');
+      } else if (time === 'afternoon') {
+        triggerHtml += triggerInput(h.id + '_afternoon', h.label + ' (afternoon)', h.icon, 'e.g. After lunch...');
       } else if (time === 'pm') {
         triggerHtml += triggerInput(h.id + '_pm', h.label + ' (evening)', h.icon, 'e.g. Before bed...');
       } else {
@@ -10461,8 +10501,8 @@ function renderSettingsTab() {
 
     // Medication reminders (only if medication is enabled)
     if (medHabitOn) {
-      const timeDesc = medTimeVal === 'am' ? '9am' : medTimeVal === 'pm' ? '8pm' : medTimeVal === 'both' ? '9am & 8pm' : 'noon';
-      const followupDesc = medTimeVal === 'am' ? '11am' : medTimeVal === 'pm' ? '10pm' : medTimeVal === 'both' ? '11am & 10pm' : '2pm';
+      const timeDesc = medTimeVal === 'am' ? '9am' : medTimeVal === 'afternoon' ? '2pm' : medTimeVal === 'pm' ? '8pm' : medTimeVal === 'all' ? '9am, 2pm & 8pm' : 'noon';
+      const followupDesc = medTimeVal === 'am' ? '11am' : medTimeVal === 'afternoon' ? '4pm' : medTimeVal === 'pm' ? '10pm' : medTimeVal === 'all' ? '11am, 4pm & 10pm' : '2pm';
       const medOpts = [
         { id: 'auto', label: 'Remind + follow up — ' + timeDesc + ', then ' + followupDesc + ' if not logged' },
         { id: 'gentle', label: 'Once only — ' + timeDesc + ', no follow-up' },
@@ -10470,7 +10510,7 @@ function renderSettingsTab() {
       ];
       notifHtml += '<div class="divider"></div>' +
         '<div class="toggle-label" style="margin-bottom:4px;color:var(--sky-light)">💊 Medication reminders</div>' +
-        '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;line-height:1.5">Based on your ' + (medTimeVal === 'both' ? 'AM & PM' : medTimeVal.toUpperCase()) + ' schedule.</div>' +
+        '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;line-height:1.5">Based on your ' + (medTimeVal === 'all' ? 'AM, Afternoon & PM' : medTimeVal === 'afternoon' ? 'Afternoon' : medTimeVal.toUpperCase()) + ' schedule.</div>' +
         '<div class="radio-group">' +
         medOpts.map(function(o) {
           return '<div class="radio-option' + (medRemindMode === o.id ? ' selected' : '') + '" onclick="setMedRemindMode(\'' + o.id + '\')">' +
@@ -10907,8 +10947,8 @@ function setHabitTime(id, time) {
 
   // Migrate today's completion data to new time slot keys
   const td = state.todayData;
-  const oldSlots = oldTime === 'both' ? ['am','pm'] : oldTime === 'any' ? ['any'] : [oldTime || 'any'];
-  const newSlots = time === 'both' ? ['am','pm'] : time === 'any' ? ['any'] : [time];
+  const oldSlots = oldTime === 'all' ? ['am','afternoon','pm'] : oldTime === 'any' ? ['any'] : [oldTime || 'any'];
+  const newSlots = time === 'all' ? ['am','afternoon','pm'] : time === 'any' ? ['any'] : [time];
   // Collect any completions from old slots
   const wasDone = oldSlots.some(s => td[id + '_' + s]);
   if (wasDone) {
@@ -13711,6 +13751,22 @@ function migrateToNewDailyHabits() {
   save('bloom_prefs', p);
 }
 
+function migrateBothToAll() {
+  if (!state.prefs) return;
+  const p = state.prefs;
+  if (p._migratedBothToAll) return;
+  const ht = p.habitTimes;
+  if (ht) {
+    Object.keys(ht).forEach(id => {
+      if (ht[id] === 'both') {
+        ht[id] = 'all';
+      }
+    });
+  }
+  p._migratedBothToAll = true;
+  save('bloom_prefs', p);
+}
+
 // ============================================================
 //  BLOOM BUDDY
 // ============================================================
@@ -15145,6 +15201,7 @@ function initApp() {
   migrateJournalFormat();
   backfillJournalPrompts();
   migrateToNewDailyHabits();
+  migrateBothToAll();
   initTheme();
   // Restore hard day dimming if active
   if (state.hardDayMode || (state.todayData?.mood !== undefined && state.todayData.mood <= 1 && state.todayData._hardDayActivated)) {
