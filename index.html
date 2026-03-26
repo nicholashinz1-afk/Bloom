@@ -5969,6 +5969,8 @@ const DAILY_HABITS = [
   { id: 'get_dressed',  icon: '👕', label: 'Get dressed',       xp: 15, defaultTime: 'any' },
   { id: 'floss',        icon: '🦷', label: 'Floss',             xp: 15, defaultTime: 'any' },
   { id: 'skincare',     icon: '✨', label: 'Skincare routine',  xp: 15, defaultTime: 'any' },
+  { id: 'good_bedtime', icon: '🌙', label: 'Good bedtime',      xp: 15, defaultTime: 'any' },
+  { id: 'screen_free',  icon: '📵', label: 'Screen-free time',  xp: 15, defaultTime: 'any' },
 ];
 
 const MEDICATION_HABIT = { id: 'medication', icon: '💊', label: 'Medication', xp: 20, defaultTime: 'any' };
@@ -6020,8 +6022,6 @@ const SELF_CARE_CATEGORIES = [
     label: 'Wind down',
     sub: 'Easing into rest',
     tasks: [
-      { id: 'sc_reasonable_bedtime', icon: '🌙', label: 'Went to bed at a good time' },
-      { id: 'sc_screen_free',        icon: '📵', label: 'Had some screen-free time' },
       { id: 'sc_moment_for_me',      icon: '🙏', label: 'Took a moment just for me' },
       { id: 'sc_tidy',               icon: '🧹', label: 'Tidied one small thing' },
     ],
@@ -6531,6 +6531,8 @@ const XP_VALUES = {
   get_dressed_am: 15, get_dressed_afternoon: 15, get_dressed_pm: 15, get_dressed_any: 15,
   floss_am: 15, floss_afternoon: 15, floss_pm: 15, floss_any: 15,
   skincare_am: 15, skincare_afternoon: 15, skincare_pm: 15, skincare_any: 15,
+  good_bedtime_am: 15, good_bedtime_afternoon: 15, good_bedtime_pm: 15, good_bedtime_any: 15,
+  screen_free_am: 15, screen_free_afternoon: 15, screen_free_pm: 15, screen_free_any: 15,
   // Medication adherence — one of the most impactful mental health actions
   medication_am: 20, medication_afternoon: 20, medication_pm: 20, medication_any: 20,
 };
@@ -9893,9 +9895,12 @@ function openHistoryDetail(dateStr) {
     get_dressed_am:'Get dressed (AM)', get_dressed_afternoon:'Get dressed (Afternoon)', get_dressed_pm:'Get dressed (PM)',
     floss_am:'Floss (AM)', floss_afternoon:'Floss (Afternoon)', floss_pm:'Floss (PM)',
     skincare_am:'Skincare (AM)', skincare_afternoon:'Skincare (Afternoon)', skincare_pm:'Skincare (PM)',
+    good_bedtime_am:'Good bedtime (AM)', good_bedtime_afternoon:'Good bedtime (Afternoon)', good_bedtime_pm:'Good bedtime (PM)',
+    screen_free_am:'Screen-free time (AM)', screen_free_afternoon:'Screen-free time (Afternoon)', screen_free_pm:'Screen-free time (PM)',
     medication_am:'Medication (AM)', medication_afternoon:'Medication (Afternoon)', medication_pm:'Medication (PM)', medication_any:'Medication',
     brush_teeth_any:'Brush teeth', brush_hair_any:'Brush hair', wash_face_any:'Wash face',
     get_dressed_any:'Get dressed', floss_any:'Floss', skincare_any:'Skincare',
+    good_bedtime_any:'Good bedtime', screen_free_any:'Screen-free time',
   };
 
   // Build union of stored habit keys + user's currently configured habits
@@ -10280,6 +10285,8 @@ function renderSettingsTab() {
     get_dressed:  { am: 'After I check the weather...', afternoon: 'When I need a fresh start...', pm: 'When I change into comfy clothes...', any: 'After I pick out what feels right...' },
     floss:        { am: 'Right after brushing my teeth...', afternoon: 'After I finish eating...', pm: 'Before I put my toothbrush away...', any: 'After I brush my teeth...' },
     skincare:     { am: 'After I wash my face...', afternoon: 'After I splash water on my face...', pm: 'After I wash off the day...', any: 'After I dry my face...' },
+    good_bedtime: { am: 'After I set my alarm...', afternoon: 'After I plan my evening...', pm: 'After I set my alarm...', any: 'When I start feeling tired...' },
+    screen_free:  { am: 'After I make my morning coffee...', afternoon: 'After I finish work...', pm: 'When I plug in my phone for the night...', any: 'When I sit down on the couch...' },
     medication:   { am: 'After I pour my coffee...', afternoon: 'After I sit down for lunch...', pm: 'After I brush my teeth at night...', any: 'After my first meal of the day...' },
   };
   function getCuePlaceholder(habitId, slot) {
@@ -13851,6 +13858,28 @@ function migrateHabitTimesToBitmask() {
   save('bloom_prefs', p);
 }
 
+function migrateSelfCareToHabits() {
+  if (!state.prefs) return;
+  const p = state.prefs;
+  if (p._migratedSelfCareToHabits) return;
+  // Migrate bedtime and screen-free from self-care to daily habits
+  const scPrefs = p.selfCare || {};
+  if (!p.dailyHabits) p.dailyHabits = {};
+  if (!p.habitTimes) p.habitTimes = {};
+  if (scPrefs.sc_reasonable_bedtime) {
+    p.dailyHabits.good_bedtime = true;
+    p.habitTimes.good_bedtime = p.habitTimes.good_bedtime || 'any';
+    delete scPrefs.sc_reasonable_bedtime;
+  }
+  if (scPrefs.sc_screen_free) {
+    p.dailyHabits.screen_free = true;
+    p.habitTimes.screen_free = p.habitTimes.screen_free || 'any';
+    delete scPrefs.sc_screen_free;
+  }
+  p._migratedSelfCareToHabits = true;
+  save('bloom_prefs', p);
+}
+
 // ============================================================
 //  BLOOM BUDDY
 // ============================================================
@@ -15277,6 +15306,7 @@ function initApp() {
   backfillJournalPrompts();
   migrateToNewDailyHabits();
   migrateHabitTimesToBitmask();
+  migrateSelfCareToHabits();
   initTheme();
   // Restore hard day dimming if active
   if (state.hardDayMode || (state.todayData?.mood !== undefined && state.todayData.mood <= 1 && state.todayData._hardDayActivated)) {
