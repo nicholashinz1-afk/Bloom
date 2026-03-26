@@ -10981,6 +10981,7 @@ async function importJSON(file) {
     try {
       const data = await decryptData(parsed.data, passphrase);
       applyRestoreData(data);
+      trackEvent('backup_restored');
       showToast('Encrypted backup restored!');
       return true;
     } catch(e) {
@@ -10991,6 +10992,7 @@ async function importJSON(file) {
 
   // Unencrypted backup
   applyRestoreData(parsed);
+  trackEvent('backup_restored');
   return true;
 }
 
@@ -11011,6 +11013,7 @@ async function tryRestoreFromURL() {
     const jsonStr = await decompressString(encoded);
     const data = JSON.parse(jsonStr);
     applyRestoreData(data);
+    trackEvent('backup_restored');
     history.replaceState({}, '', location.pathname);
     return true;
   } catch(e) { return false; }
@@ -11039,7 +11042,7 @@ function closeAllSheets() {
   document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('open'));
 }
 
-function openCrisisSheet() { openSheet('crisis-sheet'); trackFeature('crisis'); }
+function openCrisisSheet() { openSheet('crisis-sheet'); trackFeature('crisis'); trackEvent('crisis_opened'); }
 
 // ============================================================
 //  SCIENCE / INFO TOOLTIPS
@@ -12642,6 +12645,7 @@ function completeOnboarding() {
   document.getElementById('onboarding').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   initApp();
+  trackEvent('onboarding_complete');
 
   // Gentle path: auto-activate gentle mode on first load
   if (obData.readiness === 'gentle') {
@@ -13307,6 +13311,7 @@ async function buddyAcceptInvite(code) {
     haptic('medium');
     switchTab('community');
     fetchBuddyData();
+    trackEvent('buddy_pair');
     showBuddyStatus('You\'re paired! Say hi to your new buddy.', 'var(--sage)');
   } else {
     const reasons = {
@@ -13335,6 +13340,7 @@ async function buddyFindMatch(prefs) {
     haptic('medium');
     closeAllSheets();
     fetchBuddyData();
+    trackEvent('buddy_pair');
   } else if (data.ok && data.queued) {
     buddyState = { status: 'searching' };
     save('bloom_buddy_state', buddyState);
@@ -13482,6 +13488,7 @@ async function buddyUnpair(pairId) {
   }
   save('bloom_buddy_state', buddyState);
   save('bloom_buddy_list', buddyCachedBuddies);
+  trackEvent('buddy_unpair');
   renderBuddyContent();
 }
 
@@ -14249,6 +14256,7 @@ async function postToWall() {
       input.value = '';
       updateWallCharCount();
       haptic('medium');
+      trackEvent('wall_post');
       showWallStatus('Your words are out there now, making someone\'s day a little brighter.', 'var(--sage)');
       // Refresh messages only, preserve textarea
       await fetchWallMessages();
