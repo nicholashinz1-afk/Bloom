@@ -10152,12 +10152,44 @@ function renderSettingsTab() {
     </div>
   `);
 
-  // ── APPEARANCE ──────────────────────────────────────────────
-  const currentTheme = prefs.theme || 'forest';
-  const celebPref = prefs.celebrationIntensity || 'auto';
+  // ── HIGH CONTRAST (top-level accessibility toggle) ──────────
   const highContrastOn = prefs.highContrast || false;
+  html += `<div class="card" style="margin-bottom:10px">
+    <div class="toggle-row" style="padding:0">
+      <div>
+        <div class="toggle-label">♿ High contrast mode</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Stronger text contrast and bolder colors for easier reading</div>
+      </div>
+      <div class="toggle${highContrastOn ? ' on' : ''}" onclick="toggleHighContrast()"></div>
+    </div>
+  </div>`;
 
-  html += settingsSection('appearance', '🎨 Appearance', `
+  // ── CELEBRATION INTENSITY (top-level experience preference) ──
+  const celebPref = prefs.celebrationIntensity || 'auto';
+  const celebLabels = { auto: 'Auto (quieter on hard days)', full: 'Full fanfare', subtle: 'Gentle', quiet: 'Quiet' };
+  html += `<div class="card" style="margin-bottom:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="toggle-label">🎉 Celebrations</div>
+      <div style="font-size:11px;color:var(--text-muted)">${celebLabels[celebPref]}</div>
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap">
+      ${[
+        { id: 'auto', label: '✨ Auto' },
+        { id: 'full', label: '🎊 Full' },
+        { id: 'subtle', label: '🌿 Gentle' },
+        { id: 'quiet', label: '🤫 Quiet' },
+      ].map(o => `<div onclick="setCelebrationIntensity('${o.id}')" style="
+        padding:5px 12px;border-radius:99px;cursor:pointer;font-size:11px;
+        background:${celebPref === o.id ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+        border:1px solid ${celebPref === o.id ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+        color:${celebPref === o.id ? 'var(--sage-light)' : 'var(--text-muted)'}">${o.label}</div>`).join('')}
+    </div>
+  </div>`;
+
+  // ── THEME (collapsible) ──────────────────────────────────────
+  const currentTheme = prefs.theme || 'forest';
+
+  html += settingsSection('appearance', '🎨 Theme', `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       ${Object.entries(THEMES).map(([key, t]) => {
         const dots = t.pride
@@ -10181,34 +10213,6 @@ function renderSettingsTab() {
           ${key === currentTheme ? `<div style="position:absolute;top:8px;right:8px;font-size:12px;color:${t.primary}">✓</div>` : ''}
         </div>`;
       }).join('')}
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="toggle-row" style="padding:12px 0">
-      <div>
-        <div class="toggle-label">High contrast mode</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Stronger text contrast and bolder colors for easier reading</div>
-      </div>
-      <div class="toggle${highContrastOn ? ' on' : ''}" onclick="toggleHighContrast()"></div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div style="margin-top:8px">
-      <div class="toggle-label" style="margin-bottom:8px">Celebration intensity</div>
-      <div style="font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:10px">How much fanfare when you complete habits</div>
-      <div class="radio-group">
-        ${[
-          { id: 'auto', label: 'Auto — matches your mood (quieter on hard days)' },
-          { id: 'full', label: 'Full — confetti, sounds, and particles every time' },
-          { id: 'subtle', label: 'Subtle — gentle toasts and soft sounds, no confetti' },
-          { id: 'quiet', label: 'Quiet — simple checkmarks, no effects' },
-        ].map(o => `<div class="radio-option${celebPref === o.id ? ' selected' : ''}" onclick="setCelebrationIntensity('${o.id}')">
-          <div class="radio-dot"></div>
-          <div class="radio-label">${o.label}</div>
-        </div>`).join('')}
-      </div>
     </div>
   `);
 
@@ -10345,7 +10349,24 @@ function renderSettingsTab() {
     } else {
       getSlotsForTime(medTime).forEach(s => { dailyHtml += inlineCueInput('medication', s); });
     }
-    dailyHtml += `<div style="margin-top:8px;margin-left:28px;font-size:11px;color:var(--sky);cursor:pointer" onclick="openSettingsSection('notifications')">🔔 Set up medication reminders in Notifications ›</div>`;
+    // Inline medication reminder config
+    const _medRemindMode = (prefs.notifications || {}).medicationReminders || 'auto';
+    const _medSlotTimes = { am: ['9am','11am'], afternoon: ['2pm','4pm'], pm: ['8pm','10pm'] };
+    const _medSlots = medTime === 'any' ? [] : getSlotsForTime(medTime);
+    const _timeDesc = medTime === 'any' ? 'noon' : _medSlots.map(s => _medSlotTimes[s][0]).join(', ');
+    const _followDesc = medTime === 'any' ? '2pm' : _medSlots.map(s => _medSlotTimes[s][1]).join(', ');
+    const _remindLabels = { auto: '🔔 Auto — ' + _timeDesc + ', follow-up at ' + _followDesc, gentle: '🔕 Once — ' + _timeDesc + ' only', off: '❌ Off' };
+    dailyHtml += `<div style="margin-top:8px;margin-left:28px">
+      <div style="font-size:11px;color:var(--sky-light);margin-bottom:6px">Reminders</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        ${['auto','gentle','off'].map(m => `<div onclick="setMedRemindMode('${m}')" style="
+          padding:4px 10px;border-radius:99px;cursor:pointer;font-size:11px;
+          background:${_medRemindMode === m ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};
+          border:1px solid ${_medRemindMode === m ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};
+          color:${_medRemindMode === m ? 'var(--sky-light)' : 'var(--text-muted)'}">${m === 'auto' ? '🔔 Auto' : m === 'gentle' ? '🔕 Once' : '❌ Off'}</div>`).join('')}
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.4">${_remindLabels[_medRemindMode]}</div>
+    </div>`;
   }
   dailyHtml += `</div></div>`;
 
@@ -10563,29 +10584,10 @@ function renderSettingsTab() {
       }).join('')}
     </div>`;
 
-    // Medication reminders (only if medication is enabled)
+    // Medication reminders — now configured inline in Habits section
     if (medHabitOn) {
-      const slotTimes = { am: ['9am','11am'], afternoon: ['2pm','4pm'], pm: ['8pm','10pm'] };
-      const medSlots = medTimeVal === 'any' ? [] : getSlotsForTime(medTimeVal);
-      const timeDesc = medTimeVal === 'any' ? 'noon' : medSlots.map(s => slotTimes[s][0]).join(', ');
-      const followupDesc = medTimeVal === 'any' ? '2pm' : medSlots.map(s => slotTimes[s][1]).join(', ');
-      const scheduleLabel = medTimeVal === 'any' ? 'Anytime' : medSlots.map(s => s === 'am' ? 'AM' : s === 'afternoon' ? 'Afternoon' : 'PM').join(' & ');
-      const medOpts = [
-        { id: 'auto', label: 'Remind + follow up — ' + timeDesc + ', then ' + followupDesc + ' if not logged' },
-        { id: 'gentle', label: 'Once only — ' + timeDesc + ', no follow-up' },
-        { id: 'off', label: 'Off — no medication reminders' },
-      ];
       notifHtml += '<div class="divider"></div>' +
-        '<div class="toggle-label" style="margin-bottom:4px;color:var(--sky-light)">💊 Medication reminders</div>' +
-        '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;line-height:1.5">Based on your ' + scheduleLabel + ' schedule.</div>' +
-        '<div class="radio-group">' +
-        medOpts.map(function(o) {
-          return '<div class="radio-option' + (medRemindMode === o.id ? ' selected' : '') + '" onclick="setMedRemindMode(\'' + o.id + '\')">' +
-            '<div class="radio-dot"></div>' +
-            '<div class="radio-label">' + o.label + '</div>' +
-          '</div>';
-        }).join('') +
-        '</div>';
+        '<div style="font-size:12px;color:var(--text-muted);padding:4px 0;line-height:1.5">💊 Medication reminders are configured in <span style="color:var(--sky-light);cursor:pointer" onclick="openSettingsSection(\'daily\')">Habits ›</span></div>';
     }
   }
 
@@ -11275,8 +11277,7 @@ function setMedRemindMode(mode) {
   if (!state.prefs.notifications) state.prefs.notifications = {};
   state.prefs.notifications.medicationReminders = mode;
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
-  setTimeout(() => { const sh = document.getElementById('sh-notifications'); const sb = document.getElementById('sb-notifications'); if(sh&&sb){sh.classList.add('open');sb.classList.add('open');} }, 50);
+  reRenderSettingsPreservingScroll();
   setTimeout(() => scheduleAllPushNotifications(), 1000);
 }
 
