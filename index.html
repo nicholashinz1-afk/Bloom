@@ -7905,27 +7905,47 @@ function renderTodayTab() {
   // Medication is muted if it's not in the priority set and we're in reduced mode
   const medMuted = mutedAfterIndex > 0 && !priorityHabitIds.has('medication');
 
+  // Custom daily habits — group by time slot
+  const customDailyHabits = getCustomDailyHabits();
+  const customAm = customDailyHabits.filter(h => hasTimeSlot(h.time || 'any', TIME_AM));
+  const customAfternoon = customDailyHabits.filter(h => hasTimeSlot(h.time || 'any', TIME_AFTERNOON));
+  const customPm = customDailyHabits.filter(h => hasTimeSlot(h.time || 'any', TIME_PM));
+  const customAny = customDailyHabits.filter(h => (h.time || 'any') === 'any');
+
+  function customDailyHabitRow(ch, timeSlot) {
+    const key = ch.id + '_' + timeSlot;
+    const done = td[key];
+    return `<div class="habit-row" onclick="tapCustomDailyHabit('${ch.id}', '${timeSlot}', this)">
+      <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : (ch.icon || '🌸')}</div>
+      <div class="habit-info"><div class="habit-name">${ch.name}</div></div>
+      ${!done ? '<div class="habit-xp">+15</div>' : ''}
+    </div>`;
+  }
+
   // --- MORNING SECTION ---
-  if (amHabits.length > 0 || medInAm) {
+  if (amHabits.length > 0 || medInAm || customAm.length > 0) {
     html += `<div class="section-label">🌅 Morning</div><div class="card mb-0">`;
     amHabits.forEach(h => { html += dailyHabitRow(h, 'am', isMuted(h)); });
     if (medInAm) html += medHabitRow('am', medMuted);
+    customAm.forEach(ch => { html += customDailyHabitRow(ch, 'am'); });
     html += `</div>`;
   }
 
   // --- AFTERNOON SECTION ---
-  if (afternoonHabits.length > 0 || medInAfternoon) {
+  if (afternoonHabits.length > 0 || medInAfternoon || customAfternoon.length > 0) {
     html += `<div class="section-label">🌤️ Afternoon</div><div class="card mb-0">`;
     afternoonHabits.forEach(h => { html += dailyHabitRow(h, 'afternoon', isMuted(h)); });
     if (medInAfternoon) html += medHabitRow('afternoon', medMuted);
+    customAfternoon.forEach(ch => { html += customDailyHabitRow(ch, 'afternoon'); });
     html += `</div>`;
   }
 
   // --- EVENING SECTION ---
-  if (pmHabits.length > 0 || medInPm) {
+  if (pmHabits.length > 0 || medInPm || customPm.length > 0) {
     html += `<div class="section-label">🌙 Evening</div><div class="card mb-0">`;
     pmHabits.forEach(h => { html += dailyHabitRow(h, 'pm', isMuted(h)); });
     if (medInPm) html += medHabitRow('pm', medMuted);
+    customPm.forEach(ch => { html += customDailyHabitRow(ch, 'pm'); });
     html += `</div>`;
   }
 
@@ -7947,12 +7967,14 @@ function renderTodayTab() {
   const htDone = state.weekData?.household || {};
   const householdTasks = allHouseholdTasks.filter(t => isTodayScheduled(htDayPrefs[t.id] || 'any'));
 
-  const hasAnytime = anyHabits.length > 0 || medInAny || todayWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled;
+  const customSCForAnytime = getCustomSelfCare();
+  const hasAnytime = anyHabits.length > 0 || medInAny || customAny.length > 0 || todayWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled || customSCForAnytime.length > 0;
 
   if (hasAnytime) {
     html += `<div class="section-label"><span style="color:#f0c040">☀️</span> Anytime today</div><div class="card mb-0">`;
     anyHabits.forEach(h => { html += dailyHabitRow(h, 'any', isMuted(h)); });
     if (medInAny) html += medHabitRow('any', medMuted);
+    customAny.forEach(ch => { html += customDailyHabitRow(ch, 'any'); });
 
     // Weekly habits with weekly progress badge
     if (todayWeeklyHabits.length > 0) {
@@ -8009,23 +8031,36 @@ function renderTodayTab() {
     }
 
     // Self-care items — visually distinct with warm accent
-    if (scEnabled) {
+    const customSCItems = customSCForAnytime;
+    const hasAnySelfCare = scEnabled || customSCItems.length > 0;
+    if (hasAnySelfCare) {
       const scDone = td.selfCare || {};
-      const hasItemsAbove3 = anyHabits.length > 0 || medInAny || todayWeeklyHabits.length > 0 || householdTasks.length > 0;
+      const hasItemsAbove3 = anyHabits.length > 0 || medInAny || customAny.length > 0 || todayWeeklyHabits.length > 0 || householdTasks.length > 0;
       if (hasItemsAbove3) {
         html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:8px 0"></div>`;
       }
       html += `<div style="background:rgba(200,170,120,0.04);border-left:2px solid rgba(200,170,120,0.25);border-radius:0 var(--r-md) var(--r-md) 0;padding:8px 10px;margin:4px -2px">
         <div style="font-size:11px;color:rgba(200,170,120,0.7);margin-bottom:6px;font-weight:500">✨ Something nice for you</div>`;
-      selectedSCTasks.forEach(id => {
-        const task = SELF_CARE_TASKS.find(t2 => t2.id === id);
-        if (!task) return;
-        const done = scDone[id];
-        const scMuted = mutedAfterIndex > 0;
-        const scMutedStyle = scMuted && !done ? 'opacity:0.45;' : '';
-        html += `<div class="habit-row" style="${scMutedStyle}" onclick="tapSelfCare('${id}', this)">
-          <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : task.icon}</div>
-          <div class="habit-info"><div class="habit-name">${task.label}</div></div>
+      if (scEnabled) {
+        selectedSCTasks.forEach(id => {
+          const task = SELF_CARE_TASKS.find(t2 => t2.id === id);
+          if (!task) return;
+          const done = scDone[id];
+          const scMuted = mutedAfterIndex > 0;
+          const scMutedStyle = scMuted && !done ? 'opacity:0.45;' : '';
+          html += `<div class="habit-row" style="${scMutedStyle}" onclick="tapSelfCare('${id}', this)">
+            <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : task.icon}</div>
+            <div class="habit-info"><div class="habit-name">${task.label}</div></div>
+            ${!done ? '<div class="habit-xp" style="background:rgba(200,170,120,0.1);border-color:rgba(200,170,120,0.25);color:rgba(200,170,120,0.8)">+10</div>' : ''}
+          </div>`;
+        });
+      }
+      // Custom self-care items
+      customSCItems.forEach(sc => {
+        const done = scDone[sc.id];
+        html += `<div class="habit-row" onclick="tapCustomSelfCare('${sc.id}', this)">
+          <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : (sc.icon || '✨')}</div>
+          <div class="habit-info"><div class="habit-name">${sc.name}</div></div>
           ${!done ? '<div class="habit-xp" style="background:rgba(200,170,120,0.1);border-color:rgba(200,170,120,0.25);color:rgba(200,170,120,0.8)">+10</div>' : ''}
         </div>`;
       });
@@ -8109,7 +8144,7 @@ function renderTodayTab() {
   const customCheckins = getCustomCheckins();
   if (customCheckins.length > 0) {
     html += `<div class="card">
-      <div class="card-title">📝 My check-ins</div>`;
+      <div class="card-title">🪞 My check-ins</div>`;
     const ccData = td.customCheckins || {};
     customCheckins.forEach(cc => {
       const val = ccData[cc.id];
@@ -10449,6 +10484,48 @@ function renderSettingsTab() {
       <div class="toggle${prefs.habits?.track_meals ? ' on' : ''}" onclick="toggleMealTracking()"></div>
     </div>`;
 
+  // Custom daily habits
+  const customDH = getCustomDailyHabits();
+  dailyHtml += `<div class="divider"></div>
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;font-weight:500">🌸 Your custom habits</div>`;
+    customDH.forEach(ch => {
+      const curTime = ch.time || 'any';
+      const isAny = curTime === 'any' || typeof curTime !== 'number';
+      dailyHtml += `<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:16px">${ch.icon || '🌸'}</span>
+            <div class="toggle-label">${ch.name}</div>
+          </div>
+          <div onclick="removeCustomDailyHabit('${ch.id}')" style="font-size:11px;color:var(--rose-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(176,120,120,0.08)">Remove</div>
+        </div>
+        <div style="display:flex;gap:4px;margin-left:24px">
+          ${[{bit:1,label:'☀️ AM'},{bit:2,label:'🌤️ Mid'},{bit:4,label:'🌙 PM'}].map(c => {
+            const sel = !isAny && (curTime & c.bit) !== 0;
+            return `<div onclick="setCustomDailyHabitTime('${ch.id}',${c.bit})" style="
+              padding:4px 10px;border-radius:99px;cursor:pointer;font-size:11px;
+              background:${sel ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${sel ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+              color:${sel ? 'var(--sage-light)' : 'var(--text-muted)'}">${c.label}</div>`;
+          }).join('')}
+          <div onclick="setCustomDailyHabitTime('${ch.id}','any')" style="
+            padding:4px 10px;border-radius:99px;cursor:pointer;font-size:11px;
+            background:${isAny ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+            border:1px solid ${isAny ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+            color:${isAny ? 'var(--sage-light)' : 'var(--text-muted)'}">✦ Any</div>
+        </div>
+      </div>`;
+    });
+
+    if (customDH.length < 10) {
+      dailyHtml += `<div style="display:flex;gap:8px;margin-top:10px">
+        <input type="text" id="custom-daily-habit-name" placeholder="Add a custom habit...">
+        <button class="btn btn-primary btn-sm" onclick="addCustomDailyHabit()">Add</button>
+      </div>`;
+  } else {
+    dailyHtml += `<div style="font-size:11px;color:var(--text-muted);margin-top:8px">Maximum 10 custom habits reached.</div>`;
+  }
+
   html += settingsSection('daily', '☀️ Daily habits' + infoIcon('cues'), dailyHtml);
 
   // ── WEEKLY HABITS & TASKS ────────────────────────────────────
@@ -10543,10 +10620,14 @@ function renderSettingsTab() {
   });
 
   const customTasks = tasks.filter(t2 => !defaultTasks.some(d => d.id === t2.id));
+  if (customTasks.length > 0) {
+    weeklyHtml += `<div class="divider"></div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;font-weight:500">🌸 Your custom tasks</div>`;
+  }
   customTasks.forEach(t2 => {
     weeklyHtml += `<div class="toggle-row" style="flex-wrap:wrap">
-      <div><div class="toggle-label">✏️ ${t2.name}</div></div>
-      <div onclick="removeCustomTask('${t2.id}')" style="font-size:12px;color:var(--rose-light);cursor:pointer">Remove</div>`;
+      <div><div class="toggle-label">🌸 ${t2.name}</div></div>
+      <div onclick="removeCustomTask('${t2.id}')" style="font-size:11px;color:var(--rose-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(176,120,120,0.08)">Remove</div>`;
     const dayMask2 = htDays[t2.id] || 'any';
     const isAnyDay2 = dayMask2 === 'any' || typeof dayMask2 !== 'number';
     weeklyHtml += `<div style="display:flex;gap:3px;width:100%;margin-top:6px;margin-left:28px">
@@ -10623,6 +10704,44 @@ function renderSettingsTab() {
     </div>`;
   });
 
+  // Custom self-care items
+  const customSC = getCustomSelfCare();
+  scHtml += `<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)">
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;font-weight:500">✨ Your additions</div>`;
+  if (customSC.length > 0) {
+    customSC.forEach(sc => {
+      const routineLabels = { morning: '☀️ AM', evening: '🌙 PM', anytime: 'Any' };
+      scHtml += `<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:16px">${sc.icon || '✨'}</span>
+            <div class="toggle-label">${sc.name}</div>
+          </div>
+          <div onclick="removeCustomSelfCare('${sc.id}')" style="font-size:11px;color:var(--rose-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(176,120,120,0.08)">Remove</div>
+        </div>
+        <div style="display:flex;gap:4px;margin-left:24px">
+          ${['morning','evening','anytime'].map(opt => {
+            const sel = (sc.routine || 'anytime') === opt;
+            return `<div onclick="setCustomSelfCareRoutine('${sc.id}','${opt}')" style="
+              padding:3px 8px;border-radius:99px;cursor:pointer;font-size:10px;
+              background:${sel ? 'rgba(200,170,120,0.2)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${sel ? 'rgba(200,170,120,0.4)' : 'rgba(255,255,255,0.08)'};
+              color:${sel ? 'rgba(200,170,120,0.9)' : 'var(--text-muted)'}">${routineLabels[opt]}</div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    });
+  }
+  if (customSC.length < 10) {
+    scHtml += `<div style="display:flex;gap:8px;margin-top:10px">
+      <input type="text" id="custom-selfcare-name" placeholder="Add something nice for you...">
+      <button class="btn btn-primary btn-sm" onclick="addCustomSelfCare()">Add</button>
+    </div>`;
+  } else {
+    scHtml += `<div style="font-size:11px;color:var(--text-muted);margin-top:8px">Maximum 10 custom self-care items reached.</div>`;
+  }
+  scHtml += `</div>`;
+
   scHtml += `<div style="font-size:11px;color:var(--text-muted);margin-top:12px;font-style:italic;line-height:1.6;text-align:center">
     This is entirely yours. Add, remove, or change anything, any time.
   </div>`;
@@ -10632,39 +10751,44 @@ function renderSettingsTab() {
   // ── CUSTOM CHECK-INS ──────────────────────────────────────────
   const ccs = getCustomCheckins();
   let ccHtml = `<div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:14px">
-    Track anything that matters to you. These appear on your Daily tab as simple daily questions.
+    Check in with yourself each day. These appear on your Daily tab as gentle questions.
   </div>`;
 
   if (ccs.length > 0) {
+    const typeIcons = { yesno: '✓/✗', scale: '1–5', number: '#' };
+    const typeLabels = { yesno: 'Yes/No', scale: '1-5 Scale', number: 'Counter' };
     ccs.forEach(cc => {
-      const typeLabels = { yesno: 'Yes/No', scale: '1-5 Scale', number: 'Counter' };
-      ccHtml += `<div class="toggle-row">
-        <div>
-          <div class="toggle-label">${cc.name}</div>
-          <div class="toggle-sub">${typeLabels[cc.type] || cc.type}</div>
+      ccHtml += `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(var(--sage-rgb),0.1);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--sage-light);font-weight:600;flex-shrink:0">${typeIcons[cc.type] || '?'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cc.name}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${typeLabels[cc.type] || cc.type}</div>
         </div>
-        <div onclick="removeCustomCheckin('${cc.id}')" style="font-size:12px;color:var(--rose-light);cursor:pointer">Remove</div>
+        <div onclick="removeCustomCheckin('${cc.id}')" style="font-size:11px;color:var(--rose-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(176,120,120,0.08)">Remove</div>
       </div>`;
     });
   }
 
   if (ccs.length < 10) {
-    ccHtml += `<div style="margin-top:12px">
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <input type="text" id="custom-checkin-name" placeholder="e.g. Did I take a walk?" style="flex:1">
-        <select id="custom-checkin-type" style="padding:6px 10px;font-size:13px;background:var(--bg-elevated);color:var(--cream);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-sm)">
-          <option value="yesno">Yes/No</option>
-          <option value="scale">1-5 Scale</option>
-          <option value="number">Counter</option>
-        </select>
+    ccHtml += `<div style="margin-top:14px">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:500">Type</div>
+      <div id="checkin-type-chips" style="display:flex;gap:6px;margin-bottom:10px">
+        ${[{type:'yesno',label:'✓ Yes / No'},{type:'scale',label:'⊡ 1–5 Scale'},{type:'number',label:'# Counter'}].map((t, i) => `<div class="cc-type-chip${i === 0 ? ' selected' : ''}" data-type="${t.type}" onclick="document.querySelectorAll('.cc-type-chip').forEach(c=>{c.classList.remove('selected');c.style.background='rgba(255,255,255,0.04)';c.style.borderColor='rgba(255,255,255,0.08)';c.style.color='var(--text-muted)'});this.classList.add('selected');this.style.background='rgba(var(--sage-rgb),0.18)';this.style.borderColor='rgba(var(--sage-rgb),0.45)';this.style.color='var(--sage-light)'" style="
+          padding:6px 12px;border-radius:99px;cursor:pointer;font-size:12px;transition:all 0.15s;
+          background:${i === 0 ? 'rgba(var(--sage-rgb),0.18)' : 'rgba(255,255,255,0.04)'};
+          border:1px solid ${i === 0 ? 'rgba(var(--sage-rgb),0.45)' : 'rgba(255,255,255,0.08)'};
+          color:${i === 0 ? 'var(--sage-light)' : 'var(--text-muted)'}">${t.label}</div>`).join('')}
       </div>
-      <button class="btn btn-primary btn-sm" onclick="addCustomCheckin()">Add check-in</button>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="custom-checkin-name" placeholder="e.g. Did I take a walk?" style="flex:1">
+        <button class="btn btn-primary btn-sm" onclick="addCustomCheckin()">Add</button>
+      </div>
     </div>`;
   } else {
-    ccHtml += `<div style="font-size:11px;color:var(--text-muted);margin-top:8px">Maximum 10 custom check-ins reached.</div>`;
+    ccHtml += `<div style="font-size:11px;color:var(--text-muted);margin-top:8px">Maximum 10 check-ins reached.</div>`;
   }
 
-  html += settingsSection('checkins', '📝 Custom check-ins', ccHtml);
+  html += settingsSection('checkins', '🪞 Check-ins', ccHtml);
 
   // Group divider — Social
   html += `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:20px 4px 8px">Social</div>`;
@@ -11331,7 +11455,7 @@ function addCustomTask() {
   if (!input || !input.value.trim()) return;
   if (!state.prefs.householdTasks) state.prefs.householdTasks = [];
   const id = 'custom_' + Date.now();
-  state.prefs.householdTasks.push({ id, name: input.value.trim(), icon: '✏️' });
+  state.prefs.householdTasks.push({ id, name: input.value.trim(), icon: '🌸' });
   save('bloom_prefs', state.prefs);
   reRenderSettingsPreservingScroll();
 }
@@ -15427,11 +15551,12 @@ function getCustomCheckins() {
 
 function addCustomCheckin() {
   const nameInput = document.getElementById('custom-checkin-name');
-  const typeSelect = document.getElementById('custom-checkin-type');
   if (!nameInput || !nameInput.value.trim()) return;
 
   const name = nameInput.value.trim();
-  const type = typeSelect?.value || 'yesno'; // yesno, scale, number
+  // Read selected type from chips (default yesno)
+  const selectedChip = document.querySelector('#checkin-type-chips .cc-type-chip.selected');
+  const type = selectedChip?.dataset?.type || 'yesno';
   const id = 'cc_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + Date.now().toString(36).slice(-4);
 
   if (!state.prefs.customCheckins) state.prefs.customCheckins = [];
@@ -15444,7 +15569,7 @@ function addCustomCheckin() {
   state.prefs.customCheckins.push({ id, name, type });
   save('bloom_prefs', state.prefs);
   nameInput.value = '';
-  renderSettingsTab();
+  reRenderSettingsPreservingScroll();
   renderTodayTab();
   haptic('light');
 }
@@ -15453,7 +15578,7 @@ function removeCustomCheckin(id) {
   if (!state.prefs.customCheckins) return;
   state.prefs.customCheckins = state.prefs.customCheckins.filter(c => c.id !== id);
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
+  reRenderSettingsPreservingScroll();
   renderTodayTab();
 }
 
@@ -15470,6 +15595,147 @@ function logCustomCheckin(id, value) {
 
   checkFirstTaskStreak();
   haptic('light');
+  renderTodayTab();
+}
+
+// ============================================================
+//  CUSTOM DAILY HABITS
+// ============================================================
+function getCustomDailyHabits() {
+  return state.prefs?.customDailyHabits || [];
+}
+
+function addCustomDailyHabit() {
+  const nameInput = document.getElementById('custom-daily-habit-name');
+  if (!nameInput || !nameInput.value.trim()) return;
+
+  const name = nameInput.value.trim();
+  const id = 'cdh_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + Date.now().toString(36).slice(-4);
+
+  if (!state.prefs.customDailyHabits) state.prefs.customDailyHabits = [];
+  if (state.prefs.customDailyHabits.length >= 10) return;
+
+  state.prefs.customDailyHabits.push({ id, name, icon: '🌸', time: 'any' });
+  save('bloom_prefs', state.prefs);
+  nameInput.value = '';
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
+  haptic('light');
+}
+
+function removeCustomDailyHabit(id) {
+  if (!state.prefs.customDailyHabits) return;
+  state.prefs.customDailyHabits = state.prefs.customDailyHabits.filter(h => h.id !== id);
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
+}
+
+function setCustomDailyHabitTime(id, slotBit) {
+  if (!state.prefs.customDailyHabits) return;
+  const habit = state.prefs.customDailyHabits.find(h => h.id === id);
+  if (!habit) return;
+
+  if (slotBit === 'any') {
+    habit.time = 'any';
+  } else {
+    const curTime = habit.time;
+    if (curTime === 'any' || typeof curTime !== 'number') {
+      habit.time = slotBit;
+    } else {
+      const newTime = curTime ^ slotBit;
+      habit.time = newTime === 0 ? 'any' : newTime;
+    }
+  }
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
+}
+
+function tapCustomDailyHabit(id, timeSlot, el) {
+  const key = id + '_' + timeSlot;
+  const wasDone = state.todayData[key];
+  if (!wasDone) _justCompletedKey = key;
+  state.todayData[key] = !wasDone;
+
+  if (!wasDone) {
+    addXP(15, el);
+    checkFirstTaskStreak();
+    celebrate('custom_daily', el);
+  } else {
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - 15);
+    haptic('light');
+    saveState();
+    updateProgressTab();
+  }
+
+  saveState();
+  archiveToday();
+  renderTodayTab();
+  checkAllDone();
+}
+
+// ============================================================
+//  CUSTOM SELF-CARE ITEMS
+// ============================================================
+function getCustomSelfCare() {
+  return state.prefs?.customSelfCare || [];
+}
+
+function addCustomSelfCare() {
+  const nameInput = document.getElementById('custom-selfcare-name');
+  if (!nameInput || !nameInput.value.trim()) return;
+
+  const name = nameInput.value.trim();
+  const id = 'csc_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + Date.now().toString(36).slice(-4);
+
+  if (!state.prefs.customSelfCare) state.prefs.customSelfCare = [];
+  if (state.prefs.customSelfCare.length >= 10) return;
+
+  state.prefs.customSelfCare.push({ id, name, icon: '✨', routine: 'anytime' });
+  save('bloom_prefs', state.prefs);
+  nameInput.value = '';
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
+  haptic('light');
+}
+
+function removeCustomSelfCare(id) {
+  if (!state.prefs.customSelfCare) return;
+  state.prefs.customSelfCare = state.prefs.customSelfCare.filter(s => s.id !== id);
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
+}
+
+function setCustomSelfCareRoutine(id, routine) {
+  if (!state.prefs.customSelfCare) return;
+  const item = state.prefs.customSelfCare.find(s => s.id === id);
+  if (!item) return;
+  item.routine = routine;
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
+}
+
+function tapCustomSelfCare(id, el) {
+  if (!state.todayData.selfCare) state.todayData.selfCare = {};
+  const wasDone = state.todayData.selfCare[id];
+  if (!wasDone) _justCompletedKey = id;
+  state.todayData.selfCare[id] = !wasDone;
+
+  if (!wasDone) {
+    addXP(10, el);
+    checkFirstTaskStreak();
+    celebrate('sc_body', el);
+  } else {
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - 10);
+    haptic('light');
+    saveState();
+    updateProgressTab();
+  }
+
+  saveState();
+  archiveToday();
   renderTodayTab();
 }
 
