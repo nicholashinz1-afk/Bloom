@@ -9697,10 +9697,7 @@ function shuffleSelfCareAct() {
 function completeSelfCareAct() {
   if (!state.todayData.selfCareAct) return;
   state.todayData.selfCareAct.done = true;
-  if (!state.todayData.selfCareActXPGiven) {
-    state.todayData.selfCareActXPGiven = true;
-    addXP(5, 'self_care_act');
-  }
+  addXP(5, 'self_care_act');
   saveState();
   renderWellnessTab();
   celebrate('self_care', document.querySelector('.skill-grid'));
