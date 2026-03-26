@@ -8046,7 +8046,7 @@ function renderWellnessTab() {
       <div class="card-title" style="margin-bottom:0">📓 Daily journal${infoIcon('journal')}</div>
       ${totalJournalDays > 0 ? `<div style="font-size:11px;color:var(--text-muted)">${totalJournalDays} day${totalJournalDays !== 1 ? 's' : ''} journaled</div>` : ''}
     </div>
-    ${state.journalMode === 'free' ? '' : `<div class="journal-prompt">${journalPrompt}</div>`}`;
+    ${state.editingJournal && state.journalMode !== 'free' ? `<div class="journal-prompt">${state.journalSamePrompt || journalPrompt}</div>` : (journalEntries.length === 0 && state.journalMode !== 'free' ? `<div class="journal-prompt">${journalPrompt}</div>` : '')}`;
 
   // Show editing textarea
   if (state.editingJournal) {
@@ -8069,6 +8069,7 @@ function renderWellnessTab() {
       const meta = [time, source].filter(Boolean).join(' · ');
       html += `<div style="padding:10px 0;${i > 0 ? 'border-top:1px solid rgba(255,255,255,0.06);margin-top:8px' : ''}">
         ${meta ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">${meta}</div>` : ''}
+        ${entry.prompt ? `<div class="journal-prompt" style="font-size:13px;margin-bottom:8px">${entry.prompt}</div>` : ''}
         <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap">${entry.text}</div>`;
       if (entry.ai) {
         html += `<div class="ai-response" style="margin-top:10px"><div class="ai-response-text">${entry.ai}</div></div>`;
@@ -8353,14 +8354,15 @@ async function saveJournal() {
     entryIndex = state.editingJournalIndex;
   } else {
     // New entry
-    const prompt = getJournalPrompt();
-    state.wellnessData.journal[t].push({ text, ai: null, savedAt: new Date().toISOString(), prompt, source: 'journal' });
+    const prompt = state.journalMode === 'free' ? null : (state.journalSamePrompt || getJournalPrompt());
+    state.wellnessData.journal[t].push({ text, ai: null, savedAt: new Date().toISOString(), prompt, source: state.journalMode === 'free' ? 'open' : 'journal' });
     entryIndex = state.wellnessData.journal[t].length - 1;
   }
 
   state.editingJournal = false;
   state.editingJournalIndex = null;
   state.journalDraft = '';
+  state.journalSamePrompt = null;
   state.loadingJournalAI = true;
   trackFeature('journal');
   saveState();
@@ -8419,9 +8421,13 @@ function newJournalEntry(mode) {
     // Cycle to a different prompt than the current one
     if (!state.journalPromptOffset) state.journalPromptOffset = 0;
     state.journalPromptOffset++;
+    state.journalSamePrompt = null;
     state.journalMode = 'prompt';
   } else if (mode === 'same') {
-    // Keep the same prompt
+    // Reuse the prompt from the last entry so mood changes don't swap it
+    const entries = getJournalEntries(today());
+    const lastPrompt = entries.length > 0 ? entries[entries.length - 1].prompt : null;
+    if (lastPrompt) state.journalSamePrompt = lastPrompt;
     state.journalMode = 'prompt';
   } else {
     state.journalMode = 'free';
@@ -9380,6 +9386,7 @@ function openHistoryDetail(dateStr) {
       const meta = [time, source].filter(Boolean).join(' · ');
       html += `<div style="${i > 0 ? 'margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)' : ''}">
         ${meta ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">${meta}</div>` : ''}
+        ${je.prompt ? `<div class="journal-prompt" style="font-size:13px;margin-bottom:6px">${je.prompt}</div>` : ''}
         <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap">${je.text}</div>
         ${je.ai ? `<div class="ai-response" style="margin-top:8px"><div class="ai-response-text">${je.ai}</div></div>` : ''}
       </div>`;
