@@ -3000,7 +3000,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.10.1';
+const VERSION = '2.10.2';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -9310,8 +9310,18 @@ function renderHistoryTab() {
 }
 
 function openHistoryDetail(dateStr) {
-  const entry = state.historyData[dateStr];
-  if (!entry) return;
+  let entry = state.historyData[dateStr];
+
+  // If no historyData entry, build a minimal one from wellnessData journal
+  if (!entry) {
+    const journalEntries = getJournalEntries(dateStr);
+    if (journalEntries.length === 0) return;
+    entry = { journalEntries };
+  } else if (!entry.journalEntries?.length && !entry.journal) {
+    // historyData exists but has no journal — pull from wellnessData
+    const journalEntries = getJournalEntries(dateStr);
+    if (journalEntries.length > 0) entry = { ...entry, journalEntries };
+  }
 
   const date = new Date(dateStr + 'T00:00:00');
   const moodEmojis = ['😔 Low','😕 Rough','😐 Okay','🙂 Good','😊 Great'];
@@ -9434,16 +9444,15 @@ function openJournalHistory() {
       if (preview.length > 60) preview = preview.substring(0, 60) + '...';
 
       const dateLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-      const hasHistory = !!state.historyData[d];
 
-      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px;cursor:pointer" onclick="${hasHistory ? `closeSheet('journal-history-sheet');setTimeout(()=>openHistoryDetail('${d}'),300)` : ''}">
+      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px;cursor:pointer" onclick="closeSheet('journal-history-sheet');setTimeout(()=>openHistoryDetail('${d}'),300)">
         <div style="display:flex;align-items:center;gap:12px">
           <div style="font-size:22px;width:30px;text-align:center">📝</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;color:var(--cream)">${dateLabel}</div>
             <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${count} entry${count !== 1 ? 'ies' : ''}${preview ? ' · ' : ''}<span style="font-style:italic">${preview}</span></div>
           </div>
-          ${hasHistory ? '<div style="color:var(--text-muted);font-size:16px">›</div>' : ''}
+          <div style="color:var(--text-muted);font-size:16px">›</div>
         </div>
       </div>`;
     });
