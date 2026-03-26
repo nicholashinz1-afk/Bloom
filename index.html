@@ -1300,6 +1300,108 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 
 /* ============================================================
+   SKILL-BUILDING 2x2 GRID
+   ============================================================ */
+.skill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.skill-tile {
+  border-radius: var(--r-lg);
+  padding: 16px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.skill-tile:active {
+  transform: scale(0.96);
+}
+.skill-tile-emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+.skill-tile-name {
+  font-family: 'Fraunces', serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+.skill-tile-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   SELF-CARE ACT CARD
+   ============================================================ */
+@keyframes selfCareShuffle {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-15deg) scale(1.1); }
+  75% { transform: rotate(15deg) scale(1.1); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+.self-care-shuffling {
+  animation: selfCareShuffle 0.4s ease;
+}
+
+/* ============================================================
+   WORD TREE / WORD CLOUD
+   ============================================================ */
+.word-tree {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 16px 8px;
+}
+.word-tree-word {
+  display: inline-block;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  line-height: 1.3;
+  transition: all 0.3s ease;
+}
+
+/* ============================================================
+   SPECIAL DATE ANIMATIONS
+   ============================================================ */
+@keyframes specialDateGlow {
+  0% { box-shadow: 0 0 0 0 rgba(var(--sage-rgb), 0.3); }
+  50% { box-shadow: 0 0 20px 8px rgba(var(--sage-rgb), 0.15); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--sage-rgb), 0); }
+}
+@keyframes specialDateCelebGlow {
+  0% { box-shadow: 0 0 0 0 rgba(201,149,74,0.3); }
+  50% { box-shadow: 0 0 20px 8px rgba(201,149,74,0.15); }
+  100% { box-shadow: 0 0 0 0 rgba(201,149,74,0); }
+}
+@keyframes heartFloat {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(1.3); }
+}
+.special-date-warm-glow {
+  animation: specialDateGlow 1.5s ease forwards;
+}
+.special-date-celeb-glow {
+  animation: specialDateCelebGlow 1.5s ease forwards;
+}
+.special-date-heart-float {
+  animation: heartFloat 1.2s ease forwards;
+  position: absolute;
+  pointer-events: none;
+}
+
+/* ============================================================
    JOURNAL / AI RESPONSE
    ============================================================ */
 .journal-prompt {
@@ -2871,6 +2973,12 @@ select:focus {
   </div>
 </div>
 
+<!-- Skill tool sheet -->
+<div class="bottom-sheet" id="skill-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:0 20px 20px" id="skill-sheet-content"></div>
+</div>
+
 <!-- Hard day sheet -->
 <div class="bottom-sheet" id="hard-day-sheet">
   <div class="sheet-handle"></div>
@@ -3003,7 +3111,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '3.0.0';
+const VERSION = '3.1.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -3049,7 +3157,10 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'Everything in one place — your daily habits, weekly goals (shower, exercise, therapy), household tasks, and self-care all live on the Today tab now. One view for your whole day.', spotlight: null, tab: 'today', featured: true },
+  { text: 'Random self-care act — not sure what you need today? Head to the Wellness tab and let Bloom pick something kind for you. Shuffle until one feels right.', spotlight: null, tab: 'wellness', featured: true },
+  { text: 'Special dates — mark birthdays, anniversaries, and hard dates in Settings. Bloom will check in with you on those days and meet you where you are.', spotlight: null, tab: 'settings' },
+  { text: 'Skill tools redesigned — breathing, grounding, body scan, and reframe are now in a compact grid that opens into focused sheets. Same tools, less scrolling.', spotlight: null, tab: 'wellness' },
+  { text: 'Everything in one place — your daily habits, weekly goals (shower, exercise, therapy), household tasks, and self-care all live on the Today tab now. One view for your whole day.', spotlight: null, tab: 'today' },
   { text: 'Pick your days — weekly habits like therapy or exercise can be set to specific days of the week, or left flexible with a weekly goal. Find the day chips in Settings.', spotlight: null, tab: 'settings' },
   { text: 'Self-care woven in — your self-care items now appear naturally in the Anytime section with a soft divider. Less separate, more part of your flow.', spotlight: null, tab: 'today' },
   { text: 'Smarter settings — medication reminders, celebration intensity, and high contrast mode are easier to find. Habit cues live right under each habit now.', spotlight: null, tab: 'settings' },
@@ -4360,6 +4471,156 @@ function checkWelcomeBack() {
   }
 }
 
+// ============================================================
+//  SPECIAL DATES & ANNIVERSARIES
+// ============================================================
+function checkSpecialDates() {
+  const dates = state.prefs?.specialDates || [];
+  if (dates.length === 0) return;
+  const now = new Date();
+  const todayMonth = now.getMonth() + 1;
+  const todayDay = now.getDate();
+  const thisYear = now.getFullYear();
+
+  const matches = dates.filter(d => d.month === todayMonth && d.day === todayDay);
+  if (matches.length === 0) return;
+
+  // Enrich with computed fields
+  matches.forEach(d => {
+    if (d.year && d.type === 'celebration') {
+      d._years = thisYear - d.year;
+    } else if (d.year && d.type === 'hard') {
+      d._years = thisYear - d.year;
+    }
+  });
+
+  state._specialDateMatches = matches;
+}
+
+function respondToSpecialDate(dateId, response) {
+  if (!state.todayData._specialDateResponses) state.todayData._specialDateResponses = {};
+  state.todayData._specialDateResponses[dateId] = response;
+
+  if (response === 'hard') {
+    // Warm transition into hard day mode
+    state.hardDayMode = true;
+    state.todayData._hardDayActivated = true;
+    saveState();
+    // Animate: show warm message first, then fade into hard day mode
+    const banner = document.getElementById('special-date-banner-' + dateId);
+    if (banner) {
+      banner.innerHTML = `
+        <div style="text-align:center;padding:12px 0">
+          <div style="font-size:28px;margin-bottom:10px">🫂</div>
+          <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sky-light);line-height:1.7;margin-bottom:8px">
+            We're right here with you. Let's make today a little easier.
+          </div>
+        </div>`;
+      banner.classList.add('special-date-warm-glow');
+    }
+    setTimeout(() => {
+      document.body.classList.add('hard-day-active');
+      renderTodayTop();
+      renderTodayTab();
+    }, 1500);
+  } else if (response === 'okay') {
+    // Warm pulse — they're doing good
+    saveState();
+    const banner = document.getElementById('special-date-banner-' + dateId);
+    if (banner) {
+      banner.innerHTML = `
+        <div style="text-align:center;padding:12px 0;position:relative">
+          <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sage-light);line-height:1.7">
+            That's really good to hear. 💚
+          </div>
+          <div class="special-date-heart-float" style="left:50%;top:0;font-size:20px">💚</div>
+        </div>`;
+      banner.classList.add('special-date-warm-glow');
+    }
+    setTimeout(() => renderTodayTop(), 2000);
+  } else if (response === 'celebrate') {
+    // Full celebration!
+    saveState();
+    const intensity = state.prefs?.celebrationIntensity || 'auto';
+    if (intensity !== 'quiet') {
+      setTimeout(() => {
+        if (typeof launchConfetti === 'function') launchConfetti(window.innerWidth / 2, window.innerHeight / 3, 80);
+        playSound('milestone');
+      }, 300);
+    }
+    renderTodayTop();
+  } else if (response === 'complicated') {
+    // Gentle acknowledgment — no hard mode, just warmth
+    saveState();
+    const banner = document.getElementById('special-date-banner-' + dateId);
+    if (banner) {
+      banner.innerHTML = `
+        <div style="text-align:center;padding:12px 0">
+          <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sage-light);line-height:1.7;margin-bottom:12px">
+            That's okay — these days can feel complicated. We're here. 💚
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="closeAllSheets();openOpenJournal()" style="font-size:12px">Want to write about it?</button>
+        </div>`;
+      banner.classList.add('special-date-warm-glow');
+    }
+    setTimeout(() => renderTodayTop(), 4000);
+  }
+}
+
+function getOrdinal(n) {
+  const s = ['th','st','nd','rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+function renderBirthdayMiniReview() {
+  const xp = state.xpData || {};
+  const daysShowedUp = xp.daysShowedUp || 0;
+  const level = getLevel(xp.total || 0);
+  const journalDays = Object.keys(state.wellnessData?.journal || {}).filter(d => {
+    const entries = state.wellnessData.journal[d];
+    return Array.isArray(entries) && entries.length > 0;
+  }).length;
+  if (daysShowedUp < 2) return '';
+  return `<div style="margin-top:12px;padding:10px 14px;background:rgba(201,149,74,0.08);border-radius:var(--r-md);font-size:12px;color:var(--text-secondary);line-height:1.8">
+    <div style="font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Your Bloom year</div>
+    ${daysShowedUp} days showed up · ${journalDays} days journaled · Level: ${level.name} ${level.emoji}
+  </div>`;
+}
+
+function addSpecialDate() {
+  if (!state.prefs.specialDates) state.prefs.specialDates = [];
+  const id = 'sd_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  state.prefs.specialDates.push({ id, name: '', month: null, day: null, year: null, type: 'celebration', isDefault: false });
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
+}
+
+function updateSpecialDate(id, field, value) {
+  const entry = (state.prefs.specialDates || []).find(d => d.id === id);
+  if (!entry) return;
+  if (field === 'month' || field === 'day' || field === 'year') {
+    entry[field] = value ? parseInt(value) : null;
+  } else {
+    entry[field] = value;
+  }
+  save('bloom_prefs', state.prefs);
+}
+
+function removeSpecialDate(id) {
+  state.prefs.specialDates = (state.prefs.specialDates || []).filter(d => d.id !== id);
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
+}
+
+function toggleSpecialDateType(id) {
+  const entry = (state.prefs.specialDates || []).find(d => d.id === id);
+  if (!entry || entry.isDefault) return;
+  entry.type = entry.type === 'celebration' ? 'hard' : 'celebration';
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
+}
+
 function dismissWelcomeBack(reason) {
   state.showWelcomeBack = false;
   if (reason) {
@@ -4665,6 +4926,7 @@ async function saveOpenJournal() {
   state.wellnessData.journal[t].push({ text, ai: null, savedAt: new Date().toISOString(), prompt: null, source: 'open' });
   const entryIndex = state.wellnessData.journal[t].length - 1;
   state.loadingJournalAI = true;
+  updateWordTree(text);
   saveState();
   archiveToday();
   playSound('journal');
@@ -4789,7 +5051,7 @@ async function renderHardDaySheet() {
     </div>
     ${helpedHtml}
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
-      <button class="btn btn-secondary btn-block" onclick="closeAllSheets();switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">🌬 Take a breath</button>
+      <button class="btn btn-secondary btn-block" onclick="closeAllSheets();openSkillSheet('breathing')">🌬 Take a breath</button>
       <button class="btn btn-secondary btn-block" onclick="closeAllSheets();openOpenJournal()">📓 Just write it out</button>
       <button class="btn btn-secondary btn-block" onclick="closeAllSheets();openCrisisSheet()">🤍 I need more support</button>
     </div>
@@ -4950,7 +5212,9 @@ function winddownSaveJournal() {
   const t = today();
   if (!state.wellnessData.journal) state.wellnessData.journal = {};
   if (!Array.isArray(state.wellnessData.journal[t])) state.wellnessData.journal[t] = [];
-  state.wellnessData.journal[t].push({ text: el.value.trim(), ai: null, savedAt: new Date().toISOString(), prompt: null, source: 'winddown' });
+  const winddownText = el.value.trim();
+  state.wellnessData.journal[t].push({ text: winddownText, ai: null, savedAt: new Date().toISOString(), prompt: null, source: 'winddown' });
+  updateWordTree(winddownText);
   saveState();
   archiveToday();
 }
@@ -7395,6 +7659,45 @@ function renderTodayTop() {
     </div>`;
   }
 
+  // Special date banners
+  const specialMatches = state._specialDateMatches || [];
+  const responses = state.todayData._specialDateResponses || {};
+  specialMatches.forEach(sd => {
+    if (responses[sd.id]) return; // already responded
+    const yearText = sd._years ? (sd.type === 'celebration'
+      ? (sd.id === 'birthday' ? ` Happy ${getOrdinal(sd._years)} birthday!` : ` ${sd._years} year${sd._years !== 1 ? 's' : ''} — happy anniversary!`)
+      : ` ${sd._years} year${sd._years !== 1 ? 's' : ''} since ${sd.name}.`) : '';
+
+    if (sd.type === 'hard') {
+      html += `<div id="special-date-banner-${sd.id}" class="banner" style="background:rgba(106,154,176,0.08);border:1px solid rgba(106,154,176,0.18);margin-bottom:12px">
+        <div style="text-align:center;width:100%">
+          <div style="font-size:28px;margin-bottom:10px">🫂</div>
+          <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sky-light);line-height:1.7;margin-bottom:4px">
+            We remember today is ${sd.name}.${yearText ? '<br>' + yearText.trim() : ''} How are you feeling?
+          </div>
+          <div style="display:flex;gap:10px;justify-content:center;margin-top:14px">
+            <button class="btn btn-sm" style="background:rgba(106,154,176,0.2);border:1px solid rgba(106,154,176,0.35);color:var(--sky-light)" onclick="respondToSpecialDate('${sd.id}','hard')">I could use some support</button>
+            <button class="btn btn-ghost btn-sm" onclick="respondToSpecialDate('${sd.id}','okay')">I'm doing okay</button>
+          </div>
+        </div>
+      </div>`;
+    } else {
+      html += `<div id="special-date-banner-${sd.id}" class="banner" style="background:rgba(201,149,74,0.1);border:1px solid rgba(201,149,74,0.25);margin-bottom:12px">
+        <div style="text-align:center;width:100%">
+          <div style="font-size:28px;margin-bottom:10px">🎉</div>
+          <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--amber-light);line-height:1.7;margin-bottom:4px">
+            Today is ${sd.name}!${yearText ? '<br>' + yearText.trim() : ''} How are you feeling about it?
+          </div>
+          ${sd.id === 'birthday' && sd._years ? renderBirthdayMiniReview() : ''}
+          <div style="display:flex;gap:10px;justify-content:center;margin-top:14px">
+            <button class="btn btn-sm" style="background:rgba(201,149,74,0.2);border:1px solid rgba(201,149,74,0.35);color:var(--amber-light)" onclick="respondToSpecialDate('${sd.id}','celebrate')">Feeling good! 🎉</button>
+            <button class="btn btn-ghost btn-sm" onclick="respondToSpecialDate('${sd.id}','complicated')">It's complicated</button>
+          </div>
+        </div>
+      </div>`;
+    }
+  });
+
   // Welcome-back re-engagement
   if (state.showWelcomeBack) {
     const daysAway = state.daysAway || 2;
@@ -8162,7 +8465,7 @@ function renderTodayTab() {
       <div style="margin-left:auto;font-size:11px;color:var(--sky);background:rgba(106,154,176,0.15);padding:2px 8px;border-radius:99px">4-7-8</div>
     </div>
     <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
-    <div style="text-align:center"><button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="switchTab('wellness');setTimeout(()=>scrollToBreath(),300)">Begin breathing exercise</button></div>
+    <div style="text-align:center"><button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="openSkillSheet('breathing')">Begin breathing exercise</button></div>
   </div>`;
 
   } // end progressive disclosure week 3+ gate
@@ -8842,62 +9145,57 @@ function renderWellnessTab() {
     });
     html += `</div>`;
   }
-  // --- SKILL-BUILDING MODULES ---
+  // --- RANDOM SELF-CARE ACT ---
+  const selfCareAct = state.todayData.selfCareAct || null;
   html += `<div style="margin-top:16px">
+    <div style="font-family:Fraunces,serif;font-size:16px;font-weight:400;color:var(--cream);margin-bottom:12px;padding:0 2px">Something kind for you</div>
+    <div style="background:linear-gradient(135deg,rgba(var(--sage-rgb),0.12),rgba(201,149,74,0.08));border:1px solid rgba(var(--sage-rgb),0.2);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:16px">
+      ${selfCareAct ? `
+        <div style="text-align:center">
+          <div id="self-care-emoji" style="font-size:32px;margin-bottom:8px">${selfCareAct.emoji}</div>
+          <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--cream);line-height:1.6;margin-bottom:4px">${selfCareAct.text}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:14px">${selfCareAct.category}</div>
+          ${selfCareAct.done
+            ? `<div style="font-size:13px;color:var(--sage-light);font-family:Fraunces,serif;font-style:italic">Done — you did something kind for yourself today 💚</div>`
+            : `<div style="display:flex;gap:10px;justify-content:center">
+                <button class="btn btn-sm" style="background:rgba(var(--sage-rgb),0.25);border:1px solid rgba(var(--sage-rgb),0.4);color:var(--sage-light)" onclick="completeSelfCareAct()">Done ✓</button>
+                <button class="btn btn-ghost btn-sm" onclick="shuffleSelfCareAct()">Shuffle 🔀</button>
+              </div>`
+          }
+        </div>
+      ` : `
+        <div style="text-align:center">
+          <div style="font-size:28px;margin-bottom:8px">🎲</div>
+          <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6">Not sure what you need today?<br>Let us pick something kind for you.</div>
+          <button class="btn btn-sm" style="background:rgba(var(--sage-rgb),0.25);border:1px solid rgba(var(--sage-rgb),0.4);color:var(--sage-light)" onclick="shuffleSelfCareAct()">Pick a self-care act</button>
+        </div>
+      `}
+    </div>
+  </div>`;
+
+  // --- SKILL-BUILDING MODULES (2x2 Grid) ---
+  html += `<div style="margin-top:4px">
     <div style="font-family:Fraunces,serif;font-size:16px;font-weight:400;color:var(--cream);margin-bottom:12px;padding:0 2px">Skill-building tools</div>
-
-    <!-- Take a Breath -->
-    <div id="breath-section" style="margin-bottom:10px">
-      <div style="background:linear-gradient(135deg,rgba(106,154,176,0.12),rgba(106,154,176,0.05));border:1px solid rgba(106,154,176,0.25);border-radius:var(--r-lg);padding:18px 16px" id="breath-card">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-          <span style="font-size:18px">🌬</span>
-          <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sky-light)">Take a breath${infoIcon('breathing')}</div>
-          <div style="margin-left:auto;font-size:11px;color:var(--sky);background:rgba(106,154,176,0.15);padding:2px 8px;border-radius:99px">4-7-8</div>
-        </div>
-        <div style="font-size:13px;color:rgba(158,196,216,0.7);margin-bottom:14px;font-style:italic">Here whenever you need it — no streak, no pressure</div>
-        <div id="breath-ui" style="text-align:center">
-          <button class="btn" style="background:rgba(106,154,176,0.25);border:1px solid rgba(106,154,176,0.4);color:var(--sky-light)" onclick="startBreathing()">Begin breathing exercise</button>
-        </div>
+    <div class="skill-grid">
+      <div class="skill-tile" style="background:linear-gradient(135deg,rgba(106,154,176,0.12),rgba(106,154,176,0.05));border:1px solid rgba(106,154,176,0.25)" onclick="openSkillSheet('breathing')">
+        <div class="skill-tile-emoji">🌬</div>
+        <div class="skill-tile-name" style="color:var(--sky-light)">Breathe</div>
+        <div class="skill-tile-badge" style="color:var(--sky);background:rgba(106,154,176,0.15)">4-7-8</div>
       </div>
-    </div>
-
-    <!-- 5-4-3-2-1 Grounding -->
-    <div style="background:linear-gradient(135deg,rgba(var(--sage-rgb),0.12),rgba(var(--sage-rgb),0.05));border:1px solid rgba(var(--sage-rgb),0.25);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:10px" id="grounding-card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <span style="font-size:18px">🌿</span>
-        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--sage-light)">5-4-3-2-1 Grounding${infoIcon('grounding')}</div>
-        <div style="margin-left:auto;font-size:11px;color:var(--sage);background:rgba(var(--sage-rgb),0.15);padding:2px 8px;border-radius:99px">senses</div>
+      <div class="skill-tile" style="background:linear-gradient(135deg,rgba(var(--sage-rgb),0.12),rgba(var(--sage-rgb),0.05));border:1px solid rgba(var(--sage-rgb),0.25)" onclick="openSkillSheet('grounding')">
+        <div class="skill-tile-emoji">🌿</div>
+        <div class="skill-tile-name" style="color:var(--sage-light)">Grounding</div>
+        <div class="skill-tile-badge" style="color:var(--sage);background:rgba(var(--sage-rgb),0.15)">senses</div>
       </div>
-      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;font-style:italic">Gently bring yourself back to the present moment</div>
-      <div id="grounding-ui" style="text-align:center">
-        <button class="btn" style="background:rgba(var(--sage-rgb),0.25);border:1px solid rgba(var(--sage-rgb),0.4);color:var(--sage-light)" onclick="startGrounding()">Begin grounding exercise</button>
+      <div class="skill-tile" style="background:linear-gradient(135deg,rgba(176,120,120,0.12),rgba(176,120,120,0.05));border:1px solid rgba(176,120,120,0.25)" onclick="openSkillSheet('bodyscan')">
+        <div class="skill-tile-emoji">🫧</div>
+        <div class="skill-tile-name" style="color:var(--rose-light)">Body scan</div>
+        <div class="skill-tile-badge" style="color:var(--rose);background:rgba(176,120,120,0.15)">~3 min</div>
       </div>
-    </div>
-
-    <!-- Body Scan -->
-    <div style="background:linear-gradient(135deg,rgba(176,120,120,0.12),rgba(176,120,120,0.05));border:1px solid rgba(176,120,120,0.25);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:10px" id="bodyscan-card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <span style="font-size:18px">🫧</span>
-        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--rose-light)">Body scan${infoIcon('bodyscan')}</div>
-        <div style="margin-left:auto;font-size:11px;color:var(--rose);background:rgba(176,120,120,0.15);padding:2px 8px;border-radius:99px">~3 min</div>
-      </div>
-      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;font-style:italic">Notice where you're holding tension — no need to fix it</div>
-      <div id="bodyscan-ui" style="text-align:center">
-        <button class="btn" style="background:rgba(176,120,120,0.25);border:1px solid rgba(176,120,120,0.4);color:var(--rose-light)" onclick="startBodyScan()">Begin body scan</button>
-      </div>
-    </div>
-
-    <!-- Cognitive Reframing -->
-    <div style="background:linear-gradient(135deg,rgba(201,149,74,0.12),rgba(201,149,74,0.05));border:1px solid rgba(201,149,74,0.25);border-radius:var(--r-lg);padding:18px 16px;margin-bottom:10px" id="reframe-card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <span style="font-size:18px">💡</span>
-        <div style="font-family:Fraunces,serif;font-size:15px;font-weight:400;color:var(--amber-light)">Gentle reframe${infoIcon('reframe')}</div>
-        <div style="margin-left:auto;font-size:11px;color:var(--amber);background:rgba(201,149,74,0.15);padding:2px 8px;border-radius:99px">thought tool</div>
-      </div>
-      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;font-style:italic">A kinder way to look at a difficult thought</div>
-      <div id="reframe-ui" style="text-align:center">
-        <button class="btn" style="background:rgba(201,149,74,0.25);border:1px solid rgba(201,149,74,0.4);color:var(--amber-light)" onclick="startReframe()">Try a gentle reframe</button>
-        ${(state.wellnessData.reframeHistory?.length > 0) ? `<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="openReframeHistory()" style="font-size:11px;color:var(--text-muted)">View past reframes (${state.wellnessData.reframeHistory.length})</button></div>` : ''}
+      <div class="skill-tile" style="background:linear-gradient(135deg,rgba(201,149,74,0.12),rgba(201,149,74,0.05));border:1px solid rgba(201,149,74,0.25)" onclick="openSkillSheet('reframe')">
+        <div class="skill-tile-emoji">💡</div>
+        <div class="skill-tile-name" style="color:var(--amber-light)">Reframe</div>
+        <div class="skill-tile-badge" style="color:var(--amber);background:rgba(201,149,74,0.15)">thought tool</div>
       </div>
     </div>
   </div>`;
@@ -8906,8 +9204,7 @@ function renderWellnessTab() {
 }
 
 function scrollToBreath() {
-  const el = document.getElementById('breath-section');
-  if (el) el.scrollIntoView({ behavior: 'smooth' });
+  openSkillSheet('breathing');
 }
 
 async function saveJournal() {
@@ -8938,6 +9235,7 @@ async function saveJournal() {
   state.journalSamePrompt = null;
   state.loadingJournalAI = true;
   trackFeature('journal');
+  updateWordTree(text);
   saveState();
   checkFirstTaskStreak();
   renderWellnessTab();
@@ -9146,6 +9444,7 @@ function addAffirmation() {
   // Track today's affirmations separately so the gateway card is date-aware
   if (!state.todayData.affirmations) state.todayData.affirmations = [];
   state.todayData.affirmations.push(text);
+  updateWordTree(text);
   if (!state.todayData.affirmXPGiven) {
     state.todayData.affirmXPGiven = true;
     addXP(5, null);
@@ -9165,6 +9464,246 @@ function removeAffirmation(i) {
 function toggleAffirmationPool() {
   const pool = document.getElementById('affirmation-pool');
   if (pool) pool.style.display = pool.style.display === 'none' ? 'block' : 'none';
+}
+
+// ============================================================
+//  POSITIVE WORD TREE
+// ============================================================
+const POSITIVE_WORDS = new Set([
+  'strong', 'kind', 'brave', 'resilient', 'creative', 'worthy', 'capable', 'loved',
+  'enough', 'growing', 'patient', 'caring', 'compassionate', 'smart', 'talented',
+  'beautiful', 'powerful', 'gentle', 'determined', 'grateful', 'hopeful', 'proud',
+  'confident', 'courageous', 'honest', 'generous', 'thoughtful', 'loyal', 'reliable',
+  'dedicated', 'persistent', 'motivated', 'inspired', 'peaceful', 'calm', 'centered',
+  'grounded', 'balanced', 'whole', 'complete', 'healing', 'improving', 'learning',
+  'evolving', 'becoming', 'thriving', 'blooming', 'radiant', 'warm', 'soft',
+  'tender', 'fierce', 'bold', 'fearless', 'authentic', 'genuine', 'real',
+  'present', 'mindful', 'aware', 'wise', 'intuitive', 'empathetic', 'sensitive',
+  'open', 'flexible', 'adaptable', 'resourceful', 'clever', 'imaginative',
+  'artistic', 'curious', 'adventurous', 'playful', 'joyful', 'happy', 'content',
+  'satisfied', 'fulfilled', 'blessed', 'fortunate', 'lucky', 'amazing', 'wonderful',
+  'incredible', 'awesome', 'fantastic', 'magnificent', 'brilliant', 'remarkable',
+  'special', 'unique', 'valuable', 'important', 'significant', 'meaningful',
+  'purposeful', 'driven', 'ambitious', 'hardworking', 'diligent', 'focused',
+  'unstoppable', 'unbreakable', 'good', 'great', 'better', 'best',
+]);
+
+function extractPositiveWords(text) {
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  const found = [];
+  // Match self-referencing patterns: "I am [adv] [adj]", "I'm [adv] [adj]", "I feel [adv] [adj]"
+  const patterns = [
+    /\bi\s+am\s+(?:a\s+)?(?:really\s+|so\s+|very\s+|truly\s+|pretty\s+)?(\w+)/gi,
+    /\bi'm\s+(?:a\s+)?(?:really\s+|so\s+|very\s+|truly\s+|pretty\s+)?(\w+)/gi,
+    /\bi\s+feel\s+(?:really\s+|so\s+|very\s+|truly\s+)?(\w+)/gi,
+    /\bi\s+am\s+(?:a\s+)?(\w+)\s+person/gi,
+    /\bi'm\s+(?:a\s+)?(\w+)\s+person/gi,
+  ];
+  for (const pat of patterns) {
+    let match;
+    while ((match = pat.exec(lower)) !== null) {
+      const word = match[1];
+      if (POSITIVE_WORDS.has(word) && !found.includes(word)) {
+        found.push(word);
+      }
+    }
+  }
+  // Also scan for "I am [adj] and [adj]" patterns
+  const andPattern = /\bi(?:\s+am|'m)\s+(?:a\s+)?(?:really\s+|so\s+|very\s+)?(\w+)\s+and\s+(\w+)/gi;
+  let andMatch;
+  while ((andMatch = andPattern.exec(lower)) !== null) {
+    for (const w of [andMatch[1], andMatch[2]]) {
+      if (POSITIVE_WORDS.has(w) && !found.includes(w)) found.push(w);
+    }
+  }
+  return found;
+}
+
+function updateWordTree(text) {
+  if (!text) return;
+  const words = extractPositiveWords(text);
+  if (words.length === 0) return;
+  if (!state.wellnessData.wordTree) state.wellnessData.wordTree = {};
+  for (const w of words) {
+    state.wellnessData.wordTree[w] = (state.wellnessData.wordTree[w] || 0) + 1;
+  }
+  saveState();
+}
+
+// ============================================================
+//  SKILL-BUILDING SHEET
+// ============================================================
+function openSkillSheet(tool) {
+  const content = document.getElementById('skill-sheet-content');
+  if (!content) return;
+
+  const tools = {
+    breathing: {
+      title: 'Take a breath',
+      subtitle: 'Here whenever you need it — no streak, no pressure',
+      emoji: '🌬',
+      color: 'var(--sky-light)',
+      colorRgb: '106,154,176',
+      uiId: 'breath-ui',
+      cardId: 'breath-card',
+      startFn: 'startBreathing()',
+      startLabel: 'Begin breathing exercise',
+      info: infoIcon('breathing'),
+    },
+    grounding: {
+      title: '5-4-3-2-1 Grounding',
+      subtitle: 'Gently bring yourself back to the present moment',
+      emoji: '🌿',
+      color: 'var(--sage-light)',
+      colorRgb: 'var(--sage-rgb)',
+      uiId: 'grounding-ui',
+      cardId: 'grounding-card',
+      startFn: 'startGrounding()',
+      startLabel: 'Begin grounding exercise',
+      info: infoIcon('grounding'),
+      useThemeRgb: true,
+    },
+    bodyscan: {
+      title: 'Body scan',
+      subtitle: 'Notice where you\'re holding tension — no need to fix it',
+      emoji: '🫧',
+      color: 'var(--rose-light)',
+      colorRgb: '176,120,120',
+      uiId: 'bodyscan-ui',
+      cardId: 'bodyscan-card',
+      startFn: 'startBodyScan()',
+      startLabel: 'Begin body scan',
+      info: infoIcon('bodyscan'),
+    },
+    reframe: {
+      title: 'Gentle reframe',
+      subtitle: 'A kinder way to look at a difficult thought',
+      emoji: '💡',
+      color: 'var(--amber-light)',
+      colorRgb: '201,149,74',
+      uiId: 'reframe-ui',
+      cardId: 'reframe-card',
+      startFn: 'startReframe()',
+      startLabel: 'Try a gentle reframe',
+      info: infoIcon('reframe'),
+      extra: (state.wellnessData.reframeHistory?.length > 0) ? `<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="openReframeHistory()" style="font-size:11px;color:var(--text-muted)">View past reframes (${state.wellnessData.reframeHistory.length})</button></div>` : '',
+    },
+  };
+
+  const t = tools[tool];
+  if (!t) return;
+
+  const rgbVal = t.useThemeRgb ? `var(--sage-rgb)` : t.colorRgb;
+
+  content.innerHTML = `
+    <div style="text-align:center;margin-bottom:6px">
+      <span style="font-size:28px">${t.emoji}</span>
+    </div>
+    <div style="font-family:Fraunces,serif;font-size:20px;font-weight:300;color:${t.color};margin-bottom:4px;text-align:center">${t.title}${t.info}</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;font-style:italic;text-align:center">${t.subtitle}</div>
+    <div id="${t.cardId}" style="background:linear-gradient(135deg,rgba(${rgbVal},0.08),rgba(${rgbVal},0.02));border-radius:var(--r-lg);padding:18px 16px">
+      <div id="${t.uiId}" style="text-align:center">
+        <button class="btn" style="background:rgba(${rgbVal},0.25);border:1px solid rgba(${rgbVal},0.4);color:${t.color}" onclick="${t.startFn}">${t.startLabel}</button>
+        ${t.extra || ''}
+      </div>
+    </div>`;
+
+  openSheet('skill-sheet');
+  trackFeature(tool + '_sheet');
+}
+
+// ============================================================
+//  RANDOM SELF-CARE ACT
+// ============================================================
+const SELF_CARE_ACTS = [
+  // Body care
+  { text: 'Drink a full glass of water slowly — really taste it', emoji: '💧', category: 'body care' },
+  { text: 'Stretch your arms above your head for 30 seconds', emoji: '🙆', category: 'body care' },
+  { text: 'Put on your softest, most comfortable clothes', emoji: '🧦', category: 'body care' },
+  { text: 'Wash your face with warm water and really feel it', emoji: '🫧', category: 'body care' },
+  { text: 'Give yourself a hand or foot massage for 2 minutes', emoji: '🤲', category: 'body care' },
+  { text: 'Roll your shoulders and neck gently, 5 circles each way', emoji: '🔄', category: 'body care' },
+  { text: 'Put on some lip balm or moisturizer', emoji: '✨', category: 'body care' },
+  { text: 'Lie down flat for 3 minutes and let your body be heavy', emoji: '🛋', category: 'body care' },
+  // Sensory
+  { text: 'Light a candle or find a scent that feels good', emoji: '🕯', category: 'sensory' },
+  { text: 'Listen to one song that makes you feel something', emoji: '🎵', category: 'sensory' },
+  { text: 'Hold something warm — a mug, a blanket, a hand', emoji: '☕', category: 'sensory' },
+  { text: 'Look out a window for 2 minutes and just notice things', emoji: '🪟', category: 'sensory' },
+  { text: 'Take 10 deep breaths and count each one', emoji: '🌬', category: 'sensory' },
+  { text: 'Feel the texture of something soft nearby', emoji: '🧸', category: 'sensory' },
+  { text: 'Put on your favorite cozy playlist', emoji: '🎧', category: 'sensory' },
+  { text: 'Eat one thing slowly and notice every flavor', emoji: '🍓', category: 'sensory' },
+  // Connection
+  { text: 'Text someone you care about — just say hi', emoji: '💬', category: 'connection' },
+  { text: 'Send a voice note to a friend instead of a text', emoji: '🎙', category: 'connection' },
+  { text: 'Write a thank-you note to someone (even if you don\'t send it)', emoji: '💌', category: 'connection' },
+  { text: 'Tell someone one thing you appreciate about them', emoji: '💛', category: 'connection' },
+  { text: 'Look through old photos that make you smile', emoji: '📸', category: 'connection' },
+  { text: 'Hug someone (or hug a pillow — it counts)', emoji: '🫂', category: 'connection' },
+  { text: 'Call someone instead of texting', emoji: '📞', category: 'connection' },
+  // Creativity
+  { text: 'Draw or doodle something — skill doesn\'t matter', emoji: '🎨', category: 'creativity' },
+  { text: 'Write down 3 things you noticed today', emoji: '📝', category: 'creativity' },
+  { text: 'Rearrange one small space to make it feel better', emoji: '🏠', category: 'creativity' },
+  { text: 'Make a playlist for a specific mood', emoji: '🎶', category: 'creativity' },
+  { text: 'Write a tiny poem — even two lines count', emoji: '✍️', category: 'creativity' },
+  { text: 'Take a photo of something beautiful you usually ignore', emoji: '📷', category: 'creativity' },
+  { text: 'Color, paint, or craft something with your hands', emoji: '🖌', category: 'creativity' },
+  // Nature
+  { text: 'Step outside for just 2 minutes — feel the air', emoji: '🌿', category: 'nature' },
+  { text: 'Stand barefoot on grass or earth for a minute', emoji: '🦶', category: 'nature' },
+  { text: 'Watch the sky for a while — clouds, stars, whatever is there', emoji: '☁️', category: 'nature' },
+  { text: 'Water a plant (or talk to one — no judgement)', emoji: '🪴', category: 'nature' },
+  { text: 'Take a short walk with no destination', emoji: '🚶', category: 'nature' },
+  { text: 'Open a window and listen to outside sounds for 2 minutes', emoji: '🪟', category: 'nature' },
+  { text: 'Find a patch of sunlight and sit in it', emoji: '☀️', category: 'nature' },
+  // Rest
+  { text: 'Give yourself permission to do nothing for 5 minutes', emoji: '🌙', category: 'rest' },
+  { text: 'Close your eyes and count backwards from 20', emoji: '😌', category: 'rest' },
+  { text: 'Put your phone face-down for 10 minutes', emoji: '📱', category: 'rest' },
+  { text: 'Take a 15-minute nap (set an alarm if you want)', emoji: '💤', category: 'rest' },
+  { text: 'Cancel one thing today that\'s draining you', emoji: '🚫', category: 'rest' },
+  { text: 'Say no to something you don\'t have energy for', emoji: '✋', category: 'rest' },
+  { text: 'Let yourself zone out without guilt', emoji: '🫠', category: 'rest' },
+  // Mindfulness
+  { text: 'Name 3 things you can see, 2 you can hear, 1 you can feel', emoji: '🧘', category: 'mindfulness' },
+  { text: 'Put your hand on your chest and feel your heartbeat', emoji: '💚', category: 'mindfulness' },
+  { text: 'Unclench your jaw, drop your shoulders, and take a breath', emoji: '😮‍💨', category: 'mindfulness' },
+  { text: 'Write one kind sentence about yourself', emoji: '💌', category: 'mindfulness' },
+  { text: 'Forgive yourself for one thing today', emoji: '🕊', category: 'mindfulness' },
+  { text: 'Say out loud: "I\'m doing my best, and that\'s enough"', emoji: '🌸', category: 'mindfulness' },
+  { text: 'Take a moment to notice what emotion you\'re feeling right now', emoji: '🪞', category: 'mindfulness' },
+  { text: 'Thank your body for carrying you through today', emoji: '🫶', category: 'mindfulness' },
+];
+
+function shuffleSelfCareAct() {
+  const current = state.todayData.selfCareAct;
+  let pool = SELF_CARE_ACTS;
+  if (current) pool = SELF_CARE_ACTS.filter(a => a.text !== current.text);
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  state.todayData.selfCareAct = { text: pick.text, emoji: pick.emoji, category: pick.category, done: false };
+  saveState();
+  // Animate emoji
+  const emojiEl = document.getElementById('self-care-emoji');
+  if (emojiEl) {
+    emojiEl.classList.add('self-care-shuffling');
+    setTimeout(() => emojiEl.classList.remove('self-care-shuffling'), 400);
+  }
+  renderWellnessTab();
+}
+
+function completeSelfCareAct() {
+  if (!state.todayData.selfCareAct) return;
+  state.todayData.selfCareAct.done = true;
+  if (!state.todayData.selfCareActXPGiven) {
+    state.todayData.selfCareActXPGiven = true;
+    addXP(5, 'self_care_act');
+  }
+  saveState();
+  renderWellnessTab();
+  celebrate('self_care', document.querySelector('.skill-grid'));
 }
 
 // Breathing exercise
@@ -9266,7 +9805,7 @@ function stopBreathing() {
     <div style="text-align:center;padding:8px 0">
       <div style="font-size:36px;margin-bottom:8px">🌿</div>
       <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sage-light);margin-bottom:16px">Well done. Take a moment.</div>
-      <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeAllSheets()">Done</button>
     </div>`;
 }
 
@@ -9306,7 +9845,7 @@ function renderGroundingStep() {
         <div style="font-size:36px;margin-bottom:8px">🌿</div>
         <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sage-light);margin-bottom:6px">You're here. You're grounded.</div>
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Take a moment before moving on.</div>
-        <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeAllSheets()">Done</button>
       </div>`;
     return;
   }
@@ -9335,7 +9874,7 @@ function stopGrounding() {
     <div style="text-align:center;padding:8px 0">
       <div style="font-size:36px;margin-bottom:8px">🌿</div>
       <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--sage-light);margin-bottom:16px">Any amount counts. Well done.</div>
-      <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeAllSheets()">Done</button>
     </div>`;
 }
 
@@ -9372,7 +9911,7 @@ function renderBodyScanStep() {
         <div style="font-size:36px;margin-bottom:8px">🫧</div>
         <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--rose-light);margin-bottom:6px">Scan complete. How does your body feel now?</div>
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">There's no right answer.</div>
-        <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeAllSheets()">Done</button>
       </div>`;
     return;
   }
@@ -9418,7 +9957,7 @@ function stopBodyScan() {
     <div style="text-align:center;padding:8px 0">
       <div style="font-size:36px;margin-bottom:8px">🫧</div>
       <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--rose-light);margin-bottom:16px">Every bit of awareness matters.</div>
-      <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeAllSheets()">Done</button>
     </div>`;
 }
 
@@ -9434,7 +9973,7 @@ function startReframe() {
       <div style="font-family:Fraunces,serif;font-size:14px;color:var(--amber-light);margin-bottom:12px">What thought is weighing on you?</div>
       <textarea id="reframe-input" placeholder="e.g. I'm not doing enough..." rows="2" maxlength="300" style="width:100%;resize:none;margin-bottom:12px;font-size:13px"></textarea>
       <div style="display:flex;gap:10px;justify-content:center">
-        <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Cancel</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeAllSheets()">Cancel</button>
         <button class="btn" style="background:rgba(201,149,74,0.25);border:1px solid rgba(201,149,74,0.4);color:var(--amber-light)" onclick="processReframe()">Reframe this</button>
       </div>
     </div>`;
@@ -9490,7 +10029,7 @@ Give a gentle cognitive reframe in 2-3 sentences. Validate their feeling first, 
         <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--cream);line-height:1.7;padding:10px 14px;background:rgba(201,149,74,0.08);border-radius:var(--r-md);border:1px solid rgba(201,149,74,0.15)">${escapeHtml(reframe)}</div>
         <div class="ai-disclaimer" style="margin-top:10px">This is a reflection tool, not professional advice.</div>
         <div style="display:flex;gap:10px;justify-content:center;margin-top:14px">
-          <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+          <button class="btn btn-ghost btn-sm" onclick="closeAllSheets()">Done</button>
           <button class="btn" style="background:rgba(201,149,74,0.25);border:1px solid rgba(201,149,74,0.4);color:var(--amber-light)" onclick="startReframe()">Try another</button>
         </div>
       </div>`;
@@ -9500,7 +10039,7 @@ Give a gentle cognitive reframe in 2-3 sentences. Validate their feeling first, 
       <div style="text-align:center;padding:12px 0">
         <div style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Couldn't connect right now. Here's a thought to hold:</div>
         <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--cream);line-height:1.7;margin-bottom:16px">"The fact that you noticed this thought means you're already being kinder to yourself than you think."</div>
-        <button class="btn btn-ghost btn-sm" onclick="renderWellnessTab()">Done</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeAllSheets()">Done</button>
       </div>`;
   });
 }
@@ -9850,6 +10389,36 @@ function renderProgressTab() {
     html += `<div class="card" style="text-align:center;padding:20px">
       <div style="font-size:13px;color:var(--text-muted);line-height:1.6">Your wellness stats will appear here as you explore journaling, breathing, and more.</div>
     </div>`;
+  }
+
+  // --- WORD TREE ---
+  const wordTree = state.wellnessData?.wordTree || {};
+  const wordEntries = Object.entries(wordTree).filter(([,c]) => c > 0).sort((a,b) => b[1] - a[1]);
+  if (wordEntries.length > 0) {
+    const maxCount = wordEntries[0][1];
+    const colors = ['var(--sage-light)', 'var(--amber-light)', 'var(--sky-light)', 'var(--rose-light)'];
+    html += `<div class="card">
+      <div class="card-title">🌱 Your words</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;font-style:italic">Positive words you use to describe yourself</div>
+      <div class="word-tree">`;
+    wordEntries.forEach(([word, count], i) => {
+      const ratio = maxCount > 1 ? (count - 1) / (maxCount - 1) : 0;
+      const size = Math.round(14 + ratio * 18);
+      const weight = Math.round(400 + ratio * 300);
+      const opacity = (0.7 + ratio * 0.3).toFixed(2);
+      const color = colors[i % colors.length];
+      html += `<span class="word-tree-word" style="font-size:${size}px;font-weight:${weight};opacity:${opacity};color:${color}">${word}</span>`;
+    });
+    html += `</div></div>`;
+  } else {
+    // Check if user has any journal entries or affirmations at all
+    const hasEntries = Object.keys(state.wellnessData?.journal || {}).length > 0 || (state.wellnessData?.affirmations?.length > 0);
+    if (hasEntries) {
+      html += `<div class="card" style="text-align:center;padding:20px">
+        <div style="font-size:20px;margin-bottom:8px">🌱</div>
+        <div style="font-family:Fraunces,serif;font-style:italic;font-size:14px;color:var(--text-muted);line-height:1.6">As you journal and write affirmations, your positive words will bloom here.</div>
+      </div>`;
+    }
   }
 
   // Share week in review button
@@ -10304,6 +10873,50 @@ function renderSettingsTab() {
         color:${celebPref === o.id ? 'var(--sage-light)' : 'var(--text-muted)'}">${o.label}</div>`).join('')}
     </div>
   </div>`;
+
+  // ── SPECIAL DATES ──────────────────────────────────────────
+  const specialDates = prefs.specialDates || [];
+  const months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let sdHtml = '';
+
+  specialDates.forEach((sd, i) => {
+    const isBirthday = sd.isDefault && sd.id === 'birthday';
+    sdHtml += `<div style="padding:12px 0;${i > 0 ? 'border-top:1px solid rgba(255,255,255,0.06)' : ''}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:16px">${sd.type === 'celebration' ? '🎉' : '🫂'}</span>
+        ${isBirthday
+          ? `<div style="font-size:14px;font-weight:500;color:var(--cream);flex:1">Birthday</div>`
+          : `<input type="text" value="${sd.name || ''}" placeholder="Name this date..." style="flex:1;padding:5px 10px;font-size:13px" onchange="updateSpecialDate('${sd.id}','name',this.value)">`
+        }
+        ${!isBirthday ? `<div onclick="removeSpecialDate('${sd.id}')" style="color:var(--text-muted);cursor:pointer;font-size:14px;padding:4px">✕</div>` : ''}
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select style="padding:5px 8px;font-size:12px;border-radius:var(--r-md);min-width:60px" onchange="updateSpecialDate('${sd.id}','month',this.value)">
+          <option value="">Month</option>
+          ${months.slice(1).map((m,mi) => `<option value="${mi+1}" ${sd.month === mi+1 ? 'selected' : ''}>${m}</option>`).join('')}
+        </select>
+        <select style="padding:5px 8px;font-size:12px;border-radius:var(--r-md);min-width:50px" onchange="updateSpecialDate('${sd.id}','day',this.value)">
+          <option value="">Day</option>
+          ${Array.from({length:31},(_,i)=>i+1).map(d => `<option value="${d}" ${sd.day === d ? 'selected' : ''}>${d}</option>`).join('')}
+        </select>
+        <input type="number" value="${sd.year || ''}" placeholder="Year" style="width:70px;padding:5px 8px;font-size:12px" min="1900" max="2100" onchange="updateSpecialDate('${sd.id}','year',this.value)">
+        ${!isBirthday ? `
+          <div onclick="toggleSpecialDateType('${sd.id}')" style="
+            padding:4px 10px;border-radius:99px;cursor:pointer;font-size:11px;margin-left:auto;
+            background:${sd.type === 'celebration' ? 'rgba(201,149,74,0.15)' : 'rgba(106,154,176,0.15)'};
+            border:1px solid ${sd.type === 'celebration' ? 'rgba(201,149,74,0.3)' : 'rgba(106,154,176,0.3)'};
+            color:${sd.type === 'celebration' ? 'var(--amber-light)' : 'var(--sky-light)'}">
+            ${sd.type === 'celebration' ? '🎉 Celebration' : '🫂 Hard day'}
+          </div>` : ''}
+      </div>
+    </div>`;
+  });
+
+  sdHtml += `<div style="margin-top:8px">
+    <button class="btn btn-ghost btn-sm" onclick="addSpecialDate()" style="font-size:12px">+ Add a date</button>
+  </div>`;
+
+  html += settingsSection('special-dates', '📅 Special dates', sdHtml);
 
   // ── THEME (collapsible) ──────────────────────────────────────
   const currentTheme = prefs.theme || 'forest';
@@ -14318,6 +14931,43 @@ function migrateSelfCareXP() {
   save('bloom_prefs', state.prefs);
 }
 
+// ============================================================
+//  WORD TREE MIGRATION — scan existing journal + affirmations
+// ============================================================
+function migrateWordTree() {
+  if (!state.wellnessData) return;
+  if (state.wellnessData._migratedWordTree) return;
+  const tree = {};
+  // Scan all journal entries
+  const journal = state.wellnessData.journal || {};
+  Object.values(journal).forEach(entries => {
+    if (!Array.isArray(entries)) return;
+    entries.forEach(entry => {
+      const words = extractPositiveWords(entry.text);
+      words.forEach(w => { tree[w] = (tree[w] || 0) + 1; });
+    });
+  });
+  // Scan all affirmations
+  const affirmations = state.wellnessData.affirmations || [];
+  affirmations.forEach(text => {
+    const words = extractPositiveWords(text);
+    words.forEach(w => { tree[w] = (tree[w] || 0) + 1; });
+  });
+  state.wellnessData.wordTree = tree;
+  state.wellnessData._migratedWordTree = true;
+  saveState();
+}
+
+// ============================================================
+//  SPECIAL DATES MIGRATION — initialize empty array
+// ============================================================
+function migrateSpecialDates() {
+  if (!state.prefs) return;
+  if (state.prefs.specialDates) return;
+  state.prefs.specialDates = [];
+  save('bloom_prefs', state.prefs);
+}
+
 function migrateSelfCareToHabits() {
   if (!state.prefs) return;
   const p = state.prefs;
@@ -15911,6 +16561,8 @@ function initApp() {
   migrateSelfCareToHabits();
   migrateSelfCareXP();
   migrateNourishmentPrefs();
+  migrateWordTree();
+  migrateSpecialDates();
   initTheme();
   // Restore hard day dimming if active
   if (state.hardDayMode || (state.todayData?.mood !== undefined && state.todayData.mood <= 1 && state.todayData._hardDayActivated)) {
@@ -15930,6 +16582,7 @@ function initApp() {
   checkAutoGenerateInsight();
   checkStorageQuota();
   checkWelcomeBack();
+  checkSpecialDates();
   renderTodayTab();
   updateStreak();
   checkMilestones();
