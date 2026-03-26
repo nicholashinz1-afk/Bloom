@@ -9440,23 +9440,32 @@ function renderProgressTab() {
 
   html += `</div>`;
 
-  // Mood chart
-  html += `<div class="card">
-    <div class="card-title">Mood this week</div>
-    <div class="mood-chart" id="mood-chart-bars">`;
-
+  // Mood gradient chart
   const moodColors = ['#b07878','#c9954a','#9a9080','#7a9e7e','#a8c5ab'];
-  weekDates.forEach((d,i) => {
+  const moodEmojisWeek = ['😔','😕','😐','🙂','😊'];
+  const noMoodColor = 'rgba(255,255,255,0.04)';
+
+  const weekMoodStops = weekDates.map((d, i) => {
     const hist = state.historyData[d] || {};
     const mood = hist.mood;
-    const h = (mood !== undefined && mood >= 0) ? ((mood+1)/5*100) : (mood === -1 ? 12 : 8);
-    const color = (mood !== undefined && mood >= 0) ? moodColors[mood] : (mood === -1 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)');
-    html += `<div class="mood-chart-bar" style="height:${h}%;background:${color};border-radius:4px 4px 0 0"></div>`;
-  });
+    const pct = (i / 6 * 100).toFixed(1);
+    if (mood === undefined || mood < 0) return `${noMoodColor} ${pct}%`;
+    return `${moodColors[mood]} ${pct}%`;
+  }).join(', ');
 
-  html += `</div>
-    <div class="mood-chart-labels">`;
-  weekDates.forEach((_,i) => { html += `<div class="mood-chart-label">${dayLabels[i]}</div>`; });
+  html += `<div class="card">
+    <div class="card-title">Mood this week</div>
+    <div style="height:24px;border-radius:12px;background:linear-gradient(to right, ${weekMoodStops});box-shadow:0 1px 4px rgba(0,0,0,0.15);margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px;padding:0 4px">`;
+  weekDates.forEach((d, i) => {
+    const hist = state.historyData[d] || {};
+    const mood = hist.mood;
+    const emoji = (mood !== undefined && mood >= 0) ? moodEmojisWeek[mood] : (mood === -1 ? '🤷' : '');
+    html += `<div style="flex:1;text-align:center">
+      <div style="font-size:14px;line-height:1;margin-bottom:4px;min-height:14px">${emoji}</div>
+      <div style="font-size:9px;color:var(--text-muted)">${dayLabels[i]}</div>
+    </div>`;
+  });
   html += `</div></div>`;
 
   // Sleep quality chart — matches mood chart visual pattern
