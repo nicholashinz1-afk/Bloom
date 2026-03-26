@@ -8074,9 +8074,8 @@ function renderTodayTab() {
           <div style="font-size:13px;color:var(--cream);margin-bottom:6px">${cc.name}</div>
           <div style="display:flex;gap:4px">
             ${[1,2,3,4,5].map(v => `<div onclick="logCustomCheckin('${cc.id}',${v})" style="
-              width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-              cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s;
-              background:${val === v ? 'rgba(var(--sage-rgb),0.3)' : 'rgba(255,255,255,0.04)'};
+              padding:5px 12px;border-radius:99px;cursor:pointer;font-size:12px;font-weight:500;transition:all 0.15s;
+              background:${val === v ? 'rgba(var(--sage-rgb),0.25)' : 'rgba(255,255,255,0.04)'};
               border:1px solid ${val === v ? 'rgba(var(--sage-rgb),0.5)' : 'rgba(255,255,255,0.08)'};
               color:${val === v ? 'var(--sage-light)' : 'var(--text-muted)'}">${v}</div>`).join('')}
           </div>
@@ -8085,9 +8084,9 @@ function renderTodayTab() {
         html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 0">
           <div style="font-size:13px;color:var(--cream);flex:1">${cc.name}</div>
           <div style="display:flex;align-items:center;gap:6px">
-            <div onclick="logCustomCheckin('${cc.id}',Math.max(0,(${val || 0})-1))" class="stepper-btn" style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--text-secondary);cursor:pointer;font-size:14px">−</div>
+            <div onclick="logCustomCheckin('${cc.id}',Math.max(0,(${val || 0})-1))" style="padding:4px 12px;border-radius:99px;cursor:pointer;font-size:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--text-muted)">−</div>
             <div style="min-width:28px;text-align:center;font-size:15px;font-weight:500;color:var(--cream)">${val || 0}</div>
-            <div onclick="logCustomCheckin('${cc.id}',(${val || 0})+1)" class="stepper-btn" style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--text-secondary);cursor:pointer;font-size:14px">+</div>
+            <div onclick="logCustomCheckin('${cc.id}',(${val || 0})+1)" style="padding:4px 12px;border-radius:99px;cursor:pointer;font-size:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--text-muted)">+</div>
           </div>
         </div>`;
       }
@@ -8248,6 +8247,15 @@ function logMood(val) {
   checkFirstTaskStreak();
   onAnyActivityCancelEveningNudge();
   renderTodayTab();
+  // Auto-expand feelings on first mood selection of the day
+  if (prevMood === undefined) {
+    setTimeout(() => {
+      const feelingsRow = document.getElementById('feelings-row');
+      if (feelingsRow) feelingsRow.style.display = 'flex';
+      const feelingsToggle = document.querySelector('.feelings-toggle');
+      if (feelingsToggle) feelingsToggle.textContent = 'What\'s behind this? ▾';
+    }, 100);
+  }
   const btnIndex = val === -1 ? 5 : val;
   bounceMoodBtn(btnIndex);
   const moodEl = document.querySelectorAll('.mood-btn')[btnIndex];
@@ -9426,6 +9434,7 @@ function renderProgressTab() {
       <div style="flex:1">
         <div style="font-family:Fraunces,serif;font-size:22px;font-weight:300;color:var(--cream)">${level.name}</div>
         <div style="font-size:13px;color:var(--text-secondary);margin-top:2px">${total} sunlight total</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Earned by showing up and completing habits</div>
       </div>
     </div>
     <div class="xp-bar-track"><div class="xp-bar-fill" style="width:${pct}%"></div></div>
@@ -9706,15 +9715,26 @@ function renderProgressTab() {
   const breathCount = state.wellnessData?.breathSessions || 0;
   const exerciseCount = state.weekData?.w_exercise || 0;
 
-  html += `<div class="card">
-    <div class="card-title">Wellness this week</div>
-    <div class="stat-grid">
-      <div class="stat-cell"><div class="stat-val">${journalCount}</div><div class="stat-name">Journal entries</div></div>
-      <div class="stat-cell"><div class="stat-val">${reflectCount}</div><div class="stat-name">Reflections</div></div>
-      <div class="stat-cell"><div class="stat-val">${breathCount}</div><div class="stat-name">Breath sessions</div></div>
-      <div class="stat-cell"><div class="stat-val">${exerciseCount}</div><div class="stat-name">Workouts</div></div>
-    </div>
-  </div>`;
+  // Only show stats that are active (count > 0)
+  const wellnessStats = [
+    { val: journalCount, name: 'Journal entries' },
+    { val: reflectCount, name: 'Reflections' },
+    { val: breathCount, name: 'Breath sessions' },
+    { val: exerciseCount, name: 'Workouts' },
+  ].filter(s => s.val > 0);
+
+  if (wellnessStats.length > 0) {
+    html += `<div class="card">
+      <div class="card-title">Wellness this week</div>
+      <div class="stat-grid">
+        ${wellnessStats.map(s => `<div class="stat-cell"><div class="stat-val">${s.val}</div><div class="stat-name">${s.name}</div></div>`).join('')}
+      </div>
+    </div>`;
+  } else {
+    html += `<div class="card" style="text-align:center;padding:20px">
+      <div style="font-size:13px;color:var(--text-muted);line-height:1.6">Your wellness stats will appear here as you explore journaling, breathing, and more.</div>
+    </div>`;
+  }
 
   // Share week in review button
   html += `<div style="text-align:center;padding:8px 0 20px">
