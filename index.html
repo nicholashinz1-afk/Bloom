@@ -14156,6 +14156,31 @@ function migrateHabitTimesToBitmask() {
   save('bloom_prefs', p);
 }
 
+// Retroactively award +10 XP for each past self-care completion
+// (bumped from 10→20 XP per completion)
+function migrateSelfCareXP() {
+  if (state.prefs._selfCareXPMigrated) return;
+  const history = state.historyData || {};
+  let bonus = 0;
+  Object.values(history).forEach(day => {
+    const sc = day.habits?.selfCare || day.selfCare || {};
+    Object.values(sc).forEach(v => {
+      if (v === true) bonus += 10;
+    });
+  });
+  // Also count today's completions
+  const todaySC = state.todayData?.selfCare || {};
+  Object.values(todaySC).forEach(v => {
+    if (v === true) bonus += 10;
+  });
+  if (bonus > 0) {
+    state.xpData.total = (state.xpData.total || 0) + bonus;
+    save('bloom_xp', state.xpData);
+  }
+  state.prefs._selfCareXPMigrated = true;
+  save('bloom_prefs', state.prefs);
+}
+
 function migrateSelfCareToHabits() {
   if (!state.prefs) return;
   const p = state.prefs;
@@ -15747,6 +15772,7 @@ function initApp() {
   migrateToNewDailyHabits();
   migrateHabitTimesToBitmask();
   migrateSelfCareToHabits();
+  migrateSelfCareXP();
   initTheme();
   // Restore hard day dimming if active
   if (state.hardDayMode || (state.todayData?.mood !== undefined && state.todayData.mood <= 1 && state.todayData._hardDayActivated)) {
