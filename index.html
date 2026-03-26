@@ -10982,6 +10982,20 @@ function toggleHabitPref(id) {
   }, 50);
 }
 
+function reRenderSettingsPreservingScroll() {
+  const settingsScroll = document.getElementById('settings-scroll');
+  const savedScrollTop = settingsScroll ? settingsScroll.scrollTop : 0;
+  renderSettingsTab();
+  renderTodayTab();
+  if (settingsScroll) settingsScroll.scrollTop = savedScrollTop;
+  setTimeout(() => {
+    const sh = document.getElementById('sh-daily');
+    const sb = document.getElementById('sb-daily');
+    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
+    if (settingsScroll) settingsScroll.scrollTop = savedScrollTop;
+  }, 50);
+}
+
 function toggleDailyHabitPref(id) {
   if (!state.prefs.dailyHabits) state.prefs.dailyHabits = {};
   state.prefs.dailyHabits[id] = !state.prefs.dailyHabits[id];
@@ -10992,13 +11006,7 @@ function toggleDailyHabitPref(id) {
     state.prefs.habitTimes[id] = habit.defaultTime || 'any';
   }
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
-  renderTodayTab();
-  setTimeout(() => {
-    const sh = document.getElementById('sh-daily');
-    const sb = document.getElementById('sb-daily');
-    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
-  }, 50);
+  reRenderSettingsPreservingScroll();
 }
 
 function toggleHabitTimeSlot(id, slotBit) {
@@ -11033,13 +11041,7 @@ function setHabitTime(id, time) {
   }
 
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
-  renderTodayTab();
-  setTimeout(() => {
-    const sh = document.getElementById('sh-daily');
-    const sb = document.getElementById('sb-daily');
-    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
-  }, 50);
+  reRenderSettingsPreservingScroll();
 }
 
 function tapDailyHabit(id, timeSlot, el) {
