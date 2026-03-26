@@ -3479,15 +3479,48 @@ const LEVELS = [
   { name: 'Glowing',   min: 3200, emoji: '🌟' },
 ];
 
+// Baseline daily XP potential the LEVELS thresholds were designed around.
+// Roughly: 6 habits × 1 slot × 15 XP + medication × 20 + mood/journal/reflection/water/food ≈ 150
+const BASELINE_DAILY_XP = 150;
+
+function getDailyXPPotential() {
+  const prefs = state.prefs || {};
+  const dh = prefs.dailyHabits || {};
+  const ht = prefs.habitTimes || {};
+  let potential = 0;
+
+  // Daily habits
+  [...DAILY_HABITS, MEDICATION_HABIT].forEach(h => {
+    if (!dh[h.id]) return;
+    const time = ht[h.id] || h.defaultTime || 'any';
+    const slots = time === 'all' ? 3 : 1;
+    potential += (h.xp || 15) * slots;
+  });
+
+  // Non-habit daily XP (mood, journal, reflection, water, food, wins, affirmation)
+  // These are roughly fixed regardless of habit config
+  potential += 70;
+
+  return Math.max(potential, BASELINE_DAILY_XP);
+}
+
+function getScaledLevels() {
+  const scale = getDailyXPPotential() / BASELINE_DAILY_XP;
+  if (scale <= 1.05) return LEVELS; // No meaningful difference
+  return LEVELS.map(l => ({ ...l, min: Math.round(l.min * scale) }));
+}
+
 function getLevel(xp) {
-  let lv = LEVELS[0];
-  for (const l of LEVELS) { if (xp >= l.min) lv = l; else break; }
+  const scaled = getScaledLevels();
+  let lv = scaled[0];
+  for (const l of scaled) { if (xp >= l.min) lv = l; else break; }
   return lv;
 }
 
 function getNextLevel(xp) {
-  for (let i = 0; i < LEVELS.length - 1; i++) {
-    if (xp < LEVELS[i+1].min) return LEVELS[i+1];
+  const scaled = getScaledLevels();
+  for (let i = 0; i < scaled.length - 1; i++) {
+    if (xp < scaled[i+1].min) return scaled[i+1];
   }
   return null;
 }
@@ -3840,7 +3873,7 @@ function checkLevelUp(oldXP, newXP) {
 }
 
 function getLevelIndex(level) {
-  return LEVELS.findIndex(l => l.name === level.name);
+  return getScaledLevels().findIndex(l => l.name === level.name);
 }
 
 function buildFlowerSVG(levelIdx, animated = false) {
