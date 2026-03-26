@@ -10248,6 +10248,35 @@ function renderSettingsTab() {
     return chips;
   }
 
+  // Warm, specific cue placeholders per habit and time slot
+  const cuePlaceholders = {
+    brush_teeth:  { am: 'After I turn on the bathroom light...', afternoon: 'After I finish lunch...', pm: 'After I change into pajamas...', any: 'When I walk into the bathroom...' },
+    brush_hair:   { am: 'After I get out of the shower...', afternoon: 'When I check the mirror after lunch...', pm: 'While I wind down for the night...', any: 'When I look in the mirror...' },
+    wash_face:    { am: 'Right after I brush my teeth...', afternoon: 'After my afternoon break...', pm: 'As part of my bedtime routine...', any: 'When I turn on the faucet...' },
+    get_dressed:  { am: 'After I check the weather...', afternoon: 'When I need a fresh start...', pm: 'When I change into comfy clothes...', any: 'After I pick out what feels right...' },
+    floss:        { am: 'Right after brushing my teeth...', afternoon: 'After I finish eating...', pm: 'Before I put my toothbrush away...', any: 'After I brush my teeth...' },
+    skincare:     { am: 'After I wash my face...', afternoon: 'After I splash water on my face...', pm: 'After I wash off the day...', any: 'After I dry my face...' },
+    medication:   { am: 'After I pour my coffee...', afternoon: 'After I sit down for lunch...', pm: 'After I brush my teeth at night...', any: 'After my first meal of the day...' },
+  };
+  function getCuePlaceholder(habitId, slot) {
+    return cuePlaceholders[habitId]?.[slot] || 'After I...';
+  }
+
+  const triggers = prefs.habitTriggers || {};
+
+  function inlineCueInput(habitId, slot) {
+    const key = slot ? habitId + '_' + slot : habitId;
+    const val = triggers[key] || '';
+    const placeholder = slot ? getCuePlaceholder(habitId, slot) : getCuePlaceholder(habitId, 'any');
+    return `<div style="margin-top:6px;margin-left:28px">
+      <input type="text" id="trigger-${key}" value="${escapeHtml(val)}" placeholder="${placeholder}"
+        style="box-sizing:border-box;font-size:12px;padding:6px 10px;width:100%;border-radius:var(--r-md);
+        background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:var(--text-secondary);
+        font-style:italic" onchange="saveHabitTrigger('${key}')"
+        onfocus="setTimeout(()=>this.scrollIntoView({block:'center',behavior:'smooth'}),300)">
+    </div>`;
+  }
+
   function dailyHabitSettingsRow(h) {
     const on = !!dh[h.id];
     let row = `<div class="toggle-row" style="flex-wrap:wrap">
@@ -10261,6 +10290,12 @@ function renderSettingsTab() {
       row += `<div style="display:flex;gap:4px;width:100%;margin-top:8px;margin-left:28px">
         ${timeChipsHtml(h.id, curTime)}
       </div>`;
+      // Inline cue inputs per active slot
+      if (curTime === 'any') {
+        row += inlineCueInput(h.id, null);
+      } else {
+        getSlotsForTime(curTime).forEach(s => { row += inlineCueInput(h.id, s); });
+      }
     }
     row += `</div>`;
     return row;
@@ -10283,8 +10318,14 @@ function renderSettingsTab() {
     const medTime = ht.medication || 'any';
     dailyHtml += `<div style="display:flex;gap:4px;width:100%;margin-top:8px;margin-left:28px">
       ${timeChipsHtml('medication', medTime, 'rgba(106,154,176,0.2)', 'rgba(106,154,176,0.4)', 'var(--sky-light)')}
-    </div>
-    <div style="margin-top:8px;margin-left:28px;font-size:11px;color:var(--sky);cursor:pointer" onclick="openSettingsSection('notifications')">🔔 Set up medication reminders in Notifications ›</div>`;
+    </div>`;
+    // Inline cue inputs for medication
+    if (medTime === 'any') {
+      dailyHtml += inlineCueInput('medication', null);
+    } else {
+      getSlotsForTime(medTime).forEach(s => { dailyHtml += inlineCueInput('medication', s); });
+    }
+    dailyHtml += `<div style="margin-top:8px;margin-left:28px;font-size:11px;color:var(--sky);cursor:pointer" onclick="openSettingsSection('notifications')">🔔 Set up medication reminders in Notifications ›</div>`;
   }
   dailyHtml += `</div></div>`;
 
@@ -10301,62 +10342,7 @@ function renderSettingsTab() {
       <div class="toggle${prefs.habits?.track_meals ? ' on' : ''}" onclick="toggleMealTracking()"></div>
     </div>`;
 
-  html += settingsSection('daily', '☀️ Daily habits', dailyHtml);
-
-  // ── HABIT CUES (Implementation Intentions) ─────────────
-  {
-    const triggers = prefs.habitTriggers || {};
-    const ht = prefs.habitTimes || {};
-    let triggerHtml = `<div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">
-      Link each habit to a moment in your day — "I will [habit] when [cue]."
-    </div>
-    <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:16px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:var(--r-md);border:1px solid rgba(255,255,255,0.05)">
-      <span style="color:var(--sky-light)">ℹ️ Why cues work:</span> Research shows that pairing a new habit with an existing routine (like "after I pour my coffee") makes you 2-3x more likely to follow through. Your cue shows beneath each habit as a gentle reminder.
-    </div>`;
-
-    let hasTriggerHabits = false;
-
-    function triggerInput(id, label, icon, placeholder) {
-      hasTriggerHabits = true;
-      return `<div style="margin-bottom:16px">
-        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px">${icon} ${label}</div>
-        <input type="text" id="trigger-${id}" value="${escapeHtml(triggers[id] || '')}" placeholder="${placeholder}" style="box-sizing:border-box" onchange="saveHabitTrigger('${id}')" onfocus="setTimeout(()=>this.scrollIntoView({block:'center',behavior:'smooth'}),300)">
-      </div>`;
-    }
-
-    // Daily habits — respect bitmask time settings
-    const allDaily = [...DAILY_HABITS.filter(h => dh[h.id]), ...(dh.medication ? [MEDICATION_HABIT] : [])];
-    const triggerPlaceholders = { am: 'e.g. After waking up...', afternoon: 'e.g. After lunch...', pm: 'e.g. Before bed...' };
-    const triggerSlotLabels = { am: 'morning', afternoon: 'afternoon', pm: 'evening' };
-    allDaily.forEach(h => {
-      const time = ht[h.id] || h.defaultTime || 'any';
-      if (time === 'any') {
-        triggerHtml += triggerInput(h.id, h.label, h.icon, 'e.g. After morning coffee...');
-      } else {
-        getSlotsForTime(time).forEach(s => {
-          triggerHtml += triggerInput(h.id + '_' + s, h.label + ' (' + triggerSlotLabels[s] + ')', h.icon, triggerPlaceholders[s]);
-        });
-      }
-    });
-
-    // Self-care tasks
-    const enabledSelfCare = [];
-    SELF_CARE_CATEGORIES.forEach(cat => {
-      cat.tasks.forEach(task => {
-        if (prefs.selfCare?.[task.id]) enabledSelfCare.push(task);
-      });
-    });
-    if (enabledSelfCare.length > 0) {
-      triggerHtml += `<div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin:8px 0 12px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">Self-care</div>`;
-      enabledSelfCare.forEach(t => {
-        triggerHtml += triggerInput(t.id, t.label, t.icon, 'e.g. When I first get up...');
-      });
-    }
-
-    if (hasTriggerHabits) {
-      html += settingsSection('triggers', '🔗 Habit cues' + infoIcon('cues'), triggerHtml);
-    }
-  }
+  html += settingsSection('daily', '☀️ Daily habits' + infoIcon('cues'), dailyHtml);
 
   // ── WEEKLY HABITS & TASKS ────────────────────────────────────
   const tasks = prefs.householdTasks || [];
@@ -11860,10 +11846,10 @@ const SCIENCE_SECTIONS = {
     ],
   },
   cues: {
-    title: 'Habit cues',
-    tip: 'Linking a habit to an existing routine makes you 2-3x more likely to follow through.',
-    full: `<p><strong>Implementation intentions</strong> — the formal term for "if-then planning" — are one of the most reliable findings in behavioral psychology. Peter Gollwitzer's research showed that people who specified <em>when</em> and <em>where</em> they would perform a behavior were <strong>2–3x more likely</strong> to actually do it.</p>
-    <p>The mechanism is simple: by linking a new habit to an existing cue ("After I pour my coffee, I will take my medication"), you bypass the need for motivation or willpower. The existing routine acts as an automatic prompt. bloom calls these "cues" and shows them beneath each habit as a gentle reminder.</p>`,
+    title: 'Why cues help',
+    tip: 'Linking a habit to something you already do makes you 2-3x more likely to follow through.',
+    full: `<p>The text fields beneath each habit are <strong>cues</strong> — a way to link a new habit to something you already do. "After I pour my coffee, I'll take my medication" is much easier to remember than "take medication at 9am."</p>
+    <p>Research by Peter Gollwitzer found that people who pair a behavior with a specific moment in their day are <strong>2–3x more likely</strong> to actually do it. You don't need motivation or willpower — the existing routine becomes your automatic reminder. Your cue shows beneath each habit on the Today tab as a gentle nudge.</p>`,
     sources: [
       'Gollwitzer, P. M. (1999). Implementation intentions: Strong effects of simple plans. <em>American Psychologist</em>, 54(7), 493–503.',
       'Milkman, K. L., et al. (2021). Megastudies: A framework for large-scale interventions. <em>Nature</em>, 600, 478–483.',
