@@ -3000,7 +3000,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.12.0';
+const VERSION = '3.0.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -3046,9 +3046,10 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'Afternoon time slot — habits now support a midday option for medication, skincare, or anything that fits your afternoon routine. Find it in Settings under each habit.', spotlight: null, tab: 'settings', featured: true },
-  { text: 'Hard days feel gentler — on tough days your top priorities are highlighted, but everything else stays visible and tappable. Nothing is hidden, so you can still log anything you accomplish.', spotlight: null, tab: 'today' },
-  { text: 'Fairer progression — level thresholds now adapt to your setup, so everyone reaches milestones in roughly the same number of active days regardless of how many time slots they use.', spotlight: null, tab: 'progress' },
+  { text: 'Everything in one place — your daily habits, weekly goals (shower, exercise, therapy), household tasks, and self-care all live on the Today tab now. One view for your whole day.', spotlight: null, tab: 'today', featured: true },
+  { text: 'Pick your days — weekly habits like therapy or exercise can be set to specific days of the week, or left flexible with a weekly goal. Find the day chips in Settings.', spotlight: null, tab: 'settings' },
+  { text: 'Self-care woven in — your self-care items now appear naturally in the Anytime section with a soft divider. Less separate, more part of your flow.', spotlight: null, tab: 'today' },
+  { text: 'Smarter settings — medication reminders, celebration intensity, and high contrast mode are easier to find. Habit cues live right under each habit now.', spotlight: null, tab: 'settings' },
 ];
 
 // ============================================================
