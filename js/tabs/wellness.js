@@ -734,7 +734,7 @@ function renderGroundingStep() {
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:18px">Step ${groundingStep + 1} of 5</div>
       <div style="display:flex;gap:10px;justify-content:center">
         <button class="btn btn-ghost btn-sm" onclick="stopGrounding()">End early</button>
-        <button class="btn" style="background:rgba(var(--sage-rgb),0.25);border:1px solid rgba(var(--sage-rgb),0.4);color:var(--sage-light)" onclick="groundingStep++;renderGroundingStep()">
+        <button class="btn" style="background:rgba(var(--sage-rgb),0.25);border:1px solid rgba(var(--sage-rgb),0.4);color:var(--sage-light)" onclick="nextGroundingStep()">
           ${groundingStep < 4 ? 'Next' : 'Finish'}
         </button>
       </div>
@@ -803,7 +803,7 @@ function renderBodyScanStep() {
       </div>
       <div style="display:flex;gap:10px;justify-content:center">
         <button class="btn btn-ghost btn-sm" onclick="stopBodyScan()">End early</button>
-        <button class="btn" style="background:rgba(176,120,120,0.25);border:1px solid rgba(176,120,120,0.4);color:var(--rose-light)" onclick="bodyScanStep++;renderBodyScanStep()">
+        <button class="btn" style="background:rgba(176,120,120,0.25);border:1px solid rgba(176,120,120,0.4);color:var(--rose-light)" onclick="nextBodyScanStep()">
           ${bodyScanStep < 5 ? 'Next region' : 'Finish'}
         </button>
       </div>
@@ -1033,7 +1033,11 @@ window.startBreathing = startBreathing;
 window.stopBreathing = stopBreathing;
 window.continueBreathing = continueBreathing;
 window.startGrounding = startGrounding;
+function nextGroundingStep() { groundingStep++; renderGroundingStep(); }
+function nextBodyScanStep() { bodyScanStep++; renderBodyScanStep(); }
 window.renderGroundingStep = renderGroundingStep;
+window.nextGroundingStep = nextGroundingStep;
+window.nextBodyScanStep = nextBodyScanStep;
 window.stopGrounding = stopGrounding;
 window.startBodyScan = startBodyScan;
 window.renderBodyScanStep = renderBodyScanStep;

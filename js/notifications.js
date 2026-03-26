@@ -820,6 +820,7 @@ export { checkDailyAffirmation, showDailyAffirmation, dismissAffirmation,
   onWaterGoalReachedCancelPush, onAnyActivityCancelEveningNudge };
 
 window.dismissAffirmation = dismissAffirmation;
+window.showDailyAffirmation = showDailyAffirmation;
 window.testPushNotification = testPushNotification;
 window.saveNewWeekGoals = saveNewWeekGoals;
 window.toggleNewWeekTask = toggleNewWeekTask;

@@ -1026,6 +1026,7 @@ function completeOnboarding() {
 // ============================================================
 export { renderOnboarding, completeOnboarding };
 window.renderOnboarding = renderOnboarding;
+window.obData = obData;
 window.obNext = obNext; window.obBack = obBack;
 window.obSetReadiness = obSetReadiness; window.obToggleHabit = obToggleHabit;
 window.obStartSmall = obStartSmall; window.obUndoStartSmall = obUndoStartSmall;
