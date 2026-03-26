@@ -5125,13 +5125,7 @@ function setTheme(key) {
   if (headerIcon) headerIcon.innerHTML = bloomIcon(26);
   const navIcon = document.getElementById('nav-today-icon');
   if (navIcon) navIcon.innerHTML = bloomIcon(20);
-  renderSettingsTab();
-  // Keep settings section open
-  setTimeout(() => {
-    const sh = document.getElementById('sh-appearance');
-    const sb = document.getElementById('sb-appearance');
-    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
-  }, 50);
+  reRenderSettingsPreservingScroll();
 }
 
 // ============================================================
@@ -11107,42 +11101,21 @@ function toggleSelfCareTask(id) {
     state.prefs.selfCareTasks.push(id);
   }
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
-  renderTodayTab();
-  setTimeout(() => {
-    const sh = document.getElementById('sh-selfcare');
-    const sb = document.getElementById('sb-selfcare');
-    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
-  }, 50);
+  reRenderSettingsPreservingScroll();
 }
 
 function setSCRoutine(taskId, routine) {
   if (!state.prefs.selfCareRoutines) state.prefs.selfCareRoutines = {};
   state.prefs.selfCareRoutines[taskId] = routine;
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
-  renderTodayTab();
-  setTimeout(() => {
-    const sh = document.getElementById('sh-selfcare');
-    const sb = document.getElementById('sb-selfcare');
-    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
-  }, 50);
+  reRenderSettingsPreservingScroll();
 }
 
 function toggleHabitPref(id) {
   if (!state.prefs.habits) state.prefs.habits = {};
   state.prefs.habits[id] = state.prefs.habits[id] === false ? true : false;
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
-  renderTodayTab();
-  setTimeout(() => {
-    const sh = document.getElementById('sh-daily');
-    const sb = document.getElementById('sb-daily');
-    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
-    const sh2 = document.getElementById('sh-goals');
-    const sb2 = document.getElementById('sb-goals');
-    if (sh2 && sb2) { sh2.classList.add('open'); sb2.classList.add('open'); }
-  }, 50);
+  reRenderSettingsPreservingScroll();
 }
 
 function reRenderSettingsPreservingScroll() {
@@ -11350,8 +11323,7 @@ function toggleHouseholdPref(id, name, icon) {
     state.prefs.householdTasks.push({ id, name, icon });
   }
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
-  setTimeout(() => { const sh = document.getElementById('sh-tasks'); const sb = document.getElementById('sb-tasks'); if(sh&&sb){sh.classList.add('open');sb.classList.add('open');} }, 50);
+  reRenderSettingsPreservingScroll();
 }
 
 function addCustomTask() {
@@ -11361,14 +11333,13 @@ function addCustomTask() {
   const id = 'custom_' + Date.now();
   state.prefs.householdTasks.push({ id, name: input.value.trim(), icon: '✏️' });
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
-  setTimeout(() => { const sh = document.getElementById('sh-tasks'); const sb = document.getElementById('sb-tasks'); if(sh&&sb){sh.classList.add('open');sb.classList.add('open');} }, 50);
+  reRenderSettingsPreservingScroll();
 }
 
 function removeCustomTask(id) {
   state.prefs.householdTasks = (state.prefs.householdTasks || []).filter(t => t.id !== id);
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
+  reRenderSettingsPreservingScroll();
 }
 
 async function resetServiceWorker() {
@@ -11451,52 +11422,36 @@ function toggleHighContrast() {
   state.prefs.highContrast = !state.prefs.highContrast;
   save('bloom_prefs', state.prefs);
   document.body.classList.toggle('high-contrast', state.prefs.highContrast);
-  renderSettingsTab();
-  setTimeout(() => {
-    const sh = document.getElementById('sh-appearance');
-    const sb = document.getElementById('sb-appearance');
-    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
-  }, 50);
+  reRenderSettingsPreservingScroll();
 }
 
 function disableProgressiveDisclosure() {
   if (!state.prefs) state.prefs = {};
   state.prefs.progressiveDisclosure = false;
+  state.prefs.progressiveDisclosureDisabled = true;
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
-  renderTodayTab();
+  reRenderSettingsPreservingScroll();
 }
 
 function setCelebrationIntensity(mode) {
   if (!state.prefs) state.prefs = {};
   state.prefs.celebrationIntensity = mode;
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
-  setTimeout(() => {
-    const sh = document.getElementById('sh-appearance');
-    const sb = document.getElementById('sb-appearance');
-    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
-  }, 50);
+  reRenderSettingsPreservingScroll();
 }
 
 function toggleAudioPref() {
   state.prefs.audio = state.prefs.audio === false ? true : false;
   save('bloom_prefs', state.prefs);
   if (state.prefs.audio) playSound('habit'); // preview on enable
-  renderSettingsTab();
-  setTimeout(() => {
-    const sh = document.getElementById('sh-notifications');
-    const sb = document.getElementById('sb-notifications');
-    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
-  }, 50);
+  reRenderSettingsPreservingScroll();
 }
 
 function setWaterMode(mode) {
   if (!state.prefs.notifications) state.prefs.notifications = {};
   state.prefs.notifications.waterMode = mode;
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
-  setTimeout(() => { const sh = document.getElementById('sh-notifications'); const sb = document.getElementById('sb-notifications'); if(sh&&sb){sh.classList.add('open');sb.classList.add('open');} }, 50);
+  reRenderSettingsPreservingScroll();
   setTimeout(() => scheduleAllPushNotifications(), 1000);
 }
 
@@ -11512,8 +11467,7 @@ function toggleNotif(key) {
   if (!state.prefs.notifications) state.prefs.notifications = {};
   state.prefs.notifications[key] = !state.prefs.notifications[key];
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
-  // Re-schedule push notifications when preferences change
+  reRenderSettingsPreservingScroll();
   setTimeout(() => scheduleAllPushNotifications(), 1000);
 }
 
