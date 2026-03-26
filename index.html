@@ -2455,13 +2455,16 @@ button:focus-visible,
   fill: none;
 }
 .habit-check.done .check-path {
+  stroke-dashoffset: 0;
+}
+/* Animations only on fresh completion, not re-render */
+.habit-check.just-done .check-path {
   animation: checkStroke 0.35s 0.05s cubic-bezier(0.65, 0, 0.45, 1) forwards;
 }
 @keyframes checkStroke {
   to { stroke-dashoffset: 0; }
 }
-/* Subtle glow pulse on completion */
-.habit-check.done {
+.habit-check.just-done {
   box-shadow: 0 0 0 0 rgba(var(--sage-rgb),0.4);
   animation: checkGlow 0.6s cubic-bezier(0.34,1.56,0.64,1);
 }
@@ -7692,6 +7695,8 @@ function getUserWeekNumber() {
   return Math.floor(diffDays / 7) + 1; // Week 1 starts immediately
 }
 
+let _justCompletedKey = null; // Track which item was just tapped for animation
+
 function renderTodayTab() {
   const scroll = document.getElementById('today-scroll');
   if (!scroll) return;
@@ -8145,6 +8150,21 @@ function renderTodayTab() {
   </div>`;
 
   scroll.innerHTML = html;
+
+  // Apply completion animation only to the just-tapped item
+  if (_justCompletedKey) {
+    setTimeout(() => {
+      const rows = scroll.querySelectorAll('.habit-row');
+      rows.forEach(row => {
+        if (row.getAttribute('onclick')?.includes(_justCompletedKey)) {
+          const check = row.querySelector('.habit-check.done');
+          if (check) check.classList.add('just-done');
+        }
+      });
+      _justCompletedKey = null;
+    }, 10);
+  }
+
   renderTodayTop();
   checkAllDone();
 
@@ -8192,6 +8212,7 @@ function tapHouseholdTask(id, el) {
 
 function tapWeeklyHabitToday(id, el) {
   const wasDone = state.todayData[id];
+  if (!wasDone) _justCompletedKey = id;
   state.todayData[id] = !wasDone;
   const habit = WEEKLY_HABITS.find(h => h.id === id);
   const xpVal = habit?.xp || 20;
@@ -8220,6 +8241,7 @@ function tapWeeklyHabitToday(id, el) {
 
 function tapHouseholdToday(id, el) {
   const wasDone = state.todayData['ht_' + id];
+  if (!wasDone) _justCompletedKey = id;
   state.todayData['ht_' + id] = !wasDone;
   // Also update weekData for backward compat
   if (!state.weekData.household) state.weekData.household = {};
@@ -8244,6 +8266,7 @@ function tapHouseholdToday(id, el) {
 function tapSelfCare(id, el) {
   if (!state.todayData.selfCare) state.todayData.selfCare = {};
   const wasDone = state.todayData.selfCare[id];
+  if (!wasDone) _justCompletedKey = id;
   state.todayData.selfCare[id] = !wasDone;
 
   if (!wasDone) {
@@ -11129,6 +11152,7 @@ function setHabitTime(id, time) {
 function tapDailyHabit(id, timeSlot, el) {
   const key = id + '_' + timeSlot; // e.g. brush_teeth_am, brush_teeth_pm
   const wasDone = state.todayData[key];
+  if (!wasDone) _justCompletedKey = key;
   state.todayData[key] = !wasDone;
 
   if (!wasDone) {
