@@ -1,6 +1,7 @@
 import { state, today, getWeekDates, formatDateLabel, getDayIndex, dayOfWeek, saveState, getJournalEntries } from '../state.js';
 import { save, load } from '../storage.js';
 import { haptic, escapeHtml } from '../utils.js';
+import { getMoodColors, THEMES } from '../theme.js';
 import { LEVELS, DAILY_HABITS, MEDICATION_HABIT, SELF_CARE_TASKS } from '../constants.js';
 import { getLevel, getNextLevel, buildFlowerSVG } from '../xp.js';
 import { buildStreakTreeSVG } from '../streaks.js';
@@ -159,7 +160,7 @@ function renderProgressTab() {
   html += `</div>`;
 
   // Mood gradient chart
-  const moodColors = ['#8296a6','#91a7a0','#a4a78e','#bfab82','#d9c9a0'];
+  const moodColors = getMoodColors();
   const moodEmojisWeek = ['😔','😕','😐','🙂','😊'];
   const noMoodColor = 'rgba(255,255,255,0.04)';
 
@@ -255,7 +256,7 @@ function renderProgressTab() {
   }).join(', ');
 
   const flowRows = [
-    { label: 'Mood', gradient: moodStops, swatch: '#d9c9a0' },
+    { label: 'Mood', gradient: moodStops, swatch: (THEMES[state.prefs?.theme] || THEMES.forest).primary },
     { label: 'Sleep', gradient: sleepStops, swatch: '#6a9ab0' },
     { label: 'Habits', gradient: habitStops, swatch: '#7a9e7e' },
   ];

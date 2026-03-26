@@ -1,5 +1,6 @@
 import { state, today, getWeekDates, formatDateLabel } from '../state.js';
 import { DAILY_HABITS, MEDICATION_HABIT } from '../constants.js';
+import { getMoodColors } from '../theme.js';
 function getMoodPattern() {
   const history = state.historyData;
   const dates = Object.keys(history).sort().slice(-14); // last 2 weeks
@@ -159,7 +160,7 @@ async function shareWeekInReview() {
   // Mood bars
   const weekDates = getWeekDates();
   const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const moodColors2 = ['#8296a6','#91a7a0','#a4a78e','#bfab82','#d9c9a0'];
+  const moodColors2 = getMoodColors();
   const barWidth = 50;
   const barGap = 18;
   const startX = 300 - (7 * (barWidth + barGap) - barGap) / 2;

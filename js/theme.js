@@ -133,5 +133,25 @@ function setTheme(key) {
 //  DAILY AFFIRMATION
 // ============================================================
 
-export { getSeasonalAccent, applySeasonalTheme, THEMES, hexToRgb, applyTheme, initTheme, setTheme };
+function getMoodColors() {
+  const theme = THEMES[state.prefs?.theme] || THEMES.forest;
+  const dim = theme.primaryDim;
+  const mid = theme.primary;
+  const light = theme.primaryLight;
+  function lerp(a, b, t) {
+    const [r1,g1,b1] = [parseInt(a.slice(1,3),16), parseInt(a.slice(3,5),16), parseInt(a.slice(5,7),16)];
+    const [r2,g2,b2] = [parseInt(b.slice(1,3),16), parseInt(b.slice(3,5),16), parseInt(b.slice(5,7),16)];
+    const r = Math.round(r1 + (r2-r1)*t), g = Math.round(g1 + (g2-g1)*t), bl = Math.round(b1 + (b2-b1)*t);
+    return '#' + [r,g,bl].map(v => v.toString(16).padStart(2,'0')).join('');
+  }
+  return [
+    lerp(dim, mid, 0.35),
+    lerp(dim, mid, 0.7),
+    mid,
+    lerp(mid, light, 0.5),
+    light,
+  ];
+}
+
+export { getSeasonalAccent, applySeasonalTheme, THEMES, hexToRgb, applyTheme, initTheme, setTheme, getMoodColors };
 window.setTheme = setTheme;
