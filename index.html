@@ -3000,7 +3000,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.11.0';
+const VERSION = '2.12.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -3046,9 +3046,9 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'Retroactive tracking — tap any past day in your history to fill in habits and self-care you forgot to log. Your progress still counts, even when you remember it late.', spotlight: null, tab: 'weekly', featured: true },
-  { text: 'Self-care now shows in history — your past self-care activities are now visible when viewing any past day, not just daily habits.', spotlight: null, tab: 'weekly' },
-  { text: 'Refreshed journal prompts — new prompts to help you reflect in different ways, meeting you wherever you are.', spotlight: null, tab: 'wellness' },
+  { text: 'Afternoon time slot — habits now support a midday option for medication, skincare, or anything that fits your afternoon routine. Find it in Settings under each habit.', spotlight: null, tab: 'settings', featured: true },
+  { text: 'Hard days feel gentler — on tough days your top priorities are highlighted, but everything else stays visible and tappable. Nothing is hidden, so you can still log anything you accomplish.', spotlight: null, tab: 'today' },
+  { text: 'Fairer progression — level thresholds now adapt to your setup, so everyone reaches milestones in roughly the same number of active days regardless of how many time slots they use.', spotlight: null, tab: 'progress' },
 ];
 
 // ============================================================
