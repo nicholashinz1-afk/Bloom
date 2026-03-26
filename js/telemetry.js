@@ -90,7 +90,7 @@ function errorBoundary(fn, context) {
     const sessionMeta = {
       loadTime: nav ? Math.round(nav.loadEventEnd - nav.startTime) : null,
       domReady: nav ? Math.round(nav.domContentLoadedEventEnd - nav.startTime) : null,
-      returning: !!load('bloom_state', null),
+      returning: !!load('bloom_history', null),
       tabVisible: !document.hidden,
       online: navigator.onLine,
       idbAvailable: typeof indexedDB !== 'undefined',
