@@ -47,10 +47,10 @@
   --cream:       #e8e0d0;
   --cream-dim:   #9a9080;
 
-  /* Text */
+  /* Text — contrast ratios meet WCAG AA 4.5:1 against --bg (#0d1610) */
   --text-primary:   #e8e0d0;
-  --text-secondary: #8a9e8c;
-  --text-muted:     #6b7f6d;
+  --text-secondary: #a3b5a5;
+  --text-muted:     #8a9e8c;
   --text-on-sage:   #0a1a0b;
 
   --seasonal:      #a8c5ab;
@@ -173,6 +173,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   font-weight: 300;
   color: var(--cream);
   letter-spacing: 0.05em;
+  margin: 0;
 }
 #crisis-heart {
   position: absolute;
@@ -505,13 +506,18 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   border: none;
   cursor: pointer;
   font-size: 18px;
-  padding: 4px 6px;
-  opacity: 0.45;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px;
+  opacity: 0.75;
   transition: opacity 0.2s;
   line-height: 1;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-#crisis-heart:active { opacity: 0.9; transform: scale(0.92); }
+#crisis-heart:active { opacity: 1; transform: scale(0.92); }
 
 /* Bottom navigation */
 #bottom-nav {
@@ -675,6 +681,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   align-items: center;
   gap: 4px;
   padding: 10px 4px;
+  min-height: 44px;
   border-radius: var(--r-md);
   border: 2px solid transparent;
   background: var(--bg-elevated);
@@ -852,7 +859,8 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 20px;
+  padding: 12px 20px;
+  min-height: 44px;
   border-radius: var(--r-full);
   font-family: 'Instrument Sans', sans-serif;
   font-size: 14px;
@@ -925,6 +933,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   font-weight: 400;
   color: var(--cream);
   padding: 0 20px;
+  margin: 0;
   margin-bottom: 16px;
 }
 
@@ -2032,7 +2041,13 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   align-items: center;
   gap: 14px;
   padding: 14px 20px;
+  min-height: 44px;
+  border: none;
   border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -2788,8 +2803,8 @@ select:focus {
   <header id="app-header" role="banner">
     <div class="header-bloom">
       <span id="header-bloom-icon" aria-hidden="true"></span>
-      <span class="header-bloom-name">bloom</span>
-      <button id="settings-gear" onclick="switchTab('settings')" title="Settings" aria-label="Open settings" style="position:absolute;left:0;background:none;border:none;cursor:pointer;font-size:17px;padding:4px;opacity:0.35;transition:opacity 0.2s;line-height:1"><span aria-hidden="true">⚙️</span></button>
+      <h1 class="header-bloom-name">bloom</h1>
+      <button id="settings-gear" onclick="switchTab('settings')" title="Settings" aria-label="Open settings" style="position:absolute;left:0;background:none;border:none;cursor:pointer;font-size:17px;min-width:44px;min-height:44px;padding:10px;opacity:0.6;transition:opacity 0.2s;line-height:1;display:flex;align-items:center;justify-content:center"><span aria-hidden="true">⚙️</span></button>
       <button id="crisis-heart" onclick="openCrisisSheet()" title="Mental health resources" aria-label="Mental health crisis resources"><span aria-hidden="true">🤍</span></button>
     </div>
     <div class="header-quote" id="daily-quote" role="status" aria-live="polite"></div>
@@ -2863,37 +2878,37 @@ select:focus {
 <div class="bottom-sheet" id="crisis-sheet" role="dialog" aria-label="Crisis support resources">
   <div class="sheet-handle"></div>
   <div style="padding:0 20px 8px">
-    <div class="sheet-title">You don't have to face this alone</div>
+    <h2 class="sheet-title">You don't have to face this alone</h2>
     <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;padding:0 0 16px">Reaching out is a brave thing to do. These resources are here for you right now.</p>
   </div>
-  <div class="crisis-option" onclick="window.location='tel:988'">
-    <div class="crisis-option-icon">📞</div>
-    <div>
-      <div class="crisis-option-title">Call or Text 988</div>
-      <div class="crisis-option-sub">Suicide & Crisis Lifeline — free, confidential, 24/7</div>
-    </div>
-  </div>
-  <div class="crisis-option" onclick="window.open('sms:741741?body=HOME')">
-    <div class="crisis-option-icon">💬</div>
-    <div>
-      <div class="crisis-option-title">Crisis Text Line</div>
-      <div class="crisis-option-sub">Text HOME to 741741</div>
-    </div>
-  </div>
-  <div class="crisis-option" onclick="window.open('https://988lifeline.org/chat/')">
-    <div class="crisis-option-icon">🌐</div>
-    <div>
-      <div class="crisis-option-title">Chat Online</div>
-      <div class="crisis-option-sub">988lifeline.org — live chat support</div>
-    </div>
-  </div>
-  <div class="crisis-option" onclick="window.open('https://findahelpline.com/')">
-    <div class="crisis-option-icon">🌍</div>
-    <div>
-      <div class="crisis-option-title">International Resources</div>
-      <div class="crisis-option-sub">findahelpline.com — crisis lines in 40+ languages worldwide</div>
-    </div>
-  </div>
+  <button class="crisis-option" onclick="window.location='tel:988'" aria-label="Call or text 988 Suicide and Crisis Lifeline">
+    <span class="crisis-option-icon" aria-hidden="true">📞</span>
+    <span>
+      <span class="crisis-option-title">Call or Text 988</span>
+      <span class="crisis-option-sub">Suicide & Crisis Lifeline — free, confidential, 24/7</span>
+    </span>
+  </button>
+  <button class="crisis-option" onclick="window.open('sms:741741?body=HOME')" aria-label="Text HOME to 741741 for Crisis Text Line">
+    <span class="crisis-option-icon" aria-hidden="true">💬</span>
+    <span>
+      <span class="crisis-option-title">Crisis Text Line</span>
+      <span class="crisis-option-sub">Text HOME to 741741</span>
+    </span>
+  </button>
+  <button class="crisis-option" onclick="window.open('https://988lifeline.org/chat/')" aria-label="Chat online at 988 Lifeline dot org">
+    <span class="crisis-option-icon" aria-hidden="true">🌐</span>
+    <span>
+      <span class="crisis-option-title">Chat Online</span>
+      <span class="crisis-option-sub">988lifeline.org — live chat support</span>
+    </span>
+  </button>
+  <button class="crisis-option" onclick="window.open('https://findahelpline.com/')" aria-label="Find international crisis helplines in 40 plus languages">
+    <span class="crisis-option-icon" aria-hidden="true">🌍</span>
+    <span>
+      <span class="crisis-option-title">International Resources</span>
+      <span class="crisis-option-sub">findahelpline.com — crisis lines in 40+ languages worldwide</span>
+    </span>
+  </button>
   <div style="padding:20px 20px 0">
     <div class="banner" style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);">
       <div class="banner-body">
@@ -3005,7 +3020,7 @@ select:focus {
   <div style="padding:0 20px 20px">
     <div style="font-family:Fraunces,serif;font-style:italic;font-size:20px;font-weight:300;color:var(--rose-light);margin-bottom:6px">What's on your heart right now?</div>
     <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">No prompts. No structure. Just space — say whatever needs saying.</div>
-    <textarea id="open-journal-textarea" placeholder="You don't have to make it make sense..." rows="7" style="margin-bottom:12px"></textarea>
+    <textarea id="open-journal-textarea" aria-label="Open journal entry" placeholder="You don't have to make it make sense..." rows="7" style="margin-bottom:12px"></textarea>
     <div style="display:flex;gap:10px">
       <button class="btn btn-primary" style="flex:1" id="open-journal-save">Let it out</button>
       <button class="btn btn-ghost" onclick="closeAllSheets()">Close</button>
@@ -5204,7 +5219,7 @@ function renderWindDownStep() {
         <div style="font-size:40px;margin-bottom:14px">📓</div>
         <div style="font-family:Fraunces,serif;font-size:18px;font-weight:300;color:var(--cream);margin-bottom:8px">One thought before rest</div>
         <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;font-style:italic">What's one thing — however small — that went okay today?</div>
-        <textarea id="winddown-journal" rows="3" style="width:100%;resize:none;margin-bottom:16px" placeholder="No pressure. Even one word is enough."></textarea>
+        <textarea id="winddown-journal" aria-label="Wind-down journal" rows="3" style="width:100%;resize:none;margin-bottom:16px" placeholder="No pressure. Even one word is enough."></textarea>
         <div style="display:flex;gap:10px;justify-content:center">
           <button class="btn btn-ghost btn-sm" onclick="winddownNext()">Skip</button>
           <button class="btn btn-primary" onclick="winddownSaveJournal();winddownNext()">Save & continue</button>
@@ -12859,7 +12874,11 @@ async function tryRestoreFromURL() {
 // ============================================================
 //  BOTTOM SHEETS
 // ============================================================
+// Track which element opened the sheet so we can restore focus when it closes
+let _sheetTriggerElement = null;
+
 function openSheet(id) {
+  _sheetTriggerElement = document.activeElement;
   document.getElementById('sheet-backdrop').classList.add('open');
   const sheet = document.getElementById(id);
   sheet.classList.add('open');
@@ -12882,6 +12901,11 @@ function closeAllSheets() {
   document.querySelectorAll('.bottom-sheet.open').forEach(s => releaseFocusTrap(s));
   document.getElementById('sheet-backdrop').classList.remove('open');
   document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('open'));
+  // Restore focus to the element that opened the sheet
+  if (_sheetTriggerElement && typeof _sheetTriggerElement.focus === 'function') {
+    setTimeout(() => _sheetTriggerElement.focus(), 50);
+    _sheetTriggerElement = null;
+  }
   // Pop the history state we pushed (unless back button already did)
   if (wasOpen && history.state?.sheetOpen) {
     history.back();
