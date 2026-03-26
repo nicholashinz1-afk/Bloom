@@ -121,17 +121,32 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
+    // Handle batched telemetry events (multiple events in one request)
+    if (body.type === 'batch' && Array.isArray(body.events)) {
+      const events = body.events.slice(0, 50); // Cap at 50 per batch
+      for (const evt of events) {
+        if (!evt.type || !validateEvent(evt)) continue;
+        await processEvent(evt);
+      }
+      return res.json({ ok: true, processed: events.length });
+    }
+
     if (!validateEvent(body)) {
       return res.status(400).json({ error: 'Invalid event type' });
     }
 
+    return await processEvent(body, res);
+  }
+
+  async function processEvent(body, res) {
     const ts = Date.now();
 
     switch (body.type) {
       case 'ai_feedback': {
         const { context, value } = body;
         if (!value || !['yes', 'no'].includes(value)) {
-          return res.json({ ok: false });
+          if (res) return res.json({ ok: false });
+          return;
         }
         await appendToList(KEYS.aiFeedback, {
           context: (context || 'unknown').slice(0, 50),
@@ -139,7 +154,8 @@ export default async function handler(req, res) {
           ts,
         });
         await incrementDaily(value === 'yes' ? 'ai_helpful' : 'ai_unhelpful');
-        return res.json({ ok: true });
+        if (res) return res.json({ ok: true });
+        return;
       }
 
       case 'error': {
@@ -151,7 +167,8 @@ export default async function handler(req, res) {
           ts,
         }, 2000);
         await incrementDaily('errors');
-        return res.json({ ok: true });
+        if (res) return res.json({ ok: true });
+        return;
       }
 
       case 'feature_use': {
@@ -164,10 +181,12 @@ export default async function handler(req, res) {
           'weekly', 'wellness', 'progress', 'community', 'grounding', 'bodyscan', 'reframe',
         ];
         if (!feature || !allowedFeatures.includes(feature)) {
-          return res.json({ ok: false });
+          if (res) return res.json({ ok: false });
+          return;
         }
         await incrementDaily('feature:' + feature);
-        return res.json({ ok: true });
+        if (res) return res.json({ ok: true });
+        return;
       }
 
       case 'session_start': {
@@ -186,7 +205,8 @@ export default async function handler(req, res) {
         // Also track as regular event
         await appendToList(KEYS.events, { event: 'session_start', ts });
         await incrementDaily('event:session_start');
-        return res.json({ ok: true });
+        if (res) return res.json({ ok: true });
+        return;
       }
 
       default: {
@@ -197,7 +217,8 @@ export default async function handler(req, res) {
           ts,
         });
         await incrementDaily('event:' + body.type);
-        return res.json({ ok: true });
+        if (res) return res.json({ ok: true });
+        return;
       }
     }
   }

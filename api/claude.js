@@ -21,10 +21,14 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
 
-  const { system, message } = body;
+  const { system, message, model } = body;
   if (!message) {
     return res.status(400).json({ error: 'Missing message' });
   }
+
+  // Allow client to request Sonnet for richer reflections; default to Haiku for cost efficiency
+  const ALLOWED_MODELS = ['claude-haiku-4-5-20251001', 'claude-sonnet-4-20250514'];
+  const selectedModel = ALLOWED_MODELS.includes(model) ? model : 'claude-haiku-4-5-20251001';
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -35,7 +39,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: selectedModel,
         max_tokens: 1000,
         system: system || 'You are a warm, helpful assistant.',
         messages: [{ role: 'user', content: message }],

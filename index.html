@@ -5143,7 +5143,8 @@ async function showMonthlyReflectionPrompt() {
   trackFeature('monthly_reflection');
   const ai = await callClaude(
     `Write a warm monthly reflection for a wellness app user. Month: ${monthName}. Average mood: ${avgMood}/4. Journal entries: ${journalCount}. Write 3-4 sentences that feel like a caring friend reflecting on their month — personal, encouraging, honest. Never shame.`,
-    'You are Bloom. 3-4 sentences. Warm, personal, never clinical. If mood data suggests a very difficult month, gently acknowledge that and remind them the 🤍 crisis heart is always there if they need support beyond what bloom can offer.'
+    'You are Bloom. 3-4 sentences. Warm, personal, never clinical. If mood data suggests a very difficult month, gently acknowledge that and remind them the 🤍 crisis heart is always there if they need support beyond what bloom can offer.',
+    { model: 'claude-sonnet-4-20250514' }
   );
 
   // Store it
@@ -7183,15 +7184,44 @@ if (!_bloomUid) {
   save('bloom_uid', _bloomUid);
 }
 
+// Telemetry batching — queue events and flush periodically to reduce serverless invocations
+const _telemetryQueue = [];
+let _telemetryTimer = null;
+
 function sendTelemetry(type, data) {
   try {
-    fetch('/api/diagnostics', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, ...data }),
-    }).catch(() => {});
+    _telemetryQueue.push({ type, ...data, _ts: Date.now() });
+    // Start flush timer if not already running
+    if (!_telemetryTimer) {
+      _telemetryTimer = setTimeout(flushTelemetry, 30000);
+    }
   } catch(e) {}
 }
+
+function flushTelemetry() {
+  _telemetryTimer = null;
+  if (_telemetryQueue.length === 0) return;
+  const batch = _telemetryQueue.splice(0);
+  try {
+    const payload = JSON.stringify({ type: 'batch', events: batch });
+    // Use sendBeacon if available (survives page unload), otherwise fetch
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/diagnostics', new Blob([payload], { type: 'application/json' }));
+    } else {
+      fetch('/api/diagnostics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+      }).catch(() => {});
+    }
+  } catch(e) {}
+}
+
+// Flush on page hide/unload to avoid losing events
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushTelemetry();
+});
+window.addEventListener('beforeunload', flushTelemetry);
 
 function trackFeature(feature) { sendTelemetry('feature_use', { feature }); }
 function trackEvent(eventName, meta) { sendTelemetry(eventName, meta ? { meta } : {}); }
@@ -7393,7 +7423,7 @@ function getScriptedResponse() {
 
 const AI_FALLBACK_RESPONSE = "You showed up today, and that matters. Whatever you're carrying, you don't have to carry it alone.";
 
-async function callClaude(prompt, systemPrompt) {
+async function callClaude(prompt, systemPrompt, options) {
   // Track AI reflection usage for journey analysis
   const aiSource = prompt.includes('journal') ? 'journal' : prompt.includes('reflection') ? 'reflection' : prompt.includes('hard day') ? 'hard_day' : prompt.includes('weekly') || prompt.includes('week') ? 'weekly_insight' : prompt.includes('monthly') || prompt.includes('month') ? 'monthly_reflection' : 'other';
   trackAIJourney(aiSource, aiSource);
@@ -7401,13 +7431,15 @@ async function callClaude(prompt, systemPrompt) {
   try {
     const name = state.prefs?.name;
     const nameContext = name ? ` The user's name is ${name} — use it occasionally but naturally, not in every sentence.` : '';
+    const body = {
+      system: (systemPrompt || 'You are Bloom, a warm and compassionate mental wellness companion. Keep responses brief, warm, and human. Never clinical. 1-4 sentences maximum.') + ' Never use first-person language like "I am here for you" or "I care about you" — you are a tool, not a person. Frame support as observations and affirmations, not as a relationship.' + nameContext,
+      message: prompt,
+    };
+    if (options?.model) body.model = options.model;
     const res = await timedFetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system: (systemPrompt || 'You are Bloom, a warm and compassionate mental wellness companion. Keep responses brief, warm, and human. Never clinical. 1-4 sentences maximum.') + ' Never use first-person language like "I am here for you" or "I care about you" — you are a tool, not a person. Frame support as observations and affirmations, not as a relationship.' + nameContext,
-        message: prompt,
-      })
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     return filterAIResponse(data.text || AI_FALLBACK_RESPONSE);
@@ -9460,7 +9492,8 @@ async function generateWeeklyInsight(e) {
     `Write a weekly insight for a mental wellness app user. This week: ${avgMood ? `average mood ${avgMood}/4` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}. Small wins they logged: ${weekWins.length > 0 ? weekWins.slice(0,5).join(', ') : 'none this week'}.
 
 Write 3-4 sentences from an emotional lens — how they showed up for themselves this week. If they logged small wins, reflect specific ones back to them as evidence of progress. If it was a hard week emotionally but they still did self-care, reflect that back as evidence of resilience. Celebrate specific acts of self-care as emotional wins. Never shame, never clinical. End with something genuinely encouraging about the week ahead.`,
-    'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only. If the week data suggests persistent struggle, gently remind them the 🤍 crisis heart is always there and that reaching out to a professional is a sign of strength.'
+    'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only. If the week data suggests persistent struggle, gently remind them the 🤍 crisis heart is always there and that reaching out to a professional is a sign of strength.',
+    { model: 'claude-sonnet-4-20250514' }
   );
 
   const d = new Date();
