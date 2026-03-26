@@ -4,16 +4,63 @@ Mental health self-care PWA. Compassionate, no-shame, no-pressure design philoso
 
 ## Architecture
 
-- **Single-page app** — entire frontend lives in `index.html` (~11K lines)
+- **Single-page app** — vanilla JS with native ES modules (no build step, no framework)
+- **`index.html`** — slim HTML shell (~370 lines), loads `js/app.js` as entry point
+- **`bloom.css`** — consolidated stylesheet (~2600 lines)
+- **`js/`** — 32 ES modules organized by domain (see below)
 - **Deployed on Vercel** — static hosting + serverless API functions
 - **Storage:** localStorage (primary) with IndexedDB backup mirror. No user accounts/auth.
 - **Data stays local** unless user explicitly uses community features (buddy, wall)
+
+## Frontend Module Structure
+
+```
+js/
+├── app.js              — entry point (imports all, boots app)
+├── state.js            — central state object, date helpers, load/save state
+├── storage.js          — localStorage + IndexedDB wrappers
+├── constants.js        — all static data (habits, levels, quotes, celebrations)
+├── utils.js            — haptics, audio engine, helpers
+├── icons.js            — SVG icon generators
+├── ui.js               — ripple, confetti, animations
+├── xp.js               — XP, levels, streaks visuals, flower SVG
+├── streaks.js          — streak logic, milestones, welcome back
+├── celebrate.js        — celebration effects, undo toast
+├── habits.js           — habit toggle logic, completion checks
+├── ai.js               — Claude API client, response rendering
+├── telemetry.js        — anonymous usage tracking
+├── theme.js            — color themes, seasonal accents
+├── router.js           — tab switching, accessibility, focus traps
+├── notifications.js    — reminders, push, session management
+├── sheets.js           — bottom sheet management, science tooltips
+├── whatsnew.js         — version announcements, guided tour, daily quote
+├── backup.js           — export/import, encrypted backup, URL sharing
+├── init.js             — OneSignal, migrations, service worker, safari checks
+├── seasonal.js         — seasonal insights, weekly summary, custom check-ins
+├── tabs/
+│   ├── today.js        — daily habits, mood, water, food, self-care
+│   ├── weekly.js       — weekly habit progress view
+│   ├── wellness.js     — journal, breathing, grounding, body scan, reframing
+│   ├── progress.js     — stats, XP, levels, flower, history, insights
+│   ├── community.js    — encouragement wall + buddy list
+│   └── settings.js     — preferences, data management, accessibility
+└── features/
+    ├── buddy.js        — buddy system client (pairing, messaging, nudges)
+    ├── onboarding.js   — multi-step setup flow
+    ├── hardday.js      — hard day mode, wind-down, monthly reflection
+    ├── mood.js         — mood analytics, correlations, weekly review
+    └── tutorial.js     — spotlight-based feature tour
+```
+
+**Inline onclick pattern:** HTML uses `onclick="fn()"` handlers. Each module attaches its interactive functions to `window` (e.g., `window.toggleHabit = toggleHabit`). This is a deliberate bridge pattern — migration to `addEventListener` is a future cleanup.
 
 ## API Endpoints (Vercel serverless)
 
 - `api/claude.js` — proxies to Anthropic API (server-side key via `ANTHROPIC_API_KEY`)
 - `api/buddy.js` — buddy pairing, messaging, nudges (Redis/Vercel KV via `REDIS_URL`)
 - `api/wall.js` — community encouragement wall (same Redis backend)
+- `api/diagnostics.js` — anonymous telemetry + admin dashboard
+- `api/_shared/` — shared modules: moderation, Redis client, CORS, ID generation
 
 ## Key Environment Variables
 
@@ -24,7 +71,7 @@ Mental health self-care PWA. Compassionate, no-shame, no-pressure design philoso
 
 ## Content Moderation
 
-Moderation filters in `api/buddy.js` and `api/wall.js` use a three-tier approach:
+Moderation filters in `api/_shared/moderation.js` (shared by buddy.js and wall.js) use a three-tier approach:
 1. **Blocked** — directed harm toward others, targeted slurs
 2. **Flagged (allowed but surfaces crisis resources)** — self-harm language
 3. **Allowed** — venting, frustration, general expression

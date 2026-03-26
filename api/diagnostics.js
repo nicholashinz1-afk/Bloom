@@ -2,37 +2,8 @@
 // Collects anonymous operational telemetry — no PII, no journal content
 // Admin dashboard protected by ADMIN_KEY env var
 
-import { createClient } from 'redis';
-
-let _redisClient = null;
-async function getRedis() {
-  if (_redisClient && _redisClient.isReady) return _redisClient;
-  if (_redisClient) { try { await _redisClient.disconnect(); } catch(e) {} }
-  _redisClient = createClient({ url: process.env.REDIS_URL, socket: { reconnectStrategy: (retries) => retries < 3 ? Math.min(retries * 200, 1000) : false } });
-  _redisClient.on('error', () => {});
-  await _redisClient.connect();
-  return _redisClient;
-}
-
-async function kvGet(key) {
-  try {
-    const client = await getRedis();
-    const val = await client.get(key);
-    if (val === null) return null;
-    return JSON.parse(val);
-  } catch(e) { return null; }
-}
-
-async function kvSet(key, value, ttlSeconds) {
-  try {
-    const client = await getRedis();
-    if (ttlSeconds) {
-      await client.set(key, JSON.stringify(value), { EX: ttlSeconds });
-    } else {
-      await client.set(key, JSON.stringify(value));
-    }
-  } catch(e) {}
-}
+import { kvGet, kvSet, getRedis } from './_shared/redis.js';
+import { setCorsHeaders, handlePreflight, parseBody } from './_shared/cors.js';
 
 // ── Keys ──────────────────────────────────────────────────
 const KEYS = {
@@ -95,15 +66,8 @@ function sanitizeError(msg) {
 }
 
 export default async function handler(req, res) {
-  const allowedOrigins = ['https://bloomhabits.app', 'http://localhost:3000'];
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Key');
-
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  setCorsHeaders(req, res);
+  if (handlePreflight(req, res)) return;
 
   // Health check
   if (req.method === 'GET' && req.query?.check === 'health') {
@@ -119,7 +83,7 @@ export default async function handler(req, res) {
 
   // ── POST: Receive telemetry from clients ────────────────
   if (req.method === 'POST') {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const body = parseBody(req);
 
     if (!validateEvent(body)) {
       return res.status(400).json({ error: 'Invalid event type' });
