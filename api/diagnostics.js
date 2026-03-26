@@ -77,7 +77,7 @@ function validateEvent(body) {
     'wall_post', 'onboarding_complete', 'encrypted_backup',
     'api_timing', 'health_check', 'error_boundary',
     'idb_slow', 'idb_error', 'session_diagnostics', 'mood_pattern', 'ai_journey',
-    'winddown_started', 'winddown_completed',
+    'winddown_started', 'winddown_completed', 'level_snapshot',
   ];
   if (!type || !allowed.includes(type)) return false;
   return true;
@@ -209,6 +209,35 @@ export default async function handler(req, res) {
         return;
       }
 
+      case 'level_snapshot': {
+        const { uid, level, xp, daysAtLevel, daysShowedUp, streak, hardDayToday, xpSources, featuresUsed, hasBuddy } = body;
+        if (!uid || !level) { if (res) return res.json({ ok: false }); return; }
+        // Store per-user level data (keyed by anonymous uid, overwritten each session)
+        const userKey = `bloom_level_user:${uid.slice(0, 20)}`;
+        await kvSet(userKey, {
+          level, xp: xp || 0, daysAtLevel: daysAtLevel || 0,
+          daysShowedUp: daysShowedUp || 0, streak: streak || 0,
+          hardDayToday: !!hardDayToday,
+          xpSources: xpSources || {}, featuresUsed: featuresUsed || [],
+          hasBuddy: !!hasBuddy,
+          lastSeen: ts,
+        }, NINETY_DAYS);
+        // Track uid in the level user index so we can enumerate them
+        const idx = await kvGet('bloom_level_user_index') || [];
+        const idxSet = new Set(idx);
+        idxSet.add(uid.slice(0, 20));
+        await kvSet('bloom_level_user_index', [...idxSet], NINETY_DAYS);
+        // Track level-up timestamps per user for progression analytics
+        const progressKey = `bloom_level_progress:${uid.slice(0, 20)}`;
+        const progress = await kvGet(progressKey) || {};
+        if (!progress[level]) progress[level] = ts;
+        await kvSet(progressKey, progress, NINETY_DAYS);
+        await incrementDaily('event:level_snapshot');
+        await incrementDaily('level:' + level);
+        if (res) return res.json({ ok: true });
+        return;
+      }
+
       default: {
         // Generic event tracking
         await appendToList(KEYS.events, {
@@ -295,7 +324,175 @@ export default async function handler(req, res) {
       return res.json({ ok: true, data: evts.slice(-200).reverse() });
     }
 
-    return res.status(400).json({ error: 'Unknown view. Use: dashboard, ai_feedback, errors, events' });
+    if (view === 'level_analytics') {
+      const LEVEL_NAMES = ['Seedling','Sprout','Blooming','Thriving','Radiant','Glowing','Flourishing','Rooted','Evergreen','Full Bloom'];
+      const idx = await kvGet('bloom_level_user_index') || [];
+      const now = Date.now();
+      const SEVEN_DAYS = 7 * 86400000;
+      const THIRTY_DAYS = 30 * 86400000;
+
+      // Gather all user data
+      const users = [];
+      for (const uid of idx) {
+        const data = await kvGet(`bloom_level_user:${uid}`);
+        if (data) users.push({ uid, ...data });
+      }
+
+      const totalUsers = users.length;
+      const activeUsers = users.filter(u => (now - u.lastSeen) < SEVEN_DAYS);
+      const active30 = users.filter(u => (now - u.lastSeen) < THIRTY_DAYS);
+
+      // 1. Users per level (count + percentage)
+      const levelCounts = {};
+      const levelActive = {};
+      const levelActive30 = {};
+      LEVEL_NAMES.forEach(l => { levelCounts[l] = 0; levelActive[l] = 0; levelActive30[l] = 0; });
+      users.forEach(u => {
+        if (levelCounts[u.level] !== undefined) levelCounts[u.level]++;
+      });
+      activeUsers.forEach(u => {
+        if (levelActive[u.level] !== undefined) levelActive[u.level]++;
+      });
+      active30.forEach(u => {
+        if (levelActive30[u.level] !== undefined) levelActive30[u.level]++;
+      });
+
+      const levelDistribution = LEVEL_NAMES.map(name => ({
+        name,
+        total: levelCounts[name] || 0,
+        pct: totalUsers > 0 ? Math.round(((levelCounts[name] || 0) / totalUsers) * 100) : 0,
+        active7d: levelActive[name] || 0,
+        active30d: levelActive30[name] || 0,
+      }));
+
+      // 2. Level-up conversion rate
+      const conversionRates = [];
+      for (let i = 0; i < LEVEL_NAMES.length - 1; i++) {
+        const atOrAbove = users.filter(u => LEVEL_NAMES.indexOf(u.level) >= i).length;
+        const nextOrAbove = users.filter(u => LEVEL_NAMES.indexOf(u.level) >= i + 1).length;
+        conversionRates.push({
+          from: LEVEL_NAMES[i],
+          to: LEVEL_NAMES[i + 1],
+          rate: atOrAbove > 0 ? Math.round((nextOrAbove / atOrAbove) * 100) : 0,
+          fromCount: atOrAbove,
+          toCount: nextOrAbove,
+        });
+      }
+
+      // 3. Median days at current level (for active users)
+      const daysAtLevelByLevel = {};
+      LEVEL_NAMES.forEach(l => { daysAtLevelByLevel[l] = []; });
+      activeUsers.forEach(u => {
+        if (daysAtLevelByLevel[u.level]) daysAtLevelByLevel[u.level].push(u.daysAtLevel || 0);
+      });
+      const medianDaysAtLevel = LEVEL_NAMES.map(name => {
+        const arr = daysAtLevelByLevel[name].sort((a, b) => a - b);
+        const med = arr.length > 0 ? arr[Math.floor(arr.length / 2)] : null;
+        return { name, median: med, count: arr.length };
+      });
+
+      // 4. Stagnation (active users at same level 30+ days)
+      const stagnant = activeUsers.filter(u => (u.daysAtLevel || 0) >= 30);
+      const stagnationByLevel = {};
+      LEVEL_NAMES.forEach(l => { stagnationByLevel[l] = 0; });
+      stagnant.forEach(u => { if (stagnationByLevel[u.level] !== undefined) stagnationByLevel[u.level]++; });
+
+      // 5. Average daily XP by level (approximate from total XP / daysShowedUp)
+      const avgDailyXP = {};
+      LEVEL_NAMES.forEach(l => { avgDailyXP[l] = []; });
+      activeUsers.forEach(u => {
+        if (u.daysShowedUp > 0 && avgDailyXP[u.level]) {
+          avgDailyXP[u.level].push(Math.round(u.xp / u.daysShowedUp));
+        }
+      });
+      const avgXPByLevel = LEVEL_NAMES.map(name => {
+        const arr = avgDailyXP[name];
+        const avg = arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null;
+        return { name, avgDailyXP: avg, sampleSize: arr.length };
+      });
+
+      // 6. Hard day frequency by level
+      const hardDayByLevel = {};
+      LEVEL_NAMES.forEach(l => { hardDayByLevel[l] = { total: 0, hardDay: 0 }; });
+      activeUsers.forEach(u => {
+        if (hardDayByLevel[u.level]) {
+          hardDayByLevel[u.level].total++;
+          if (u.hardDayToday) hardDayByLevel[u.level].hardDay++;
+        }
+      });
+      const hardDayRates = LEVEL_NAMES.map(name => ({
+        name,
+        rate: hardDayByLevel[name].total > 0 ? Math.round((hardDayByLevel[name].hardDay / hardDayByLevel[name].total) * 100) : null,
+        count: hardDayByLevel[name].hardDay,
+        total: hardDayByLevel[name].total,
+      }));
+
+      // 7. Feature adoption by level
+      const featuresByLevel = {};
+      LEVEL_NAMES.forEach(l => { featuresByLevel[l] = {}; });
+      activeUsers.forEach(u => {
+        if (featuresByLevel[u.level] && Array.isArray(u.featuresUsed)) {
+          u.featuresUsed.forEach(f => {
+            featuresByLevel[u.level][f] = (featuresByLevel[u.level][f] || 0) + 1;
+          });
+        }
+      });
+
+      // 8. XP source breakdown by level
+      const xpSourcesByLevel = {};
+      LEVEL_NAMES.forEach(l => { xpSourcesByLevel[l] = {}; });
+      activeUsers.forEach(u => {
+        if (xpSourcesByLevel[u.level] && u.xpSources) {
+          Object.keys(u.xpSources).forEach(s => {
+            xpSourcesByLevel[u.level][s] = (xpSourcesByLevel[u.level][s] || 0) + 1;
+          });
+        }
+      });
+
+      // 9. Buddy pair rate by level
+      const buddyByLevel = {};
+      LEVEL_NAMES.forEach(l => { buddyByLevel[l] = { total: 0, paired: 0 }; });
+      activeUsers.forEach(u => {
+        if (buddyByLevel[u.level]) {
+          buddyByLevel[u.level].total++;
+          if (u.hasBuddy) buddyByLevel[u.level].paired++;
+        }
+      });
+
+      // 10. Return rate approximation (users with streak > 0 after 3+ day gap)
+      const returnByLevel = {};
+      LEVEL_NAMES.forEach(l => { returnByLevel[l] = { active: 0, returned: 0 }; });
+      active30.forEach(u => {
+        if (returnByLevel[u.level]) {
+          returnByLevel[u.level].active++;
+          // If they have a current streak but also showed up many days, they likely returned
+          if (u.daysShowedUp > 3 && u.streak > 0 && u.streak < u.daysShowedUp) {
+            returnByLevel[u.level].returned++;
+          }
+        }
+      });
+
+      return res.json({
+        ok: true,
+        levelAnalytics: {
+          totalUsers,
+          activeUsers7d: activeUsers.length,
+          activeUsers30d: active30.length,
+          levelDistribution,
+          conversionRates,
+          medianDaysAtLevel,
+          stagnation: { total: stagnant.length, byLevel: stagnationByLevel },
+          avgXPByLevel,
+          hardDayRates,
+          featuresByLevel,
+          xpSourcesByLevel,
+          buddyByLevel,
+          returnByLevel,
+        },
+      });
+    }
+
+    return res.status(400).json({ error: 'Unknown view. Use: dashboard, ai_feedback, errors, events, level_analytics' });
   }
 
   return res.status(405).json({ error: 'Method not allowed' });

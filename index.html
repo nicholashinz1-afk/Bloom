@@ -17058,6 +17058,52 @@ function initApp() {
   }
   checkForUpdate();
   sendTelemetry('session_start', { uid: _bloomUid });
+  // Send level snapshot for analytics (after short delay so state is fully loaded)
+  setTimeout(() => {
+    const xp = state.xpData?.total || 0;
+    const lvl = getLevel(xp);
+    const levelReachedKey = `bloom_level_reached_ts_${lvl.name}`;
+    // Record the first time we reached this level
+    if (!load(levelReachedKey, null)) save(levelReachedKey, Date.now());
+    // Calculate days at current level
+    const levelReachedTs = load(levelReachedKey, Date.now());
+    const daysAtLevel = Math.floor((Date.now() - levelReachedTs) / 86400000);
+    // Gather XP source breakdown from today
+    const td = state.todayData || {};
+    const xpSources = {};
+    if (td.m_teeth || td.brush_teeth_am) xpSources.teeth_am = 1;
+    if (td.e_teeth || td.brush_teeth_pm) xpSources.teeth_pm = 1;
+    if (td.medication_am || td.medication_pm || td.medication_afternoon || td.medication_any) xpSources.medication = 1;
+    if (td.mood !== undefined) xpSources.mood = 1;
+    if (td.journalXPGiven) xpSources.journal = 1;
+    if ((td.water || 0) > 0) xpSources.water = 1;
+    if (td.hardDayMode) xpSources.hard_day = 1;
+    // Count features used recently (last 7 days from history)
+    const history = load('bloom_history', {});
+    const recentDays = Object.keys(history).sort().slice(-7);
+    const featuresUsed = new Set();
+    recentDays.forEach(d => {
+      const day = history[d];
+      if (day?.mood !== undefined) featuresUsed.add('mood');
+      if (day?.journal) featuresUsed.add('journal');
+      if (day?.m_teeth || day?.e_teeth) featuresUsed.add('habits');
+      if (day?.water) featuresUsed.add('water');
+      if (day?.hardDayMode) featuresUsed.add('hard_day');
+    });
+    const hasBuddy = buddyState?.status === 'paired';
+    sendTelemetry('level_snapshot', {
+      uid: _bloomUid,
+      level: lvl.name,
+      xp,
+      daysAtLevel,
+      daysShowedUp: state.xpData?.daysShowedUp || 0,
+      streak: state.xpData?.currentRun || 0,
+      hardDayToday: !!td.hardDayMode,
+      xpSources,
+      featuresUsed: [...featuresUsed],
+      hasBuddy,
+    });
+  }, 2000);
   renderDailyQuote();
   applySeasonalTheme();
   checkNewWeek();

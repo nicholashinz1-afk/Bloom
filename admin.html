@@ -221,6 +221,24 @@
   .incident-reason { color: var(--amber-light); min-width: 80px; }
   .incident-text { color: var(--text-secondary); font-style: italic; flex: 1; }
   .incident-time { color: var(--text-muted); white-space: nowrap; }
+
+  /* Level analytics */
+  .level-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .level-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .level-table th { text-align: left; padding: 6px 8px; color: var(--text-muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .level-table td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .level-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .level-bar-cell { width: 100px; }
+  .level-mini-bar { height: 14px; border-radius: 7px; background: rgba(255,255,255,0.04); overflow: hidden; }
+  .level-mini-fill { height: 100%; border-radius: 7px; transition: width 0.3s; }
+  .level-emoji { font-size: 14px; margin-right: 4px; }
+  .level-warn { color: var(--amber); font-weight: 600; }
+  .level-good { color: var(--sage-light); }
+  .level-muted { color: var(--text-muted); }
+  .level-conversion-arrow { color: var(--text-muted); font-size: 10px; margin: 0 4px; }
+  .level-heatmap { display: grid; grid-template-columns: 80px repeat(var(--cols, 5), 1fr); gap: 2px; font-size: 11px; }
+  .level-heatmap-cell { padding: 4px 6px; border-radius: 4px; text-align: center; }
+  .level-stagnant-alert { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: rgba(201,149,74,0.08); border: 1px solid rgba(201,149,74,0.2); border-radius: var(--r-md); font-size: 13px; color: var(--amber-light); }
 </style>
 </head>
 <body>
@@ -259,6 +277,7 @@
     <div class="tab-btn" onclick="switchAdminTab('events')">Events</div>
     <div class="tab-btn" onclick="switchAdminTab('features')">Features</div>
     <div class="tab-btn" onclick="switchAdminTab('agents')">Agents</div>
+    <div class="tab-btn" onclick="switchAdminTab('levels')">Levels</div>
     <div class="tab-btn" onclick="switchAdminTab('wall')">Wall</div>
   </div>
 
@@ -348,6 +367,17 @@
         <h2>Report History</h2>
         <div id="agent-history-list"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Level Analytics -->
+  <div class="tab-panel" id="panel-levels">
+    <div class="refresh-bar">
+      <button onclick="loadLevelAnalytics()">Refresh</button>
+      <span id="levels-refresh-time" style="font-size:12px;color:var(--text-muted)"></span>
+    </div>
+    <div id="levels-content">
+      <div class="loading" style="text-align:center;padding:40px;color:var(--text-muted)">Click Refresh to load level analytics</div>
     </div>
   </div>
 
@@ -1086,6 +1116,212 @@ async function toggleBanUser(fp, ban) {
   } catch(e) {
     alert('Network error: ' + e.message);
   }
+}
+
+// ── Level Analytics ──────────────────────────────────────────
+let levelData = null;
+
+async function loadLevelAnalytics() {
+  const container = document.getElementById('levels-content');
+  container.innerHTML = '<div class="loading">Loading level analytics...</div>';
+  try {
+    const res = await fetch('/api/diagnostics?view=level_analytics&key=' + encodeURIComponent(adminKey));
+    const data = await res.json();
+    if (data.ok) {
+      levelData = data.levelAnalytics;
+      document.getElementById('levels-refresh-time').textContent = 'Refreshed: ' + new Date().toLocaleTimeString();
+      renderLevelAnalytics();
+    } else {
+      container.innerHTML = '<div class="loading">Failed to load data</div>';
+    }
+  } catch(e) {
+    container.innerHTML = '<div class="loading">Network error</div>';
+  }
+}
+
+function renderLevelAnalytics() {
+  if (!levelData) return;
+  const d = levelData;
+  const container = document.getElementById('levels-content');
+
+  const LEVEL_COLORS = {
+    'Seedling': '#7a9e7e', 'Sprout': '#88aa8c', 'Blooming': '#c97a8a', 'Thriving': '#e0b87a',
+    'Radiant': '#9ec4d8', 'Glowing': '#e0b87a', 'Flourishing': '#c97a8a', 'Rooted': '#6b5040',
+    'Evergreen': '#5a8a5e', 'Full Bloom': '#d4a0a8',
+  };
+  const LEVEL_EMOJIS = {
+    'Seedling': '🌱', 'Sprout': '🌿', 'Blooming': '🌸', 'Thriving': '🌻',
+    'Radiant': '✨', 'Glowing': '🌟', 'Flourishing': '🌺', 'Rooted': '🌳',
+    'Evergreen': '🍃', 'Full Bloom': '🌷',
+  };
+
+  let html = '';
+
+  // Summary cards
+  html += `<div class="grid">
+    <div class="card">
+      <h3>User Totals</h3>
+      <div class="stat-row"><span class="stat-label">Total tracked users</span><span class="stat-value good">${d.totalUsers}</span></div>
+      <div class="stat-row"><span class="stat-label">Active (7d)</span><span class="stat-value" style="font-size:16px;color:var(--sage-light)">${d.activeUsers7d}</span></div>
+      <div class="stat-row"><span class="stat-label">Active (30d)</span><span style="font-size:14px;color:var(--cream)">${d.activeUsers30d}</span></div>
+    </div>
+    <div class="card">
+      <h3>Stagnation Alert</h3>
+      ${d.stagnation.total > 0
+        ? `<div class="level-stagnant-alert" style="margin-bottom:10px">⚠ ${d.stagnation.total} active user${d.stagnation.total > 1 ? 's' : ''} stuck at same level for 30+ days</div>`
+        : `<div style="font-size:13px;color:var(--sage-light);padding:8px 0">✓ No stagnation detected</div>`}
+      ${Object.entries(d.stagnation.byLevel).filter(([,v]) => v > 0).map(([k,v]) =>
+        `<div class="stat-row"><span class="stat-label">${LEVEL_EMOJIS[k] || ''} ${k}</span><span class="level-warn">${v}</span></div>`
+      ).join('')}
+    </div>
+  </div>`;
+
+  // Level distribution table
+  html += `<div class="level-grid">
+    <div class="card">
+      <h2>Level Distribution</h2>
+      <table class="level-table">
+        <tr><th>Level</th><th>Users</th><th>%</th><th>Active 7d</th><th>Active 30d</th><th class="level-bar-cell">Share</th></tr>
+        ${d.levelDistribution.map(l => `
+          <tr>
+            <td><span class="level-emoji">${LEVEL_EMOJIS[l.name] || ''}</span>${l.name}</td>
+            <td>${l.total}</td>
+            <td>${l.pct}%</td>
+            <td class="level-good">${l.active7d}</td>
+            <td>${l.active30d}</td>
+            <td class="level-bar-cell"><div class="level-mini-bar"><div class="level-mini-fill" style="width:${l.pct}%;background:${LEVEL_COLORS[l.name] || 'var(--sage)'}"></div></div></td>
+          </tr>
+        `).join('')}
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Level-Up Conversion</h2>
+      <table class="level-table">
+        <tr><th>From</th><th></th><th>To</th><th>Rate</th><th class="level-bar-cell">Funnel</th></tr>
+        ${d.conversionRates.map(c => {
+          const color = c.rate >= 60 ? 'var(--sage-light)' : c.rate >= 30 ? 'var(--amber)' : 'var(--red)';
+          return `<tr>
+            <td>${LEVEL_EMOJIS[c.from] || ''} ${c.from} <span class="level-muted">(${c.fromCount})</span></td>
+            <td class="level-conversion-arrow">→</td>
+            <td>${LEVEL_EMOJIS[c.to] || ''} ${c.to} <span class="level-muted">(${c.toCount})</span></td>
+            <td style="color:${color};font-weight:600">${c.rate}%</td>
+            <td class="level-bar-cell"><div class="level-mini-bar"><div class="level-mini-fill" style="width:${c.rate}%;background:${color}"></div></div></td>
+          </tr>`;
+        }).join('')}
+      </table>
+    </div>
+  </div>`;
+
+  // Median days at level + Avg XP
+  html += `<div class="level-grid">
+    <div class="card">
+      <h2>Median Days at Level</h2>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Among active users — how long they've been at their current level</p>
+      <table class="level-table">
+        <tr><th>Level</th><th>Median Days</th><th>Users</th></tr>
+        ${d.medianDaysAtLevel.map(m => {
+          const warn = m.median !== null && m.median >= 30;
+          return `<tr>
+            <td>${LEVEL_EMOJIS[m.name] || ''} ${m.name}</td>
+            <td class="${warn ? 'level-warn' : ''}">${m.median !== null ? m.median + 'd' : '—'}</td>
+            <td class="level-muted">${m.count}</td>
+          </tr>`;
+        }).join('')}
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Average Daily XP by Level</h2>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Are higher-level users earning more or burning out?</p>
+      <table class="level-table">
+        <tr><th>Level</th><th>Avg Daily XP</th><th>Sample</th></tr>
+        ${d.avgXPByLevel.map(x => `<tr>
+          <td>${LEVEL_EMOJIS[x.name] || ''} ${x.name}</td>
+          <td style="color:var(--cream)">${x.avgDailyXP !== null ? x.avgDailyXP + ' XP' : '—'}</td>
+          <td class="level-muted">${x.sampleSize}</td>
+        </tr>`).join('')}
+      </table>
+    </div>
+  </div>`;
+
+  // Hard day + Feature adoption
+  html += `<div class="level-grid">
+    <div class="card">
+      <h2>Hard Day Mode by Level</h2>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Higher rates at higher levels may signal pressure</p>
+      <table class="level-table">
+        <tr><th>Level</th><th>Rate</th><th>Today</th><th>Active</th></tr>
+        ${d.hardDayRates.map(h => {
+          const warn = h.rate !== null && h.rate > 30;
+          return `<tr>
+            <td>${LEVEL_EMOJIS[h.name] || ''} ${h.name}</td>
+            <td class="${warn ? 'level-warn' : ''}">${h.rate !== null ? h.rate + '%' : '—'}</td>
+            <td>${h.count}</td>
+            <td class="level-muted">${h.total}</td>
+          </tr>`;
+        }).join('')}
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Feature Adoption by Level</h2>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Which features each level cohort uses (last 7 days)</p>
+      ${Object.entries(d.featuresByLevel).filter(([,v]) => Object.keys(v).length > 0).map(([level, features]) => {
+        const total = d.levelDistribution.find(l => l.name === level)?.active7d || 1;
+        return `<div style="margin-bottom:10px">
+          <div style="font-size:12px;font-weight:500;color:var(--cream);margin-bottom:4px">${LEVEL_EMOJIS[level] || ''} ${level}</div>
+          ${Object.entries(features).sort(([,a],[,b]) => b - a).map(([f, count]) =>
+            `<div class="feature-row">
+              <span class="feature-name">${f}</span>
+              <div class="feature-bar-bg"><div class="feature-bar" style="width:${Math.round((count/total)*100)}%;background:${LEVEL_COLORS[level] || 'var(--sky)'}"></div></div>
+              <span class="feature-count">${count}/${total}</span>
+            </div>`
+          ).join('')}
+        </div>`;
+      }).join('') || '<div class="level-muted" style="padding:12px">No data yet</div>'}
+    </div>
+  </div>`;
+
+  // XP Sources + Buddy rates
+  html += `<div class="level-grid">
+    <div class="card">
+      <h2>XP Sources by Level</h2>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Where users at each level earn XP today</p>
+      ${Object.entries(d.xpSourcesByLevel).filter(([,v]) => Object.keys(v).length > 0).map(([level, sources]) => {
+        const total = d.levelDistribution.find(l => l.name === level)?.active7d || 1;
+        return `<div style="margin-bottom:10px">
+          <div style="font-size:12px;font-weight:500;color:var(--cream);margin-bottom:4px">${LEVEL_EMOJIS[level] || ''} ${level}</div>
+          ${Object.entries(sources).sort(([,a],[,b]) => b - a).map(([s, count]) =>
+            `<div class="feature-row">
+              <span class="feature-name">${s.replace(/_/g, ' ')}</span>
+              <div class="feature-bar-bg"><div class="feature-bar" style="width:${Math.round((count/total)*100)}%;background:${LEVEL_COLORS[level] || 'var(--sage)'}"></div></div>
+              <span class="feature-count">${count}/${total}</span>
+            </div>`
+          ).join('')}
+        </div>`;
+      }).join('') || '<div class="level-muted" style="padding:12px">No data yet</div>'}
+    </div>
+
+    <div class="card">
+      <h2>Buddy Adoption by Level</h2>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Do higher levels pair with buddies more?</p>
+      <table class="level-table">
+        <tr><th>Level</th><th>Paired</th><th>Active</th><th>Rate</th></tr>
+        ${Object.entries(d.buddyByLevel).map(([level, b]) => {
+          const rate = b.total > 0 ? Math.round((b.paired / b.total) * 100) : null;
+          return `<tr>
+            <td>${LEVEL_EMOJIS[level] || ''} ${level}</td>
+            <td>${b.paired}</td>
+            <td class="level-muted">${b.total}</td>
+            <td style="color:var(--sage-light)">${rate !== null ? rate + '%' : '—'}</td>
+          </tr>`;
+        }).join('')}
+      </table>
+    </div>
+  </div>`;
+
+  container.innerHTML = html;
 }
 
 // Auto-focus the key input
