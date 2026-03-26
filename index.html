@@ -10340,12 +10340,20 @@ function renderSettingsTab() {
     const key = slot ? habitId + '_' + slot : habitId;
     const val = triggers[key] || '';
     const placeholder = slot ? getCuePlaceholder(habitId, slot) : getCuePlaceholder(habitId, 'any');
+    const slotLabel = slot === 'am' ? '☀️ Morning' : slot === 'afternoon' ? '🌤️ Afternoon' : slot === 'pm' ? '🌙 Evening' : '';
+    const saved = val ? ' ✓' : '';
     return `<div style="margin-top:6px;margin-left:28px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+        ${slotLabel ? `<span style="font-size:10px;color:var(--text-muted)">${slotLabel} cue</span>` : '<span style="font-size:10px;color:var(--text-muted)">Cue — link to something you already do</span>'}
+        ${saved ? '<span style="font-size:10px;color:var(--sage)">saved ✓</span>' : ''}
+      </div>
       <input type="text" id="trigger-${key}" value="${escapeHtml(val)}" placeholder="${placeholder}"
-        style="box-sizing:border-box;font-size:12px;padding:6px 10px;width:100%;border-radius:var(--r-md);
-        background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:var(--text-secondary);
-        font-style:italic" onchange="saveHabitTrigger('${key}')"
-        onfocus="setTimeout(()=>this.scrollIntoView({block:'center',behavior:'smooth'}),300)">
+        style="box-sizing:border-box;font-size:12px;padding:8px 10px;width:100%;border-radius:8px;
+        background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:var(--text-secondary);
+        border-bottom:2px solid ${val ? 'rgba(var(--sage-rgb),0.3)' : 'rgba(255,255,255,0.06)'}"
+        onchange="saveHabitTrigger('${key}');reRenderSettingsPreservingScroll()"
+        onfocus="this.style.borderBottomColor='rgba(var(--sage-rgb),0.5)';setTimeout(()=>this.scrollIntoView({block:'center',behavior:'smooth'}),300)"
+        onblur="this.style.borderBottomColor=this.value?'rgba(var(--sage-rgb),0.3)':'rgba(255,255,255,0.06)'">
     </div>`;
   }
 
@@ -11065,18 +11073,26 @@ function toggleHabitPref(id) {
 function reRenderSettingsPreservingScroll() {
   const settingsScroll = document.getElementById('settings-scroll');
   const savedScrollTop = settingsScroll ? settingsScroll.scrollTop : 0;
+  // Remember which sections were open before re-render
+  const openSections = [];
+  settingsScroll?.querySelectorAll('.settings-header.open')?.forEach(el => {
+    const id = el.id?.replace('sh-', '');
+    if (id) openSections.push(id);
+  });
   renderSettingsTab();
   renderTodayTab();
-  if (settingsScroll) settingsScroll.scrollTop = savedScrollTop;
+  // Restore open sections and scroll position
   setTimeout(() => {
-    // Re-open any settings sections that were open
-    ['daily', 'goals', 'notifications'].forEach(sec => {
+    openSections.forEach(sec => {
       const sh = document.getElementById('sh-' + sec);
       const sb = document.getElementById('sb-' + sec);
       if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
     });
-    if (settingsScroll) settingsScroll.scrollTop = savedScrollTop;
-  }, 50);
+    // Restore scroll after sections have opened and layout settled
+    setTimeout(() => {
+      if (settingsScroll) settingsScroll.scrollTop = savedScrollTop;
+    }, 10);
+  }, 10);
 }
 
 function toggleDailyHabitPref(id) {
