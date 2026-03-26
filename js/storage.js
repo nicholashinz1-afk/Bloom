@@ -2,6 +2,10 @@
 import { state } from './state.js';
 import { haptic } from './utils.js';
 
+const DB_NAME = 'bloom_db';
+const DB_VERSION = 1;
+let db = null;
+
 function initDB() {
   return new Promise((resolve) => {
     try {

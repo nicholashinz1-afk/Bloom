@@ -1,4 +1,4 @@
-import { state, today } from './state.js';
+import { state, today, getJournalEntries } from './state.js';
 import { save, load } from './storage.js';
 import { haptic, playSound } from './utils.js';
 import { addXP } from './xp.js';

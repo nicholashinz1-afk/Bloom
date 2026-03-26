@@ -1,4 +1,4 @@
-import { state, today, getDayIndex, dayOfWeek, getWeekDates, saveState } from './state.js';
+import { state, today, getDayIndex, dayOfWeek, getWeekDates, saveState, getJournalEntries } from './state.js';
 import { save, load } from './storage.js';
 import { haptic } from './utils.js';
 import { updateStreak } from './streaks.js';

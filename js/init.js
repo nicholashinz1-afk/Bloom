@@ -5,6 +5,7 @@ import { DAILY_HABITS, MEDICATION_HABIT, VERSION } from './constants.js';
 function toggleSettingsSection(...args) { return window.toggleSettingsSection?.(...args); }
 function showBackupSheet(...args) { return window.showBackupSheet?.(...args); }
 function buddyRegisterAndSync(...args) { return window.buddyRegisterAndSync?.(...args); }
+function scheduleAllPushNotifications(...args) { return window.scheduleAllPushNotifications?.(...args); }
 function initOneSignal() {
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {

@@ -78,38 +78,9 @@ function errorBoundary(fn, context) {
 }
 
 // ── IndexedDB performance metrics ──────────────────────────
-const _origDbSet = typeof dbSet === 'function' ? dbSet : null;
-const _origDbGet = typeof dbGet === 'function' ? dbGet : null;
-
-if (_origDbSet) {
-  dbSet = async function(key, value) {
-    const start = performance.now();
-    try {
-      const result = await _origDbSet(key, value);
-      const duration = Math.round(performance.now() - start);
-      if (duration > 500) sendTelemetry('idb_slow', { meta: { op: 'set', key, duration } });
-      return result;
-    } catch(err) {
-      sendTelemetry('idb_error', { meta: { op: 'set', key, error: String(err.message || err).slice(0, 200) } });
-      throw err;
-    }
-  };
-}
-
-if (_origDbGet) {
-  dbGet = async function(key) {
-    const start = performance.now();
-    try {
-      const result = await _origDbGet(key);
-      const duration = Math.round(performance.now() - start);
-      if (duration > 500) sendTelemetry('idb_slow', { meta: { op: 'get', key, duration } });
-      return result;
-    } catch(err) {
-      sendTelemetry('idb_error', { meta: { op: 'get', key, error: String(err.message || err).slice(0, 200) } });
-      throw err;
-    }
-  };
-}
+// NOTE: IDB wrapping disabled in modular build — dbSet/dbGet are module-scoped
+// in storage.js and can't be monkey-patched across module boundaries.
+// To re-enable, storage.js would need to export a setWrapper() hook.
 
 // ── Session start diagnostics ─────────────────────────────
 (function captureSessionDiagnostics() {
@@ -122,7 +93,7 @@ if (_origDbGet) {
       returning: !!load('bloom_state', null),
       tabVisible: !document.hidden,
       online: navigator.onLine,
-      idbAvailable: !!db,
+      idbAvailable: typeof indexedDB !== 'undefined',
     };
     sendTelemetry('session_diagnostics', { meta: sessionMeta });
   }, 5000);

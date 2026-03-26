@@ -1,5 +1,5 @@
 import { sendTelemetry, trackFeature, trackAIJourney, timedFetch } from './telemetry.js';
-import { getDayIndex } from './state.js';
+import { getDayIndex, state } from './state.js';
 import { save, load } from './storage.js';
 import { escapeHtml } from './utils.js';
 const SCRIPTED_LOW_MOOD_RESPONSES = [
