@@ -61,7 +61,12 @@ async function gatherData() {
     if (stats) dailyStats[key] = stats;
   }
 
-  return { aiFeedback: aiFeedback || [], errors: errors || [], events: events || [], dailyStats };
+  // Window events to last 30 days for consistency with dailyStats
+  const thirtyDaysAgo = Date.now() - 30 * 86400000;
+  const windowedEvents = (events || []).filter(e => e.ts > thirtyDaysAgo);
+  const windowedErrors = (errors || []).filter(e => e.ts > thirtyDaysAgo);
+
+  return { aiFeedback: aiFeedback || [], errors: windowedErrors, events: windowedEvents, dailyStats };
 }
 
 // ── Agent definitions ─────────────────────────────────────
@@ -71,11 +76,11 @@ function buildUXPrompt(data) {
   const featureTotals = {};
   const dailySummary = dates.map(date => {
     const stats = data.dailyStats[date];
-    const total = Object.values(stats).reduce((a, b) => a + b, 0);
+    const total = Object.entries(stats).filter(([k]) => !k.startsWith('_') && k !== 'unique_users').reduce((a, [,b]) => a + (typeof b === 'number' ? b : 0), 0);
     Object.entries(stats).forEach(([k, v]) => {
       if (k.startsWith('feature:')) {
         const name = k.replace('feature:', '');
-        featureTotals[name] = (featureTotals[name] || 0) + v;
+        featureTotals[name] = (featureTotals[name] || 0) + (typeof v === 'number' ? v : 0);
       }
     });
     return `${date}: ${total} events`;
@@ -95,19 +100,28 @@ function buildUXPrompt(data) {
 
 Today's date is ${new Date().toISOString().slice(0, 10)}. The daily activity below is listed in CHRONOLOGICAL order (oldest first, newest/today last). When comparing days, remember that the LAST date listed is the most recent. An increase in events from an earlier date to a later date is a GROWTH SPIKE, not a drop-off.
 
+## IMPORTANT: Early-Stage App Context
+Bloom is in its EARLY stages with a small but growing user base. When analyzing:
+- Small absolute numbers (single digits, even zeros on some days) are NORMAL for an early-stage app
+- Focus on TRENDS and RATIOS rather than raw counts
+- A handful of active users engaging deeply is a positive signal, not a concern
+- Do NOT flag low total counts as poor engagement — compare relative feature usage instead
+- Growth should be evaluated week-over-week, not against mature app benchmarks
+- Missing data for some days simply means no one used the app that day — this is expected early on
+
 Bloom has these tabs: Today (daily habits, mood), Weekly (weekly habits), Wellness (breathing, grounding, body scan, reframing), Progress (XP, streaks, insights), Community (buddy, wall), Settings.
 
 Key design principles: no consecutive streaks (total days only), hard day mode, no shame/pressure.
 
-## IMPORTANT: Expected Event Frequencies
+## Expected Event Frequencies
 When evaluating engagement, do NOT flag low counts for infrequent features. Here are normal frequencies:
 - **Every session (multiple/day):** session_start, mood_log, tab navigation (today/weekly/wellness/progress/community/settings)
 - **Daily (1-3x/day):** journal saves, habit completions, breathing exercises, mood_feelings
 - **Weekly (1x/week):** weekly_insight AI reflection (auto-generated on Weekly tab)
 - **Monthly (1x/month):** monthly_reflection AI reflection (auto-generated at month start)
 - **As-needed (0-few/week):** hard_day activation, crisis resource opens, buddy messages/nudges, wall posts, reframe, grounding, bodyscan
-- **Rare:** ai_feedback (only shown after AI responses, user must click), backup_created, encrypted_backup
-Low numbers for weekly/monthly/as-needed features are NORMAL, not a sign of poor engagement. Only flag if a DAILY feature shows zero activity.
+- **Rare:** ai_feedback (only shown after AI responses, user must click), backup_created, encrypted_backup, onboarding_complete (once per new user)
+Low numbers for weekly/monthly/as-needed features are NORMAL, not a sign of poor engagement. Only flag if a DAILY feature shows zero activity across multiple active days.
 
 ## User Counts
 ${(() => {
@@ -165,6 +179,15 @@ ${(() => {
     return hdEvents.length ? `${hdEvents.length} activations in tracked period` : 'No hard day activations';
   })()}
 
+## Community & Social Events
+${(() => {
+    const pairs = data.events.filter(e => e.event === 'buddy_pair').length;
+    const unpairs = data.events.filter(e => e.event === 'buddy_unpair').length;
+    const wallPosts = data.events.filter(e => e.event === 'wall_post').length;
+    const onboarding = data.events.filter(e => e.event === 'onboarding_complete').length;
+    return `Buddy pairings: ${pairs}, Buddy unpairings: ${unpairs}, Wall posts: ${wallPosts}, Onboarding completions: ${onboarding}`;
+  })()}
+
 ## Recent Events
 ${data.events.slice(-20).map(e => `  ${e.event}${e.meta ? ' — ' + e.meta : ''}`).join('\n') || 'None'}
 
@@ -178,7 +201,7 @@ Provide your audit as JSON with this structure:
   "summary": "1-2 sentence overall UX health summary"
 }
 
-Focus on: engagement patterns, underused features, AI reflection journey (which features drive AI usage), hard day mode discoverability, session performance, mood logging patterns, navigation friction. Be specific and actionable.`;
+Focus on: engagement patterns, underused features, AI reflection journey (which features drive AI usage), hard day mode discoverability, session performance, mood logging patterns, navigation friction, onboarding completion, buddy adoption and retention (pair vs unpair ratio). Be specific and actionable. Remember this is an early-stage app — frame findings as growth opportunities rather than failures.`;
 }
 
 function buildClinicalPrompt(data) {
@@ -190,24 +213,35 @@ function buildClinicalPrompt(data) {
   const crisisEvents = data.events.filter(e =>
     e.event === 'crisis_opened' || e.event === 'hard_day_activated'
   );
-  const moodEvents = data.events.filter(e =>
-    e.event === 'mood_log' || (e.meta && e.meta.includes('mood'))
-  );
 
   // Feature usage related to clinical features
   const dates = Object.keys(data.dailyStats).sort();
   const clinicalFeatures = {};
+  const clinicalFeatureKeys = [
+    'feature:breathing', 'feature:crisis', 'feature:mood_log', 'feature:journal',
+    'feature:mood_feelings', 'feature:ai_reflection', 'feature:grounding',
+    'feature:bodyscan', 'feature:reframe', 'feature:buddy', 'feature:wall',
+  ];
   dates.forEach(date => {
     const stats = data.dailyStats[date];
     Object.entries(stats).forEach(([k, v]) => {
-      if (['feature:breathing', 'feature:crisis', 'feature:mood_log', 'feature:journal', 'feature:mood_feelings', 'feature:ai_reflection'].includes(k)) {
+      if (clinicalFeatureKeys.includes(k)) {
         const name = k.replace('feature:', '');
-        clinicalFeatures[name] = (clinicalFeatures[name] || 0) + v;
+        clinicalFeatures[name] = (clinicalFeatures[name] || 0) + (typeof v === 'number' ? v : 0);
       }
     });
   });
 
   return `You are the Content & Clinical Safety Admin Agent for Bloom, a mental health self-care PWA. Analyze the following data for clinical safety and content appropriateness.
+
+## IMPORTANT: Early-Stage App Context
+Bloom is in its EARLY stages with a small user base. When analyzing clinical safety:
+- Small numbers are expected — even a single user engaging with wellness tools is meaningful
+- Zero crisis opens with low/no mood data simply means limited data, NOT a safety gap
+- Focus on whether safety MECHANISMS are working (crisis resources accessible, moderation active) rather than usage volume
+- Do NOT escalate to "critical" based on low data volume alone — "critical" should be reserved for actual safety signals (e.g. consistently low moods with no crisis access, broken moderation, harmful AI responses)
+- "needs_attention" is appropriate for things worth monitoring as the app grows
+- "healthy" is the right call when mechanisms are in place and no red flags exist in available data
 
 Bloom's clinical principles:
 - AI reflections use warm witness tone, never clinical advice
@@ -217,15 +251,17 @@ Bloom's clinical principles:
 - Moderation allows venting — emotional language is NOT filtered
 - No consecutive streaks (total days only, never goes down)
 - Hard day mode reduces habits to top 2
+- Wellness tools: breathing, grounding, body scan, reframing — all clinically relevant
 
-## IMPORTANT: Expected Event Frequencies
+## Expected Event Frequencies
 Do NOT flag low counts for features that are designed to be infrequent:
 - **AI reflections:** journal responses are per-entry, weekly insight is 1x/week, monthly reflection is 1x/month
 - **AI feedback:** only shown after AI responses; user must click — low counts are normal
 - **Crisis resources:** 0 opens can be GOOD (no one needed them). Only concerning if mood logs show consistent low moods WITH zero crisis resource access
 - **Hard day mode:** as-needed; 0 activations can mean users are doing well
-- **Breathing/grounding/bodyscan:** as-needed wellness tools, not daily habits
+- **Breathing/grounding/bodyscan/reframe:** as-needed wellness tools, not daily habits
 - **Content moderation:** low/zero counts mean community is healthy, not that moderation is broken
+- **Buddy/wall:** community features — low adoption is normal early on
 
 ## AI Feedback (last 7 days)
 Helpful: ${fbLast7.filter(f => f.value === 'yes').length}, Not helpful: ${fbLast7.filter(f => f.value === 'no').length}
@@ -243,15 +279,14 @@ ${crisisEvents.slice(-20).map(e => `  ${e.event} at ${new Date(e.ts).toISOString
 ## Clinical Feature Usage (30 days)
 ${Object.entries(clinicalFeatures).map(([k, v]) => `  ${k}: ${v}`).join('\n') || 'No data'}
 
-## Content Moderation Activity
+## Community Safety Signals
 ${(() => {
-    const modEvents = data.events.filter(e => e.event === 'moderation');
-    if (!modEvents.length) return 'No moderation data yet';
-    let blocked = 0, flagged = 0, allowed = 0;
-    modEvents.forEach(e => { try { const m = JSON.parse(e.meta); if (!m.ok) blocked++; else if (m.flag) flagged++; else allowed++; } catch {} });
-    const flaggedDetails = modEvents.filter(e => { try { return JSON.parse(e.meta).flag; } catch { return false; } }).slice(-5);
-    return `Allowed: ${allowed}, Flagged (self-harm, crisis resources shown): ${flagged}, Blocked (harmful): ${blocked}\nRecent flagged:\n${flaggedDetails.map(e => `  ${new Date(e.ts).toISOString().slice(0,16)} — ${JSON.parse(e.meta).source}`).join('\n') || '  None'}`;
+    const wallPosts = data.events.filter(e => e.event === 'wall_post').length;
+    const buddyPairs = data.events.filter(e => e.event === 'buddy_pair').length;
+    const buddyUnpairs = data.events.filter(e => e.event === 'buddy_unpair').length;
+    return `Wall posts: ${wallPosts}, Buddy pairings: ${buddyPairs}, Buddy unpairings: ${buddyUnpairs}`;
   })()}
+Note: Content moderation (blocked/flagged messages) is handled server-side by buddy.js and wall.js with a three-tier approach (blocked, flagged with crisis resources, allowed). Moderation data is available in the Wall tab of this dashboard, not in telemetry events.
 
 ## Mood Logging Patterns
 ${(() => {
@@ -285,7 +320,7 @@ Provide your audit as JSON with this structure:
   "summary": "1-2 sentence clinical safety summary"
 }
 
-Focus on: AI response quality/satisfaction trends, crisis resource accessibility and usage, content safety signals, moderation effectiveness, clinical feature engagement, mood logging patterns (especially low moods and "I don't know" selections), hard day mode discoverability and usage, any patterns suggesting users may not be getting adequate support. Be compassionate but thorough.`;
+Focus on: AI response quality/satisfaction trends, crisis resource accessibility and usage, clinical feature engagement (including wellness tools like breathing, grounding, body scan, reframing), mood logging patterns (especially low moods and "I don't know" selections), hard day mode discoverability and usage, community safety (buddy/wall interactions), any patterns suggesting users may not be getting adequate support. Be compassionate but thorough. Remember this is an early-stage app — distinguish between "not enough data yet" and actual clinical safety concerns.`;
 }
 
 function buildSecurityPrompt(data) {
@@ -320,19 +355,28 @@ function buildSecurityPrompt(data) {
 
   return `You are the Technical & Security Admin Agent for Bloom, a mental health self-care PWA deployed on Vercel.
 
+## IMPORTANT: Early-Stage App Context
+Bloom is in its EARLY stages with a small user base. When analyzing:
+- Low event/error counts are expected — do not flag low volume as anomalous
+- Sparse data across 30 days (many empty days) is normal for a new app
+- Focus on error PATTERNS and RATES rather than absolute counts
+- A few errors in a week with a handful of users is not alarming
+- "critical" should be reserved for actual security issues (CSP violations, injection attempts, sustained API failures) — not just "there were some errors"
+- Intermittent cold-start latency spikes are expected with Vercel serverless
+
 Architecture:
-- Single-page app (index.html, ~13K lines)
+- Single-page app (index.html) deployed as static site
 - Vercel serverless API: claude.js (Anthropic proxy), buddy.js (Redis), wall.js (Redis), diagnostics.js (Redis)
 - localStorage primary + IndexedDB backup
 - CORS locked to bloomhabits.app + localhost:3000
 - CSP headers configured in vercel.json
 - No user accounts/auth — data stays local unless using community features
-- Content moderation on buddy.js and wall.js
+- Content moderation on buddy.js and wall.js (three-tier: blocked, flagged, allowed)
 
-## IMPORTANT: Expected Patterns
+## Expected Patterns
 - **Redis response times:** First request after cold start can be 500-1000ms (Vercel serverless). Subsequent requests should be <200ms. Only flag if SUSTAINED high latency across many requests.
 - **IndexedDB:** Used as backup mirror for localStorage. idbAvailable=false may occur on some browsers/contexts but is not critical — localStorage is the primary store.
-- **Session diagnostics:** loadTime of 0 can happen if measured before load completes. loadTime under 3000ms is acceptable for a 13K-line SPA.
+- **Session diagnostics:** loadTime of 0 can happen if measured before load completes. loadTime under 3000ms is acceptable for a large SPA.
 - **API timing:** buddy/wall endpoints hit Redis; claude endpoint hits external Anthropic API (expect 1-3s). Compare like-for-like.
 
 ## Error Summary
@@ -359,14 +403,14 @@ ${data.events.filter(e => e.event === 'health_check').slice(-5).map(e => {
     try { const m = JSON.parse(e.meta); return '  ' + Object.entries(m).map(([k,v]) => `${k}: ${v.ok ? 'OK' : 'FAIL'}`).join(', '); } catch { return ''; }
   }).filter(Boolean).join('\n') || 'No health check data yet'}
 
-## Content Moderation
+## Community Activity
 ${(() => {
-    const modEvents = data.events.filter(e => e.event === 'moderation');
-    if (!modEvents.length) return 'No moderation data yet';
-    let blocked = 0, flagged = 0, allowed = 0;
-    modEvents.forEach(e => { try { const m = JSON.parse(e.meta); if (!m.ok) blocked++; else if (m.flag) flagged++; else allowed++; } catch {} });
-    return `Allowed: ${allowed}, Flagged (crisis resources shown): ${flagged}, Blocked: ${blocked}`;
+    const wallPosts = data.events.filter(e => e.event === 'wall_post').length;
+    const buddyPairs = data.events.filter(e => e.event === 'buddy_pair').length;
+    const buddyUnpairs = data.events.filter(e => e.event === 'buddy_unpair').length;
+    return `Wall posts: ${wallPosts}, Buddy pairings: ${buddyPairs}, Buddy unpairings: ${buddyUnpairs}`;
   })()}
+Note: Content moderation (blocked/flagged messages) is handled server-side. Check the Wall tab for moderation details.
 
 ## IndexedDB Performance
 ${(() => {
@@ -405,7 +449,7 @@ Provide your audit as JSON with this structure:
   "summary": "1-2 sentence technical/security health summary"
 }
 
-Focus on: error rate trends, recurring error patterns, potential security concerns, API health and response times, IndexedDB performance, session load times, data integrity signals, any anomalous patterns. Be specific and actionable.`;
+Focus on: error rate trends, recurring error patterns, potential security concerns, API health and response times, IndexedDB performance, session load times, data integrity signals, any anomalous patterns. Be specific and actionable. Remember this is an early-stage app — a handful of JS errors or cold-start latency spikes do not warrant "critical" status.`;
 }
 
 const AGENTS = {
@@ -431,7 +475,7 @@ async function runAgent(agentType, data) {
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
-      system: `You are an admin audit agent for Bloom, a mental health self-care PWA. Respond ONLY with valid JSON. No markdown, no explanation outside the JSON.`,
+      system: `You are an admin audit agent for Bloom, a mental health self-care PWA in its early stages. The app has a small but growing user base — calibrate your assessments accordingly. Low absolute numbers are expected. Focus on patterns, ratios, and whether safety mechanisms are functioning, not volume. Respond ONLY with valid JSON. No markdown, no explanation outside the JSON.`,
       messages: [{ role: 'user', content: prompt }],
     }),
   });
