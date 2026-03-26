@@ -4538,7 +4538,7 @@ async function shareWeekInReview() {
   // Mood bars
   const weekDates = getWeekDates();
   const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const moodColors2 = ['#8296a6','#91a7a0','#a4a78e','#bfab82','#d9c9a0'];
+  const moodColors2 = getMoodColors();
   const barWidth = 50;
   const barGap = 18;
   const startX = 300 - (7 * (barWidth + barGap) - barGap) / 2;
@@ -5024,6 +5024,26 @@ const THEMES = {
     confetti: ['#e04050','#e87030','#e8c840','#50b868','#4080d0','#9050c8'],
   },
 };
+
+function getMoodColors() {
+  const theme = THEMES[state.prefs?.theme] || THEMES.forest;
+  const dim = theme.primaryDim;
+  const mid = theme.primary;
+  const light = theme.primaryLight;
+  function lerp(a, b, t) {
+    const [r1,g1,b1] = [parseInt(a.slice(1,3),16), parseInt(a.slice(3,5),16), parseInt(a.slice(5,7),16)];
+    const [r2,g2,b2] = [parseInt(b.slice(1,3),16), parseInt(b.slice(3,5),16), parseInt(b.slice(5,7),16)];
+    const r = Math.round(r1 + (r2-r1)*t), g = Math.round(g1 + (g2-g1)*t), bl = Math.round(b1 + (b2-b1)*t);
+    return '#' + [r,g,bl].map(v => v.toString(16).padStart(2,'0')).join('');
+  }
+  return [
+    lerp(dim, mid, 0.35),
+    lerp(dim, mid, 0.7),
+    mid,
+    lerp(mid, light, 0.5),
+    light,
+  ];
+}
 
 function hexToRgb(hex) {
   const h = hex.replace('#', '');
@@ -9441,7 +9461,7 @@ function renderProgressTab() {
   html += `</div>`;
 
   // Mood gradient chart
-  const moodColors = ['#8296a6','#91a7a0','#a4a78e','#bfab82','#d9c9a0'];
+  const moodColors = getMoodColors();
   const moodEmojisWeek = ['😔','😕','😐','🙂','😊'];
   const noMoodColor = 'rgba(255,255,255,0.04)';
 
@@ -9537,7 +9557,7 @@ function renderProgressTab() {
   }).join(', ');
 
   const flowRows = [
-    { label: 'Mood', gradient: moodStops, swatch: '#d9c9a0' },
+    { label: 'Mood', gradient: moodStops, swatch: (THEMES[state.prefs?.theme] || THEMES.forest).primary },
     { label: 'Sleep', gradient: sleepStops, swatch: '#6a9ab0' },
     { label: 'Habits', gradient: habitStops, swatch: '#7a9e7e' },
   ];
