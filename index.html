@@ -5975,6 +5975,41 @@ const DAILY_HABITS = [
 
 const MEDICATION_HABIT = { id: 'medication', icon: '💊', label: 'Medication', xp: 20, defaultTime: 'any' };
 
+// Weekly habits — appear on Today tab, tracked per-week
+const WEEKLY_HABITS = [
+  { id: 'w_shower',   icon: '🚿', label: 'Shower',         xp: 20, defaultGoal: 3 },
+  { id: 'w_exercise', icon: '💪', label: 'Exercise',        xp: 20, defaultGoal: 3 },
+  { id: 'w_outside',  icon: '🌿', label: 'Go outside',      xp: 20, defaultGoal: 3 },
+  { id: 'w_therapy',  icon: '🛋️', label: 'Go to therapy',   xp: 25, defaultGoal: 1 },
+];
+
+// Day-of-week bitmask for weekly habit scheduling
+const DAY_MON = 1, DAY_TUE = 2, DAY_WED = 4, DAY_THU = 8, DAY_FRI = 16, DAY_SAT = 32, DAY_SUN = 64;
+const DAY_LABELS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAY_BITS = [DAY_MON, DAY_TUE, DAY_WED, DAY_THU, DAY_FRI, DAY_SAT, DAY_SUN];
+
+function isTodayScheduled(dayMask) {
+  if (dayMask === 'any' || typeof dayMask !== 'number') return true;
+  const dow = new Date().getDay(); // 0=Sun, 1=Mon, ...
+  const bit = dow === 0 ? DAY_SUN : DAY_BITS[dow - 1];
+  return (dayMask & bit) !== 0;
+}
+
+function getWeeklyHabitCount(habitId) {
+  // Count how many days this week the habit was completed
+  const dates = getWeekDates();
+  let count = 0;
+  dates.forEach(d => {
+    const hist = state.historyData[d];
+    if (hist?.habits?.[habitId]) count++;
+    // Also check todayData for today
+    if (d === today() && state.todayData[habitId]) count++;
+  });
+  // Also count from weekData for backward compat
+  const wdCount = state.weekData?.[habitId] || 0;
+  return Math.max(count, wdCount);
+}
+
 // ============================================================
 //  SELF-CARE TASKS
 // ============================================================
@@ -7838,20 +7873,74 @@ function renderTodayTab() {
     html += `</div>`;
   }
 
-  // --- ANYTIME SECTION (includes self-care below divider) ---
+  // --- ANYTIME SECTION (daily habits + weekly habits + household + self-care) ---
   const selectedSCTasks = (state.prefs?.selfCareTasks || []).filter(id => !id.startsWith('sc_medication'));
   const scEnabled = selectedSCTasks.length > 0 && (userWeek >= 2 || state.prefs?.progressiveDisclosureDisabled);
-  const hasAnytime = anyHabits.length > 0 || medInAny || scEnabled;
+
+  // Weekly habits scheduled for today
+  const weeklyHabitDays = state.prefs?.weeklyHabitDays || {};
+  const todayWeeklyHabits = WEEKLY_HABITS.filter(h => {
+    if (state.prefs?.habits?.[h.id] === false) return false;
+    return isTodayScheduled(weeklyHabitDays[h.id] || 'any');
+  });
+
+  // Household tasks
+  const householdTasks = state.prefs?.householdTasks || [];
+  const htDone = state.weekData?.household || {};
+
+  const hasAnytime = anyHabits.length > 0 || medInAny || todayWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled;
 
   if (hasAnytime) {
     html += `<div class="section-label"><span style="color:#f0c040">☀️</span> Anytime today</div><div class="card mb-0">`;
     anyHabits.forEach(h => { html += dailyHabitRow(h, 'any', isMuted(h)); });
     if (medInAny) html += medHabitRow('any', medMuted);
 
+    // Weekly habits with weekly progress badge
+    if (todayWeeklyHabits.length > 0) {
+      const hasItemsAbove = anyHabits.length > 0 || medInAny;
+      if (hasItemsAbove) {
+        html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0"></div>`;
+      }
+      todayWeeklyHabits.forEach(h => {
+        const done = td[h.id];
+        const goal = state.prefs?.goals?.[h.id] || h.defaultGoal || 3;
+        const weekCount = getWeeklyHabitCount(h.id);
+        const weeklyMuted = mutedAfterIndex > 0;
+        const wMutedStyle = weeklyMuted && !done ? 'opacity:0.45;' : '';
+        html += `<div class="habit-row" style="${wMutedStyle}" onclick="tapWeeklyHabitToday('${h.id}', this)">
+          <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : h.icon}</div>
+          <div class="habit-info">
+            <div class="habit-name">${h.label}</div>
+            <div style="font-size:11px;color:${weekCount >= goal ? 'var(--sage)' : 'var(--text-muted)'};margin-top:1px">${weekCount}/${goal} this week${weekCount >= goal ? ' ✓' : ''}</div>
+          </div>
+          ${!done ? `<div class="habit-xp">+${h.xp}</div>` : ''}
+        </div>`;
+      });
+    }
+
+    // Household tasks
+    if (householdTasks.length > 0) {
+      const hasItemsAbove2 = anyHabits.length > 0 || medInAny || todayWeeklyHabits.length > 0;
+      if (hasItemsAbove2) {
+        html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0"></div>`;
+      }
+      householdTasks.forEach(t => {
+        const done = td['ht_' + t.id] || htDone[t.id];
+        const htMuted = mutedAfterIndex > 0;
+        const htMutedStyle = htMuted && !done ? 'opacity:0.45;' : '';
+        html += `<div class="habit-row" style="${htMutedStyle}" onclick="tapHouseholdToday('${t.id}', this)">
+          <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : (t.icon || '🏠')}</div>
+          <div class="habit-info"><div class="habit-name">${t.name}</div></div>
+          ${!done ? '<div class="habit-xp">+15</div>' : ''}
+        </div>`;
+      });
+    }
+
     // Self-care items with thin divider
     if (scEnabled) {
       const scDone = td.selfCare || {};
-      if (anyHabits.length > 0 || medInAny) {
+      const hasItemsAbove3 = anyHabits.length > 0 || medInAny || todayWeeklyHabits.length > 0 || householdTasks.length > 0;
+      if (hasItemsAbove3) {
         html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0;padding-top:6px">
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;margin-left:4px">✨ Self-care</div>
         </div>`;
@@ -8127,6 +8216,57 @@ function tapHouseholdTask(id, el) {
   toggleHouseholdTask(id, check || el);
 }
 
+function tapWeeklyHabitToday(id, el) {
+  const wasDone = state.todayData[id];
+  state.todayData[id] = !wasDone;
+  const habit = WEEKLY_HABITS.find(h => h.id === id);
+  const xpVal = habit?.xp || 20;
+
+  if (!wasDone) {
+    // Also increment weekData counter for backward compat
+    if (!state.weekData[id]) state.weekData[id] = 0;
+    state.weekData[id]++;
+    addXP(xpVal, el);
+    checkFirstTaskStreak();
+    const goal = state.prefs?.goals?.[id] || habit?.defaultGoal || 3;
+    const weekCount = getWeeklyHabitCount(id);
+    celebrate(weekCount >= goal ? 'weekly_goal' : id, el);
+  } else {
+    if (state.weekData[id] > 0) state.weekData[id]--;
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
+    haptic('light');
+    saveState();
+    updateProgressTab();
+  }
+
+  saveState();
+  archiveToday();
+  renderTodayTab();
+}
+
+function tapHouseholdToday(id, el) {
+  const wasDone = state.todayData['ht_' + id];
+  state.todayData['ht_' + id] = !wasDone;
+  // Also update weekData for backward compat
+  if (!state.weekData.household) state.weekData.household = {};
+  state.weekData.household[id] = !wasDone;
+
+  if (!wasDone) {
+    addXP(15, el);
+    checkFirstTaskStreak();
+    celebrate('household', el);
+  } else {
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - 15);
+    haptic('light');
+    saveState();
+    updateProgressTab();
+  }
+
+  saveState();
+  archiveToday();
+  renderTodayTab();
+}
+
 function tapSelfCare(id, el) {
   if (!state.todayData.selfCare) state.todayData.selfCare = {};
   const wasDone = state.todayData.selfCare[id];
@@ -8329,91 +8469,18 @@ function renderWeeklyTab() {
   const scroll = document.getElementById('weekly-scroll');
   if (!scroll) return;
 
-  const prefs = state.prefs;
-  const wd = state.weekData;
   let html = '';
 
-  // --- WEEKLY GOALS ---
-  const weeklyHabits = [
-    { id: 'w_shower',   icon: '🚿', name: 'Shower' },
-    { id: 'w_exercise', icon: '💪', name: 'Exercise' },
-    { id: 'w_outside',  icon: '🌿', name: 'Go outside' },
-    { id: 'w_therapy',  icon: '🛋️', name: 'Go to therapy' },
-  ].filter(h => prefs?.habits?.[h.id] !== false);
+  // Tagline
+  html += `<div style="font-size:13px;color:var(--text-muted);text-align:center;padding:8px 0 4px;line-height:1.5">Your recent history — tap any day to view or update</div>`;
 
-  if (weeklyHabits.length > 0) {
-    html += `<div class="section-label">🎯 Weekly goals</div><div class="card mb-0">`;
-    weeklyHabits.forEach(h => {
-      const goal = prefs?.goals?.[h.id] || 3;
-      const done = wd[h.id] || 0;
-      const atGoal = done >= goal;
-      const pips = Array.from({length: goal}, (_,i) =>
-        `<div class="week-pip${i < done ? ' done' : ''}"></div>`).join('');
-      html += `<div class="habit-row" style="cursor:default">
-        <div class="habit-check${atGoal ? ' done' : ''}" style="cursor:default">${atGoal ? CHECK_SVG : h.icon}</div>
-        <div class="habit-info">
-          <div class="habit-name">${h.name}</div>
-          <div class="habit-sub">${done}/${goal} this week</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="week-badge">${pips}</div>
-          <div style="display:flex;gap:4px">
-            ${done > 0 ? `<div onclick="tapWeeklyHabit('${h.id}','dec',this)" style="width:26px;height:26px;border-radius:50%;background:var(--bg-elevated);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-secondary)">−</div>` : `<div style="width:26px"></div>`}
-            ${!atGoal ? `<div onclick="tapWeeklyHabit('${h.id}','inc',this)" style="width:26px;height:26px;border-radius:50%;background:rgba(var(--sage-rgb),0.15);border:1px solid rgba(var(--sage-rgb),0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--sage-light)">+</div>` : `<div style="width:26px"></div>`}
-          </div>
-        </div>
-      </div>`;
-    });
-    html += `</div>`;
-  }
+  // Link to Progress tab
+  html += `<div style="text-align:center;margin-bottom:12px">
+    <span onclick="switchTab('progress')" style="font-size:12px;color:var(--sky-light);cursor:pointer">View weekly progress in Progress tab ›</span>
+  </div>`;
 
-  // --- HOUSEHOLD TASKS ---
-  const tasks = prefs?.householdTasks || [];
-  if (tasks.length > 0) {
-    html += `<div class="section-label">🏠 Household</div><div class="card mb-0">`;
-    tasks.forEach(t2 => {
-      const done2 = wd.household?.[t2.id];
-      html += `<div class="habit-row" onclick="tapHouseholdTask('${t2.id}', this)">
-        <div class="habit-check${done2 ? ' done' : ''}">${done2 ? CHECK_SVG : t2.icon || '🏠'}</div>
-        <div class="habit-info">
-          <div class="habit-name">${t2.name}</div>
-          ${done2 ? '<div class="habit-sub" style="color:var(--sage)">Done this week ✓</div>' : '<div class="habit-sub">Tap when done</div>'}
-        </div>
-        ${!done2 ? '<div class="habit-xp">+15</div>' : ''}
-      </div>`;
-    });
-    html += `</div>`;
-  }
-
-  // --- WEEKLY PROGRESS SNAPSHOT ---
-  const weekDates = getWeekDates();
+  // --- HISTORY ---
   const todayStr = today();
-  const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-
-  html += `<div class="section-label">📊 This week</div>`;
-  html += `<div class="card" style="padding:16px">
-    <div class="week-bar">`;
-  weekDates.forEach((d, i) => {
-    const hist = state.historyData[d] || {};
-    const isToday = d === todayStr;
-    const moodEmoji = hist.mood !== undefined ? (hist.mood === -1 ? '🤷' : ['😔','😕','😐','🙂','😊'][hist.mood]) : '';
-    let dotClass = '';
-    if (hist.habits) {
-      const done = Object.values(hist.habits).filter(Boolean).length;
-      const total = Object.keys(hist.habits).length;
-      if (done === total && total > 0) dotClass = 'full';
-      else if (done > 0) dotClass = 'partial';
-      else dotClass = 'missed';
-    }
-    if (isToday) dotClass += ' today';
-    html += `<div class="week-day-dot">
-      <div class="week-dot ${dotClass}">${moodEmoji || (isToday ? '○' : '')}</div>
-      <div class="week-day-label">${dayLabels[i]}</div>
-    </div>`;
-  });
-  html += `</div></div>`;
-
-  // --- HISTORY (previously its own tab) ---
   const history = state.historyData;
   const moodEmojis = ['😔','😕','😐','🙂','😊'];
   const dates = Object.keys(history)
@@ -8423,7 +8490,6 @@ function renderWeeklyTab() {
 
   if (dates.length > 0) {
     html += `<div class="section-label">📅 Recent history</div>`;
-    html += `<div style="font-size:12px;color:var(--text-muted);margin-top:-4px;margin-bottom:10px;line-height:1.5">Tap any day to view or update things you forgot to log.</div>`;
     let currentMonth = '';
     dates.forEach(d => {
       const dt = new Date(d + 'T00:00:00');
@@ -10379,22 +10445,46 @@ function renderSettingsTab() {
     { id: 'clean_room', name: 'Clean room', icon: '🧹' },
   ];
 
+  const whDays = prefs.weeklyHabitDays || {};
   let weeklyHtml = `
-    ${[
-      { id: 'w_shower',   icon: '🚿', label: 'Shower' },
-      { id: 'w_exercise', icon: '💪', label: 'Exercise' },
-      { id: 'w_outside',  icon: '🌿', label: 'Go outside' },
-      { id: 'w_therapy',  icon: '🛋️', label: 'Go to therapy' },
-    ].map(h => `<div class="toggle-row">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:18px">${h.icon}</span>
-        <div class="toggle-label">${h.label}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        ${prefs.habits?.[h.id] !== false ? goalStepper('', h.id, goals[h.id] || 3, true) : ''}
-        <div class="toggle${prefs.habits?.[h.id] !== false ? ' on' : ''}" onclick="toggleHabitPref('${h.id}')"></div>
-      </div>
-    </div>`).join('')}
+    ${WEEKLY_HABITS.map(h => {
+      const on = prefs.habits?.[h.id] !== false;
+      const dayMask = whDays[h.id] || 'any';
+      const isAnyDay = dayMask === 'any' || typeof dayMask !== 'number';
+      let row = `<div class="toggle-row" style="flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:10px;flex:1">
+          <span style="font-size:18px">${h.icon}</span>
+          <div class="toggle-label">${h.label}</div>
+        </div>
+        <div class="toggle${on ? ' on' : ''}" onclick="toggleHabitPref('${h.id}')"></div>`;
+      if (on) {
+        // Day-of-week chips
+        row += `<div style="display:flex;gap:3px;width:100%;margin-top:8px;margin-left:28px">
+          ${DAY_LABELS.map((lbl, i) => {
+            const sel = !isAnyDay && (dayMask & DAY_BITS[i]) !== 0;
+            return `<div onclick="toggleWeeklyHabitDay('${h.id}',${DAY_BITS[i]})" style="
+              width:30px;text-align:center;padding:4px 0;border-radius:99px;cursor:pointer;font-size:10px;
+              background:${sel ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${sel ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+              color:${sel ? 'var(--sage-light)' : 'var(--text-muted)'}">${lbl.substring(0,1)}</div>`;
+          }).join('')}
+          <div onclick="setWeeklyHabitDay('${h.id}','any')" style="
+            padding:4px 8px;border-radius:99px;cursor:pointer;font-size:10px;
+            background:${isAnyDay ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+            border:1px solid ${isAnyDay ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+            color:${isAnyDay ? 'var(--sage-light)' : 'var(--text-muted)'}">Any</div>
+        </div>`;
+        // Goal stepper (only when "Any day" selected)
+        if (isAnyDay) {
+          row += `<div style="margin-top:6px;margin-left:28px;display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:var(--text-muted)">Goal:</span>
+            ${goalStepper('', h.id, goals[h.id] || h.defaultGoal || 3, true)}
+          </div>`;
+        }
+      }
+      row += `</div>`;
+      return row;
+    }).join('')}
     <div class="divider"></div>
     <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;font-weight:500">Household tasks</div>`;
 
@@ -10982,9 +11072,12 @@ function reRenderSettingsPreservingScroll() {
   renderTodayTab();
   if (settingsScroll) settingsScroll.scrollTop = savedScrollTop;
   setTimeout(() => {
-    const sh = document.getElementById('sh-daily');
-    const sb = document.getElementById('sb-daily');
-    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
+    // Re-open any settings sections that were open
+    ['daily', 'goals', 'notifications'].forEach(sec => {
+      const sh = document.getElementById('sh-' + sec);
+      const sb = document.getElementById('sb-' + sec);
+      if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
+    });
     if (settingsScroll) settingsScroll.scrollTop = savedScrollTop;
   }, 50);
 }
@@ -11012,6 +11105,28 @@ function toggleHabitTimeSlot(id, slotBit) {
     if (newTime === 0) newTime = 'any'; // nothing selected → fall back to Any
   }
   setHabitTime(id, newTime);
+}
+
+function toggleWeeklyHabitDay(id, dayBit) {
+  if (!state.prefs.weeklyHabitDays) state.prefs.weeklyHabitDays = {};
+  const cur = state.prefs.weeklyHabitDays[id] || 'any';
+  let newVal;
+  if (cur === 'any' || typeof cur !== 'number') {
+    newVal = dayBit;
+  } else {
+    newVal = cur ^ dayBit;
+    if (newVal === 0) newVal = 'any';
+  }
+  state.prefs.weeklyHabitDays[id] = newVal;
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
+}
+
+function setWeeklyHabitDay(id, val) {
+  if (!state.prefs.weeklyHabitDays) state.prefs.weeklyHabitDays = {};
+  state.prefs.weeklyHabitDays[id] = val;
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
 }
 
 function setHabitTime(id, time) {
