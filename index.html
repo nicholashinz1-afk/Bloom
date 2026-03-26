@@ -2941,7 +2941,7 @@ select:focus {
 <div class="bottom-sheet" id="whats-new-sheet">
   <div class="sheet-handle"></div>
   <div style="padding:0 20px 20px">
-    <div class="sheet-title" id="whats-new-title">What's new 🌿</div>
+    <h2 class="sheet-title" id="whats-new-title">What's new 🌿</h2>
     <div id="whats-new-list"></div>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button class="btn btn-primary" style="flex:1" id="whats-new-tour-btn" onclick="startWhatsNewTour()">Show me what's new</button>
@@ -3051,7 +3051,7 @@ select:focus {
 <div class="bottom-sheet" id="new-week-sheet">
   <div class="sheet-handle"></div>
   <div style="padding:0 20px 20px">
-    <div class="sheet-title">🏠 This week's tasks</div>
+    <h2 class="sheet-title">🏠 This week's tasks</h2>
     <div id="new-week-goals-body"></div>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button class="btn btn-primary" style="flex:1" onclick="saveNewWeekGoals()">Let's go</button>
@@ -3064,7 +3064,7 @@ select:focus {
 <div class="bottom-sheet" id="backup-sheet">
   <div class="sheet-handle"></div>
   <div style="padding:0 20px 20px">
-    <div class="sheet-title">Save your backup link</div>
+    <h2 class="sheet-title">Save your backup link</h2>
     <p class="text-sm text-muted" style="line-height:1.6;margin-bottom:12px">Bookmark this link or copy it somewhere safe. It contains all your Bloom data and can restore everything if you switch devices or clear your browser.</p>
     <div style="background:rgba(255,180,80,0.08);border:1px solid rgba(255,180,80,0.15);border-radius:var(--r-lg);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--amber-light);line-height:1.6">
       ⚠️ This link contains your private data including journal entries. Keep it somewhere only you can access. Avoid saving it on shared devices or in shared bookmarks.
@@ -3093,7 +3093,7 @@ select:focus {
 <div class="bottom-sheet" id="buddy-info-sheet">
   <div class="sheet-handle"></div>
   <div style="padding:4px 20px 20px">
-    <div class="sheet-title">What is bloom buddy?</div>
+    <h2 class="sheet-title">What is bloom buddy?</h2>
     <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
       <p style="margin-bottom:12px">bloom buddy pairs you with someone for <strong style="color:var(--cream)">mutual encouragement and accountability</strong>. Here's what your buddy can see:</p>
       <div style="margin-bottom:12px">
@@ -3127,7 +3127,7 @@ select:focus {
 <div class="bottom-sheet" id="science-sheet" style="max-height:92vh">
   <div class="sheet-handle"></div>
   <div style="padding:0 20px 30px">
-    <div class="sheet-title">Science behind bloom</div>
+    <h2 class="sheet-title">Science behind bloom</h2>
     <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px;font-style:italic">
       Every feature in bloom is grounded in research. Here's the evidence behind what you use every day.
     </div>
@@ -3145,7 +3145,7 @@ function bloomIcon(size = 24) {
   // Four teardrop petals in 2x2 grid — sage, rose, sky, amber
   // Replicates the clean original icon style
   const s = size;
-  return `<svg width="${s}" height="${s}" viewBox="0 0 100 100" style="display:inline-block;vertical-align:middle;flex-shrink:0" xmlns="http://www.w3.org/2000/svg">
+  return `<svg width="${s}" height="${s}" viewBox="0 0 100 100" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0" xmlns="http://www.w3.org/2000/svg">
     <circle cx="35" cy="35" r="18" fill="#7a9e7e" opacity="0.9"/>
     <circle cx="35" cy="35" r="10" fill="#a8c5ab"/>
     <circle cx="65" cy="35" r="18" fill="#b07878" opacity="0.9"/>
@@ -3159,7 +3159,7 @@ function bloomIcon(size = 24) {
 
 function buddyIcon(size = 24) {
   const s = size;
-  return `<svg width="${s}" height="${s}" viewBox="0 0 100 100" style="display:inline-block;vertical-align:middle;flex-shrink:0" xmlns="http://www.w3.org/2000/svg">
+  return `<svg width="${s}" height="${s}" viewBox="0 0 100 100" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0" xmlns="http://www.w3.org/2000/svg">
     <circle cx="36" cy="50" r="28" fill="#7a9e7e" opacity="0.9"/>
     <circle cx="36" cy="50" r="16" fill="#a8c5ab"/>
     <circle cx="64" cy="50" r="28" fill="#c9954a" opacity="0.9"/>
@@ -3975,7 +3975,7 @@ function playSound(type, param) {
 }
 
 // ── Animated checkmark SVG ───────────────────────────────────
-const CHECK_SVG = '<svg class="habit-check-svg" viewBox="0 0 16 16"><path class="check-path" d="M3.5 8.5L6.5 11.5L12.5 4.5"/></svg>';
+const CHECK_SVG = '<svg class="habit-check-svg" viewBox="0 0 16 16" aria-hidden="true"><path class="check-path" d="M3.5 8.5L6.5 11.5L12.5 4.5"/></svg>';
 
 // ── Ripple on element ────────────────────────────────────────
 function addRipple(el, e) {
@@ -4050,6 +4050,7 @@ function getLevelIndex(level) {
 function buildFlowerSVG(levelIdx, animated = false) {
   // Stages: 0=Seedling, 1=Sprout, 2=Blooming, 3=Thriving, 4=Radiant, 5=Glowing
   const i = Math.min(levelIdx, 5);
+  const stageName = ['Seedling', 'Sprout', 'Blooming', 'Thriving', 'Radiant', 'Glowing'][i];
   const potColor = '#6b5a4a';
   const potLight = '#8a7560';
   const soilColor = '#4a3d30';
@@ -4140,7 +4141,7 @@ function buildFlowerSVG(levelIdx, animated = false) {
     </g>`;
   }
 
-  return `<svg viewBox="30 40 140 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:200px;height:auto;display:block;margin:0 auto">
+  return `<svg viewBox="30 40 140 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Growth level: ${stageName}" style="width:100%;max-width:200px;height:auto;display:block;margin:0 auto">
     ${plant}
     <path d="M72 160 L72 190 Q72 200 82 200 L118 200 Q128 200 128 190 L128 160 Z" fill="${potColor}"/>
     <path d="M68 155 L132 155 L128 165 L72 165 Z" fill="${potLight}"/>
@@ -4371,6 +4372,7 @@ function updateStreak() {
 // ── Streak milestones ────────────────────────────────────────
 function buildStreakTreeSVG(streak) {
   // Growth stages: 3=sprout, 7=sapling, 14=young tree, 30=full tree, 60=grand tree, 100=ancient tree
+  const treeStageName = streak >= 100 ? 'Ancient tree' : streak >= 60 ? 'Grand tree' : streak >= 30 ? 'Full tree' : streak >= 14 ? 'Young tree' : streak >= 7 ? 'Sapling' : 'Sprout';
   const trunk = '#6b5a4a';
   const trunkLight = '#8a7560';
   const green1 = '#5a8a5e';
@@ -4464,7 +4466,7 @@ function buildStreakTreeSVG(streak) {
     `;
   }
 
-  return `<svg viewBox="30 30 140 165" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:200px;height:auto;display:block;margin:0 auto">
+  return `<svg viewBox="30 30 140 165" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Streak tree: ${treeStageName}, ${streak} days" style="width:100%;max-width:200px;height:auto;display:block;margin:0 auto">
     ${tree}
     <ellipse cx="100" cy="178" rx="45" ry="6" fill="${ground}" opacity="0.5"/>
   </svg>`;
@@ -6217,7 +6219,7 @@ function showNewWeekGoalsSheet() {
   });
 
   html += `<div style="display:flex;gap:8px;margin-top:14px">
-    <input type="text" id="new-week-custom-task" placeholder="Add a custom task...">
+    <input type="text" id="new-week-custom-task" aria-label="Add a custom weekly task" placeholder="Add a custom task...">
     <button class="btn btn-ghost btn-sm" onclick="addNewWeekCustomTask()">Add</button>
   </div>`;
 
@@ -8210,7 +8212,7 @@ function renderTodayTab() {
         const filled = i < waterCount;
         const bw = wGoal <= 3 ? 40 : wGoal <= 4 ? 36 : 30;
         return `<div class="water-bottle${filled ? ' water-filled' : ''}" onclick="tapWater(${i})" style="width:${bw}px" aria-label="Bottle ${i+1}${filled ? ', filled' : ''}" role="checkbox" aria-checked="${filled}" tabindex="0">
-          <svg viewBox="0 0 56 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 56 100" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
             <defs><linearGradient id="wg${i}" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="${filled ? thm.primaryLight : '#3a3d30'}"/>
               <stop offset="100%" stop-color="${filled ? thm.primaryDim : '#252820'}"/>
@@ -9018,7 +9020,7 @@ function renderWellnessTab() {
       ? (journalEntries[state.editingJournalIndex]?.text || '')
       : (state.journalDraft || '');
     const placeholder = state.journalMode === 'free' ? 'No prompt, no pressure. Just write...' : 'What\'s on your mind today...';
-    html += `<textarea id="journal-textarea" placeholder="${placeholder}" rows="5" style="margin-bottom:10px">${editText}</textarea>
+    html += `<textarea id="journal-textarea" aria-label="Journal entry" placeholder="${placeholder}" rows="5" style="margin-bottom:10px">${editText}</textarea>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="btn btn-primary" style="flex:1" onclick="saveJournal()">${state.editingJournalIndex !== null && state.editingJournalIndex !== undefined ? 'Update entry' : 'Save & reflect'}</button>
       <button class="btn btn-ghost" onclick="cancelEditJournal()">Cancel</button>
@@ -9060,7 +9062,7 @@ function renderWellnessTab() {
     }
   } else {
     // No entries yet — show textarea
-    html += `<textarea id="journal-textarea" placeholder="What's on your mind today..." rows="5" style="margin-bottom:10px">${state.journalDraft || ''}</textarea>
+    html += `<textarea id="journal-textarea" aria-label="Journal entry" placeholder="What's on your mind today..." rows="5" style="margin-bottom:10px">${state.journalDraft || ''}</textarea>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="btn btn-primary" style="flex:1" onclick="saveJournal()">Save & reflect</button>
     </div>
@@ -9086,7 +9088,7 @@ function renderWellnessTab() {
   html += `<div class="card">
     <div class="card-title">🏅 Small wins${infoIcon('wins')}</div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
-      <input type="text" id="win-input" placeholder="Something good, however tiny..." style="flex:1">
+      <input type="text" id="win-input" aria-label="Log a small win" placeholder="Something good, however tiny..." style="flex:1">
       <button class="btn btn-primary btn-sm" onclick="addWin()">Log it</button>
     </div>
     <div id="wins-list">
@@ -9104,7 +9106,7 @@ function renderWellnessTab() {
       <button onclick="showDailyAffirmation()" style="background:none;border:none;font-size:12px;color:var(--text-muted);cursor:pointer;font-family:Fraunces,serif;font-style:italic;text-decoration:underline;text-underline-offset:3px">I am enough ›</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
-      <input type="text" id="affirm-input" placeholder="Write something kind to yourself...">
+      <input type="text" id="affirm-input" aria-label="Write an affirmation" placeholder="Write something kind to yourself...">
       <button class="btn btn-primary btn-sm" onclick="addAffirmation()">Save</button>
     </div>
     ${todayAffirmations.length === 0 ? '<div class="text-sm text-muted">Write an affirmation for today — it\'ll appear randomly as you log habits.</div>' : ''}
@@ -9176,7 +9178,7 @@ function renderWellnessTab() {
           </div>`;
         }
       } else {
-        html += `<textarea id="reflect-${qi}" placeholder="Your thoughts..." rows="3" style="margin-bottom:6px">${answer?.text || ''}</textarea>
+        html += `<textarea id="reflect-${qi}" aria-label="Reflection response" placeholder="Your thoughts..." rows="3" style="margin-bottom:6px">${answer?.text || ''}</textarea>
         <button class="btn btn-ghost btn-sm" onclick="saveReflection(${qi})">Save</button>
         <div id="reflect-ai-${qi}" style="display:none;margin-top:8px"></div>`;
       }
@@ -10119,7 +10121,7 @@ function startReframe() {
   ui.innerHTML = `
     <div style="text-align:left;padding:4px 0">
       <div style="font-family:Fraunces,serif;font-size:14px;color:var(--amber-light);margin-bottom:12px">What thought is weighing on you?</div>
-      <textarea id="reframe-input" placeholder="e.g. I'm not doing enough..." rows="2" maxlength="300" style="width:100%;resize:none;margin-bottom:12px;font-size:13px"></textarea>
+      <textarea id="reframe-input" aria-label="Thought to reframe" placeholder="e.g. I'm not doing enough..." rows="2" maxlength="300" style="width:100%;resize:none;margin-bottom:12px;font-size:13px"></textarea>
       <div style="display:flex;gap:10px;justify-content:center">
         <button class="btn btn-ghost btn-sm" onclick="closeAllSheets()">Cancel</button>
         <button class="btn" style="background:rgba(201,149,74,0.25);border:1px solid rgba(201,149,74,0.4);color:var(--amber-light)" onclick="processReframe()">Reframe this</button>
@@ -10973,7 +10975,7 @@ function renderSettingsTab() {
   html += settingsSection('profile', '👤 Profile', `
     <div class="toggle-row" style="border-bottom:none;margin-bottom:12px">
       <div><div class="toggle-label">Your name</div></div>
-      <input type="text" id="settings-name" value="${prefs.name || ''}" style="width:140px;padding:6px 10px;font-size:13px" onchange="saveSettingsName()">
+      <input type="text" id="settings-name" aria-label="Your name" value="${prefs.name || ''}" style="width:140px;padding:6px 10px;font-size:13px" onchange="saveSettingsName()">
     </div>
     <div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05)">
       <div style="font-size:32px">${level.emoji}</div>
@@ -11041,7 +11043,7 @@ function renderSettingsTab() {
         <span style="font-size:16px">${sd.type === 'celebration' ? '🎉' : '🫂'}</span>
         ${isBirthday
           ? `<div style="font-size:14px;font-weight:500;color:var(--cream);flex:1">Birthday</div>`
-          : `<input type="text" value="${sd.name || ''}" placeholder="Name this date..." style="flex:1;padding:5px 10px;font-size:13px" onchange="updateSpecialDate('${sd.id}','name',this.value)">`
+          : `<input type="text" aria-label="Special date name" value="${sd.name || ''}" placeholder="Name this date..." style="flex:1;padding:5px 10px;font-size:13px" onchange="updateSpecialDate('${sd.id}','name',this.value)">`
         }
         ${!isBirthday ? `<div onclick="removeSpecialDate('${sd.id}')" style="color:var(--text-muted);cursor:pointer;font-size:14px;padding:4px">✕</div>` : ''}
       </div>
@@ -11054,7 +11056,7 @@ function renderSettingsTab() {
           <option value="">Day</option>
           ${Array.from({length:31},(_,i)=>i+1).map(d => `<option value="${d}" ${sd.day === d ? 'selected' : ''}>${d}</option>`).join('')}
         </select>
-        <input type="number" value="${sd.year || ''}" placeholder="Year" style="width:70px;padding:5px 8px;font-size:12px" min="1900" max="2100" onchange="updateSpecialDate('${sd.id}','year',this.value)">
+        <input type="number" aria-label="Year" value="${sd.year || ''}" placeholder="Year" style="width:70px;padding:5px 8px;font-size:12px" min="1900" max="2100" onchange="updateSpecialDate('${sd.id}','year',this.value)">
         ${!isBirthday ? `
           <div onclick="toggleSpecialDateType('${sd.id}')" style="
             padding:4px 10px;border-radius:99px;cursor:pointer;font-size:11px;margin-left:auto;
@@ -11188,7 +11190,7 @@ function renderSettingsTab() {
         ${slotLabel ? `<span style="font-size:10px;color:var(--text-muted)">${slotLabel} cue</span>` : '<span style="font-size:10px;color:var(--text-muted)">Cue — link to something you already do</span>'}
         ${saved ? '<span style="font-size:10px;color:var(--sage)">saved ✓</span>' : ''}
       </div>
-      <input type="text" id="trigger-${key}" value="${escapeHtml(val)}" placeholder="${placeholder}"
+      <input type="text" id="trigger-${key}" aria-label="${slotLabel ? slotLabel + ' habit cue' : 'Habit cue'}" value="${escapeHtml(val)}" placeholder="${placeholder}"
         style="box-sizing:border-box;font-size:12px;padding:8px 10px;width:100%;border-radius:8px;
         background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:var(--text-secondary);
         border-bottom:2px solid ${val ? 'rgba(var(--sage-rgb),0.3)' : 'rgba(255,255,255,0.06)'}"
@@ -11329,7 +11331,7 @@ function renderSettingsTab() {
 
   if ((customNourishment.length || 0) < 5) {
     dailyHtml += `<div style="display:flex;gap:8px;align-items:center">
-      <input type="text" id="custom-nourishment-name" placeholder="Add something custom..." style="flex:1">
+      <input type="text" id="custom-nourishment-name" aria-label="Add custom nourishment item" placeholder="Add something custom..." style="flex:1">
       <button class="btn btn-primary btn-sm" onclick="addCustomNourishment()">Add</button>
     </div>`;
   }
@@ -11369,7 +11371,7 @@ function renderSettingsTab() {
 
     if (customDH.length < 10) {
       dailyHtml += `<div style="display:flex;gap:8px;margin-top:10px">
-        <input type="text" id="custom-daily-habit-name" placeholder="Add a custom habit...">
+        <input type="text" id="custom-daily-habit-name" aria-label="Add a custom daily habit" placeholder="Add a custom habit...">
         <button class="btn btn-primary btn-sm" onclick="addCustomDailyHabit()">Add</button>
       </div>`;
   } else {
@@ -11510,7 +11512,7 @@ function renderSettingsTab() {
   });
 
   weeklyHtml += `<div style="display:flex;gap:8px;margin-top:12px">
-    <input type="text" id="custom-task-input" placeholder="Add custom task...">
+    <input type="text" id="custom-task-input" aria-label="Add custom weekly task" placeholder="Add custom task...">
     <button class="btn btn-primary btn-sm" onclick="addCustomTask()">Add</button>
   </div>`;
 
@@ -11584,7 +11586,7 @@ function renderSettingsTab() {
   }
   if (customSC.length < 10) {
     scHtml += `<div style="display:flex;gap:8px;margin-top:10px">
-      <input type="text" id="custom-selfcare-name" placeholder="Add something nice for you...">
+      <input type="text" id="custom-selfcare-name" aria-label="Add custom self-care item" placeholder="Add something nice for you...">
       <button class="btn btn-primary btn-sm" onclick="addCustomSelfCare()">Add</button>
     </div>`;
   } else {
@@ -11630,7 +11632,7 @@ function renderSettingsTab() {
           color:${i === 0 ? 'var(--sage-light)' : 'var(--text-muted)'}">${t.label}</div>`).join('')}
       </div>
       <div style="display:flex;gap:8px">
-        <input type="text" id="custom-checkin-name" placeholder="e.g. Did I take a walk?" style="flex:1">
+        <input type="text" id="custom-checkin-name" aria-label="Add custom check-in question" placeholder="e.g. Did I take a walk?" style="flex:1">
         <button class="btn btn-primary btn-sm" onclick="addCustomCheckin()">Add</button>
       </div>
     </div>`;
@@ -11971,7 +11973,7 @@ function openMedicationSheet() {
     { id: 'evening',   icon: '🌙', label: 'Evening',    sub: 'End of day' },
   ];
   let html = `
-    <div class="sheet-title">💊 Medication reminder</div>
+    <h2 class="sheet-title">💊 Medication reminder</h2>
     <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">
       A private, judgment-free nudge. Choose which times of day are relevant to you — you can change this any time.
     </div>
@@ -13496,7 +13498,7 @@ function showTourSpotlight(el, text, total, onNext) {
     : `top:${relTop + elRect.height + pad + 12}px`;
 
   overlay.innerHTML = `
-    <svg width="${appW}" height="${appH}" style="position:absolute;top:0;left:0">
+    <svg width="${appW}" height="${appH}" aria-hidden="true" style="position:absolute;top:0;left:0">
       <defs>
         <mask id="tour-mask">
           <rect width="${appW}" height="${appH}" fill="white"/>
@@ -13650,7 +13652,7 @@ function renderOBWelcomeAndName(body, footer) {
       </div>
       <div style="width:100%;text-align:left;margin-bottom:8px">
         <div class="ob-sub" style="margin-bottom:8px">What should we call you?</div>
-        <input type="text" id="ob-name-input" placeholder="Your name..." value="${obData.name}" style="font-size:18px;padding:16px;width:100%">
+        <input type="text" id="ob-name-input" aria-label="Your name" placeholder="Your name..." value="${obData.name}" style="font-size:18px;padding:16px;width:100%">
         <div style="font-size:12px;color:var(--text-muted);margin-top:6px">Your name stays only on your device.</div>
       </div>
     </div>`;
@@ -13920,7 +13922,7 @@ function renderOBName(body, footer) {
   body.innerHTML = `
     <div class="ob-title">What should we<br>call you?</div>
     <div class="ob-sub">Your name stays only on your device.</div>
-    <input type="text" id="ob-name-input" placeholder="Your name..." value="${obData.name}" style="font-size:18px;padding:16px">
+    <input type="text" id="ob-name-input" aria-label="Your name" placeholder="Your name..." value="${obData.name}" style="font-size:18px;padding:16px">
   `;
   footer.innerHTML = `
     <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
@@ -14073,7 +14075,7 @@ function renderOBHousehold(body, footer) {
   });
 
   html += `<div style="display:flex;gap:8px;margin-top:12px">
-    <input type="text" id="ob-custom-task" placeholder="Add custom task...">
+    <input type="text" id="ob-custom-task" aria-label="Add custom task" placeholder="Add custom task...">
     <button class="btn btn-ghost btn-sm" onclick="obAddCustomTask()">Add</button>
   </div>`;
 
@@ -14868,7 +14870,7 @@ function buildTutorialOverlay(step) {
     const h = Math.min(H, spotRect.height + pad * 2);
 
     backdropHTML = `
-      <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" xmlns="http://www.w3.org/2000/svg">
+      <svg aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <mask id="tut-mask">
             <rect width="${W}" height="${H}" fill="white"/>
@@ -15816,7 +15818,7 @@ function renderBuddyPairingOptions() {
     <div class="card" style="margin-top:8px">
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;text-align:center">Have an invite code?</div>
       <div style="display:flex;gap:8px;align-items:center">
-        <input type="text" id="buddy-code-input" placeholder="Enter code" maxlength="6" autofocus style="flex:1;text-transform:uppercase;text-align:center;font-size:16px;letter-spacing:3px;padding:10px;font-family:Fraunces,serif">
+        <input type="text" id="buddy-code-input" aria-label="Buddy invite code" placeholder="Enter code" maxlength="6" autofocus style="flex:1;text-transform:uppercase;text-align:center;font-size:16px;letter-spacing:3px;padding:10px;font-family:Fraunces,serif">
         <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.readText().then(t=>{const i=document.getElementById('buddy-code-input');if(i)i.value=t.trim().substring(0,6).toUpperCase()})" style="min-width:50px;font-size:11px">Paste</button>
         <button class="btn btn-primary btn-sm" onclick="buddyAcceptInvite(document.getElementById('buddy-code-input').value)" style="min-width:60px">Join</button>
       </div>
@@ -15962,7 +15964,7 @@ function renderBuddyCard(b, index) {
             <div style="text-align:center;font-size:12px;color:var(--text-muted);padding:8px">Loading...</div>
           </div>
           <div class="buddy-msg-input">
-            <textarea id="buddy-input-${pid}" placeholder="Say something kind..." rows="1" maxlength="200"></textarea>
+            <textarea id="buddy-input-${pid}" aria-label="Message to buddy" placeholder="Say something kind..." rows="1" maxlength="200"></textarea>
             <button class="btn btn-primary btn-sm" onclick="buddySendMessage('${pid}')" style="min-width:54px">Send</button>
           </div>
         </div>
@@ -16042,7 +16044,7 @@ function selectBuddyPref(type, value) {
 function renderBuddyMatchForm() {
   return `
     <div style="padding:4px 20px 20px">
-      <div class="sheet-title">Find a bloom buddy</div>
+      <h2 class="sheet-title">Find a bloom buddy</h2>
       <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">
         Quick questions so we can match you with someone compatible.
       </p>
@@ -16135,7 +16137,7 @@ function renderCommunityTab() {
   // Post form
   html += `<div class="card" id="wall-post-card">
     <div style="display:flex;gap:8px;align-items:flex-end">
-      <textarea id="wall-input" placeholder="Leave a kind word for someone..." rows="2" maxlength="140" style="flex:1;resize:none" oninput="updateWallCharCount()"></textarea>
+      <textarea id="wall-input" aria-label="Encouragement wall post" placeholder="Leave a kind word for someone..." rows="2" maxlength="140" style="flex:1;resize:none" oninput="updateWallCharCount()"></textarea>
       <button class="btn btn-primary btn-sm" id="wall-post-btn" onclick="postToWall()" style="min-width:60px">Post</button>
     </div>
     <div style="display:flex;justify-content:space-between;margin-top:6px">
