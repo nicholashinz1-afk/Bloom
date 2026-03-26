@@ -374,6 +374,7 @@ function renderDailyQuote() {
 //  ONBOARDING
 // ============================================================
 export { showWhatsNew, renderDailyQuote, dismissReintro, startReintro, startWhatsNewTour, cancelWhatsNewTour, showTourSpotlight };
+window.showWhatsNew = showWhatsNew;
 window.dismissReintro = dismissReintro;
 window.startReintro = startReintro;
 window.reintroSetTheme = reintroSetTheme;

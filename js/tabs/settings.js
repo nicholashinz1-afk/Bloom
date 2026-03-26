@@ -1244,3 +1244,4 @@ window.setMedRemindMode = setMedRemindMode;
 window.toggleNotif = toggleNotif;
 window.shareApp = shareApp;
 window.goalStepper = goalStepper;
+window.resetToday = resetToday;
