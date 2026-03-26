@@ -4086,7 +4086,7 @@ function recoverStreakFromHistory() {
   const td = state.todayData || {};
   const todayHasActivity = (
     td.m_teeth || td.e_teeth ||
-    Object.keys(td).some(k => (k.endsWith('_am') || k.endsWith('_pm') || k.endsWith('_any')) && td[k]) ||
+    Object.keys(td).some(k => (k.endsWith('_am') || k.endsWith('_afternoon') || k.endsWith('_pm') || k.endsWith('_any')) && td[k]) ||
     td.mood !== undefined || td.sleep !== undefined ||
     (td.water && td.water > 0) ||
     (td.food && Object.values(td.food).some(Boolean)) ||
@@ -4151,7 +4151,7 @@ function updateStreak() {
   const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
 
   const anySelfCare = td.selfCare && Object.values(td.selfCare).some(Boolean);
-  const anyDailyHabit = Object.keys(td).some(k => (k.endsWith('_am') || k.endsWith('_pm') || k.endsWith('_any')) && td[k]);
+  const anyDailyHabit = Object.keys(td).some(k => (k.endsWith('_am') || k.endsWith('_afternoon') || k.endsWith('_pm') || k.endsWith('_any')) && td[k]);
   const anyAction = (
     td.m_teeth || td.e_teeth || anyDailyHabit ||
     td.mood !== undefined ||
@@ -4721,7 +4721,7 @@ function activateHardDayMode() {
   archiveToday();
   playSound('hard_day');
   trackFeature('hard_day');
-  trackEvent('hard_day_activated', { mood: state.todayData.mood, habitsCompleted: Object.keys(state.todayData).filter(k => (k.endsWith('_am') || k.endsWith('_pm') || k.endsWith('_any')) && state.todayData[k]).length });
+  trackEvent('hard_day_activated', { mood: state.todayData.mood, habitsCompleted: Object.keys(state.todayData).filter(k => (k.endsWith('_am') || k.endsWith('_afternoon') || k.endsWith('_pm') || k.endsWith('_any')) && state.todayData[k]).length });
   // Dim the UI to feel calmer
   document.body.classList.add('hard-day-active');
   closeAllSheets();
@@ -5445,7 +5445,7 @@ function checkEveningNudge() {
   if (sent.evening_nudge) return;
 
   const td = state.todayData || {};
-  const anyDailyHabit = Object.keys(td).some(k => (k.endsWith('_am') || k.endsWith('_pm') || k.endsWith('_any')) && td[k]);
+  const anyDailyHabit = Object.keys(td).some(k => (k.endsWith('_am') || k.endsWith('_afternoon') || k.endsWith('_pm') || k.endsWith('_any')) && td[k]);
   const anySelfCare = td.selfCare && Object.values(td.selfCare).some(Boolean);
   const anyActivity = (
     td.m_teeth || td.e_teeth || anyDailyHabit ||
@@ -5547,7 +5547,7 @@ function checkNudgeCredit() {
   if (sent.nudge_credit_given) return; // already credited
 
   const td = state.todayData || {};
-  const anyDailyHabit = Object.keys(td).some(k => (k.endsWith('_am') || k.endsWith('_pm') || k.endsWith('_any')) && td[k]);
+  const anyDailyHabit = Object.keys(td).some(k => (k.endsWith('_am') || k.endsWith('_afternoon') || k.endsWith('_pm') || k.endsWith('_any')) && td[k]);
   const anySelfCare = td.selfCare && Object.values(td.selfCare).some(Boolean);
   const anyActivity = (
     td.m_teeth || td.e_teeth || anyDailyHabit ||
@@ -5814,6 +5814,8 @@ function onHabitCompletedCancelPush(habitId) {
     cancelScheduledPush('habit_e_teeth');
   } else if (habitId === 'medication_am') {
     cancelScheduledPush('med_am');
+  } else if (habitId === 'medication_afternoon') {
+    cancelScheduledPush('med_afternoon');
   } else if (habitId === 'medication_pm') {
     cancelScheduledPush('med_pm');
   } else if (habitId === 'medication_any') {
