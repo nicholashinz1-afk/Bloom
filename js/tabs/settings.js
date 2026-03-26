@@ -1212,6 +1212,8 @@ function resetToday() {
 
 export { renderSettingsTab, settingsSection, toggleSettingsGroup, toggleSettingsSection, openSettingsSection };
 window.renderSettingsTab = renderSettingsTab;
+window.state = state;
+window.saveState = saveState;
 window.toggleSettingsGroup = toggleSettingsGroup;
 window.toggleSettingsSection = toggleSettingsSection;
 window.openSettingsSection = openSettingsSection;

@@ -1,7 +1,11 @@
 import { state } from './state.js';
 import { save } from './storage.js';
 import { trapFocusInSheet, releaseFocusTrap } from './router.js';
-import { sendTelemetry, trackFeature } from './telemetry.js';
+import { sendTelemetry, trackFeature, trackEvent } from './telemetry.js';
+
+// Late-bound cross-module references
+function renderWeeklyTab(...args) { return window.renderWeeklyTab?.(...args); }
+
 function openSheet(id) {
   document.getElementById('sheet-backdrop').classList.add('open');
   const sheet = document.getElementById(id);

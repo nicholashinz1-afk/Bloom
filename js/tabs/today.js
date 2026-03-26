@@ -1003,6 +1003,9 @@ export { renderTodayTab, renderTodayTop, logMood, logSleep, tapWater, tapFood,
   toggleInlineBreathe, stopInlineBreathing, inlineContinueBreathing,
   triggerLowMoodAI, getFeelingWords, toggleFeeling, showCrisisFeelingsNudge };
 window.renderTodayTab = renderTodayTab;
+window.renderTodayTop = renderTodayTop;
+window.state = state;
+window.saveState = saveState;
 window.logMood = logMood;
 window.logSleep = logSleep;
 window.tapWater = tapWater;
