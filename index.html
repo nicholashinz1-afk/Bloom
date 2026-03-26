@@ -2492,22 +2492,97 @@ body.hard-day-active .celebrate-toast {
 /* ── High contrast mode ─────────────────────────────────── */
 body.high-contrast {
   --text-primary:   #ffffff;
-  --text-secondary: #c0c0c0;
-  --text-muted:     #909090;
+  --text-secondary: #d0d0d0;
+  --text-muted:     #b0b0b0;
+  --text-on-sage:   #000000;
   --bg:             #000000;
   --bg-mid:         #0a0a0a;
   --bg-card:        #141414;
   --bg-elevated:    #1e1e1e;
+  --bg-overlay:     rgba(0,0,0,0.95);
   --sage:           #90c894;
   --sage-light:     #b8e0bb;
+  --sage-dim:       #305834;
   --amber:          #e0a850;
   --amber-light:    #f0c870;
+  --amber-dim:      #705020;
   --rose:           #d08080;
   --rose-light:     #e8b0b0;
+  --rose-dim:       #603030;
   --sky:            #80b8d0;
   --sky-light:      #b0d8f0;
   --cream:          #ffffff;
+  --cream-dim:      #b0b0b0;
 }
+/* High contrast: stronger borders and outlines */
+body.high-contrast .card {
+  border: 1px solid rgba(255,255,255,0.2);
+}
+body.high-contrast .toggle {
+  border-color: rgba(255,255,255,0.4);
+}
+body.high-contrast .btn {
+  border: 1px solid rgba(255,255,255,0.25);
+}
+body.high-contrast .btn-primary {
+  border-color: var(--sage);
+}
+body.high-contrast .mood-btn {
+  border-color: rgba(255,255,255,0.15);
+}
+body.high-contrast .mood-btn.selected {
+  border-color: var(--sage-light);
+  border-width: 3px;
+}
+body.high-contrast .bottom-sheet {
+  border-top: 2px solid rgba(255,255,255,0.2);
+}
+body.high-contrast .crisis-option {
+  border-bottom-color: rgba(255,255,255,0.15);
+}
+body.high-contrast input,
+body.high-contrast textarea,
+body.high-contrast select {
+  border: 1px solid rgba(255,255,255,0.3) !important;
+}
+body.high-contrast :focus-visible {
+  outline: 3px solid var(--sage-light);
+  outline-offset: 2px;
+}
+body.high-contrast #crisis-heart {
+  opacity: 1;
+}
+body.high-contrast #settings-gear {
+  opacity: 1 !important;
+}
+body.high-contrast .nav-btn {
+  color: var(--text-secondary);
+}
+body.high-contrast .nav-btn.active {
+  color: var(--sage-light);
+}
+body.high-contrast .section-label {
+  color: var(--text-secondary);
+}
+body.high-contrast .crisis-option-sub {
+  color: var(--text-secondary);
+}
+
+/* ── Text size scaling ─────────────────────────────────────── */
+body.text-large {
+  font-size: 118%;
+}
+body.text-large .mood-emoji { font-size: 26px; }
+body.text-large .section-label { font-size: 13px; }
+body.text-large .card-title { font-size: 15px; }
+body.text-large .toggle-label { font-size: 16px; }
+body.text-large .btn { font-size: 16px; }
+body.text-large textarea,
+body.text-large input[type="text"] { font-size: 16px; }
+body.text-large .crisis-option-title { font-size: 17px; }
+body.text-large .crisis-option-sub { font-size: 14px; }
+body.text-large .daily-quote { font-size: 16px; }
+body.text-large .nav-btn { font-size: 12px; }
 
 /* ── Buddy onboarding ───────────────────────────────────── */
 .buddy-onboard-step {
@@ -11003,9 +11078,21 @@ function renderSettingsTab() {
     <div class="toggle-row" style="padding:0">
       <div>
         <div class="toggle-label">♿ High contrast mode</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Stronger text contrast and bolder colors for easier reading</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Stronger borders, bolder colors, brighter text for easier reading</div>
       </div>
-      <div class="toggle${highContrastOn ? ' on' : ''}" onclick="toggleHighContrast()"></div>
+      <div class="toggle${highContrastOn ? ' on' : ''}" onclick="toggleHighContrast()" role="switch" aria-checked="${highContrastOn}" aria-label="High contrast mode" tabindex="0"></div>
+    </div>
+  </div>`;
+
+  // ── LARGER TEXT (accessibility toggle) ──────────────────────
+  const largeTextOn = prefs.largeText || false;
+  html += `<div class="card" style="margin-bottom:10px">
+    <div class="toggle-row" style="padding:0">
+      <div>
+        <div class="toggle-label">🔤 Larger text</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Increase text size throughout the app</div>
+      </div>
+      <div class="toggle${largeTextOn ? ' on' : ''}" onclick="toggleLargeText()" role="switch" aria-checked="${largeTextOn}" aria-label="Larger text" tabindex="0"></div>
     </div>
   </div>`;
 
@@ -11818,14 +11905,14 @@ function renderSettingsTab() {
         <li>Keyboard navigation — all tabs, sheets, and core features reachable without a mouse; focus trapped in dialogs</li>
         <li>Touch targets — minimum 44px on all buttons and interactive elements</li>
         <li>Color contrast — text meets WCAG AA 4.5:1 contrast ratio</li>
+        <li>High contrast mode — stronger borders, brighter text, bolder colors (toggle above in Settings)</li>
+        <li>Larger text mode — increases text size throughout the app (toggle above in Settings)</li>
         <li>Reduced motion — respects your device's "reduce motion" setting, disables all animations</li>
         <li>Crisis resources — the 🤍 button is always keyboard and screen reader accessible</li>
       </ul>
 
       <div style="font-weight:500;color:var(--cream);margin-bottom:6px;font-size:13px">What we're still working on</div>
       <ul style="padding-left:18px;margin-bottom:14px;font-size:12px;color:var(--text-secondary);line-height:1.8">
-        <li>High contrast theme option for users with low vision</li>
-        <li>Larger text mode beyond browser zoom</li>
         <li>Full screen reader testing across VoiceOver, NVDA, and TalkBack</li>
         <li>ARIA live region announcements for all dynamic content updates</li>
       </ul>
@@ -12475,6 +12562,14 @@ function toggleHighContrast() {
   state.prefs.highContrast = !state.prefs.highContrast;
   save('bloom_prefs', state.prefs);
   document.body.classList.toggle('high-contrast', state.prefs.highContrast);
+  reRenderSettingsPreservingScroll();
+}
+
+function toggleLargeText() {
+  if (!state.prefs) state.prefs = {};
+  state.prefs.largeText = !state.prefs.largeText;
+  save('bloom_prefs', state.prefs);
+  document.body.classList.toggle('text-large', state.prefs.largeText);
   reRenderSettingsPreservingScroll();
 }
 
@@ -16768,9 +16863,12 @@ function initApp() {
   if (state.hardDayMode || (state.todayData?.mood !== undefined && state.todayData.mood <= 1 && state.todayData._hardDayActivated)) {
     document.body.classList.add('hard-day-active');
   }
-  // Restore high contrast mode
+  // Restore accessibility preferences
   if (state.prefs?.highContrast) {
     document.body.classList.add('high-contrast');
+  }
+  if (state.prefs?.largeText) {
+    document.body.classList.add('text-large');
   }
   checkForUpdate();
   sendTelemetry('session_start', { uid: _bloomUid });
