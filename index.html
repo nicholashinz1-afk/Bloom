@@ -3681,7 +3681,7 @@ function getDailyCompletionCount() {
     if (td.e_teeth) count++;
   }
   if (td.mood !== undefined) count++;
-  if (td.water >= 3) count++;
+  if (td.water >= (state.prefs?.waterGoal || 3)) count++;
   if (td.foodXPGiven) count++;
   if (td.journalXPGiven) count++;
   // Weekly habits done this week
@@ -5370,7 +5370,7 @@ function checkWaterReminders() {
   if (waterMode === 'off') return;
 
   const waterCount = state.todayData.water || 0;
-  if (waterCount >= 3) return; // goal reached, no more reminders
+  if (waterCount >= (state.prefs?.waterGoal || 3)) return; // goal reached, no more reminders
 
   const now = new Date();
   const hour = now.getHours();
@@ -5396,9 +5396,10 @@ function checkWaterReminders() {
     if (!due) return;
     sent[`water_s${due}`] = true;
     save(sentKey, sent);
-    const bottlesLeft = 3 - waterCount;
+    const _wg = state.prefs?.waterGoal || 3;
+    const bottlesLeft = _wg - waterCount;
     const bodies = [
-      `You've had ${waterCount}/3 bottles today. A sip when you're ready — no rush.`,
+      `You've had ${waterCount}/${_wg} bottles today. A sip when you're ready — no rush.`,
       `Gentle nudge — ${bottlesLeft} more bottle${bottlesLeft !== 1 ? 's' : ''} to go. You've got this.`,
       `How's your water today? ${waterCount > 0 ? 'You\'re on your way — keep it up.' : 'Even one sip counts.'}`,
     ];
@@ -5693,7 +5694,7 @@ async function scheduleAllPushNotifications() {
   const waterMode = state.prefs?.notifications?.waterMode || 'smart';
   if (waterMode !== 'off') {
     const waterCount = state.todayData.water || 0;
-    if (waterCount < 3) {
+    if (waterCount < (state.prefs?.waterGoal || 3)) {
       if (waterMode === 'smart') {
         [12, 16, 20].forEach(h => {
           if (h > hour && !sent[`water_s${h}`]) {
@@ -7767,18 +7768,43 @@ function renderTodayTab() {
 
   // --- FOUNDATIONS: Water + Food (compact combined card) ---
   const waterCount = td.water || 0;
-  const trackMeals = state.prefs?.habits?.track_meals;
+  const wGoal = state.prefs?.waterGoal || 3;
   const foodDone = td.food || {};
-  const foodItems = trackMeals ? [
-    { id: 'breakfast', label: '🌅 Breakfast' },
-    { id: 'lunch',     label: '☀️ Lunch' },
-    { id: 'dinner',    label: '🌙 Dinner' },
-    { id: 'felt_nourished', label: '💚 Felt nourished' },
-  ] : [
-    { id: 'ate_meal',       label: '🍽 Ate a meal' },
-    { id: 'had_veggies',    label: '🥦 Had veggies' },
-    { id: 'felt_nourished', label: '💚 Felt nourished' },
-  ];
+
+  // Build food items from nourishment preferences (with fallback for existing users)
+  const nourishPrefs = state.prefs?.nourishment || [];
+  const customNourishItems = state.prefs?.customNourishment || [];
+  const NOURISHMENT_MAP = {
+    breakfast:      { id: 'breakfast',      label: '🌅 Breakfast' },
+    lunch:          { id: 'lunch',          label: '☀️ Lunch' },
+    dinner:         { id: 'dinner',         label: '🌙 Dinner' },
+    ate_meal:       { id: 'ate_meal',       label: '🍽 Ate a meal' },
+    had_snack:      { id: 'had_snack',      label: '🍎 Had a snack' },
+    had_veggies:    { id: 'had_veggies',    label: '🥦 Had veggies' },
+    cooked:         { id: 'cooked',         label: '🍳 Cooked something' },
+    mindful_eating: { id: 'mindful_eating', label: '🧘 Ate mindfully' },
+    felt_nourished: { id: 'felt_nourished', label: '💚 Felt nourished' },
+  };
+  let foodItems;
+  if (nourishPrefs.length > 0) {
+    foodItems = nourishPrefs.map(id => NOURISHMENT_MAP[id]).filter(Boolean);
+    customNourishItems.forEach(cn => {
+      foodItems.push({ id: cn.id, label: (cn.icon || '🌿') + ' ' + cn.name });
+    });
+  } else if (state.prefs?.habits?.track_meals) {
+    // Legacy fallback
+    foodItems = [
+      { id: 'breakfast', label: '🌅 Breakfast' },
+      { id: 'lunch',     label: '☀️ Lunch' },
+      { id: 'dinner',    label: '🌙 Dinner' },
+      { id: 'felt_nourished', label: '💚 Felt nourished' },
+    ];
+  } else {
+    foodItems = [
+      { id: 'ate_meal',       label: '🍽 Ate a meal' },
+      { id: 'felt_nourished', label: '💚 Felt nourished' },
+    ];
+  }
   const mainItems = foodItems.filter(f => f.id !== 'felt_nourished');
   const mainDone = mainItems.filter(f => foodDone[f.id]).length;
   const foodCount = Object.values(foodDone).filter(Boolean).length;
@@ -7786,12 +7812,13 @@ function renderTodayTab() {
   html += `<div class="card" style="padding:14px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div style="font-size:12px;color:var(--text-muted)">💧 Water</div>
-      <div style="font-size:11px;color:${waterCount >= 3 ? 'var(--sage-light)' : 'var(--text-muted)'}">${waterCount >= 3 ? 'Hydrated ✓' : waterCount + '/3'}</div>
+      <div style="font-size:11px;color:${waterCount >= wGoal ? 'var(--sage-light)' : 'var(--text-muted)'}">${waterCount >= wGoal ? 'Hydrated ✓' : waterCount + '/' + wGoal}</div>
     </div>
-    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:14px" id="water-bottles-row">
-      ${[0,1,2].map(i => {
+    <div style="display:flex;justify-content:center;gap:${wGoal <= 4 ? '16' : '10'}px;margin-bottom:14px" id="water-bottles-row">
+      ${Array.from({length: wGoal}, (_, i) => i).map(i => {
         const filled = i < waterCount;
-        return `<div class="water-bottle${filled ? ' water-filled' : ''}" onclick="tapWater(${i})" style="width:40px" aria-label="Bottle ${i+1}${filled ? ', filled' : ''}" role="checkbox" aria-checked="${filled}" tabindex="0">
+        const bw = wGoal <= 3 ? 40 : wGoal <= 4 ? 36 : 30;
+        return `<div class="water-bottle${filled ? ' water-filled' : ''}" onclick="tapWater(${i})" style="width:${bw}px" aria-label="Bottle ${i+1}${filled ? ', filled' : ''}" role="checkbox" aria-checked="${filled}" tabindex="0">
           <svg viewBox="0 0 56 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs><linearGradient id="wg${i}" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="${filled ? thm.primaryLight : '#3a3d30'}"/>
@@ -8454,8 +8481,9 @@ function tapWater(i) {
   checkFirstTaskStreak();
   onAnyActivityCancelEveningNudge();
   const newCount = state.todayData.water;
-  if (newCount >= 3) onWaterGoalReachedCancelPush();
-  if (newCount >= 3 && !state.todayData.waterXPGiven) {
+  const _wGoal = state.prefs?.waterGoal || 3;
+  if (newCount >= _wGoal) onWaterGoalReachedCancelPush();
+  if (newCount >= _wGoal && !state.todayData.waterXPGiven) {
     state.todayData.waterXPGiven = true;
     addXP(10, null);
     setTimeout(() => {
@@ -10471,18 +10499,72 @@ function renderSettingsTab() {
   }
   dailyHtml += `</div></div>`;
 
-  // Meal tracking
+  // Water & Nourishment tracking
+  const waterGoal = prefs.waterGoal || 3;
   dailyHtml += `<div class="divider"></div>
-    <div class="toggle-row">
-      <div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:18px">🍽</span>
-          <div class="toggle-label">Track daily meals</div>
-        </div>
-        <div class="toggle-sub" style="margin-left:26px;line-height:1.5">Adds Breakfast, Lunch & Dinner — a gentle reminder that eating is self-care, not a food diary.</div>
-      </div>
-      <div class="toggle${prefs.habits?.track_meals ? ' on' : ''}" onclick="toggleMealTracking()"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="font-size:18px">💧</span>
+      <div class="toggle-label">Water goal</div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:10px;margin-left:26px">How many bottles feel right for you?</div>
+    <div style="display:flex;gap:6px;margin-bottom:4px;margin-left:26px">
+      ${[2,3,4,5,6].map(n => `<div onclick="setWaterGoal(${n})" style="
+        padding:6px 14px;border-radius:99px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s;
+        background:${waterGoal === n ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};
+        border:1px solid ${waterGoal === n ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};
+        color:${waterGoal === n ? 'var(--sky-light)' : 'var(--text-muted)'}">${n}</div>`).join('')}
     </div>`;
+
+  const selectedNourishment = prefs.nourishment || [];
+  const NOURISHMENT_OPTIONS = [
+    { id: 'breakfast',       icon: '🌅', label: 'Breakfast' },
+    { id: 'lunch',           icon: '☀️', label: 'Lunch' },
+    { id: 'dinner',          icon: '🌙', label: 'Dinner' },
+    { id: 'ate_meal',        icon: '🍽', label: 'Ate a meal' },
+    { id: 'had_snack',       icon: '🍎', label: 'Had a snack' },
+    { id: 'had_veggies',     icon: '🥦', label: 'Had veggies' },
+    { id: 'cooked',          icon: '🍳', label: 'Cooked something' },
+    { id: 'mindful_eating',  icon: '🧘', label: 'Ate mindfully' },
+    { id: 'felt_nourished',  icon: '💚', label: 'Felt nourished' },
+  ];
+  dailyHtml += `<div class="divider"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="font-size:18px">🍽</span>
+      <div class="toggle-label">Nourishment</div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:12px;margin-left:26px">Not a food diary — just a gentle reminder that feeding yourself is self-care.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+      ${NOURISHMENT_OPTIONS.map(n => {
+        const on = selectedNourishment.includes(n.id);
+        return `<div onclick="toggleNourishmentOption('${n.id}')" style="
+          display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;cursor:pointer;font-size:12px;transition:all 0.15s;
+          background:${on ? 'rgba(var(--sage-rgb),0.18)' : 'rgba(255,255,255,0.04)'};
+          border:1px solid ${on ? 'rgba(var(--sage-rgb),0.45)' : 'rgba(255,255,255,0.08)'};
+          color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'}"><span>${n.icon}</span>${n.label}</div>`;
+      }).join('')}
+    </div>`;
+
+  // Custom nourishment items
+  const customNourishment = prefs.customNourishment || [];
+  if (customNourishment.length > 0) {
+    dailyHtml += `<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:500">Your additions</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">`;
+    customNourishment.forEach(cn => {
+      dailyHtml += `<div style="display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;font-size:12px;
+        background:rgba(var(--sage-rgb),0.18);border:1px solid rgba(var(--sage-rgb),0.45);color:var(--sage-light)">
+        <span>${cn.icon}</span>${cn.name}
+        <span onclick="removeCustomNourishment('${cn.id}')" style="margin-left:4px;cursor:pointer;opacity:0.6;font-size:10px">✕</span>
+      </div>`;
+    });
+    dailyHtml += `</div>`;
+  }
+
+  if ((customNourishment.length || 0) < 5) {
+    dailyHtml += `<div style="display:flex;gap:8px;align-items:center">
+      <input type="text" id="custom-nourishment-name" placeholder="Add something custom..." style="flex:1">
+      <button class="btn btn-primary btn-sm" onclick="addCustomNourishment()">Add</button>
+    </div>`;
+  }
 
   // Custom daily habits
   const customDH = getCustomDailyHabits();
@@ -11415,14 +11497,58 @@ function toggleMealTracking() {
   if (!state.prefs.habits) state.prefs.habits = {};
   state.prefs.habits.track_meals = !state.prefs.habits.track_meals;
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
+  reRenderSettingsPreservingScroll();
   renderTodayTab();
-  // Reopen daily section
-  setTimeout(() => {
-    const sh = document.getElementById('sh-daily');
-    const sb = document.getElementById('sb-daily');
-    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
-  }, 50);
+}
+
+function toggleNourishmentOption(id) {
+  if (!state.prefs.nourishment) state.prefs.nourishment = [];
+  const idx = state.prefs.nourishment.indexOf(id);
+  if (idx > -1) {
+    state.prefs.nourishment.splice(idx, 1);
+  } else {
+    state.prefs.nourishment.push(id);
+  }
+  // Sync legacy track_meals flag
+  if (!state.prefs.habits) state.prefs.habits = {};
+  const hasMeals = ['breakfast','lunch','dinner'].some(m => state.prefs.nourishment.includes(m));
+  state.prefs.habits.track_meals = hasMeals;
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
+}
+
+function addCustomNourishment() {
+  const nameInput = document.getElementById('custom-nourishment-name');
+  if (!nameInput || !nameInput.value.trim()) return;
+
+  const name = nameInput.value.trim();
+  const id = 'cn_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + Date.now().toString(36).slice(-4);
+
+  if (!state.prefs.customNourishment) state.prefs.customNourishment = [];
+  if (state.prefs.customNourishment.length >= 5) return;
+
+  state.prefs.customNourishment.push({ id, name, icon: '🌿' });
+  save('bloom_prefs', state.prefs);
+  nameInput.value = '';
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
+  haptic('light');
+}
+
+function removeCustomNourishment(id) {
+  if (!state.prefs.customNourishment) return;
+  state.prefs.customNourishment = state.prefs.customNourishment.filter(n => n.id !== id);
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
+}
+
+function setWaterGoal(amount) {
+  state.prefs.waterGoal = amount;
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
 }
 
 function saveSettingsName() {
@@ -14158,6 +14284,17 @@ function migrateHabitTimesToBitmask() {
 
 // Retroactively award +10 XP for each past self-care completion
 // (bumped from 10→20 XP per completion)
+// Migrate legacy track_meals toggle to new nourishment selection
+function migrateNourishmentPrefs() {
+  if (state.prefs._nourishmentMigrated) return;
+  if (state.prefs.habits?.track_meals && !state.prefs.nourishment?.length) {
+    state.prefs.nourishment = ['breakfast', 'lunch', 'dinner', 'felt_nourished'];
+    save('bloom_prefs', state.prefs);
+  }
+  state.prefs._nourishmentMigrated = true;
+  save('bloom_prefs', state.prefs);
+}
+
 function migrateSelfCareXP() {
   if (state.prefs._selfCareXPMigrated) return;
   const history = state.historyData || {};
@@ -15773,6 +15910,7 @@ function initApp() {
   migrateHabitTimesToBitmask();
   migrateSelfCareToHabits();
   migrateSelfCareXP();
+  migrateNourishmentPrefs();
   initTheme();
   // Restore hard day dimming if active
   if (state.hardDayMode || (state.todayData?.mood !== undefined && state.todayData.mood <= 1 && state.todayData._hardDayActivated)) {
