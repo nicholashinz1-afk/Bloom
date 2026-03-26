@@ -71,7 +71,7 @@ function buildUXPrompt(data) {
   const featureTotals = {};
   const dailySummary = dates.map(date => {
     const stats = data.dailyStats[date];
-    const total = Object.values(stats).reduce((a, b) => a + b, 0);
+    const total = Object.entries(stats).filter(([k]) => !k.startsWith('_') && k !== 'unique_users').reduce((a, [,b]) => a + (typeof b === 'number' ? b : 0), 0);
     Object.entries(stats).forEach(([k, v]) => {
       if (k.startsWith('feature:')) {
         const name = k.replace('feature:', '');
