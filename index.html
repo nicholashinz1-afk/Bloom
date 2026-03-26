@@ -2164,6 +2164,38 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   from { opacity: 0; transform: scale(0.9); }
   to { opacity: 1; transform: scale(1); }
 }
+.buddy-level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sage-light);
+  background: rgba(var(--sage-rgb),0.12);
+  border: 1px solid rgba(var(--sage-rgb),0.2);
+  border-radius: 99px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+.buddy-levelup-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cream);
+  background: linear-gradient(135deg, rgba(var(--sage-rgb),0.3), rgba(var(--sage-rgb),0.15));
+  border: 1px solid rgba(var(--sage-rgb),0.4);
+  border-radius: 99px;
+  padding: 3px 10px;
+  white-space: nowrap;
+  animation: buddyLevelPulse 2s ease-in-out 3;
+  box-shadow: 0 0 12px rgba(var(--sage-rgb),0.2);
+}
+@keyframes buddyLevelPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(var(--sage-rgb),0.2); transform: scale(1); }
+  50% { box-shadow: 0 0 20px rgba(var(--sage-rgb),0.4); transform: scale(1.05); }
+}
 .buddy-stats {
   display: flex;
   gap: 16px;
@@ -5967,8 +5999,16 @@ function checkNudgeCredit() {
   }
 }
 
-// Check reminders every 15 minutes (fallback for when app is open)
-setInterval(() => { checkScheduledReminders(); checkWaterReminders(); checkMedicationReminders(); checkEveningNudge(); }, 15 * 60 * 1000);
+// Returns true if real push notifications are active (OneSignal player ID exists + permission granted)
+function pushNotificationsActive() {
+  return !!load('bloom_onesignal_pid', null) && Notification.permission === 'granted';
+}
+
+// Check reminders every 15 minutes (fallback ONLY when push notifications are not active)
+setInterval(() => {
+  if (pushNotificationsActive()) return; // OneSignal handles delivery — skip local fallback
+  checkScheduledReminders(); checkWaterReminders(); checkMedicationReminders(); checkEveningNudge();
+}, 15 * 60 * 1000);
 
 // ── OneSignal Push Scheduling (real push notifications) ──────
 // Schedules notifications server-side so they fire even when the app is closed.
@@ -15340,6 +15380,7 @@ async function syncBuddyStatus() {
   const id = ensureBuddyId();
   const playerId = load('bloom_onesignal_pid', null);
   const shareMood = state.prefs?.buddyShareMood !== false;
+  const currentLevel = getLevel(state.xpData?.total || 0);
   await buddyApi({
     action: 'sync',
     buddyId: id,
@@ -15347,6 +15388,8 @@ async function syncBuddyStatus() {
     streak: state.xpData?.streak || 0,
     habitPct: getHabitPct(),
     oneSignalId: playerId,
+    level: currentLevel?.name || null,
+    levelEmoji: currentLevel?.emoji || null,
   });
   // Only re-register if name or playerId actually changed
   const name = getBuddyDisplayName();
@@ -15822,6 +15865,13 @@ function renderBuddyContent() {
     </div>`;
     html += `<div id="buddy-add-section" style="display:none">${renderBuddySetup()}</div>`;
     container.innerHTML = html;
+    // Fire confetti on buddy level-up badges
+    setTimeout(() => {
+      container.querySelectorAll('.buddy-levelup-badge').forEach(badge => {
+        const rect = badge.getBoundingClientRect();
+        launchConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2, 30);
+      });
+    }, 100);
     // Fetch messages for each buddy
     buddyCachedBuddies.forEach(b => fetchBuddyMessages(b.pairId));
     checkBuddyActivityTimeout();
@@ -16037,6 +16087,9 @@ function isBuddyDataFromToday(ts) {
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
 }
 
+// Track previously seen buddy levels to detect level-ups within this session
+const _buddyPrevLevels = {};
+
 function renderBuddyCard(b, index) {
   const moods = ['\ud83d\ude14 Low', '\ud83d\ude15 Rough', '\ud83d\ude10 Okay', '\ud83d\ude42 Good', '\ud83d\ude0a Great'];
   const buddyActiveToday = isBuddyDataFromToday(b.lastActive);
@@ -16051,6 +16104,25 @@ function renderBuddyCard(b, index) {
     ? `<span class="buddy-unread-badge">${unreadCount} new</span>`
     : '';
 
+  // Detect buddy level-up: compare against last known level for this buddy
+  const prevLevelKey = `bloom_buddy_level_${pid}`;
+  const prevKnownLevel = _buddyPrevLevels[pid] || load(prevLevelKey, null);
+  const justLeveledUp = b.level && prevKnownLevel && b.level !== prevKnownLevel;
+  if (b.level) {
+    _buddyPrevLevels[pid] = b.level;
+    save(prevLevelKey, b.level);
+  }
+
+  // Build level display
+  let levelHtml = '';
+  if (b.level) {
+    if (justLeveledUp) {
+      levelHtml = `<span class="buddy-levelup-badge">${b.levelEmoji || '🌱'} Leveled up! ${escapeHtml(b.level)}</span>`;
+    } else {
+      levelHtml = `<span class="buddy-level-badge">${b.levelEmoji || '🌱'} ${escapeHtml(b.level)}</span>`;
+    }
+  }
+
   return `
     <div class="buddy-card" style="margin-bottom:12px">
       <div class="buddy-card-header" onclick="${multipleCards ? `toggleBuddyCard('${pid}')` : ''}" style="${multipleCards ? 'cursor:pointer' : ''}">
@@ -16064,6 +16136,7 @@ function renderBuddyCard(b, index) {
         <div class="buddy-stats">
           <div class="buddy-stat"><span>${moodDisplay}</span></div>
           <div class="buddy-stat">🌿 <span class="buddy-stat-value">${b.streak || 0}</span> days shown up</div>
+          ${levelHtml ? `<div class="buddy-stat">${levelHtml}</div>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
           <span style="font-size:12px;color:var(--text-secondary)">Habits</span>
@@ -16904,10 +16977,13 @@ function initApp() {
   checkBackupReminder();
   checkSafariDataWarning();
   checkShowTutorial();
-  checkScheduledReminders();
-  checkWaterReminders();
-  checkMedicationReminders();
-  checkEveningNudge();
+  // Local fallback reminders — only fire if push notifications aren't active
+  if (!pushNotificationsActive()) {
+    checkScheduledReminders();
+    checkWaterReminders();
+    checkMedicationReminders();
+    checkEveningNudge();
+  }
   checkNudgeCredit();
   checkWeeklySummaryNotification();
   // Schedule real push notifications via OneSignal (delayed to let SDK init)

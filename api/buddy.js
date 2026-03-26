@@ -305,17 +305,19 @@ export default async function handler(req, res) {
 
   // ── SYNC: update mood/streak/habitPct + trigger notifications ──
   if (action === 'sync') {
-    const { mood, streak, habitPct, oneSignalId } = body;
+    const { mood, streak, habitPct, oneSignalId, level, levelEmoji } = body;
     if (!buddyId) return res.status(400).json({ error: 'Missing buddyId' });
 
     const profile = await kvGet(`bloom_buddy:${buddyId}`) || {};
     const prevMood = profile.mood;
     const prevStreak = profile.streak || 0;
+    const prevLevel = profile.level || null;
 
     profile.mood = mood !== undefined ? mood : profile.mood;
     profile.moodTs = mood !== undefined ? Date.now() : profile.moodTs;
     profile.streak = streak !== undefined ? streak : profile.streak;
     profile.habitPct = habitPct !== undefined ? habitPct : profile.habitPct;
+    if (level) { profile.level = level; profile.levelEmoji = levelEmoji; }
     if (oneSignalId) profile.oneSignalId = oneSignalId;
     profile.lastActive = Date.now();
 
@@ -374,6 +376,16 @@ export default async function handler(req, res) {
             }
           }
         }
+      }
+
+      // 4. Level-up celebration — notify buddy when partner reaches a new level
+      if (level && prevLevel && level !== prevLevel) {
+        const emoji = levelEmoji || '🌱';
+        await sendPush(
+          partner.oneSignalId,
+          'bloom buddy',
+          `${profile.name || 'Your bloom buddy'} just leveled up to ${level} ${emoji}!`
+        );
       }
     }
 
@@ -616,6 +628,8 @@ export default async function handler(req, res) {
         streak: partner.streak || 0,
         habitPct: partner.habitPct || 0,
         lastActive: partner.lastActive,
+        level: partner.level || null,
+        levelEmoji: partner.levelEmoji || null,
       });
     }
 
@@ -626,7 +640,7 @@ export default async function handler(req, res) {
       paired: buddies.length > 0,
       pairId: first?.pairId,
       partnerId: first?.partnerId,
-      partner: first ? { name: first.name, mood: first.mood, moodTs: first.moodTs, streak: first.streak, habitPct: first.habitPct, lastActive: first.lastActive } : null,
+      partner: first ? { name: first.name, mood: first.mood, moodTs: first.moodTs, streak: first.streak, habitPct: first.habitPct, lastActive: first.lastActive, level: first.level, levelEmoji: first.levelEmoji } : null,
       buddies,
     });
   }
