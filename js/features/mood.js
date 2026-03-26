@@ -159,7 +159,7 @@ async function shareWeekInReview() {
   // Mood bars
   const weekDates = getWeekDates();
   const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const moodColors2 = ['#b07878','#c9954a','#9a9080','#7a9e7e','#a8c5ab'];
+  const moodColors2 = ['#8296a6','#91a7a0','#a4a78e','#bfab82','#d9c9a0'];
   const barWidth = 50;
   const barGap = 18;
   const startX = 300 - (7 * (barWidth + barGap) - barGap) / 2;

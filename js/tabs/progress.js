@@ -159,7 +159,7 @@ function renderProgressTab() {
   html += `</div>`;
 
   // Mood gradient chart
-  const moodColors = ['#b07878','#c9954a','#9a9080','#7a9e7e','#a8c5ab'];
+  const moodColors = ['#8296a6','#91a7a0','#a4a78e','#bfab82','#d9c9a0'];
   const moodEmojisWeek = ['😔','😕','😐','🙂','😊'];
   const noMoodColor = 'rgba(255,255,255,0.04)';
 
@@ -255,7 +255,7 @@ function renderProgressTab() {
   }).join(', ');
 
   const flowRows = [
-    { label: 'Mood', gradient: moodStops, swatch: '#a8c5ab' },
+    { label: 'Mood', gradient: moodStops, swatch: '#d9c9a0' },
     { label: 'Sleep', gradient: sleepStops, swatch: '#6a9ab0' },
     { label: 'Habits', gradient: habitStops, swatch: '#7a9e7e' },
   ];
