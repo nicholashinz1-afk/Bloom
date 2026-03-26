@@ -3000,7 +3000,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.10.2';
+const VERSION = '2.10.3';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -9445,7 +9445,7 @@ function openJournalHistory() {
 
       const dateLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px;cursor:pointer" onclick="closeSheet('journal-history-sheet');setTimeout(()=>openHistoryDetail('${d}'),300)">
+      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px;cursor:pointer" onclick="closeAllSheets();setTimeout(()=>openHistoryDetail('${d}'),300)">
         <div style="display:flex;align-items:center;gap:12px">
           <div style="font-size:22px;width:30px;text-align:center">📝</div>
           <div style="flex:1;min-width:0">
