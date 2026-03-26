@@ -1360,16 +1360,21 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  align-items: center;
-  gap: 8px 12px;
-  padding: 16px 8px;
+  align-items: baseline;
+  gap: 6px 10px;
+  padding: 20px 12px;
+  line-height: 1.6;
 }
 .word-tree-word {
   display: inline-block;
   font-family: 'Fraunces', serif;
   font-style: italic;
-  line-height: 1.3;
+  line-height: 1.2;
   transition: all 0.3s ease;
+  padding: 2px 4px;
+}
+.word-tree-word:hover {
+  transform: scale(1.1);
 }
 
 /* ============================================================
@@ -9445,7 +9450,7 @@ function addAffirmation() {
   // Track today's affirmations separately so the gateway card is date-aware
   if (!state.todayData.affirmations) state.todayData.affirmations = [];
   state.todayData.affirmations.push(text);
-  updateWordTree(text);
+  updateWordTree(text, true);
   if (!state.todayData.affirmXPGiven) {
     state.todayData.affirmXPGiven = true;
     addXP(5, null);
@@ -9489,41 +9494,64 @@ const POSITIVE_WORDS = new Set([
   'unstoppable', 'unbreakable', 'good', 'great', 'better', 'best',
 ]);
 
-function extractPositiveWords(text) {
+function extractPositiveWords(text, isAffirmation) {
   if (!text) return [];
   const lower = text.toLowerCase();
   const found = [];
-  // Match self-referencing patterns: "I am [adv] [adj]", "I'm [adv] [adj]", "I feel [adv] [adj]"
+
+  // For affirmations, scan broadly — they're inherently self-referencing
+  if (isAffirmation) {
+    const words = lower.match(/\b[a-z]+\b/g) || [];
+    for (const w of words) {
+      if (POSITIVE_WORDS.has(w) && !found.includes(w)) found.push(w);
+    }
+    return found;
+  }
+
+  // For journal text, match self-referencing patterns
   const patterns = [
-    /\bi\s+am\s+(?:a\s+)?(?:really\s+|so\s+|very\s+|truly\s+|pretty\s+)?(\w+)/gi,
-    /\bi'm\s+(?:a\s+)?(?:really\s+|so\s+|very\s+|truly\s+|pretty\s+)?(\w+)/gi,
-    /\bi\s+feel\s+(?:really\s+|so\s+|very\s+|truly\s+)?(\w+)/gi,
-    /\bi\s+am\s+(?:a\s+)?(\w+)\s+person/gi,
-    /\bi'm\s+(?:a\s+)?(\w+)\s+person/gi,
+    // "I am [adv] [adj]", "I'm [adv] [adj]"
+    /\bi\s+am\s+(?:a\s+)?(?:really\s+|so\s+|very\s+|truly\s+|pretty\s+|actually\s+|genuinely\s+)?(\w+)/gi,
+    /\bi'm\s+(?:a\s+)?(?:really\s+|so\s+|very\s+|truly\s+|pretty\s+|actually\s+|genuinely\s+)?(\w+)/gi,
+    // "I feel [adj]", "I felt [adj]", "feeling [adj]"
+    /\bi\s+feel\s+(?:really\s+|so\s+|very\s+|truly\s+|more\s+)?(\w+)/gi,
+    /\bi\s+felt\s+(?:really\s+|so\s+|very\s+|truly\s+|more\s+)?(\w+)/gi,
+    /\bfeeling\s+(?:really\s+|so\s+|very\s+|more\s+)?(\w+)/gi,
+    // "I was [adj]", "I've been [adj]", "I am becoming [adj]"
+    /\bi\s+was\s+(?:really\s+|so\s+|very\s+)?(\w+)/gi,
+    /\bi've\s+been\s+(?:really\s+|so\s+|very\s+)?(\w+)/gi,
+    /\bi(?:'m|\s+am)\s+(?:becoming|getting)\s+(?:more\s+)?(\w+)/gi,
+    // "I can be [adj]", "I deserve to be [adj]"
+    /\bi\s+can\s+be\s+(?:more\s+)?(\w+)/gi,
+    /\bi\s+deserve\s+to\s+be\s+(\w+)/gi,
+    // "[adj] person" (self-referencing)
+    /\bi(?:\s+am|'m)\s+(?:a\s+)?(\w+)\s+person/gi,
+    // "I am [adj] and [adj]"
+    /\bi(?:\s+am|'m)\s+(?:a\s+)?(?:really\s+|so\s+|very\s+)?(\w+)\s+and\s+(\w+)/gi,
+    // "made me feel [adj]", "makes me [adj]"
+    /\bmade?\s+me\s+(?:feel\s+)?(?:really\s+|so\s+|very\s+)?(\w+)/gi,
+    // "proud of", "grateful for", "thankful" — standalone self-reflection words
+    /\bi(?:'m|\s+am)\s+(proud|grateful|thankful|hopeful|content|peaceful|happy|calm)/gi,
   ];
+
   for (const pat of patterns) {
     let match;
     while ((match = pat.exec(lower)) !== null) {
-      const word = match[1];
-      if (POSITIVE_WORDS.has(word) && !found.includes(word)) {
-        found.push(word);
+      // Some patterns capture 2 groups (the "and" pattern)
+      const captures = [match[1], match[2]].filter(Boolean);
+      for (const word of captures) {
+        if (POSITIVE_WORDS.has(word) && !found.includes(word)) {
+          found.push(word);
+        }
       }
-    }
-  }
-  // Also scan for "I am [adj] and [adj]" patterns
-  const andPattern = /\bi(?:\s+am|'m)\s+(?:a\s+)?(?:really\s+|so\s+|very\s+)?(\w+)\s+and\s+(\w+)/gi;
-  let andMatch;
-  while ((andMatch = andPattern.exec(lower)) !== null) {
-    for (const w of [andMatch[1], andMatch[2]]) {
-      if (POSITIVE_WORDS.has(w) && !found.includes(w)) found.push(w);
     }
   }
   return found;
 }
 
-function updateWordTree(text) {
+function updateWordTree(text, isAffirmation) {
   if (!text) return;
-  const words = extractPositiveWords(text);
+  const words = extractPositiveWords(text, isAffirmation);
   if (words.length === 0) return;
   if (!state.wellnessData.wordTree) state.wellnessData.wordTree = {};
   for (const w of words) {
@@ -10394,18 +10422,25 @@ function renderProgressTab() {
   const wordEntries = Object.entries(wordTree).filter(([,c]) => c > 0).sort((a,b) => b[1] - a[1]);
   if (wordEntries.length > 0) {
     const maxCount = wordEntries[0][1];
-    const colors = ['var(--sage-light)', 'var(--amber-light)', 'var(--sky-light)', 'var(--rose-light)'];
+    const colors = ['var(--sage-light)', 'var(--amber-light)', 'var(--sky-light)', 'var(--rose-light)', 'var(--cream)'];
+    // Interleave big and small words for a more organic cloud shape
+    const shuffled = [];
+    const mid = Math.ceil(wordEntries.length / 2);
+    for (let i = 0; i < mid; i++) {
+      if (wordEntries[i]) shuffled.push(wordEntries[i]);
+      if (wordEntries[mid + i]) shuffled.push(wordEntries[mid + i]);
+    }
     html += `<div class="card">
       <div class="card-title">🌱 Your words</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;font-style:italic">Positive words you use to describe yourself</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;font-style:italic">Positive words you use to describe yourself</div>
       <div class="word-tree">`;
-    wordEntries.forEach(([word, count], i) => {
+    shuffled.forEach(([word, count], i) => {
       const ratio = maxCount > 1 ? (count - 1) / (maxCount - 1) : 0;
-      const size = Math.round(14 + ratio * 18);
+      const size = Math.round(14 + ratio * 20);
       const weight = Math.round(400 + ratio * 300);
-      const opacity = (0.7 + ratio * 0.3).toFixed(2);
+      const opacity = (0.65 + ratio * 0.35).toFixed(2);
       const color = colors[i % colors.length];
-      html += `<span class="word-tree-word" style="font-size:${size}px;font-weight:${weight};opacity:${opacity};color:${color}">${word}</span>`;
+      html += `<span class="word-tree-word" style="font-size:${size}px;font-weight:${weight};opacity:${opacity};color:${color}" title="${count} time${count !== 1 ? 's' : ''}">${word}</span>`;
     });
     html += `</div></div>`;
   } else {
@@ -14934,25 +14969,26 @@ function migrateSelfCareXP() {
 // ============================================================
 function migrateWordTree() {
   if (!state.wellnessData) return;
-  if (state.wellnessData._migratedWordTree) return;
+  // v2: broader extraction — rescan even if previously migrated
+  if (state.wellnessData._migratedWordTreeV2) return;
   const tree = {};
   // Scan all journal entries
   const journal = state.wellnessData.journal || {};
   Object.values(journal).forEach(entries => {
     if (!Array.isArray(entries)) return;
     entries.forEach(entry => {
-      const words = extractPositiveWords(entry.text);
+      const words = extractPositiveWords(entry.text, false);
       words.forEach(w => { tree[w] = (tree[w] || 0) + 1; });
     });
   });
-  // Scan all affirmations
+  // Scan all affirmations — broad matching (no "I am" prefix required)
   const affirmations = state.wellnessData.affirmations || [];
   affirmations.forEach(text => {
-    const words = extractPositiveWords(text);
+    const words = extractPositiveWords(text, true);
     words.forEach(w => { tree[w] = (tree[w] || 0) + 1; });
   });
   state.wellnessData.wordTree = tree;
-  state.wellnessData._migratedWordTree = true;
+  state.wellnessData._migratedWordTreeV2 = true;
   saveState();
 }
 
