@@ -33,6 +33,18 @@ const SELF_HARM_PATTERNS = [
   /\b(suicide|suicidal|self[- ]?harm|cut myself|hurt myself)\b/i,
 ];
 
+// Crude / off-topic — not blocked, but soft-flagged for content warning display
+const CRUDE_PATTERNS = [
+  /\b(hog|dong|wiener|schlong|pp|peen|johnson|boner)\b/i,
+  /\bcrank\b.*\b(hog|one|it)\b/i,
+  /\b(jerk|jack|wank|beat)\s*(off|it|ing)\b/i,
+  /\b(dick|cock|penis|balls|nuts|tits|boobs|ass|booty)\b/i,
+  /\b(horny|sexy|bang|hookup|hook up|smash|69)\b/i,
+  /\b(porn|onlyfans|nsfw|nude|naked)\b/i,
+  /\b(shit|fuck|damn|hell|crap|piss)\b/i,
+  /\b(stfu|gtfo|lmao.*ass|dumbass|badass|jackass)\b/i,
+];
+
 /**
  * Moderate a user-submitted message.
  * @param {string} text - raw message text
@@ -61,6 +73,11 @@ export function moderateMessage(text, { minLen = 1, maxLen = 200 } = {}) {
 
   for (const pat of SELF_HARM_PATTERNS) {
     if (pat.test(lower)) return { ok: true, flag: 'self-harm' };
+  }
+
+  // Soft-flag crude/off-topic — allow but mark for content warning display
+  for (const pat of CRUDE_PATTERNS) {
+    if (pat.test(lower)) return { ok: true, flag: 'crude' };
   }
 
   return { ok: true };

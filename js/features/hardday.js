@@ -32,6 +32,7 @@ async function saveOpenJournal() {
   if (!ta || !ta.value.trim()) return;
   const text = ta.value.trim();
   const t = today();
+  trackFeature('journal');
   trackEvent('journal_saved');
 
   // Save as new journal entry
@@ -212,6 +213,7 @@ async function showMonthlyReflectionPrompt() {
   const avgMood = moods.length ? (moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1) : 'unknown';
   const journalCount = prevDates.filter(d => state.historyData[d]?.journal).length;
 
+  trackFeature('monthly_reflection');
   const ai = await callClaude(
     `Write a warm monthly reflection for a wellness app user. Month: ${monthName}. Average mood: ${avgMood}/4. Journal entries: ${journalCount}. Write 3-4 sentences that feel like a caring friend reflecting on their month — personal, encouraging, honest. Never shame.`,
     'You are Bloom. 3-4 sentences. Warm, personal, never clinical. If mood data suggests a very difficult month, gently acknowledge that and remind them the 🤍 crisis heart is always there if they need support beyond what bloom can offer.'
@@ -305,6 +307,7 @@ function renderWindDownStep() {
 }
 
 function winddownSetMood(val) {
+  trackFeature('mood_log');
   state.todayData.mood = val;
   saveState();
   archiveToday();
@@ -319,6 +322,7 @@ function winddownNext() {
 function winddownSaveJournal() {
   const el = document.getElementById('winddown-journal');
   if (!el || !el.value.trim()) return;
+  trackFeature('journal');
   const t = today();
   if (!state.wellnessData.journal) state.wellnessData.journal = {};
   if (!Array.isArray(state.wellnessData.journal[t])) state.wellnessData.journal[t] = [];

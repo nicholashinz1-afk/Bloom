@@ -2,6 +2,7 @@
 import { state } from './state.js';
 import { staggerCards } from './ui.js';
 import { haptic } from './utils.js';
+import { trackFeature } from './telemetry.js';
 
 // ============================================================
 export function switchTab(tab) {
@@ -20,7 +21,7 @@ export function switchTab(tab) {
   if (tab === 'weekly') renderWeeklyTab();
   if (tab === 'wellness') renderWellnessTab();
   if (tab === 'progress') { renderProgressTab(); setTimeout(() => generateRollingInsight(), 800); }
-  if (tab === 'community') { renderCommunityTab(); fetchBuddyData(); if (buddyState.status === 'paired') { buddyCachedBuddies.forEach(b => fetchBuddyMessages(b.pairId)); } }
+  if (tab === 'community') { renderCommunityTab(); trackFeature('buddy'); fetchBuddyData(); if (buddyState.status === 'paired') { buddyCachedBuddies.forEach(b => fetchBuddyMessages(b.pairId)); } }
   if (tab === 'settings') renderSettingsTab();
   // Stop buddy polling when leaving community tab
   if (tab !== 'community') stopBuddyPolling();

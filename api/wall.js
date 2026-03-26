@@ -29,6 +29,39 @@ async function logModeration(source, result) {
   } catch(e) {}
 }
 
+// ── User moderation strikes ──────────────────────────────
+const STRIKES_KEY = 'bloom_mod:strikes';
+
+async function getStrikes() {
+  return await kvGet(STRIKES_KEY) || {};
+}
+
+async function saveStrikes(strikes) {
+  await kvSet(STRIKES_KEY, strikes);
+}
+
+async function recordStrike(fp, reason, source, messageText) {
+  if (!fp || fp === 'anon') return;
+  const strikes = await getStrikes();
+  if (!strikes[fp]) strikes[fp] = { incidents: [], banned: false };
+  strikes[fp].incidents.push({
+    reason,
+    source,
+    text: (messageText || '').slice(0, 80),
+    ts: Date.now(),
+  });
+  if (strikes[fp].incidents.length > 50) {
+    strikes[fp].incidents = strikes[fp].incidents.slice(-50);
+  }
+  await saveStrikes(strikes);
+}
+
+async function isUserBanned(fp) {
+  if (!fp || fp === 'anon') return false;
+  const strikes = await getStrikes();
+  return strikes[fp]?.banned === true;
+}
+
 async function getMessages() {
   return await kvGet('bloom_wall_messages') || [];
 }
@@ -70,9 +103,22 @@ export default async function handler(req, res) {
       const { text, fp } = body;
       if (!text) return res.status(400).json({ error: 'Missing text' });
 
+      // Check if user is banned from social features
+      if (await isUserBanned(fp)) {
+        return res.json({ ok: false, reason: 'filtered' });
+      }
+
       const check = moderateMessage(text, { minLen: 3, maxLen: 140 });
       await logModeration('wall_post', check);
-      if (!check.ok) return res.json({ ok: false, reason: check.reason });
+
+      // Record strike for blocked or flagged content
+      if (!check.ok) {
+        await recordStrike(fp, check.reason, 'wall', text);
+        return res.json({ ok: false, reason: check.reason });
+      }
+      if (check.flag === 'crude') {
+        await recordStrike(fp, 'crude', 'wall', text);
+      }
 
       const messages = await getMessages();
       const oneHourAgo = Date.now() - 3600000;
@@ -86,6 +132,8 @@ export default async function handler(req, res) {
         ts: Date.now(),
         fp: fp || 'anon',
       };
+      // Auto-flag crude content so it renders with a content warning
+      if (check.flag === 'crude') msg.moderated = 'auto';
       messages.push(msg);
       const trimmed = messages.sort((a, b) => b.ts - a.ts).slice(0, 200);
       await saveMessages(trimmed);
@@ -123,6 +171,96 @@ export default async function handler(req, res) {
         }
       }
       return res.json({ ok: true });
+    }
+
+    // Admin moderation — mark a message as moderated or remove it entirely
+    if (action === 'moderate') {
+      const adminKey = process.env.ADMIN_KEY;
+      const provided = body.adminKey;
+      if (!adminKey || provided !== adminKey) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+
+      const { id, type } = body; // type: 'warn' | 'remove' | 'clear'
+      if (!id) return res.status(400).json({ error: 'Missing id' });
+
+      const messages = await getMessages();
+      const msg = messages.find(m => m.id === id);
+
+      if (type === 'remove') {
+        if (msg?.fp) await recordStrike(msg.fp, 'admin-remove', 'wall', msg.text);
+        const filtered = messages.filter(m => m.id !== id);
+        await saveMessages(filtered);
+        return res.json({ ok: true, action: 'removed' });
+      }
+      if (type === 'clear') {
+        if (msg) { delete msg.moderated; await saveMessages(messages); }
+        return res.json({ ok: true, action: 'cleared' });
+      }
+      // Default: warn — grey out with content warning
+      if (msg) {
+        msg.moderated = 'admin';
+        await saveMessages(messages);
+        if (msg.fp) await recordStrike(msg.fp, 'admin-warn', 'wall', msg.text);
+      }
+      return res.json({ ok: true, action: 'warned' });
+    }
+
+    // Admin: rescan all existing messages against current filters
+    if (action === 'rescan') {
+      const adminKey = process.env.ADMIN_KEY;
+      const provided = body.adminKey;
+      if (!adminKey || provided !== adminKey) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+
+      const messages = await getMessages();
+      let flagged = 0;
+      for (const msg of messages) {
+        if (msg.moderated) continue;
+        const check = moderateMessage(msg.text, { minLen: 3, maxLen: 140 });
+        if (check.flag === 'crude') {
+          msg.moderated = 'auto';
+          flagged++;
+          if (msg.fp) await recordStrike(msg.fp, 'crude', 'wall-rescan', msg.text);
+        }
+      }
+      if (flagged > 0) await saveMessages(messages);
+      return res.json({ ok: true, scanned: messages.length, flagged });
+    }
+
+    // Admin: view flagged users with strike history
+    if (action === 'flagged-users') {
+      const adminKey = process.env.ADMIN_KEY;
+      const provided = body.adminKey;
+      if (!adminKey || provided !== adminKey) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+      const strikes = await getStrikes();
+      const users = Object.entries(strikes).map(([fp, data]) => ({
+        fp,
+        banned: data.banned || false,
+        totalIncidents: data.incidents.length,
+        lastIncident: data.incidents.length > 0 ? data.incidents[data.incidents.length - 1].ts : 0,
+        incidents: data.incidents.slice(-10),
+      })).sort((a, b) => b.totalIncidents - a.totalIncidents);
+      return res.json({ ok: true, users });
+    }
+
+    // Admin: ban or unban a user from social features
+    if (action === 'ban-user') {
+      const adminKey = process.env.ADMIN_KEY;
+      const provided = body.adminKey;
+      if (!adminKey || provided !== adminKey) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+      const { fp: targetFp, banned } = body;
+      if (!targetFp) return res.status(400).json({ error: 'Missing fp' });
+      const strikes = await getStrikes();
+      if (!strikes[targetFp]) strikes[targetFp] = { incidents: [], banned: false };
+      strikes[targetFp].banned = banned !== false;
+      await saveStrikes(strikes);
+      return res.json({ ok: true, banned: strikes[targetFp].banned });
     }
 
     return res.status(400).json({ error: 'Unknown action' });

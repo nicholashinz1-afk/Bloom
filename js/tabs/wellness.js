@@ -503,6 +503,7 @@ async function generateWeeklyInsight(e) {
     breathSessions > 0 ? `did ${breathSessions} breathing session${breathSessions > 1 ? 's' : ''}` : null,
   ].filter(Boolean).join(', ');
 
+  trackFeature('weekly_insight');
   const ai = await callClaude(
     `Write a weekly insight for a mental wellness app user. This week: ${avgMood ? `average mood ${avgMood}/4` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}. Small wins they logged: ${weekWins.length > 0 ? weekWins.slice(0,5).join(', ') : 'none this week'}.
 

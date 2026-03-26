@@ -96,8 +96,8 @@
     white-space: nowrap; margin-bottom: 4px; pointer-events: none;
   }
   .chart-bar:hover .tooltip { display: block; }
-  .chart-labels { display: flex; gap: 3px; }
-  .chart-labels span { flex: 1; min-width: 8px; font-size: 9px; color: var(--text-muted); text-align: center; }
+  .chart-labels { display: flex; justify-content: space-between; }
+  .chart-labels span { font-size: 9px; color: var(--text-muted); text-align: center; }
 
   /* Feature heatmap */
   .feature-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
@@ -180,6 +180,47 @@
   .refresh-bar .last-refresh { font-size: 12px; color: var(--text-muted); }
   .refresh-bar .auto-label { font-size: 12px; color: var(--text-muted); margin-left: auto; }
   .loading { color: var(--text-muted); font-size: 13px; padding: 20px; text-align: center; }
+
+  /* Wall moderation */
+  .wall-admin-msg {
+    padding: 14px; margin-bottom: 8px; background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06); border-radius: var(--r-md);
+    transition: opacity 0.2s;
+  }
+  .wall-admin-msg.is-moderated { border-left: 3px solid var(--amber); opacity: 0.7; }
+  .wall-admin-msg.is-reported { border-left: 3px solid var(--red); }
+  .wall-msg-text { font-size: 14px; font-style: italic; line-height: 1.5; margin-bottom: 8px; }
+  .wall-msg-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 11px; color: var(--text-muted); }
+  .wall-msg-actions { display: flex; gap: 6px; margin-left: auto; }
+  .wall-msg-actions button {
+    padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04); color: var(--text-secondary); font-size: 11px; cursor: pointer;
+  }
+  .wall-msg-actions button:hover { background: rgba(255,255,255,0.08); }
+  .wall-msg-actions button.warn { border-color: rgba(201,149,74,0.3); color: var(--amber-light); }
+  .wall-msg-actions button.remove { border-color: rgba(212,93,93,0.3); color: var(--red); }
+  .wall-msg-actions button.clear { border-color: rgba(122,158,126,0.3); color: var(--sage-light); }
+  .wall-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+  .wall-badge.auto { background: rgba(201,149,74,0.12); color: var(--amber-light); }
+  .wall-badge.admin { background: rgba(212,93,93,0.12); color: var(--red); }
+  .wall-badge.reported { background: rgba(212,93,93,0.08); color: #e88; }
+
+  /* Flagged users */
+  .flagged-user {
+    padding: 14px; margin-bottom: 8px; background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06); border-radius: var(--r-md);
+  }
+  .flagged-user.is-banned { border-left: 3px solid var(--red); background: rgba(212,93,93,0.03); }
+  .flagged-user-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .flagged-user-fp { font-family: monospace; font-size: 12px; color: var(--text-secondary); }
+  .flagged-user-stats { display: flex; gap: 12px; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+  .flagged-user-incidents { font-size: 12px; color: var(--text-muted); }
+  .flagged-user-incidents summary { cursor: pointer; margin-bottom: 6px; }
+  .flagged-user-incidents summary:hover { color: var(--text-secondary); }
+  .incident-item { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 11px; display: flex; gap: 8px; align-items: baseline; }
+  .incident-reason { color: var(--amber-light); min-width: 80px; }
+  .incident-text { color: var(--text-secondary); font-style: italic; flex: 1; }
+  .incident-time { color: var(--text-muted); white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -218,6 +259,7 @@
     <div class="tab-btn" onclick="switchAdminTab('events')">Events</div>
     <div class="tab-btn" onclick="switchAdminTab('features')">Features</div>
     <div class="tab-btn" onclick="switchAdminTab('agents')">Agents</div>
+    <div class="tab-btn" onclick="switchAdminTab('wall')">Wall</div>
   </div>
 
   <!-- Overview -->
@@ -308,6 +350,44 @@
       </div>
     </div>
   </div>
+
+  <!-- Wall Moderation -->
+  <div class="tab-panel" id="panel-wall">
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h2>Encouragement Wall Moderation</h2>
+        <div style="display:flex;gap:8px">
+          <button onclick="rescanWallMessages()" style="padding:6px 14px;background:rgba(201,149,74,0.2);color:var(--amber-light);border:1px solid rgba(201,149,74,0.3);border-radius:var(--r-md);font-size:12px;font-weight:500;cursor:pointer">Re-scan all</button>
+          <button onclick="loadWallMessages()" style="padding:6px 14px;background:var(--sage);color:#0a1a0b;border:none;border-radius:var(--r-md);font-size:12px;font-weight:600;cursor:pointer">Refresh</button>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+        Review and moderate wall messages. Warned messages appear greyed out with a content warning for users.
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button onclick="filterWallView('all')" class="wall-filter active" style="padding:5px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:16px;color:var(--cream);font-size:12px;cursor:pointer">All</button>
+        <button onclick="filterWallView('moderated')" class="wall-filter" style="padding:5px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;color:var(--text-secondary);font-size:12px;cursor:pointer">Moderated</button>
+        <button onclick="filterWallView('reported')" class="wall-filter" style="padding:5px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;color:var(--text-secondary);font-size:12px;cursor:pointer">Reported</button>
+        <button onclick="filterWallView('clean')" class="wall-filter" style="padding:5px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;color:var(--text-secondary);font-size:12px;cursor:pointer">Clean</button>
+      </div>
+      <div id="wall-admin-list">
+        <div class="loading">Click "Refresh" to load wall messages.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h2>Flagged Users</h2>
+        <button onclick="loadFlaggedUsers()" style="padding:6px 14px;background:var(--sage);color:#0a1a0b;border:none;border-radius:var(--r-md);font-size:12px;font-weight:600;cursor:pointer">Refresh</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+        Users with moderation strikes from automated filters or admin actions. Banning blocks them from posting on the wall.
+      </div>
+      <div id="flagged-users-list">
+        <div class="loading">Click "Refresh" to load flagged users.</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -389,13 +469,13 @@ function renderOverview() {
   const d = dashboardData;
   const fb = d.aiFeedback;
   const totalFb7 = fb.last7Days.yes + fb.last7Days.no;
-  const helpfulRate7 = totalFb7 > 0 ? Math.round((fb.last7Days.yes / totalFb7) * 100) : 0;
-  const rateClass = helpfulRate7 >= 70 ? 'good' : helpfulRate7 >= 50 ? 'warn' : 'bad';
+  const helpfulRate7 = totalFb7 > 0 ? Math.round((fb.last7Days.yes / totalFb7) * 100) : null;
+  const rateClass = helpfulRate7 === null ? '' : helpfulRate7 >= 70 ? 'good' : helpfulRate7 >= 50 ? 'warn' : 'bad';
 
   // Calculate today's total events from dailyStats
   const today = new Date().toISOString().slice(0, 10);
   const todayStats = d.dailyStats[today] || {};
-  const todayTotal = Object.entries(todayStats).filter(([k]) => !k.startsWith('_')).reduce((a, [,b]) => a + b, 0);
+  const todayTotal = Object.entries(todayStats).filter(([k]) => !k.startsWith('_') && k !== 'unique_users').reduce((a, [,b]) => a + (typeof b === 'number' ? b : 0), 0);
   const todayUniqueUsers = todayStats.unique_users || 0;
 
   // Calculate running unique users (30-day)
@@ -425,7 +505,7 @@ function renderOverview() {
       <div style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">
       ${Object.entries(todayStats).filter(([k]) => !k.startsWith('_') && k !== 'unique_users').sort(([,a],[,b]) => b - a).slice(0, 5).map(([k, v]) => `
         <div class="stat-row">
-          <span class="stat-label" style="font-size:12px">${k.replace('feature:', '').replace('event:', '')}</span>
+          <span class="stat-label" style="font-size:12px">${formatName(k)}</span>
           <span style="font-size:13px;color:var(--text-secondary)">${v}</span>
         </div>
       `).join('')}
@@ -436,7 +516,7 @@ function renderOverview() {
       <h3>AI Feedback (7 days)</h3>
       <div class="stat-row">
         <span class="stat-label">Helpful rate</span>
-        <span class="stat-value ${rateClass}">${helpfulRate7}%</span>
+        <span class="stat-value ${rateClass}">${helpfulRate7 === null ? 'No data' : helpfulRate7 + '%'}</span>
       </div>
       <div class="fb-bar">
         <div class="fb-yes" style="width:${totalFb7 > 0 ? (fb.last7Days.yes/totalFb7)*100 : 50}%"></div>
@@ -460,24 +540,30 @@ function renderOverview() {
     </div>
   `;
 
-  // Daily chart
-  const dates = Object.keys(d.dailyStats).sort();
-  if (dates.length > 0) {
+  // Daily chart — show all 30 days including empty ones
+  const chartTotal = (stats) => Object.entries(stats).filter(([k]) => !k.startsWith('_') && k !== 'unique_users').reduce((a,[,b]) => a + (typeof b === 'number' ? b : 0), 0);
+  const allChartDates = [];
+  for (let i = 29; i >= 0; i--) {
+    const dt = new Date(); dt.setDate(dt.getDate() - i);
+    allChartDates.push(dt.toISOString().slice(0, 10));
+  }
+  const hasAnyData = Object.keys(d.dailyStats).length > 0;
+  if (hasAnyData) {
     document.getElementById('daily-chart-card').style.display = 'block';
-    const chartTotal = (stats) => Object.entries(stats).filter(([k]) => !k.startsWith('_') && k !== 'unique_users').reduce((a,[,b]) => a + (typeof b === 'number' ? b : 0), 0);
-    const maxVal = Math.max(...dates.map(dt => chartTotal(d.dailyStats[dt])), 1);
+    const maxVal = Math.max(...allChartDates.map(dt => chartTotal(d.dailyStats[dt] || {})), 1);
     document.getElementById('daily-chart').innerHTML = `
       <div class="chart">
-        ${dates.map(dt => {
-          const total = chartTotal(d.dailyStats[dt]);
+        ${allChartDates.map(dt => {
+          const stats = d.dailyStats[dt] || {};
+          const total = chartTotal(stats);
           const pct = (total / maxVal) * 100;
-          return `<div class="chart-bar" style="height:${Math.max(2, pct)}%">
+          return `<div class="chart-bar" style="height:${Math.max(pct > 0 ? 2 : 0, pct)}%;${total === 0 ? 'opacity:0.2;min-height:2px' : ''}" title="${dt}: ${total}">
             <div class="tooltip">${dt}: ${total} events</div>
           </div>`;
         }).join('')}
       </div>
       <div class="chart-labels">
-        ${dates.map(dt => `<span>${dt.slice(8)}</span>`).join('')}
+        ${allChartDates.filter((_, i) => i % 5 === 0 || i === allChartDates.length - 1).map(dt => `<span>${dt.slice(5)}</span>`).join('')}
       </div>
     `;
   }
@@ -486,11 +572,11 @@ function renderOverview() {
 function renderAIFeedback() {
   const fb = dashboardData.aiFeedback;
   const total30 = fb.last30Days.yes + fb.last30Days.no;
-  const rate30 = total30 > 0 ? Math.round((fb.last30Days.yes / total30) * 100) : 0;
+  const rate30 = total30 > 0 ? Math.round((fb.last30Days.yes / total30) * 100) : null;
 
   document.getElementById('ai-summary-card').innerHTML = `
     <h2>AI Reflection Feedback</h2>
-    <div class="stat-row"><span class="stat-label">30-day helpful rate</span><span class="stat-value ${rate30 >= 70 ? 'good' : rate30 >= 50 ? 'warn' : 'bad'}">${rate30}%</span></div>
+    <div class="stat-row"><span class="stat-label">30-day helpful rate</span><span class="stat-value ${rate30 === null ? '' : rate30 >= 70 ? 'good' : rate30 >= 50 ? 'warn' : 'bad'}">${rate30 === null ? 'No data' : rate30 + '%'}</span></div>
     <div class="fb-bar">
       <div class="fb-yes" style="width:${total30 > 0 ? (fb.last30Days.yes/total30)*100 : 50}%"></div>
       <div class="fb-no" style="width:${total30 > 0 ? (fb.last30Days.no/total30)*100 : 50}%"></div>
@@ -577,7 +663,7 @@ function renderFeatures() {
     ${features.length === 0 ? '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No feature usage recorded today.</div>' : ''}
     ${features.map(f => `
       <div class="feature-row">
-        <span class="feature-name">${f.name}</span>
+        <span class="feature-name">${formatName(f.name)}</span>
         <div class="feature-bar-bg"><div class="feature-bar" style="width:${(f.count/maxToday)*100}%"></div></div>
         <span class="feature-count">${f.count}</span>
       </div>
@@ -591,7 +677,7 @@ function renderFeatures() {
     Object.entries(day).forEach(([k, v]) => {
       if (k.startsWith('feature:')) {
         const name = k.replace('feature:', '');
-        featureTotals[name] = (featureTotals[name] || 0) + v;
+        featureTotals[name] = (featureTotals[name] || 0) + (typeof v === 'number' ? v : 0);
       }
     });
   });
@@ -605,7 +691,7 @@ function renderFeatures() {
     ${featureList30.length === 0 ? '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No data yet.</div>' : ''}
     ${featureList30.map(f => `
       <div class="feature-row">
-        <span class="feature-name">${f.name}</span>
+        <span class="feature-name">${formatName(f.name)}</span>
         <div class="feature-bar-bg"><div class="feature-bar" style="width:${(f.count/max30)*100}%"></div></div>
         <span class="feature-count">${f.count}</span>
       </div>
@@ -617,6 +703,14 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str || '';
   return div.innerHTML;
+}
+
+function formatName(key) {
+  // Strip prefixes and format underscored names for display
+  return key
+    .replace('feature:', '')
+    .replace('event:', '')
+    .replace(/_/g, ' ');
 }
 
 // ── Agent functions ──────────────────────────────────────
@@ -785,14 +879,214 @@ async function loadAgentHistory() {
 }
 
 // Load agent history when switching to agents tab
-const origSwitchTab = switchAdminTab;
 switchAdminTab = function(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   event.target.classList.add('active');
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'agents') loadAgentHistory();
+  if (tab === 'wall') { loadWallMessages(); loadFlaggedUsers(); }
 };
+
+// ── Wall moderation ──────────────────────────────────────
+let wallAdminMessages = [];
+let wallFilter = 'all';
+
+async function loadWallMessages() {
+  const container = document.getElementById('wall-admin-list');
+  container.innerHTML = '<div class="loading">Loading wall messages...</div>';
+  try {
+    const res = await fetch('/api/wall');
+    const data = await res.json();
+    wallAdminMessages = data.messages || [];
+    renderWallAdmin();
+  } catch(e) {
+    container.innerHTML = '<div class="loading" style="color:var(--red)">Failed to load: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+function filterWallView(filter) {
+  wallFilter = filter;
+  document.querySelectorAll('.wall-filter').forEach(b => {
+    b.classList.remove('active');
+    b.style.background = 'rgba(255,255,255,0.04)';
+    b.style.color = 'var(--text-secondary)';
+    b.style.borderColor = 'rgba(255,255,255,0.08)';
+  });
+  event.target.classList.add('active');
+  event.target.style.background = 'rgba(255,255,255,0.08)';
+  event.target.style.color = 'var(--cream)';
+  event.target.style.borderColor = 'rgba(255,255,255,0.12)';
+  renderWallAdmin();
+}
+
+function renderWallAdmin() {
+  const container = document.getElementById('wall-admin-list');
+  let msgs = wallAdminMessages;
+
+  if (wallFilter === 'moderated') msgs = msgs.filter(m => m.moderated);
+  else if (wallFilter === 'reported') msgs = msgs.filter(m => m.reports > 0);
+  else if (wallFilter === 'clean') msgs = msgs.filter(m => !m.moderated && !(m.reports > 0));
+
+  if (msgs.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:16px;text-align:center">No messages match this filter.</div>';
+    return;
+  }
+
+  container.innerHTML = msgs.map(msg => {
+    const classes = ['wall-admin-msg'];
+    if (msg.moderated) classes.push('is-moderated');
+    if (msg.reports > 0) classes.push('is-reported');
+
+    let badges = '';
+    if (msg.moderated === 'auto') badges += '<span class="wall-badge auto">auto-flagged</span> ';
+    if (msg.moderated === 'admin') badges += '<span class="wall-badge admin">admin-warned</span> ';
+    if (msg.reports > 0) badges += '<span class="wall-badge reported">' + msg.reports + ' report' + (msg.reports > 1 ? 's' : '') + '</span> ';
+
+    const safeId = escapeHtml(msg.id);
+    const actions = msg.moderated
+      ? `<button class="clear" onclick="moderateWallMsg('${safeId}','clear')">Clear warning</button>
+         <button class="remove" onclick="moderateWallMsg('${safeId}','remove')">Remove</button>`
+      : `<button class="warn" onclick="moderateWallMsg('${safeId}','warn')">Warn</button>
+         <button class="remove" onclick="moderateWallMsg('${safeId}','remove')">Remove</button>`;
+
+    return `<div class="${classes.join(' ')}">
+      <div class="wall-msg-text">"${escapeHtml(msg.text)}"</div>
+      <div class="wall-msg-meta">
+        ${badges}
+        <span>${msg.hearts || 0} hearts</span>
+        <span>${timeAgo(msg.ts)}</span>
+        <span style="opacity:0.5">id: ${msg.id}</span>
+        <div class="wall-msg-actions">${actions}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function moderateWallMsg(id, type) {
+  if (type === 'remove' && !confirm('Remove this message permanently?')) return;
+  try {
+    const res = await fetch('/api/wall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'moderate', id, type, adminKey }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      await loadWallMessages();
+    } else {
+      alert('Moderation failed: ' + (data.error || 'Unknown error'));
+    }
+  } catch(e) {
+    alert('Network error: ' + e.message);
+  }
+}
+
+async function rescanWallMessages() {
+  if (!confirm('Re-scan all wall messages against current moderation filters?\n\nThis will flag any existing messages that match the crude/off-topic filter and record strikes against their authors.')) return;
+  try {
+    const res = await fetch('/api/wall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'rescan', adminKey }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      alert(`Scan complete: ${data.scanned} messages scanned, ${data.flagged} newly flagged.`);
+      loadWallMessages();
+      loadFlaggedUsers();
+    } else {
+      alert('Rescan failed: ' + (data.error || 'Unknown error'));
+    }
+  } catch(e) {
+    alert('Network error: ' + e.message);
+  }
+}
+
+// ── Flagged users ────────────────────────────────────────
+let flaggedUsers = [];
+
+async function loadFlaggedUsers() {
+  const container = document.getElementById('flagged-users-list');
+  container.innerHTML = '<div class="loading">Loading flagged users...</div>';
+  try {
+    const res = await fetch('/api/wall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'flagged-users', adminKey }),
+    });
+    const data = await res.json();
+    flaggedUsers = data.users || [];
+    renderFlaggedUsers();
+  } catch(e) {
+    container.innerHTML = '<div class="loading" style="color:var(--red)">Failed to load: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+function renderFlaggedUsers() {
+  const container = document.getElementById('flagged-users-list');
+
+  if (flaggedUsers.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:16px;text-align:center">No flagged users yet.</div>';
+    return;
+  }
+
+  container.innerHTML = flaggedUsers.map(user => {
+    const classes = ['flagged-user'];
+    if (user.banned) classes.push('is-banned');
+
+    const safeFp = escapeHtml(user.fp);
+    const banBtn = user.banned
+      ? `<button class="clear" onclick="toggleBanUser('${safeFp}', false)">Unban</button>`
+      : `<button class="remove" onclick="toggleBanUser('${safeFp}', true)">Ban from social</button>`;
+
+    return `<div class="${classes.join(' ')}">
+      <div class="flagged-user-header">
+        <div>
+          <span class="flagged-user-fp">${escapeHtml(user.fp)}</span>
+          ${user.banned ? ' <span class="wall-badge admin">BANNED</span>' : ''}
+        </div>
+        <div class="wall-msg-actions">${banBtn}</div>
+      </div>
+      <div class="flagged-user-stats">
+        <span>${user.totalIncidents} strike${user.totalIncidents !== 1 ? 's' : ''}</span>
+        <span>Last: ${timeAgo(user.lastIncident)}</span>
+      </div>
+      ${user.incidents.length > 0 ? `
+        <details class="flagged-user-incidents">
+          <summary>Recent incidents (${user.incidents.length})</summary>
+          ${user.incidents.slice().reverse().map(inc => `
+            <div class="incident-item">
+              <span class="incident-reason">${escapeHtml(inc.reason)}</span>
+              <span class="incident-text">${inc.text ? '"' + escapeHtml(inc.text) + '"' : ''}</span>
+              <span class="incident-time">${timeAgo(inc.ts)}</span>
+            </div>
+          `).join('')}
+        </details>
+      ` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function toggleBanUser(fp, ban) {
+  const action = ban ? 'ban this user from all social features' : 'unban this user';
+  if (!confirm(`Are you sure you want to ${action}?\n\nFingerprint: ${fp}`)) return;
+  try {
+    const res = await fetch('/api/wall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'ban-user', fp, banned: ban, adminKey }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      await loadFlaggedUsers();
+    } else {
+      alert('Failed: ' + (data.error || 'Unknown error'));
+    }
+  } catch(e) {
+    alert('Network error: ' + e.message);
+  }
+}
 
 // Auto-focus the key input
 document.getElementById('admin-key-input').focus();

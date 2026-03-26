@@ -48,6 +48,7 @@ function validateEvent(body) {
     'wall_post', 'onboarding_complete', 'encrypted_backup',
     'api_timing', 'health_check', 'error_boundary',
     'idb_slow', 'idb_error', 'session_diagnostics', 'mood_pattern', 'ai_journey',
+    'winddown_started', 'winddown_completed',
   ];
   if (!type || !allowed.includes(type)) return false;
   return true;

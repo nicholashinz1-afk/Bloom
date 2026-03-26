@@ -377,8 +377,18 @@ function renderHistoryTab() {
 }
 
 function openHistoryDetail(dateStr) {
-  const entry = state.historyData[dateStr];
-  if (!entry) return;
+  let entry = state.historyData[dateStr];
+
+  // If no historyData entry, build a minimal one from wellnessData journal
+  if (!entry) {
+    const journalEntries = getJournalEntries(dateStr);
+    if (journalEntries.length === 0) return;
+    entry = { journalEntries };
+  } else if (!entry.journalEntries?.length && !entry.journal) {
+    // historyData exists but has no journal — pull from wellnessData
+    const journalEntries = getJournalEntries(dateStr);
+    if (journalEntries.length > 0) entry = { ...entry, journalEntries };
+  }
 
   const date = new Date(dateStr + 'T00:00:00');
   const moodEmojis = ['😔 Low','😕 Rough','😐 Okay','🙂 Good','😊 Great'];

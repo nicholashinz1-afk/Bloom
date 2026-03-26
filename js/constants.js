@@ -1,5 +1,5 @@
 // Bloom constants — all static data, quotes, habit definitions, levels, celebrations
-export const VERSION = '2.9.1';
+export const VERSION = '2.10.3';
 
 export const WHATS_NEW = [
   { text: 'Journal entries now save individually — write multiple times a day and each entry is preserved with its own AI response. You\'ll see a count of how many entries you\'ve saved.', spotlight: null, tab: 'wellness', featured: true },
