@@ -3000,7 +3000,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '2.10.3';
+const VERSION = '2.11.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -3046,10 +3046,9 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'Journal entries now save individually — write multiple times a day and each entry is preserved with its own AI response. You\'ll see a count of how many entries you\'ve saved.', spotlight: null, tab: 'wellness', featured: true },
-  { text: 'Go to therapy — a new weekly habit you can track in the Weekly tab. Set how many sessions per week and get celebrated for showing up. Because asking for help is strength.', spotlight: null, tab: 'weekly', featured: true },
-  { text: 'Reframe history — your past cognitive reframes are now saved and viewable anytime from the Wellness tab. Revisit the kinder perspectives you\'ve found.', spotlight: null, tab: 'wellness' },
-  { text: 'Therapist export now includes individual journal entries with timestamps and your cognitive reframe history — more context for your care team.', spotlight: null },
+  { text: 'Retroactive tracking — tap any past day in your history to fill in habits and self-care you forgot to log. Your progress still counts, even when you remember it late.', spotlight: null, tab: 'weekly', featured: true },
+  { text: 'Self-care now shows in history — your past self-care activities are now visible when viewing any past day, not just daily habits.', spotlight: null, tab: 'weekly' },
+  { text: 'Refreshed journal prompts — new prompts to help you reflect in different ways, meeting you wherever you are.', spotlight: null, tab: 'wellness' },
 ];
 
 // ============================================================
@@ -3497,7 +3496,8 @@ function showXPFloat(amount, el) {
   const rect = el.getBoundingClientRect();
   const div = document.createElement('div');
   div.className = 'xp-float';
-  div.textContent = `+${amount} ☀️`;
+  div.textContent = amount >= 0 ? `+${amount} ☀️` : `${amount} ☀️`;
+  if (amount < 0) div.style.color = 'var(--rose-dim)';
   div.style.left = (rect.left + rect.width/2 - 30) + 'px';
   div.style.top = (rect.top - 10) + 'px';
   document.body.appendChild(div);
@@ -7288,6 +7288,7 @@ function renderTodayTop() {
         </div>
         <div class="banner-actions">
           <div class="banner-action" onclick="dismissWelcomeBack(null)">Let's go</div>
+          <div class="banner-action" onclick="dismissWelcomeBack(null);switchTab('weekly');setTimeout(()=>{const h=document.querySelector('.section-label');if(h&&h.textContent.includes('history'))h.scrollIntoView({behavior:'smooth',block:'start'})},150)" style="opacity:0.7">Fill in past days</div>
         </div>
       </div>
     </div>`;
@@ -8319,6 +8320,7 @@ function renderWeeklyTab() {
 
   if (dates.length > 0) {
     html += `<div class="section-label">📅 Recent history</div>`;
+    html += `<div style="font-size:12px;color:var(--text-muted);margin-top:-4px;margin-bottom:10px;line-height:1.5">Tap any day to view or update things you forgot to log.</div>`;
     let currentMonth = '';
     dates.forEach(d => {
       const dt = new Date(d + 'T00:00:00');
@@ -8329,8 +8331,12 @@ function renderWeeklyTab() {
       }
       const day = history[d];
       const moodE = day.mood !== undefined ? (day.mood === -1 ? '🤷' : moodEmojis[day.mood]) : '·';
-      const habitsArr = day.habits ? Object.entries(day.habits).filter(([_,v]) => v) : [];
-      const habitsStr = habitsArr.length > 0 ? `${habitsArr.length} habits` : '';
+      const _histHabitNames = { m_teeth:1, e_teeth:1, w_shower:1, w_exercise:1, w_outside:1, w_therapy:1, brush_teeth_am:1, brush_teeth_pm:1, brush_hair_am:1, brush_hair_pm:1, wash_face_am:1, wash_face_pm:1, get_dressed_am:1, get_dressed_pm:1, floss_am:1, floss_pm:1, skincare_am:1, skincare_pm:1, medication_am:1, medication_pm:1, medication_any:1, brush_teeth_any:1, brush_hair_any:1, wash_face_any:1, get_dressed_any:1, floss_any:1, skincare_any:1 };
+      const habitCount = day.habits ? Object.entries(day.habits).filter(([k,v]) => v === true && k in _histHabitNames).length : 0;
+      const scData = day.habits?.selfCare || {};
+      const scCount = Object.values(scData).filter(Boolean).length;
+      const habitsStr = habitCount > 0 ? `${habitCount} habit${habitCount !== 1 ? 's' : ''}` : '';
+      const scStr = scCount > 0 ? `${scCount} self-care` : '';
       const journal = day.journal ? '📝' : '';
 
       html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px;cursor:pointer" onclick="openHistoryDetail('${d}')">
@@ -8338,7 +8344,7 @@ function renderWeeklyTab() {
           <div style="font-size:22px;width:30px;text-align:center">${moodE}</div>
           <div style="flex:1">
             <div style="font-size:13px;color:var(--cream)">${dt.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'})}</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${[habitsStr, journal].filter(Boolean).join(' · ') || 'No data'}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${[habitsStr, scStr, journal].filter(Boolean).join(' · ') || 'No data'}</div>
           </div>
           <div style="color:var(--text-muted);font-size:16px">›</div>
         </div>
@@ -9654,8 +9660,13 @@ function openHistoryDetail(dateStr) {
   // If no historyData entry, build a minimal one from wellnessData journal
   if (!entry) {
     const journalEntries = getJournalEntries(dateStr);
-    if (journalEntries.length === 0) return;
-    entry = { journalEntries };
+    if (journalEntries.length === 0) {
+      // Create empty entry so user can retroactively fill in habits/self-care
+      state.historyData[dateStr] = { habits: {} };
+      entry = state.historyData[dateStr];
+    } else {
+      entry = { journalEntries };
+    }
   } else if (!entry.journalEntries?.length && !entry.journal) {
     // historyData exists but has no journal — pull from wellnessData
     const journalEntries = getJournalEntries(dateStr);
@@ -9690,15 +9701,64 @@ function openHistoryDetail(dateStr) {
     brush_teeth_any:'Brush teeth', brush_hair_any:'Brush hair', wash_face_any:'Wash face',
     get_dressed_any:'Get dressed', floss_any:'Floss', skincare_any:'Skincare',
   };
-  const habitKeys = Object.keys(habits).filter(k => k in habitNames);
+
+  // Build union of stored habit keys + user's currently configured habits
+  const userHabitKeys = new Set();
+  const dhPrefs = state.prefs?.dailyHabits || {};
+  const htPrefs = state.prefs?.habitTimes || {};
+  const allConfiguredHabits = [...DAILY_HABITS].filter(h => dhPrefs[h.id]);
+  if (dhPrefs.medication) allConfiguredHabits.push(MEDICATION_HABIT);
+  allConfiguredHabits.forEach(h => {
+    const time = htPrefs[h.id] || h.defaultTime || 'any';
+    if (time === 'both') {
+      userHabitKeys.add(h.id + '_am');
+      userHabitKeys.add(h.id + '_pm');
+    } else if (time === 'am') {
+      userHabitKeys.add(h.id + '_am');
+    } else if (time === 'pm') {
+      userHabitKeys.add(h.id + '_pm');
+    } else {
+      userHabitKeys.add(h.id + '_any');
+    }
+  });
+  // Also include any keys already stored in this entry's history
+  Object.keys(habits).forEach(k => { if (k in habitNames) userHabitKeys.add(k); });
+
+  const habitKeys = [...userHabitKeys].filter(k => k in habitNames);
 
   if (habitKeys.length > 0) {
-    html += '<div style="margin:12px 0">';
+    html += `<div style="margin:12px 0">
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Daily habits</div>
+        <div style="font-size:11px;color:var(--text-muted);font-style:italic">Tap to update</div>
+      </div>`;
     habitKeys.forEach(h => {
-      const done = habits[h];
-      html += `<div style="display:flex;align-items:center;gap:8px;padding:5px 0">
-        <div style="width:20px;height:20px;border-radius:50%;background:${done?'var(--sage)':'var(--rose-dim)'};display:flex;align-items:center;justify-content:center;font-size:10px">${done?'✓':'×'}</div>
-        <div style="font-size:14px;color:${done?'var(--text-primary)':'var(--text-muted)'}">${habitNames[h]}</div>
+      const done = !!habits[h];
+      html += `<div onclick="toggleHistoryHabit('${dateStr}','${h}',this)" style="display:flex;align-items:center;gap:8px;padding:7px 0;cursor:pointer;-webkit-tap-highlight-color:rgba(255,255,255,0.05)">
+        <div style="width:20px;height:20px;border-radius:50%;background:${done?'var(--sage)':'rgba(255,255,255,0.08)'};border:${done?'none':'1.5px solid rgba(255,255,255,0.15)'};display:flex;align-items:center;justify-content:center;font-size:10px;color:${done?'var(--bg)':'var(--text-muted)'};transition:all 0.2s">${done?'✓':''}</div>
+        <div style="font-size:14px;color:${done?'var(--text-primary)':'var(--text-muted)'};transition:color 0.2s">${habitNames[h]}</div>
+      </div>`;
+    });
+    html += '</div><div class="divider"></div>';
+  }
+
+  // Self-care section: union of stored keys + user's currently enabled tasks
+  const storedSelfCare = habits.selfCare || {};
+  const enabledTasks = state.prefs?.selfCareTasks || [];
+  const selfCareKeySet = new Set([...Object.keys(storedSelfCare), ...enabledTasks]);
+  const selfCareTaskMap = {};
+  SELF_CARE_TASKS.forEach(t => { selfCareTaskMap[t.id] = t; });
+  const selfCareKeys = [...selfCareKeySet].filter(k => k in selfCareTaskMap);
+
+  if (selfCareKeys.length > 0) {
+    html += `<div style="margin:12px 0">
+      <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Self-care</div>`;
+    selfCareKeys.forEach(id => {
+      const task = selfCareTaskMap[id];
+      const done = !!storedSelfCare[id];
+      html += `<div onclick="toggleHistorySelfCare('${dateStr}','${id}',this)" style="display:flex;align-items:center;gap:8px;padding:7px 0;cursor:pointer;-webkit-tap-highlight-color:rgba(255,255,255,0.05)">
+        <div style="width:20px;height:20px;border-radius:50%;background:${done?'var(--sage)':'rgba(255,255,255,0.08)'};border:${done?'none':'1.5px solid rgba(255,255,255,0.15)'};display:flex;align-items:center;justify-content:center;font-size:10px;color:${done?'var(--bg)':'var(--text-muted)'};transition:all 0.2s">${done?'✓':''}</div>
+        <div style="font-size:14px;color:${done?'var(--text-primary)':'var(--text-muted)'};transition:color 0.2s">${task.icon} ${task.label}</div>
       </div>`;
     });
     html += '</div><div class="divider"></div>';
@@ -9730,6 +9790,56 @@ function openHistoryDetail(dateStr) {
 
   document.getElementById('history-sheet-content').innerHTML = html;
   openSheet('history-sheet');
+  state._historySheetDirty = false;
+}
+
+// Retroactive habit toggle for past days
+function toggleHistoryHabit(dateStr, key, el) {
+  if (!state.historyData[dateStr]) state.historyData[dateStr] = { habits: {} };
+  if (!state.historyData[dateStr].habits) state.historyData[dateStr].habits = {};
+  const habits = state.historyData[dateStr].habits;
+  const wasDone = !!habits[key];
+  habits[key] = !wasDone;
+
+  const xpVal = XP_VALUES[key] || 15;
+  if (!wasDone) {
+    state.xpData.total = (state.xpData.total || 0) + xpVal;
+    if (el) showXPFloat(xpVal, el);
+  } else {
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
+    if (el) showXPFloat(-xpVal, el);
+  }
+
+  haptic('light');
+  state._historySheetDirty = true;
+  saveState();
+  updateProgressTab();
+  openHistoryDetail(dateStr);
+}
+
+// Retroactive self-care toggle for past days
+function toggleHistorySelfCare(dateStr, taskId, el) {
+  if (!state.historyData[dateStr]) state.historyData[dateStr] = { habits: {} };
+  if (!state.historyData[dateStr].habits) state.historyData[dateStr].habits = {};
+  if (!state.historyData[dateStr].habits.selfCare) state.historyData[dateStr].habits.selfCare = {};
+  const sc = state.historyData[dateStr].habits.selfCare;
+  const wasDone = !!sc[taskId];
+  sc[taskId] = !wasDone;
+
+  const xpVal = 10;
+  if (!wasDone) {
+    state.xpData.total = (state.xpData.total || 0) + xpVal;
+    if (el) showXPFloat(xpVal, el);
+  } else {
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
+    if (el) showXPFloat(-xpVal, el);
+  }
+
+  haptic('light');
+  state._historySheetDirty = true;
+  saveState();
+  updateProgressTab();
+  openHistoryDetail(dateStr);
 }
 
 function openJournalHistory() {
@@ -11379,6 +11489,11 @@ function closeAllSheets() {
   document.querySelectorAll('.bottom-sheet.open').forEach(s => releaseFocusTrap(s));
   document.getElementById('sheet-backdrop').classList.remove('open');
   document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('open'));
+  // Re-render wellness tab if history was edited retroactively
+  if (state._historySheetDirty) {
+    state._historySheetDirty = false;
+    renderWeeklyTab();
+  }
 }
 
 function openCrisisSheet() { openSheet('crisis-sheet'); trackFeature('crisis'); trackEvent('crisis_opened'); }
