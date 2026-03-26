@@ -177,7 +177,7 @@ async function sendPush(playerId, title, message) {
         include_subscription_ids: [playerId],
         headings: { en: title },
         contents: { en: message },
-        url: 'https://bloomhabits.app',
+        url: 'https://bloom-zeta-rouge.vercel.app',
       }),
     });
     const result = await resp.json();
@@ -247,7 +247,7 @@ const MILESTONES = [7, 14, 30, 60, 100];
 
 // ── Main handler ────────────────────────────────────────────
 export default async function handler(req, res) {
-  const allowedOrigins = ['https://bloomhabits.app', 'http://localhost:3000'];
+  const allowedOrigins = ['https://bloom-zeta-rouge.vercel.app', 'http://localhost:3000'];
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);

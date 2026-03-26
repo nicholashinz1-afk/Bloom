@@ -368,7 +368,7 @@ Architecture:
 - Single-page app (index.html) deployed as static site
 - Vercel serverless API: claude.js (Anthropic proxy), buddy.js (Redis), wall.js (Redis), diagnostics.js (Redis)
 - localStorage primary + IndexedDB backup
-- CORS locked to bloomhabits.app + localhost:3000
+- CORS locked to bloom-zeta-rouge.vercel.app + localhost:3000
 - CSP headers configured in vercel.json
 - No user accounts/auth — data stays local unless using community features
 - Content moderation on buddy.js and wall.js (three-tier: blocked, flagged, allowed)
@@ -520,7 +520,7 @@ async function getReports() {
 
 // ── Handler ───────────────────────────────────────────────
 export default async function handler(req, res) {
-  const allowedOrigins = ['https://bloomhabits.app', 'http://localhost:3000'];
+  const allowedOrigins = ['https://bloom-zeta-rouge.vercel.app', 'http://localhost:3000'];
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);

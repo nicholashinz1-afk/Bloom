@@ -34,7 +34,7 @@ This is intentional for a mental health app. Don't block words like "hurt", "har
 ## Security Headers
 
 Configured in `vercel.json`: CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy.
-CORS is locked to `bloomhabits.app` + `localhost:3000` in the API files.
+CORS is locked to `bloom-zeta-rouge.vercel.app` + `localhost:3000` in the API files.
 
 ## Crisis Resources
 
@@ -48,8 +48,11 @@ Always accessible via the white heart button in the header.
 
 ## Accessibility
 
-Basic ARIA/semantic HTML added (header, main, nav landmarks; tab roles; aria-labels).
-More work needed — no full keyboard navigation, limited screen reader support beyond landmarks.
+- Semantic HTML: h1/h2 headings, header/main/nav landmarks, tab roles, aria-labels on all inputs
+- Keyboard navigation: all tabs, sheets, and features reachable; focus trapping in dialogs; focus restoration on close
+- WCAG AA color contrast (4.5:1 minimum), high contrast mode toggle, larger text mode toggle
+- 44px minimum touch targets, prefers-reduced-motion support
+- Crisis resources always keyboard and screen reader accessible
 
 ## Mental Health Design Principles
 
@@ -64,6 +67,6 @@ More work needed — no full keyboard navigation, limited screen reader support 
 
 Today | Weekly | Wellness | Progress | Community | Settings
 
-## Domain
+## Deployment
 
-https://bloomhabits.app
+https://bloom-zeta-rouge.vercel.app

@@ -95,7 +95,7 @@ function sanitizeError(msg) {
 }
 
 export default async function handler(req, res) {
-  const allowedOrigins = ['https://bloomhabits.app', 'http://localhost:3000'];
+  const allowedOrigins = ['https://bloom-zeta-rouge.vercel.app', 'http://localhost:3000'];
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
