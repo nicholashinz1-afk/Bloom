@@ -12165,6 +12165,20 @@ function renderSettingsTab() {
     <button class="btn btn-primary" onclick="shareApp()" style="background:var(--sage);color:#0a1a0b;padding:12px 32px;font-size:15px">🌿 Share bloom</button>
   </div>`;
 
+  // ── SUPPORT BLOOM (hidden until donation link is configured) ──
+  // To show this section, set SUPPORT_URL below to your Ko-fi, GitHub Sponsors, or Buy Me a Coffee link
+  const SUPPORT_URL = ''; // e.g. 'https://ko-fi.com/bloom' or 'https://github.com/sponsors/nicholashinz1-afk'
+  if (SUPPORT_URL) {
+    html += `
+    <div style="margin:8px 0 4px;padding:20px 16px;background:linear-gradient(135deg,rgba(var(--sage-rgb),0.08),rgba(201,149,74,0.06));border:1px solid rgba(var(--sage-rgb),0.15);border-radius:var(--r-xl);text-align:center">
+      <div style="font-size:28px;margin-bottom:10px">💛</div>
+      <div style="font-family:Fraunces,serif;font-size:17px;font-weight:300;color:var(--cream);margin-bottom:6px">Support bloom</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px">Bloom is free forever — no ads, no data selling, no investors. If it's helped you and you're able to, a small contribution helps keep it running.</div>
+      <a href="${SUPPORT_URL}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="background:var(--sage);color:#0a1a0b;padding:12px 32px;font-size:15px;text-decoration:none;display:inline-block">💛 Support bloom</a>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:10px">No pressure. Sharing bloom is just as meaningful.</div>
+    </div>`;
+  }
+
   html += `<div style="text-align:center;padding:20px 0 8px;font-size:11px;color:var(--text-muted)">bloom v${VERSION} · made with care 🌿</div>`;
 
   scroll.innerHTML = html;

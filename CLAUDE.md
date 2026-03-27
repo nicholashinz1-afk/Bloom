@@ -86,10 +86,12 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 
 ## Sustainability
 
-- **Open Collective:** Applied (pending approval for Open Source Collective fiscal sponsorship)
+- **Open Collective:** Rejected (project too early-stage for fiscal sponsorship — reapply when community grows)
+- **GitHub Sponsors:** Next step — set up via Stripe directly (no fiscal host needed)
+- **Ko-fi / Buy Me a Coffee:** Next step — simple donation page, zero overhead
 - **Vercel OSS:** Emailed partnerships@vercel.com for sponsorship
 - **Upstash OSS:** Applied via oss@upstash.com
-- **GitHub Sponsors:** Pending (waiting for Open Collective fiscal host approval first)
+- **Support link in Settings:** Added but hidden — set `SUPPORT_URL` in `index.html` `renderSettingsTab()` once donation page is live
 - **Contact:** bloomhabits@proton.me
 
 ## Scaling Roadmap
@@ -97,7 +99,7 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 See `SCALABILITY_PROPOSAL.md` for the full proposal. Summary of phases:
 1. **Quick wins (done)** — Haiku/Sonnet split, telemetry batching, accessibility fixes
 2. **Free AI tier (next)** — Cloudflare Workers AI as primary LLM, Claude as fallback
-3. **Sustainability** — Open Collective, grants (Mozilla, McGovern Foundation, Google.org)
+3. **Sustainability** — Ko-fi/GitHub Sponsors, grants (Mozilla doesn't require nonprofit), reapply Open Collective when community grows
 4. **Reach** — Internationalization, university partnerships, crisis org partnerships
 5. **Architecture** — Cloudflare Pages + Workers migration if Vercel limits are hit
 

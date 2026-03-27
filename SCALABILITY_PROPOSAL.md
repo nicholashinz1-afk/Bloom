@@ -171,7 +171,7 @@ These are real programs that exist today, ranked by how easy they are to set up:
 | **AWS for Nonprofits** | $2,000/yr AWS credits | aws.amazon.com/nonprofits (via TechSoup) |
 | **Microsoft AI for Good** | Azure credits + technical support | microsoft.com/ai/ai-for-good |
 
-**Why Open Collective matters:** It gives you fiscal sponsorship under their 501(c)(3) umbrella. That means you can accept tax-deductible donations and apply for grants -- without personally incorporating a nonprofit. This is the single most important non-technical step.
+**Open Collective update (March 2026):** Application was rejected — project is too early-stage for fiscal sponsorship. They recommend Ko-fi, Patreon, or Buy Me a Coffee for individual-led projects, and invite reapplication once community involvement grows. **Revised immediate path:** GitHub Sponsors (via Stripe, no fiscal host needed) + Ko-fi for simple donations. Grants requiring nonprofit status are deferred until either (a) Open Collective accepts a future application, or (b) an alternative fiscal sponsor is found.
 
 ---
 
@@ -242,11 +242,13 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 **Result: ~2,000-3,000 DAU capacity, ~$0-2/month**
 
 ### Phase 3 -- Sustainability (Month 2-3)
-- [ ] Set up Open Collective with fiscal sponsorship
-- [ ] Add a small, non-intrusive "Support Bloom" link in settings
+- [ ] Set up Ko-fi or Buy Me a Coffee page
+- [ ] Set up GitHub Sponsors (via Stripe)
+- [x] Add "Support Bloom" link in settings (hidden until donation URL is configured — set SUPPORT_URL in renderSettingsTab)
 - [ ] Apply for Cloudflare Project Galileo
-- [ ] Apply for Google/AWS nonprofit credits (via Open Collective fiscal sponsor)
-- [ ] Write and submit first grant application (Mozilla Foundation)
+- [ ] Reapply to Open Collective once community grows (contributors, issues, discussions)
+- [ ] Explore alternative fiscal sponsors (Software Freedom Conservancy, Hack Club, NumFOCUS)
+- [ ] Write and submit first grant application (Mozilla Foundation — doesn't require nonprofit status)
 
 **Result: Sustainable funding path, infrastructure credits covering costs**
 
