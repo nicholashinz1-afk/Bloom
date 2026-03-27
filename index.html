@@ -13208,66 +13208,84 @@ function _drawSocialCard(cfg, type, logoImg) {
   // Decorative circles
   ctx.globalAlpha = 0.04;
   ctx.beginPath();
-  ctx.arc(cfg.w * 0.85, cfg.h * 0.15, cfg.w * 0.3, 0, Math.PI * 2);
+  ctx.arc(cfg.w * 0.85, cfg.h * 0.2, cfg.w * 0.35, 0, Math.PI * 2);
   ctx.fillStyle = '#7a9e7e';
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(cfg.w * 0.1, cfg.h * 0.85, cfg.w * 0.25, 0, Math.PI * 2);
+  ctx.arc(cfg.w * 0.15, cfg.h * 0.8, cfg.w * 0.3, 0, Math.PI * 2);
   ctx.fillStyle = '#6a9ab0';
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  const logoX = 100 * s;
-  const logoY = type === 'twitter' ? cfg.h * 0.28 : cfg.h * 0.22;
-  const logoSize = 90 * s;
+  // Center everything vertically
+  const centerX = cfg.w / 2;
+  const logoSize = 120 * s;
+  const totalHeight = logoSize + 80 * s + 50 * s + 60 * s + 40 * s + 30 * s; // logo + gap + title + gap + tagline + gap + quote
+  const startY = (cfg.h - totalHeight) / 2;
 
-  // Draw real logo or fallback to circles
+  // Logo (centered)
   if (logoImg) {
-    ctx.drawImage(logoImg, logoX - 10 * s, logoY - 10 * s, logoSize, logoSize);
+    ctx.drawImage(logoImg, centerX - logoSize / 2, startY, logoSize, logoSize);
   } else {
-    const dotR = 22 * s;
-    const dotGap = 52 * s;
+    const dotR = 28 * s;
+    const dotGap = 64 * s;
+    const dotStartX = centerX - dotGap / 2;
+    const dotStartY = startY + logoSize / 2 - dotGap / 2;
     const dotColors = [['#7a9e7e', '#b07878'], ['#6a9ab0', '#c9954a']];
     dotColors.forEach((row, ri) => {
       row.forEach((color, ci) => {
         ctx.beginPath();
-        ctx.arc(logoX + ci * dotGap, logoY + ri * dotGap, dotR, 0, Math.PI * 2);
+        ctx.arc(dotStartX + ci * dotGap, dotStartY + ri * dotGap, dotR, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
       });
     });
   }
 
-  // "bloom" text
-  const titleY = logoY + logoSize + 50 * s;
-  ctx.font = `bold ${72 * s}px Georgia, 'Times New Roman', serif`;
+  // "bloom" text (centered)
+  const titleY = startY + logoSize + 80 * s;
+  ctx.font = `300 ${80 * s}px Georgia, 'Times New Roman', serif`;
   ctx.fillStyle = '#e8e0d0';
-  ctx.fillText('Bloom', logoX - 8 * s, titleY);
+  ctx.textAlign = 'center';
+  ctx.fillText('bloom', centerX, titleY);
 
-  // Tagline
+  // "a gentle self-care companion" (centered, italic)
   ctx.font = `italic ${26 * s}px Georgia, 'Times New Roman', serif`;
   ctx.fillStyle = '#a8c5ab';
-  ctx.fillText('a gentle self-care companion', logoX - 4 * s, titleY + 48 * s);
+  ctx.fillText('a gentle self-care companion', centerX, titleY + 50 * s);
 
-  // Features
-  const featureY = titleY + 110 * s;
-  ctx.font = `${22 * s}px -apple-system, Arial, sans-serif`;
-  ctx.fillStyle = '#8a9e8c';
-  const features = ['Free. Private. No accounts needed.', 'Mood tracking, journaling, breathing exercises.', 'Your data stays on your device.'];
+  // "No guilt. No pressure. Just you, showing up." (centered, in a subtle card)
+  const quoteY = titleY + 140 * s;
+  const quoteW = 600 * s;
+  const quoteH = 90 * s;
+  const quoteX = centerX - quoteW / 2;
+  ctx.fillStyle = 'rgba(122, 158, 126, 0.08)';
+  ctx.beginPath();
+  const qr = 16 * s;
+  ctx.moveTo(quoteX + qr, quoteY - quoteH / 2);
+  ctx.lineTo(quoteX + quoteW - qr, quoteY - quoteH / 2);
+  ctx.quadraticCurveTo(quoteX + quoteW, quoteY - quoteH / 2, quoteX + quoteW, quoteY - quoteH / 2 + qr);
+  ctx.lineTo(quoteX + quoteW, quoteY + quoteH / 2 - qr);
+  ctx.quadraticCurveTo(quoteX + quoteW, quoteY + quoteH / 2, quoteX + quoteW - qr, quoteY + quoteH / 2);
+  ctx.lineTo(quoteX + qr, quoteY + quoteH / 2);
+  ctx.quadraticCurveTo(quoteX, quoteY + quoteH / 2, quoteX, quoteY + quoteH / 2 - qr);
+  ctx.lineTo(quoteX, quoteY - quoteH / 2 + qr);
+  ctx.quadraticCurveTo(quoteX, quoteY - quoteH / 2, quoteX + qr, quoteY - quoteH / 2);
+  ctx.closePath();
+  ctx.fill();
 
-  if (type === 'twitter') {
-    ctx.fillText(features[0] + '  ' + features[2], logoX - 4 * s, featureY);
-  } else {
-    features.forEach((f, i) => {
-      ctx.fillText(f, logoX - 4 * s, featureY + i * 38 * s);
-    });
-  }
+  ctx.font = `italic ${28 * s}px Georgia, 'Times New Roman', serif`;
+  ctx.fillStyle = '#e8e0d0';
+  ctx.fillText('No guilt. No pressure.', centerX, quoteY - 6 * s);
+  ctx.fillText('Just you, showing up.', centerX, quoteY + 30 * s);
 
-  // URL
-  const urlY = type === 'twitter' ? cfg.h - 60 * s : cfg.h - 100 * s;
-  ctx.font = `${24 * s}px -apple-system, Arial, sans-serif`;
+  // URL at bottom
+  const urlY = cfg.h - 60 * s;
+  ctx.font = `500 ${22 * s}px -apple-system, Arial, sans-serif`;
   ctx.fillStyle = '#7a9e7e';
-  ctx.fillText('bloomselfcare.app', logoX - 4 * s, urlY);
+  ctx.fillText('bloomselfcare.app', centerX, urlY);
+
+  ctx.textAlign = 'start'; // reset
 
   // Download
   canvas.toBlob(blob => {
