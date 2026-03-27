@@ -4,20 +4,20 @@ Everything you need to spread the word about Bloom. Copy, paste, customize.
 
 ## The Mission (use this as your north star for all messaging)
 
-Bloom exists because mental health tools should be free, private, and gentle. Built by someone who's been through it, for people going through it. No company, no investors, no monetization. Just a quiet place to show up for yourself on hard days.
+Bloom exists because mental health tools should be free, private, and gentle. Built by someone who's been through it, for people going through it. No company, no investors, no monetization. Just a quiet place to show up for yourself.
 
 ---
 
 ## Elevator Pitches
 
 **One-liner (for bios, signatures, quick intros):**
-> Bloom is a free, private self-care app for people having hard days.
+> Bloom is a free, private self-care app. No pressure, no guilt, no accounts.
 
 **Two-liner (for social posts, intros):**
 > Bloom is a free, private self-care app. Track habits without pressure, journal with AI reflections, and breathe through tough moments. No accounts, no data collection, no cost.
 
 **Paragraph (for emails, blog posts, grant applications):**
-> Bloom is a free, open-source mental health self-care app built for people going through it. It helps you track habits without streak pressure, journal with gentle AI reflections, practice breathing exercises, and show up for yourself on hard days. Everything stays on your device. There are no accounts, no data collection, no ads, and no cost. Bloom was built from lived experience by someone who wanted better tools to exist, and it will always be free.
+> Bloom is a free, open-source mental health self-care app built for people going through it. It helps you track habits without streak pressure, journal with gentle AI reflections, practice breathing exercises, and show up for yourself at your own pace. Everything stays on your device. There are no accounts, no data collection, no ads, and no cost. Bloom was built from lived experience by someone who wanted better tools to exist, and it will always be free.
 
 **For technical audiences (README, Hacker News, dev communities):**
 > Bloom is a mental health self-care PWA. It runs entirely in your browser with localStorage, uses AI (Claude) for journal reflections, and has zero accounts or tracking. AGPL-licensed, deployed on Vercel. The whole frontend is a single HTML file.
@@ -46,14 +46,14 @@ Copy and paste. Adjust name/role as needed.
 ### Plain text (any email client):
 ```
 [Your Name]
-Bloom — free, private self-care for hard days
+Bloom — self-care, no pressure
 https://bloomselfcare.app
 ```
 
 ### With support link:
 ```
 [Your Name]
-Bloom — free, private self-care for hard days
+Bloom — self-care, no pressure
 https://bloomselfcare.app
 Support Bloom: https://ko-fi.com/bloomselfcare
 ```
@@ -84,7 +84,7 @@ links directly to Bloom when clicked.
     <td style="padding-top: 8px; border-top: 1px solid #ddd;">
       <a href="https://bloomselfcare.app" style="text-decoration: none;">
         <img src="https://bloomselfcare.app/email-badge.png"
-             alt="Bloom — gentle self-care for hard days"
+             alt="Bloom — self-care, no pressure"
              width="200" height="43"
              style="display: block; border: 0;" />
       </a>
@@ -127,7 +127,7 @@ Or with text next to it:
 ## Social Media Bios
 
 **Short (Twitter/X, 160 chars):**
-> Free, private self-care app for hard days. No accounts, no tracking, no cost. Just a quiet place to show up for yourself. Open source.
+> Free, private self-care app. No accounts, no tracking, no cost. Just a quiet place to show up for yourself. Open source.
 
 **Medium (Instagram, LinkedIn):**
 > Bloom is a free, private mental health self-care app. Track habits without pressure, journal, breathe. Everything stays on your device. Built from lived experience, open source forever.
@@ -143,7 +143,7 @@ Or with text next to it:
 ```
 I built Bloom because I needed it to exist.
 
-It's a free, private self-care app for hard days. No accounts. No tracking. No cost. Your data stays on your device.
+It's a free, private self-care app. No accounts. No tracking. No cost. No pressure. Your data stays on your device.
 
 Track habits (without streak pressure), journal, breathe, and show up for yourself.
 
@@ -207,7 +207,7 @@ Both link to `https://bloomselfcare.app` with high error correction
 ### Minimal Card (business card size)
 ```
 BLOOM
-Free, private self-care for hard days.
+Self-care. No pressure.
 
 bloomselfcare.app
 [QR CODE]
@@ -216,7 +216,7 @@ bloomselfcare.app
 ### Flyer (letter/A4 size)
 
 **Headline:**
-> A quiet place to show up for yourself on hard days.
+> Self-care. No pressure.
 
 **Body:**
 > Bloom is a free self-care app. Track habits without pressure, journal, practice breathing exercises, and take care of yourself at your own pace.
@@ -256,7 +256,7 @@ signup, and keeps all data on the user's device. Nothing is collected or shared.
 
 It was built from lived experience with the belief that mental health tools
 should be free, private, and gentle. It's not therapy and doesn't replace
-professional care, but it's a quiet place to show up for yourself on hard days.
+professional care, but it's a quiet place to show up for yourself.
 
 I'd love to explore whether Bloom could be a resource for [your counseling
 center / wellness programs / student services]. Happy to answer any questions
@@ -293,7 +293,7 @@ For Mozilla Foundation, Google.org, mental health foundations, etc.:
 | Element | Value |
 |---------|-------|
 | **App name** | Bloom |
-| **Tagline** | gentle self-care for hard days |
+| **Tagline** | Self-care. No pressure. |
 | **URL** | https://bloomselfcare.app |
 | **GitHub** | https://github.com/nicholashinz1-afk/bloom |
 | **Support** | https://ko-fi.com/bloomselfcare |
