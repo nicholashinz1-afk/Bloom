@@ -13186,11 +13186,20 @@ function downloadSocialCard(type) {
 
   showToast('Generating image...');
 
+  // Load the real logo first, then draw the card
+  const logoImg = new Image();
+  logoImg.crossOrigin = 'anonymous';
+  logoImg.onload = () => _drawSocialCard(cfg, type, logoImg);
+  logoImg.onerror = () => _drawSocialCard(cfg, type, null);
+  logoImg.src = '/bloom-logo-512.png';
+}
+
+function _drawSocialCard(cfg, type, logoImg) {
   const canvas = document.createElement('canvas');
   canvas.width = cfg.w;
   canvas.height = cfg.h;
   const ctx = canvas.getContext('2d');
-  const s = cfg.w / 1080; // scale factor relative to 1080
+  const s = cfg.w / 1080;
 
   // Background
   ctx.fillStyle = '#0d1610';
@@ -13208,51 +13217,45 @@ function downloadSocialCard(type) {
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Logo dots
-  const dotR = 22 * s;
-  const dotGap = 52 * s;
   const logoX = 100 * s;
   const logoY = type === 'twitter' ? cfg.h * 0.28 : cfg.h * 0.22;
-  const dotColors = [['#7a9e7e', '#b07878'], ['#6a9ab0', '#c9954a']];
-  dotColors.forEach((row, ri) => {
-    row.forEach((color, ci) => {
-      const cx = logoX + ci * dotGap;
-      const cy = logoY + ri * dotGap;
-      ctx.beginPath();
-      ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.globalAlpha = 0.7;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      // Inner highlight
-      ctx.beginPath();
-      ctx.arc(cx - dotR * 0.2, cy - dotR * 0.2, dotR * 0.45, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.globalAlpha = 0.4;
-      ctx.fill();
-      ctx.globalAlpha = 1;
+  const logoSize = 90 * s;
+
+  // Draw real logo or fallback to circles
+  if (logoImg) {
+    ctx.drawImage(logoImg, logoX - 10 * s, logoY - 10 * s, logoSize, logoSize);
+  } else {
+    const dotR = 22 * s;
+    const dotGap = 52 * s;
+    const dotColors = [['#7a9e7e', '#b07878'], ['#6a9ab0', '#c9954a']];
+    dotColors.forEach((row, ri) => {
+      row.forEach((color, ci) => {
+        ctx.beginPath();
+        ctx.arc(logoX + ci * dotGap, logoY + ri * dotGap, dotR, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      });
     });
-  });
+  }
 
   // "bloom" text
-  const titleY = logoY + dotGap + dotR + 60 * s;
+  const titleY = logoY + logoSize + 50 * s;
   ctx.font = `bold ${72 * s}px Georgia, 'Times New Roman', serif`;
   ctx.fillStyle = '#e8e0d0';
   ctx.fillText('Bloom', logoX - 8 * s, titleY);
 
   // Tagline
-  ctx.font = `${28 * s}px -apple-system, Arial, sans-serif`;
+  ctx.font = `italic ${26 * s}px Georgia, 'Times New Roman', serif`;
   ctx.fillStyle = '#a8c5ab';
-  ctx.fillText('self-care. no pressure.', logoX - 4 * s, titleY + 50 * s);
+  ctx.fillText('a gentle self-care companion', logoX - 4 * s, titleY + 48 * s);
 
-  // Features (vary by card type)
+  // Features
   const featureY = titleY + 110 * s;
   ctx.font = `${22 * s}px -apple-system, Arial, sans-serif`;
   ctx.fillStyle = '#8a9e8c';
   const features = ['Free. Private. No accounts needed.', 'Mood tracking, journaling, breathing exercises.', 'Your data stays on your device.'];
 
   if (type === 'twitter') {
-    // Compact: single line
     ctx.fillText(features[0] + '  ' + features[2], logoX - 4 * s, featureY);
   } else {
     features.forEach((f, i) => {
