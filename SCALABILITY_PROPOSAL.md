@@ -253,7 +253,7 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 **Result: Sustainable funding path, infrastructure credits covering costs**
 
 ### Phase 4 -- Reach (Month 3-6)
-- [ ] Purchase a custom domain (~$12/year) for a cleaner, more trustworthy URL
+- [x] Purchase a custom domain (bloomselfcare.app)
 - [ ] Internationalization framework + first community translations
 - [ ] Reach out to university counseling centers for feedback (see `docs/outreach/EMAIL_TEMPLATES.md`)
 - [ ] Reach out to crisis organizations for cross-promotion

@@ -17,7 +17,7 @@ Every feature is grounded in peer-reviewed research (affect labeling, expressive
 I'm not selling anything. Bloom is free and always will be (AGPL-3.0 open source). I'm reaching out because I'd genuinely value feedback from mental health professionals on whether this could be useful as a between-session tool or a resource for students on waitlists.
 
 If anyone on your team has 10 minutes to look at it, I'd be grateful:
-https://bloom-zeta-rouge.vercel.app
+https://bloomselfcare.app
 
 Thank you for the work you do.
 
@@ -63,7 +63,7 @@ Bloom is not therapy and doesn't claim to be. It's a self-care tool for people w
 I'm working on credibility for institutional outreach (universities, counseling centers), and a brief review from a licensed professional would be incredibly helpful. If after looking at the app you felt comfortable writing a short statement, even just 2-3 sentences, about whether Bloom is a responsible complement to professional care, it would mean a lot.
 
 No pressure at all, and I completely understand if you're too busy. Here's the app:
-https://bloom-zeta-rouge.vercel.app
+https://bloomselfcare.app
 
 And here's the full source code (it's open source):
 github.com/nicholashinz1-afk/Bloom
@@ -91,7 +91,7 @@ The app is completely free (AGPL-3.0 open source), collects no user data, and ha
 2. If you maintain a list of recommended digital tools, Bloom might be a fit
 3. I'd welcome any feedback on how to better integrate crisis support
 
-Here's the app: https://bloom-zeta-rouge.vercel.app
+Here's the app: https://bloomselfcare.app
 Source code: github.com/nicholashinz1-afk/Bloom
 
 Thank you for the life-saving work you do.

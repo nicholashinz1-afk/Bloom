@@ -1,6 +1,6 @@
 # Bloom: Free, Private Mental Health Self-Care
 
-**Website:** bloom-zeta-rouge.vercel.app
+**Website:** bloomselfcare.app
 **Source code:** github.com/nicholashinz1-afk/Bloom
 **License:** AGPL-3.0 (open source forever)
 **Contact:** bloomhabits@proton.me
