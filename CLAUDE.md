@@ -106,3 +106,7 @@ See `SCALABILITY_PROPOSAL.md` for the full proposal. Summary of phases:
 - Admin dashboard at `/admin.html`, protected by `ADMIN_KEY` environment variable in Vercel
 - Share the key to grant access, change the key in Vercel env vars to revoke
 - Single shared key for now — no role-based access
+
+## Writing Style
+
+- **No em dashes.** Use periods, commas, or restructure the sentence instead. Em dashes are widely perceived as AI-generated writing.
