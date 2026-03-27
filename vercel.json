@@ -36,7 +36,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.onesignal.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://bloomselfcare.app https://bloom-zeta-rouge.vercel.app https://api.anthropic.com https://onesignal.com https://api.onesignal.com https://cdn.onesignal.com https://findahelpline.com https://988lifeline.org; worker-src 'self' https://cdn.onesignal.com; img-src 'self' data: blob: https://img.onesignal.com; frame-src 'none'; object-src 'none'; base-uri 'self'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.onesignal.com https://*.onesignal.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://bloomselfcare.app https://bloom-zeta-rouge.vercel.app https://api.anthropic.com https://*.onesignal.com https://onesignal.com https://findahelpline.com https://988lifeline.org; worker-src 'self' https://cdn.onesignal.com https://*.onesignal.com; img-src 'self' data: blob: https://*.onesignal.com; frame-src 'none'; object-src 'none'; base-uri 'self'"
         },
         {
           "key": "X-Content-Type-Options",
