@@ -11120,7 +11120,8 @@ function openHistoryDetail(dateStr) {
   // Also include any keys already stored in this entry's history
   Object.keys(habits).forEach(k => { if (k in habitNames) userHabitKeys.add(k); });
 
-  const habitKeys = [...userHabitKeys].filter(k => k in habitNames);
+  const weeklyIds = new Set(WEEKLY_HABITS.map(h => h.id));
+  const habitKeys = [...userHabitKeys].filter(k => k in habitNames && !weeklyIds.has(k));
 
   if (habitKeys.length > 0) {
     html += `<div style="margin:12px 0">
@@ -11136,6 +11137,27 @@ function openHistoryDetail(dateStr) {
       </div>`;
     });
     html += '</div><div class="divider"></div>';
+  }
+
+  // Weekly habits section
+  const weeklyHabitKeys = WEEKLY_HABITS.map(h => h.id);
+  const hasAnyWeekly = weeklyHabitKeys.some(k => habits[k]) || WEEKLY_HABITS.some(h => state.prefs?.weeklyHabits?.[h.id] !== false);
+  if (hasAnyWeekly) {
+    html += `<div style="margin:12px 0">
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Weekly habits</div>
+        <div style="font-size:11px;color:var(--text-muted);font-style:italic">Tap to update</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">`;
+    WEEKLY_HABITS.forEach(h => {
+      const done = !!habits[h.id];
+      html += `<div onclick="toggleHistoryHabit('${dateStr}','${h.id}',this)" style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:var(--r-md);background:${done ? 'rgba(var(--sage-rgb),0.12)' : 'rgba(255,255,255,0.04)'};border:1px solid ${done ? 'rgba(var(--sage-rgb),0.3)' : 'rgba(255,255,255,0.08)'};cursor:pointer;transition:all 0.2s">
+        <span style="font-size:14px">${h.icon}</span>
+        <span style="font-size:13px;color:${done ? 'var(--cream)' : 'var(--text-muted)'}">${h.label}</span>
+        ${done ? '<span style="font-size:10px;color:var(--sage)">✓</span>' : ''}
+      </div>`;
+    });
+    html += `</div></div><div class="divider"></div>`;
   }
 
   // Self-care section: union of stored keys + user's currently enabled tasks
