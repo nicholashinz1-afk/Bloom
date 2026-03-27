@@ -328,10 +328,10 @@
     <h2 style="font-size:16px;margin:20px 0 12px;color:var(--sage-light)">Sustainability Status</h2>
     <div class="card" style="margin-bottom:16px">
       <div style="display:flex;flex-direction:column;gap:10px">
-        <div class="stat-row"><span class="stat-label">🏛️ Open Collective (fiscal sponsorship)</span><span style="font-size:13px;color:var(--amber)">Applied — pending</span></div>
+        <div class="stat-row"><span class="stat-label">🏛️ Open Collective (fiscal sponsorship)</span><span style="font-size:13px;color:var(--rose)">Rejected</span></div>
         <div class="stat-row"><span class="stat-label">▲ Vercel OSS sponsorship</span><span style="font-size:13px;color:var(--amber)">Applied — pending</span></div>
         <div class="stat-row"><span class="stat-label">🔴 Upstash OSS program</span><span style="font-size:13px;color:var(--amber)">Applied — pending</span></div>
-        <div class="stat-row"><span class="stat-label">💜 GitHub Sponsors</span><span style="font-size:13px;color:var(--text-secondary)">Waiting for Open Collective</span></div>
+        <div class="stat-row"><span class="stat-label">💜 GitHub Sponsors</span><span style="font-size:13px;color:var(--text-secondary)">Needs alternate fiscal host</span></div>
         <div class="stat-row"><span class="stat-label">📜 License (AGPL-3.0)</span><span style="font-size:13px;color:var(--sage-light)">In place ✓</span></div>
         <div class="stat-row"><span class="stat-label">📧 Project email</span><span style="font-size:13px;color:var(--cream)">bloomhabits@proton.me</span></div>
       </div>
@@ -361,7 +361,7 @@
       <div class="card" style="border-left:3px solid var(--text-muted)">
         <div>
           <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 3: Sustainability</div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Open Collective approval, grant applications (Mozilla, McGovern, Google.org)</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Alternate fiscal host, grant applications (Mozilla, McGovern, Google.org)</div>
         </div>
       </div>
       <div class="card" style="border-left:3px solid var(--text-muted)">
@@ -1442,7 +1442,8 @@ function renderLevelAnalytics() {
 }
 
 // Auto-focus the key input
-document.getElementById('admin-key-input').focus();
+const _keyInput = document.getElementById('admin-key-input');
+if (_keyInput) _keyInput.focus();
 
 // Check for key in URL hash for bookmarkability
 if (location.hash.startsWith('#key=')) {

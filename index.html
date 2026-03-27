@@ -7014,6 +7014,34 @@ const CELEBRATIONS = {
   },
 };
 
+// ── General-purpose toast notification ────────────────────────
+let _toastTimeout = null;
+function showToast(message, duration = 3000) {
+  const existing = document.getElementById('general-toast');
+  if (existing) existing.remove();
+  if (_toastTimeout) clearTimeout(_toastTimeout);
+
+  const toast = document.createElement('div');
+  toast.id = 'general-toast';
+  toast.className = 'celebrate-toast';
+  toast.style.pointerEvents = 'auto';
+  const appEl = document.getElementById('app');
+  const navEl = document.getElementById('bottom-nav');
+  const appRect = appEl ? appEl.getBoundingClientRect() : { bottom: window.innerHeight };
+  const navRect = navEl ? navEl.getBoundingClientRect() : null;
+  toast.style.bottom = (navRect ? (appRect.bottom - navRect.top) + 12 : 80) + 'px';
+  toast.innerHTML = `
+    <div class="celebrate-toast-body">
+      <div class="celebrate-toast-title" style="font-size:14px">${message}</div>
+    </div>
+  `;
+  (appEl || document.body).appendChild(toast);
+  _toastTimeout = setTimeout(() => {
+    toast.classList.add('hide');
+    setTimeout(() => toast.remove(), 350);
+  }, duration);
+}
+
 // ── Undo toast for accidental habit unchecking ───────────────
 let undoTimeout = null;
 let undoData = null;
@@ -13963,6 +13991,7 @@ function openSheet(id) {
   _sheetTriggerElement = document.activeElement;
   document.getElementById('sheet-backdrop').classList.add('open');
   const sheet = document.getElementById(id);
+  if (!sheet) return;
   sheet.classList.add('open');
   // Push history state so Android back gesture closes the sheet instead of leaving the app
   if (!history.state?.sheetOpen) {
@@ -13986,8 +14015,9 @@ function closeAllSheets() {
   state._cameFromJournalHistory = false;
   // Restore focus to the element that opened the sheet
   if (_sheetTriggerElement && typeof _sheetTriggerElement.focus === 'function') {
-    setTimeout(() => _sheetTriggerElement.focus(), 50);
+    const elToFocus = _sheetTriggerElement;
     _sheetTriggerElement = null;
+    setTimeout(() => { if (elToFocus) elToFocus.focus(); }, 50);
   }
   // Pop the history state we pushed (unless back button already did)
   if (wasOpen && history.state?.sheetOpen) {
