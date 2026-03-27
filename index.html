@@ -7740,6 +7740,13 @@ function exportDiagnostics() {
     aiFeedback: load('bloom_ai_feedback', []),
     historyDays: Object.keys(load('bloom_history', {})).length,
     buddyPaired: (load('bloom_buddy_state', {})).status === 'paired',
+    onesignal: {
+      pid: load('bloom_onesignal_pid', null),
+      sdkLoaded: !!window.OneSignal,
+      notifPermission: typeof Notification !== 'undefined' ? Notification.permission : 'unavailable',
+      swRegistrations: 'checking...',
+      debugLog: load('bloom_onesignal_debug', []),
+    },
   };
   if (navigator.storage?.estimate) {
     navigator.storage.estimate().then(est => {
@@ -15666,6 +15673,16 @@ function completeOnboarding() {
 // ============================================================
 //  ONESIGNAL
 // ============================================================
+function _osLog(msg, data) {
+  console.log('[bloom-onesignal] ' + msg, data || '');
+  try {
+    const log = load('bloom_onesignal_debug', []);
+    log.push({ t: new Date().toISOString(), msg, data: data ? String(data) : undefined });
+    if (log.length > 30) log.splice(0, log.length - 30);
+    save('bloom_onesignal_debug', log);
+  } catch(e) {}
+}
+
 function initOneSignal() {
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
@@ -15678,16 +15695,16 @@ function initOneSignal() {
         serviceWorkerParam: { scope: '/' },
         serviceWorkerPath: '/OneSignalSDKWorker.js',
       });
-      console.log('[bloom-onesignal] init success');
+      _osLog('init success');
     } catch(initErr) {
-      console.error('[bloom-onesignal] init FAILED:', initErr);
+      _osLog('init FAILED', initErr?.message || initErr);
       return;
     }
 
     // Capture player ID for buddy notifications
     try {
       OneSignal.User.PushSubscription.addEventListener('change', (e) => {
-        console.log('[bloom-onesignal] subscription change:', JSON.stringify(e.current));
+        _osLog('subscription change', JSON.stringify(e.current));
         if (e.current?.id) {
           save('bloom_onesignal_pid', e.current.id);
           buddyRegisterAndSync();
@@ -15697,28 +15714,27 @@ function initOneSignal() {
       const pid = OneSignal.User.PushSubscription.id;
       const token = OneSignal.User.PushSubscription.token;
       const optedIn = OneSignal.User.PushSubscription.optedIn;
-      console.log('[bloom-onesignal] pid:', pid, 'token:', token ? 'yes' : 'no', 'optedIn:', optedIn);
+      _osLog('state after init', 'pid=' + pid + ' token=' + (token ? 'yes' : 'no') + ' optedIn=' + optedIn);
       if (pid) {
         save('bloom_onesignal_pid', pid);
         buddyRegisterAndSync();
       } else {
-        console.warn('[bloom-onesignal] no player ID available after init');
+        _osLog('no player ID after init');
       }
     } catch(e) {
-      console.error('[bloom-onesignal] subscription check failed:', e);
+      _osLog('subscription check failed', e?.message || e);
     }
 
     // Request permission after a short delay if not yet granted
     setTimeout(async () => {
       try {
         const permission = await OneSignal.Notifications.permission;
-        console.log('[bloom-onesignal] permission:', permission);
+        _osLog('permission check', String(permission));
         if (!permission) {
-          console.log('[bloom-onesignal] requesting permission...');
+          _osLog('requesting permission');
           await OneSignal.Notifications.requestPermission();
-          // After permission granted, check for pid again
           const newPid = OneSignal.User.PushSubscription.id;
-          console.log('[bloom-onesignal] post-permission pid:', newPid);
+          _osLog('post-permission pid', newPid);
           if (newPid) {
             save('bloom_onesignal_pid', newPid);
             buddyRegisterAndSync();
@@ -15726,14 +15742,14 @@ function initOneSignal() {
           }
         }
       } catch(e) {
-        console.error('[bloom-onesignal] permission request failed:', e);
+        _osLog('permission request failed', e?.message || e);
       }
     }, 3000);
   });
   const script = document.createElement('script');
   script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
   script.defer = true;
-  script.onerror = () => console.error('[bloom-onesignal] SDK script failed to load');
+  script.onerror = () => _osLog('SDK script failed to load');
   document.head.appendChild(script);
 }
 
