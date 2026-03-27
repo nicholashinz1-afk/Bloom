@@ -67,7 +67,7 @@ Always accessible via the white heart button in the header.
 
 ## Tabs
 
-Today | Weekly | Wellness | Progress | Community | Settings
+Daily | History | Wellness | Progress | Community | Settings
 
 ## Deployment
 
