@@ -17960,14 +17960,16 @@ function initApp() {
   // re-register the service worker to pick up the fixed OneSignalSDKWorker.js.
   // This ensures existing users get the fix without manually tapping "Fix notifications."
   if (Notification.permission === 'granted' && !load('bloom_onesignal_pid', null)) {
-    try {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      for (const reg of regs) await reg.unregister();
-      await navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' });
-      _osLog('auto-repair: re-registered service worker');
-    } catch(e) {
-      _osLog('auto-repair failed', e?.message);
-    }
+    (async () => {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) await reg.unregister();
+        await navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' });
+        _osLog('auto-repair: re-registered service worker');
+      } catch(e) {
+        _osLog('auto-repair failed', e?.message);
+      }
+    })();
   }
   initOneSignal();
   // Buddy: register once, then sync if paired (sync includes conditional re-register)
