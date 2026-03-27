@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d1610">
+<title>Bloom — Press Kit</title>
+<meta name="description" content="Press kit for Bloom, a free and private mental health self-care app. Logos, brand guidelines, and key facts.">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://bloom-zeta-rouge.vercel.app/press">
+<meta property="og:title" content="Bloom — Press Kit">
+<meta property="og:description" content="Logos, brand assets, and key facts about Bloom.">
+<meta property="og:image" content="https://bloom-zeta-rouge.vercel.app/og-image.png">
+<meta property="og:site_name" content="Bloom">
+
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1610;
+    --bg-card: #162019;
+    --bg-elevated: #1c2a1f;
+    --sage: #7a9e7e;
+    --sage-light: #a8c5ab;
+    --rose: #b07878;
+    --rose-light: #d4a8a8;
+    --sky: #6a9ab0;
+    --sky-light: #9ec4d8;
+    --amber: #c9954a;
+    --amber-light: #e0b87a;
+    --cream: #e8e0d0;
+    --text-secondary: #a3b5a5;
+    --text-muted: #8a9e8c;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Instrument Sans', -apple-system, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* Header */
+  .press-header {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+
+  .press-header h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .press-header .tagline {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--sage);
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 32px;
+  }
+
+  .back-link:hover { text-decoration: underline; }
+
+  /* Sections */
+  h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--sage-light);
+    margin-bottom: 16px;
+    margin-top: 48px;
+  }
+
+  h2:first-of-type { margin-top: 0; }
+
+  p, li {
+    color: var(--cream);
+    margin-bottom: 12px;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  ul li::before {
+    content: "·";
+    color: var(--sage);
+    font-weight: 600;
+    margin-right: 8px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .card h3 {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--sage-light);
+    margin-bottom: 8px;
+  }
+
+  .card p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+  }
+
+  /* Logo grid */
+  .logo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .logo-item {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 32px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-item.light-bg {
+    background: #e8e0d0;
+  }
+
+  .logo-item img {
+    max-width: 120px;
+    height: auto;
+  }
+
+  .logo-item .label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .logo-item.light-bg .label {
+    color: #666;
+  }
+
+  .download-link {
+    display: inline-block;
+    color: var(--sage);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border: 1px solid var(--sage);
+    border-radius: 999px;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .download-link:hover {
+    background: var(--sage);
+    color: var(--bg);
+  }
+
+  .logo-item.light-bg .download-link {
+    color: #2e4d32;
+    border-color: #2e4d32;
+  }
+
+  .logo-item.light-bg .download-link:hover {
+    background: #2e4d32;
+    color: #e8e0d0;
+  }
+
+  /* Color swatches */
+  .swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .swatch {
+    border-radius: 10px;
+    padding: 20px 14px 14px;
+    text-align: center;
+  }
+
+  .swatch .name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .swatch .hex {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    font-family: monospace;
+  }
+
+  /* Fact grid */
+  .fact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .fact {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 20px;
+  }
+
+  .fact .number {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--sage-light);
+  }
+
+  .fact .label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* Quote block */
+  blockquote {
+    border-left: 3px solid var(--sage);
+    padding: 16px 20px;
+    margin: 16px 0;
+    background: var(--bg-card);
+    border-radius: 0 14px 14px 0;
+    font-family: 'Fraunces', Georgia, serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--cream);
+    line-height: 1.7;
+  }
+
+  /* Links */
+  a { color: var(--sage-light); }
+  a:hover { color: var(--sage); }
+
+  /* Footer */
+  .press-footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--bg-elevated);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .press-footer a {
+    color: var(--sage);
+    text-decoration: none;
+  }
+
+  .press-footer a:hover { text-decoration: underline; }
+
+  /* QR section */
+  .qr-section {
+    text-align: center;
+    margin-top: 16px;
+  }
+
+  .qr-section img {
+    max-width: 200px;
+    border-radius: 10px;
+  }
+
+  @media (max-width: 600px) {
+    .press-header h1 { font-size: 2rem; }
+    .container { padding: 32px 16px 64px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a href="/" class="back-link">&larr; Back to Bloom</a>
+
+  <header class="press-header">
+    <h1>Bloom Press Kit</h1>
+    <p class="tagline">Gentle self-care for hard days</p>
+  </header>
+
+  <!-- About -->
+  <h2>What is Bloom?</h2>
+  <p>
+    Bloom is a free, open-source mental health self-care app. It helps people track habits without
+    streak pressure, journal with gentle AI reflections, practice breathing exercises, and show up
+    for themselves on hard days.
+  </p>
+  <p>
+    Everything stays on your device. There are no accounts, no data collection, no ads, and no cost.
+    Bloom was built from lived experience and will always be free.
+  </p>
+
+  <blockquote>
+    Bloom exists because mental health tools should be free, private, and gentle. Built by someone
+    who's been through it, for people going through it. If this app helps even one person feel a
+    little less alone, it was worth building.
+  </blockquote>
+
+  <!-- Key Facts -->
+  <h2>Key Facts</h2>
+  <div class="fact-grid">
+    <div class="fact">
+      <div class="number">$0</div>
+      <div class="label">Cost, forever. No premium tier.</div>
+    </div>
+    <div class="fact">
+      <div class="number">0</div>
+      <div class="label">Data collected. Everything stays on-device.</div>
+    </div>
+    <div class="fact">
+      <div class="number">0</div>
+      <div class="label">Accounts required. Just open and use.</div>
+    </div>
+    <div class="fact">
+      <div class="number">AGPL-3.0</div>
+      <div class="label">Open source. Always will be.</div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <h2>Features</h2>
+  <ul>
+    <li>Habit tracking without consecutive streaks (tracks total days, never resets)</li>
+    <li>Hard day mode (scales to top 2 habits, no pressure)</li>
+    <li>Journaling with AI reflections (warm witness tone, never clinical advice)</li>
+    <li>Guided breathing exercises</li>
+    <li>Anonymous buddy system for peer support</li>
+    <li>Community encouragement wall</li>
+    <li>Crisis resources always one tap away (988, Crisis Text Line, international)</li>
+    <li>6 color themes including Pride theme</li>
+    <li>WCAG AA accessible</li>
+    <li>Works offline as an installable PWA</li>
+  </ul>
+
+  <!-- Logos -->
+  <h2>Logo &amp; Assets</h2>
+  <p>Right-click and save, or use the download links. For print materials, use the SVG version.</p>
+
+  <div class="logo-grid">
+    <div class="logo-item">
+      <img src="/bloom-logo-512.png" alt="Bloom logo on dark background">
+      <span class="label">On dark (primary)</span>
+      <a href="/bloom-logo-512.png" download class="download-link">PNG 512px</a>
+    </div>
+    <div class="logo-item light-bg">
+      <img src="/bloom-logo-512.png" alt="Bloom logo on light background">
+      <span class="label">On light</span>
+      <a href="/icon.svg" download class="download-link">SVG vector</a>
+    </div>
+    <div class="logo-item">
+      <img src="/og-image.png" alt="Bloom social sharing card" style="max-width: 100%; border-radius: 8px;">
+      <span class="label">Social card (1200x630)</span>
+      <a href="/og-image.png" download class="download-link">Download PNG</a>
+    </div>
+  </div>
+
+  <!-- Colors -->
+  <h2>Brand Colors</h2>
+  <div class="swatch-grid">
+    <div class="swatch" style="background: #0d1610; border: 1px solid #1c2a1f;">
+      <div class="name" style="color: #e8e0d0;">Forest</div>
+      <div class="hex" style="color: #a3b5a5;">#0d1610</div>
+    </div>
+    <div class="swatch" style="background: #7a9e7e;">
+      <div class="name" style="color: #0a1a0b;">Sage</div>
+      <div class="hex" style="color: #0a1a0b;">#7a9e7e</div>
+    </div>
+    <div class="swatch" style="background: #b07878;">
+      <div class="name" style="color: #fff;">Rose</div>
+      <div class="hex" style="color: rgba(255,255,255,0.8);">#b07878</div>
+    </div>
+    <div class="swatch" style="background: #6a9ab0;">
+      <div class="name" style="color: #0d1610;">Sky</div>
+      <div class="hex" style="color: rgba(13,22,16,0.7);">#6a9ab0</div>
+    </div>
+    <div class="swatch" style="background: #c9954a;">
+      <div class="name" style="color: #0d1610;">Amber</div>
+      <div class="hex" style="color: rgba(13,22,16,0.7);">#c9954a</div>
+    </div>
+    <div class="swatch" style="background: #e8e0d0;">
+      <div class="name" style="color: #0d1610;">Cream</div>
+      <div class="hex" style="color: #666;">#e8e0d0</div>
+    </div>
+  </div>
+
+  <!-- Typography -->
+  <h2>Typography</h2>
+  <div class="card">
+    <h3>Headings</h3>
+    <p style="font-family: 'Fraunces', Georgia, serif; font-size: 1.3rem;">
+      Fraunces (300, 400, 600, italic)
+    </p>
+  </div>
+  <div class="card">
+    <h3>Body Text</h3>
+    <p>Instrument Sans (400, 500, 600)</p>
+  </div>
+
+  <!-- QR Code -->
+  <h2>QR Code</h2>
+  <p>Links to the Bloom app. High error correction, prints well at any size.</p>
+  <div class="qr-section">
+    <img src="/qr-code.png" alt="QR code linking to Bloom app">
+    <br><br>
+    <a href="/qr-code.svg" download class="download-link">Download SVG (print)</a>
+    &nbsp;
+    <a href="/qr-code.png" download class="download-link">Download PNG</a>
+  </div>
+
+  <!-- Links -->
+  <h2>Links</h2>
+  <div class="card">
+    <h3>App</h3>
+    <p><a href="https://bloom-zeta-rouge.vercel.app">bloom-zeta-rouge.vercel.app</a></p>
+  </div>
+  <div class="card">
+    <h3>Source Code</h3>
+    <p><a href="https://github.com/nicholashinz1-afk/bloom">github.com/nicholashinz1-afk/bloom</a></p>
+  </div>
+  <div class="card">
+    <h3>Support Bloom</h3>
+    <p><a href="https://ko-fi.com/bloomselfcare">ko-fi.com/bloomselfcare</a></p>
+  </div>
+  <div class="card">
+    <h3>Contact</h3>
+    <p><a href="mailto:bloomhabits@proton.me">bloomhabits@proton.me</a></p>
+  </div>
+
+  <!-- Usage Guidelines -->
+  <h2>Usage Guidelines</h2>
+  <ul>
+    <li>Use the logo as-is. Don't stretch, recolor, or add effects.</li>
+    <li>Keep clear space around the logo (at least half the logo's width).</li>
+    <li>On dark backgrounds, use the logo directly. On light backgrounds, it works fine too (the dark rounded square provides its own contrast).</li>
+    <li>When writing about Bloom, please mention that it's free and open source.</li>
+    <li>Bloom is licensed under AGPL-3.0. Derivatives must remain open source.</li>
+  </ul>
+
+  <footer class="press-footer">
+    <p>
+      <a href="/">Use Bloom</a> · <a href="https://github.com/nicholashinz1-afk/bloom">GitHub</a> · <a href="https://ko-fi.com/bloomselfcare">Support</a> · <a href="mailto:bloomhabits@proton.me">Contact</a>
+    </p>
+    <p style="margin-top: 8px;">Bloom is free, open-source software (AGPL-3.0).</p>
+  </footer>
+
+</div>
+</body>
+</html>
