@@ -110,3 +110,6 @@ See `SCALABILITY_PROPOSAL.md` for the full proposal. Summary of phases:
 ## Writing Style
 
 - **No em dashes.** Use periods, commas, or restructure the sentence instead. Em dashes are widely perceived as AI-generated writing.
+- **Tone:** Real, personal, and warm, but still professional. Write like a person who genuinely cares, not a brand trying to sound relatable. Think "friend who happens to know what they're talking about," not "corporate wellness blog."
+- **Keep it grounded.** Don't oversell, don't hype. Let the work speak for itself. Simple, honest language over polished marketing speak.
+- **It's okay to be human.** Bloom was built from lived experience. The writing should reflect that. Be direct, be genuine, skip the fluff.
