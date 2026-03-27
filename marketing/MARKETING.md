@@ -47,14 +47,14 @@ Copy and paste. Adjust name/role as needed.
 ```
 [Your Name]
 Bloom — free, private self-care for hard days
-https://bloom-zeta-rouge.vercel.app
+https://bloomselfcare.app
 ```
 
 ### With support link:
 ```
 [Your Name]
 Bloom — free, private self-care for hard days
-https://bloom-zeta-rouge.vercel.app
+https://bloomselfcare.app
 Support Bloom: https://ko-fi.com/bloomselfcare
 ```
 
@@ -63,7 +63,7 @@ Support Bloom: https://ko-fi.com/bloomselfcare
 [Your Name]
 Creator, Bloom
 Free, open-source mental health self-care
-https://bloom-zeta-rouge.vercel.app | bloomhabits@proton.me
+https://bloomselfcare.app | bloomhabits@proton.me
 Source: https://github.com/nicholashinz1-afk/bloom
 ```
 
@@ -82,8 +82,8 @@ links directly to Bloom when clicked.
   </tr>
   <tr>
     <td style="padding-top: 8px; border-top: 1px solid #ddd;">
-      <a href="https://bloom-zeta-rouge.vercel.app" style="text-decoration: none;">
-        <img src="https://bloom-zeta-rouge.vercel.app/email-badge.png"
+      <a href="https://bloomselfcare.app" style="text-decoration: none;">
+        <img src="https://bloomselfcare.app/email-badge.png"
              alt="Bloom — gentle self-care for hard days"
              width="200" height="43"
              style="display: block; border: 0;" />
@@ -100,8 +100,8 @@ anywhere in your signature HTML. It's a tiny clickable icon that links to Bloom,
 perfect for dropping under your name without making Bloom the focus.
 
 ```html
-<a href="https://bloom-zeta-rouge.vercel.app" style="text-decoration: none;">
-  <img src="https://bloom-zeta-rouge.vercel.app/email-icon.png"
+<a href="https://bloomselfcare.app" style="text-decoration: none;">
+  <img src="https://bloomselfcare.app/email-icon.png"
        alt="Bloom"
        width="20" height="20"
        style="vertical-align: middle; border: 0;" />
@@ -110,8 +110,8 @@ perfect for dropping under your name without making Bloom the focus.
 
 Or with text next to it:
 ```html
-<a href="https://bloom-zeta-rouge.vercel.app" style="text-decoration: none; color: #7a9e7e; font-size: 12px;">
-  <img src="https://bloom-zeta-rouge.vercel.app/email-icon.png"
+<a href="https://bloomselfcare.app" style="text-decoration: none; color: #7a9e7e; font-size: 12px;">
+  <img src="https://bloomselfcare.app/email-icon.png"
        alt="Bloom"
        width="20" height="20"
        style="vertical-align: middle; border: 0; margin-right: 4px;" />Bloom
@@ -147,7 +147,7 @@ It's a free, private self-care app for hard days. No accounts. No tracking. No c
 
 Track habits (without streak pressure), journal, breathe, and show up for yourself.
 
-https://bloom-zeta-rouge.vercel.app
+https://bloomselfcare.app
 ```
 
 ### Mental Health Awareness Month (May)
@@ -158,7 +158,7 @@ Bloom is free, private self-care. Track habits, journal, breathe. No accounts, n
 
 Built from lived experience. Open source. Always free.
 
-https://bloom-zeta-rouge.vercel.app
+https://bloomselfcare.app
 ```
 
 ### For Developer Communities
@@ -179,7 +179,7 @@ Crisis Text Line (text 741741)
 findahelpline.com (40+ languages, international)
 
 Bloom keeps these resources one tap away, always.
-https://bloom-zeta-rouge.vercel.app
+https://bloomselfcare.app
 ```
 
 ---
@@ -191,7 +191,7 @@ Ready-to-use QR codes are included in this repo:
 - **`qr-code.svg`** — vector, scales to any size for print (flyers, posters, cards)
 - **`qr-code.png`** — raster, good for digital use and quick sharing
 
-Both link to `https://bloom-zeta-rouge.vercel.app` with high error correction
+Both link to `https://bloomselfcare.app` with high error correction
 (scannable even if partially covered or printed small).
 
 **Print tips:**
@@ -209,7 +209,7 @@ Both link to `https://bloom-zeta-rouge.vercel.app` with high error correction
 BLOOM
 Free, private self-care for hard days.
 
-bloom-zeta-rouge.vercel.app
+bloomselfcare.app
 [QR CODE]
 ```
 
@@ -224,18 +224,18 @@ bloom-zeta-rouge.vercel.app
 > No accounts. No data collection. No cost. Everything stays on your device.
 >
 > Scan the QR code or visit:
-> bloom-zeta-rouge.vercel.app
+> bloomselfcare.app
 
 **Bottom strip:**
 > Crisis resources always available: call/text 988 | text 741741 | findahelpline.com
 
 ### Bulletin Board Tear-Off Strip
 ```
-BLOOM — Free self-care app | bloom-zeta-rouge.vercel.app
-BLOOM — Free self-care app | bloom-zeta-rouge.vercel.app
-BLOOM — Free self-care app | bloom-zeta-rouge.vercel.app
-BLOOM — Free self-care app | bloom-zeta-rouge.vercel.app
-BLOOM — Free self-care app | bloom-zeta-rouge.vercel.app
+BLOOM — Free self-care app | bloomselfcare.app
+BLOOM — Free self-care app | bloomselfcare.app
+BLOOM — Free self-care app | bloomselfcare.app
+BLOOM — Free self-care app | bloomselfcare.app
+BLOOM — Free self-care app | bloomselfcare.app
 ```
 
 ---
@@ -262,7 +262,7 @@ I'd love to explore whether Bloom could be a resource for [your counseling
 center / wellness programs / student services]. Happy to answer any questions
 or do a quick demo.
 
-The app: https://bloom-zeta-rouge.vercel.app
+The app: https://bloomselfcare.app
 Source code: https://github.com/nicholashinz1-afk/bloom
 License: AGPL-3.0 (open source, always free)
 
@@ -294,7 +294,7 @@ For Mozilla Foundation, Google.org, mental health foundations, etc.:
 |---------|-------|
 | **App name** | Bloom |
 | **Tagline** | gentle self-care for hard days |
-| **URL** | https://bloom-zeta-rouge.vercel.app |
+| **URL** | https://bloomselfcare.app |
 | **GitHub** | https://github.com/nicholashinz1-afk/bloom |
 | **Support** | https://ko-fi.com/bloomselfcare |
 | **Contact** | bloomhabits@proton.me |
