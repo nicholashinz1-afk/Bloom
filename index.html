@@ -3348,7 +3348,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '3.1.0';
+const VERSION = '3.2.0';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -3394,13 +3394,10 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: 'Random self-care act — not sure what you need today? Head to the Wellness tab and let Bloom pick something kind for you. Shuffle until one feels right.', spotlight: null, tab: 'wellness', featured: true },
-  { text: 'Special dates — mark birthdays, anniversaries, and hard dates in Settings. Bloom will check in with you on those days and meet you where you are.', spotlight: null, tab: 'settings' },
-  { text: 'Skill tools redesigned — breathing, grounding, body scan, and reframe are now in a compact grid that opens into focused sheets. Same tools, less scrolling.', spotlight: null, tab: 'wellness' },
-  { text: 'Everything in one place — your daily habits, weekly goals (shower, exercise, therapy), household tasks, and self-care all live on the Today tab now. One view for your whole day.', spotlight: null, tab: 'today' },
-  { text: 'Pick your days — weekly habits like therapy or exercise can be set to specific days of the week, or left flexible with a weekly goal. Find the day chips in Settings.', spotlight: null, tab: 'settings' },
-  { text: 'Self-care woven in — your self-care items now appear naturally in the Anytime section with a soft divider. Less separate, more part of your flow.', spotlight: null, tab: 'today' },
-  { text: 'Smarter settings — medication reminders, celebration intensity, and high contrast mode are easier to find. Habit cues live right under each habit now.', spotlight: null, tab: 'settings' },
+  { text: 'Reorder your habits — drag to arrange daily habits in Settings. Your order carries to the Today tab, and your top two become gentle priorities on hard days.', spotlight: null, tab: 'settings', featured: true },
+  { text: 'Smarter hard days — selecting Low or Rough mood now automatically turns on gentle mode, dimming extra habits so you can focus on what matters. You can toggle it off anytime.', spotlight: null, tab: 'today' },
+  { text: 'Medication comes first — if you track medication, it now shows at the top of every time slot and never gets dimmed on hard days. Because it matters most.', spotlight: null, tab: 'today' },
+  { text: 'Self-care stays visible — on hard days, your "something nice for you" items no longer fade out. Comfort actions like a warm drink or fresh air are exactly what hard days are for.', spotlight: null, tab: 'today' },
 ];
 
 // ============================================================
