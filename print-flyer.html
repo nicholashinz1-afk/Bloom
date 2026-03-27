@@ -101,9 +101,9 @@
 
   /* Headline */
   .headline {
-    font-family: 'Fraunces', Georgia, serif;
-    font-size: 48px;
-    font-weight: 400;
+    font-family: 'Instrument Sans', -apple-system, sans-serif;
+    font-size: 46px;
+    font-weight: 600;
     line-height: 1.2;
     color: #e8e0d0;
     margin-bottom: 32px;
@@ -111,7 +111,9 @@
   }
 
   .headline em {
+    font-family: 'Fraunces', Georgia, serif;
     font-style: italic;
+    font-weight: 300;
     color: #a8c5ab;
   }
 
@@ -215,27 +217,39 @@
     width: 100%;
     border-top: 2px dashed rgba(122, 158, 126, 0.3);
     margin-top: 24px;
-    padding-top: 0;
   }
 
   .tearoff-tab {
     flex: 1;
     border-right: 1px dashed rgba(122, 158, 126, 0.2);
-    padding: 8px 4px;
-    text-align: center;
-    font-size: 8px;
-    color: #7a9e7e;
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    height: 0.75in;
+    padding: 10px 4px 6px;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    letter-spacing: 0.03em;
+    gap: 4px;
   }
 
   .tearoff-tab:last-child {
     border-right: none;
+  }
+
+  .tearoff-tab .tab-qr {
+    width: 0.55in;
+    height: 0.55in;
+    border-radius: 3px;
+  }
+
+  .tearoff-tab .tab-name {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 9px;
+    font-weight: 600;
+    color: #e8e0d0;
+    letter-spacing: 0.02em;
+  }
+
+  .tearoff-tab .tab-url {
+    font-size: 6px;
+    color: #7a9e7e;
   }
 </style>
 </head>
@@ -303,7 +317,7 @@
       <div class="cta-text">
         <span class="cta-scan">Scan or visit:</span>
         <span class="cta-url">bloomselfcare.app</span>
-        <span class="cta-free">Free &middot; Private &middot; Open Source</span>
+        <span class="cta-free">Free forever &middot; No accounts needed</span>
       </div>
     </div>
 
@@ -318,14 +332,14 @@
 
     <!-- Tear-off tabs -->
     <div class="tearoff-strip">
-      <div class="tearoff-tab">Bloom &middot; bloomselfcare.app</div>
-      <div class="tearoff-tab">Bloom &middot; bloomselfcare.app</div>
-      <div class="tearoff-tab">Bloom &middot; bloomselfcare.app</div>
-      <div class="tearoff-tab">Bloom &middot; bloomselfcare.app</div>
-      <div class="tearoff-tab">Bloom &middot; bloomselfcare.app</div>
-      <div class="tearoff-tab">Bloom &middot; bloomselfcare.app</div>
-      <div class="tearoff-tab">Bloom &middot; bloomselfcare.app</div>
-      <div class="tearoff-tab">Bloom &middot; bloomselfcare.app</div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
     </div>
 
   </div>
