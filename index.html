@@ -8823,7 +8823,7 @@ function renderTodayTab() {
         const done = td[h.id];
         const goal = state.prefs?.goals?.[h.id] || h.defaultGoal || 3;
         const weekCount = getWeeklyHabitCount(h.id);
-        const weeklyMuted = mutedAfterIndex > 0;
+        const weeklyMuted = isReducedDay;
         const wMutedStyle = weeklyMuted && !done ? 'opacity:0.45;' : '';
         html += `<div class="habit-row" style="${wMutedStyle}" onclick="tapWeeklyHabitToday('${h.id}', this)">
           <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : h.icon}</div>
@@ -8844,7 +8844,7 @@ function renderTodayTab() {
       }
       householdTasks.forEach(t => {
         const done = td['ht_' + t.id] || htDone[t.id];
-        const htMuted = mutedAfterIndex > 0;
+        const htMuted = isReducedDay;
         const htMutedStyle = htMuted && !done ? 'opacity:0.45;' : '';
         const htGoal = htGoalPrefs[t.id] || 1;
         // Count completions this week from history
