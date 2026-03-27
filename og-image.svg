@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600&amp;family=Instrument+Sans:wght@400;500&amp;display=swap');
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0d1610"/>
+
+  <!-- Subtle gradient overlay -->
+  <rect width="1200" height="630" fill="url(#grad)" opacity="0.3"/>
+  <defs>
+    <radialGradient id="grad" cx="30%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1c2a1f"/>
+      <stop offset="100%" stop-color="#0d1610"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Decorative circles (matching logo aesthetic) -->
+  <circle cx="950" cy="120" r="180" fill="#7a9e7e" opacity="0.08"/>
+  <circle cx="1050" cy="480" r="140" fill="#6a9ab0" opacity="0.06"/>
+  <circle cx="100" cy="550" r="120" fill="#b07878" opacity="0.06"/>
+  <circle cx="200" cy="100" r="100" fill="#c9954a" opacity="0.05"/>
+
+  <!-- Logo icon (simplified) -->
+  <g transform="translate(80, 180)">
+    <circle cx="40" cy="40" r="32" fill="#7a9e7e" opacity="0.9"/>
+    <circle cx="40" cy="40" r="18" fill="#a8c5ab"/>
+    <circle cx="100" cy="40" r="32" fill="#b07878" opacity="0.9"/>
+    <circle cx="100" cy="40" r="18" fill="#d4a8a8"/>
+    <circle cx="40" cy="100" r="32" fill="#6a9ab0" opacity="0.9"/>
+    <circle cx="40" cy="100" r="18" fill="#9ec4d8"/>
+    <circle cx="100" cy="100" r="32" fill="#c9954a" opacity="0.9"/>
+    <circle cx="100" cy="100" r="18" fill="#e0b87a"/>
+  </g>
+
+  <!-- App name -->
+  <text x="80" y="400" font-family="Fraunces, Georgia, serif" font-size="72" font-weight="600" fill="#e8e0d0">Bloom</text>
+
+  <!-- Tagline -->
+  <text x="83" y="450" font-family="Instrument Sans, sans-serif" font-size="28" font-weight="400" fill="#a3b5a5">gentle self-care for hard days</text>
+
+  <!-- Description -->
+  <text x="83" y="510" font-family="Instrument Sans, sans-serif" font-size="20" font-weight="400" fill="#8a9e8c">Free. Private. No accounts needed.</text>
+
+  <!-- URL -->
+  <text x="83" y="570" font-family="Instrument Sans, sans-serif" font-size="18" font-weight="500" fill="#7a9e7e">bloom-zeta-rouge.vercel.app</text>
+</svg>
