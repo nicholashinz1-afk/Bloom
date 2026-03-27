@@ -3741,27 +3741,6 @@ function checkStorageQuota() {
   }
 }
 
-function checkDomainMigration() {
-  if (location.hostname === 'bloomselfcare.app') return;
-  if (load('bloom_migration_dismissed', false)) return;
-  const banner = document.createElement('div');
-  banner.id = 'migration-banner';
-  banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:var(--bg-card);border-top:2px solid var(--sage);padding:16px 20px;box-shadow:0 -4px 24px rgba(0,0,0,0.3)';
-  banner.innerHTML = `
-    <div style="max-width:480px;margin:0 auto">
-      <div style="font-family:Fraunces,serif;font-size:17px;color:var(--cream);margin-bottom:6px">Bloom has a new home</div>
-      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:14px">
-        We've moved to <strong style="color:var(--sage-light)">bloomselfcare.app</strong>. Save a backup first, then visit the new site to restore your data.
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-primary btn-sm" onclick="showBackupSheet()" style="flex:1;min-width:120px">Save backup</button>
-        <a href="https://bloomselfcare.app" class="btn btn-secondary btn-sm" style="flex:1;min-width:120px;text-align:center;text-decoration:none">Visit new site</a>
-      </div>
-      <button onclick="document.getElementById('migration-banner').remove();save('bloom_migration_dismissed',true)" style="position:absolute;top:10px;right:14px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;padding:4px" aria-label="Dismiss">&times;</button>
-    </div>`;
-  document.body.appendChild(banner);
-}
-
 function load(key, def = null) {
   try {
     const v = localStorage.getItem(key);
@@ -13327,7 +13306,7 @@ async function generateBackupLink() {
     };
     const jsonStr = JSON.stringify(data);
     const encoded = await compressString(jsonStr);
-    const url = `${location.origin}${location.pathname}?restore=${encoded}`;
+    const url = `https://bloomselfcare.app/?restore=${encoded}`;
     if (url.length > 16000) {
       // URL too long even after compression — warn user
       const el = document.getElementById('backup-url-display');
@@ -15635,7 +15614,7 @@ function obShowBackup() {
   try {
     const data = { prefs: tempPrefs };
     const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
-    const url = `${location.origin}${location.pathname}?restore=${encoded}`;
+    const url = `https://bloomselfcare.app/?restore=${encoded}`;
     const el = document.getElementById('ob-backup-url');
     if (el) { el.style.display='block'; el.textContent=url; }
   } catch(e) {}
@@ -17916,7 +17895,6 @@ function initApp() {
   checkDailyAffirmation();
   checkAutoGenerateInsight();
   checkStorageQuota();
-  checkDomainMigration();
   checkWelcomeBack();
   checkSpecialDates();
   renderTodayTab();
