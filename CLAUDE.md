@@ -86,9 +86,9 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 
 ## Sustainability
 
+- **Ko-fi:** Live at ko-fi.com/bloomselfcare. Linked in Settings tab and Today tab.
 - **Open Collective:** Rejected (project too early-stage for fiscal sponsorship, reapply when community grows)
 - **GitHub Sponsors:** Live (via Stripe)
-- **Ko-fi:** Live at ko-fi.com/bloomselfcare — linked in Settings tab and Today tab
 - **Vercel OSS:** Emailed partnerships@vercel.com for sponsorship
 - **Upstash OSS:** Applied via oss@upstash.com
 - **Contact:** bloomhabits@proton.me
@@ -107,3 +107,10 @@ See `SCALABILITY_PROPOSAL.md` for the full proposal. Summary of phases:
 - Admin dashboard at `/admin.html`, protected by `ADMIN_KEY` environment variable in Vercel
 - Share the key to grant access, change the key in Vercel env vars to revoke
 - Single shared key for now, no role-based access
+
+## Writing Style
+
+- **No em dashes.** Use periods, commas, or restructure the sentence instead. Em dashes are widely perceived as AI-generated writing.
+- **Tone:** Real, personal, and warm, but still professional. Write like a person who genuinely cares, not a brand trying to sound relatable. Think "friend who happens to know what they're talking about," not "corporate wellness blog."
+- **Keep it grounded.** Don't oversell, don't hype. Let the work speak for itself. Simple, honest language over polished marketing speak.
+- **It's okay to be human.** Bloom was built from lived experience. The writing should reflect that. Be direct, be genuine, skip the fluff.
