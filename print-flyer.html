@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bloom — Flyer (Print)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @page {
+    size: letter;
+    margin: 0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Instrument Sans', -apple-system, sans-serif;
+    background: #fff;
+  }
+
+  .instructions {
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+    padding: 16px;
+    line-height: 1.5;
+    background: #f9f9f9;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .instructions strong { color: #333; }
+
+  @media print {
+    .instructions { display: none; }
+  }
+
+  .flyer {
+    width: 8.5in;
+    min-height: 11in;
+    background: #0d1610;
+    color: #e8e0d0;
+    padding: 0.75in;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Decorative background circles */
+  .flyer::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: rgba(122, 158, 126, 0.05);
+  }
+
+  .flyer::after {
+    content: '';
+    position: absolute;
+    bottom: 1.5in;
+    left: -80px;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: rgba(106, 154, 176, 0.04);
+  }
+
+  .flyer-content {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Logo */
+  .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .logo-dots-flyer {
+    display: grid;
+    grid-template-columns: 28px 28px;
+    gap: 8px;
+  }
+
+  .dot-f {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+  }
+
+  .dot-f.sage { background: #7a9e7e; }
+  .dot-f.rose { background: #b07878; }
+  .dot-f.sky { background: #6a9ab0; }
+  .dot-f.amber { background: #c9954a; }
+
+  .logo-text {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 36px;
+    font-weight: 600;
+    color: #e8e0d0;
+  }
+
+  /* Headline */
+  .headline {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 48px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: #e8e0d0;
+    margin-bottom: 32px;
+    max-width: 5.5in;
+  }
+
+  .headline em {
+    font-style: italic;
+    color: #a8c5ab;
+  }
+
+  /* Body */
+  .body-text {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #a3b5a5;
+    max-width: 5.5in;
+    margin-bottom: 40px;
+  }
+
+  /* Features */
+  .features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 32px;
+    margin-bottom: 48px;
+    max-width: 6in;
+  }
+
+  .feature {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 14px;
+    color: #e8e0d0;
+  }
+
+  .feature .dot-sm {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #7a9e7e;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* QR + URL area */
+  .cta-area {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-top: auto;
+    margin-bottom: 32px;
+  }
+
+  .qr-flyer {
+    width: 1.5in;
+    height: 1.5in;
+    border-radius: 8px;
+  }
+
+  .cta-text {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .cta-scan {
+    font-size: 14px;
+    color: #8a9e8c;
+  }
+
+  .cta-url {
+    font-size: 22px;
+    font-weight: 600;
+    color: #7a9e7e;
+  }
+
+  .cta-free {
+    font-size: 13px;
+    color: #8a9e8c;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* Divider */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: rgba(122, 158, 126, 0.2);
+    margin-bottom: 16px;
+  }
+
+  /* Crisis footer */
+  .crisis-footer {
+    font-size: 12px;
+    color: #8a9e8c;
+    line-height: 1.6;
+  }
+
+  .crisis-footer strong {
+    color: #a3b5a5;
+    font-weight: 500;
+  }
+
+  /* Tear-off strip */
+  .tearoff-strip {
+    display: flex;
+    width: 100%;
+    border-top: 2px dashed rgba(122, 158, 126, 0.3);
+    margin-top: 24px;
+    padding-top: 0;
+  }
+
+  .tearoff-tab {
+    flex: 1;
+    border-right: 1px dashed rgba(122, 158, 126, 0.2);
+    padding: 8px 4px;
+    text-align: center;
+    font-size: 8px;
+    color: #7a9e7e;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    height: 0.75in;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.03em;
+  }
+
+  .tearoff-tab:last-child {
+    border-right: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="instructions">
+  <strong>Bloom Flyer</strong><br>
+  Print this page (Ctrl/Cmd + P). Set margins to "None" and scale to 100%.<br>
+  The tear-off tabs at the bottom are meant to be cut with scissors so people can take one.
+</div>
+
+<div class="flyer">
+  <div class="flyer-content">
+
+    <!-- Logo -->
+    <div class="logo-area">
+      <div class="logo-dots-flyer">
+        <div class="dot-f sage"></div>
+        <div class="dot-f rose"></div>
+        <div class="dot-f sky"></div>
+        <div class="dot-f amber"></div>
+      </div>
+      <div class="logo-text">Bloom</div>
+    </div>
+
+    <!-- Headline -->
+    <h1 class="headline">
+      A quiet place to show up<br>
+      for yourself on <em>hard days.</em>
+    </h1>
+
+    <!-- Body -->
+    <p class="body-text">
+      Bloom is a free self-care app. Track habits without pressure, journal,
+      practice breathing exercises, and take care of yourself at your own pace.
+      No accounts. No data collection. No cost. Everything stays on your device.
+    </p>
+
+    <!-- Features -->
+    <div class="features">
+      <div class="feature">
+        <div class="dot-sm"></div>
+        <span>Habit tracking (no streak pressure)</span>
+      </div>
+      <div class="feature">
+        <div class="dot-sm"></div>
+        <span>Guided breathing exercises</span>
+      </div>
+      <div class="feature">
+        <div class="dot-sm"></div>
+        <span>Journaling with AI reflections</span>
+      </div>
+      <div class="feature">
+        <div class="dot-sm"></div>
+        <span>Anonymous buddy support</span>
+      </div>
+      <div class="feature">
+        <div class="dot-sm"></div>
+        <span>Hard day mode (less is more)</span>
+      </div>
+      <div class="feature">
+        <div class="dot-sm"></div>
+        <span>Works offline, installs like an app</span>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-area">
+      <img class="qr-flyer" src="qr-code.png" alt="QR code to Bloom app">
+      <div class="cta-text">
+        <span class="cta-scan">Scan or visit:</span>
+        <span class="cta-url">bloom-zeta-rouge.vercel.app</span>
+        <span class="cta-free">Free &middot; Private &middot; Open Source</span>
+      </div>
+    </div>
+
+    <!-- Crisis resources -->
+    <div class="divider"></div>
+    <div class="crisis-footer">
+      <strong>Crisis resources always available:</strong>
+      Call/text <strong>988</strong> &middot;
+      Text <strong>741741</strong> &middot;
+      <strong>findahelpline.com</strong> (40+ languages)
+    </div>
+
+    <!-- Tear-off tabs -->
+    <div class="tearoff-strip">
+      <div class="tearoff-tab">Bloom &middot; bloom-zeta-rouge.vercel.app</div>
+      <div class="tearoff-tab">Bloom &middot; bloom-zeta-rouge.vercel.app</div>
+      <div class="tearoff-tab">Bloom &middot; bloom-zeta-rouge.vercel.app</div>
+      <div class="tearoff-tab">Bloom &middot; bloom-zeta-rouge.vercel.app</div>
+      <div class="tearoff-tab">Bloom &middot; bloom-zeta-rouge.vercel.app</div>
+      <div class="tearoff-tab">Bloom &middot; bloom-zeta-rouge.vercel.app</div>
+      <div class="tearoff-tab">Bloom &middot; bloom-zeta-rouge.vercel.app</div>
+      <div class="tearoff-tab">Bloom &middot; bloom-zeta-rouge.vercel.app</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

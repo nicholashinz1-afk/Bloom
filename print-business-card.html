@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bloom — Business Cards (Print)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@300;400;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Instrument Sans', -apple-system, sans-serif;
+    background: #fff;
+    padding: 0.5in;
+  }
+
+  .instructions {
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .instructions strong { color: #333; }
+
+  @media print {
+    .instructions { display: none; }
+    body { padding: 0; }
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: 3.5in 3.5in;
+    grid-auto-rows: 2in;
+    gap: 0;
+    justify-content: center;
+  }
+
+  .card {
+    width: 3.5in;
+    height: 2in;
+    background: #0d1610;
+    border: 0.5px solid #ccc;
+    padding: 0.25in;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Subtle decorative circles */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(122, 158, 126, 0.06);
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .logo-dots {
+    display: grid;
+    grid-template-columns: 14px 14px;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+  }
+
+  .dot.sage { background: #7a9e7e; }
+  .dot.rose { background: #b07878; }
+  .dot.sky { background: #6a9ab0; }
+  .dot.amber { background: #c9954a; }
+
+  .card-title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #e8e0d0;
+    line-height: 1;
+  }
+
+  .card-tagline {
+    font-size: 10px;
+    color: #a3b5a5;
+    margin-top: 3px;
+    letter-spacing: 0.02em;
+  }
+
+  .card-body {
+    font-size: 9px;
+    color: #8a9e8c;
+    line-height: 1.5;
+  }
+
+  .card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .card-url {
+    font-size: 9px;
+    color: #7a9e7e;
+    font-weight: 500;
+  }
+
+  .card-qr {
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
+  }
+
+  /* Back of card variant */
+  .card.back {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .card.back .back-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card.back .logo-dots-lg {
+    display: grid;
+    grid-template-columns: 22px 22px;
+    gap: 6px;
+  }
+
+  .card.back .dot-lg {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+  }
+
+  .card.back .back-title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: #e8e0d0;
+  }
+
+  .card.back .back-sub {
+    font-size: 10px;
+    color: #a3b5a5;
+    letter-spacing: 0.05em;
+  }
+
+  .card.back .back-crisis {
+    font-size: 7.5px;
+    color: #8a9e8c;
+    margin-top: 4px;
+  }
+
+  .section-label {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 16px 0 4px;
+  }
+
+  @media print {
+    .section-label { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="instructions">
+  <strong>Bloom Business Cards</strong><br>
+  Print this page (Ctrl/Cmd + P), or save as PDF.<br>
+  Set margins to "None" or "Minimum" for best results. Cards are standard 3.5" x 2".<br>
+  Cut along the borders. Top row = fronts, bottom row = backs.
+</div>
+
+<div class="card-grid">
+
+  <div class="section-label">Front</div>
+
+  <!-- Card Front 1 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="logo-dots">
+        <div class="dot sage"></div>
+        <div class="dot rose"></div>
+        <div class="dot sky"></div>
+        <div class="dot amber"></div>
+      </div>
+      <div>
+        <div class="card-title">Bloom</div>
+        <div class="card-tagline">gentle self-care for hard days</div>
+      </div>
+    </div>
+    <div class="card-body">
+      Free, private self-care. Track habits, journal,<br>
+      breathe. No accounts. No data collection. No cost.
+    </div>
+    <div class="card-bottom">
+      <div class="card-url">bloom-zeta-rouge.vercel.app</div>
+      <img class="card-qr" src="qr-code.png" alt="QR code">
+    </div>
+  </div>
+
+  <!-- Card Front 2 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="logo-dots">
+        <div class="dot sage"></div>
+        <div class="dot rose"></div>
+        <div class="dot sky"></div>
+        <div class="dot amber"></div>
+      </div>
+      <div>
+        <div class="card-title">Bloom</div>
+        <div class="card-tagline">gentle self-care for hard days</div>
+      </div>
+    </div>
+    <div class="card-body">
+      Free, private self-care. Track habits, journal,<br>
+      breathe. No accounts. No data collection. No cost.
+    </div>
+    <div class="card-bottom">
+      <div class="card-url">bloom-zeta-rouge.vercel.app</div>
+      <img class="card-qr" src="qr-code.png" alt="QR code">
+    </div>
+  </div>
+
+  <!-- Card Front 3 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="logo-dots">
+        <div class="dot sage"></div>
+        <div class="dot rose"></div>
+        <div class="dot sky"></div>
+        <div class="dot amber"></div>
+      </div>
+      <div>
+        <div class="card-title">Bloom</div>
+        <div class="card-tagline">gentle self-care for hard days</div>
+      </div>
+    </div>
+    <div class="card-body">
+      Free, private self-care. Track habits, journal,<br>
+      breathe. No accounts. No data collection. No cost.
+    </div>
+    <div class="card-bottom">
+      <div class="card-url">bloom-zeta-rouge.vercel.app</div>
+      <img class="card-qr" src="qr-code.png" alt="QR code">
+    </div>
+  </div>
+
+  <!-- Card Front 4 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="logo-dots">
+        <div class="dot sage"></div>
+        <div class="dot rose"></div>
+        <div class="dot sky"></div>
+        <div class="dot amber"></div>
+      </div>
+      <div>
+        <div class="card-title">Bloom</div>
+        <div class="card-tagline">gentle self-care for hard days</div>
+      </div>
+    </div>
+    <div class="card-body">
+      Free, private self-care. Track habits, journal,<br>
+      breathe. No accounts. No data collection. No cost.
+    </div>
+    <div class="card-bottom">
+      <div class="card-url">bloom-zeta-rouge.vercel.app</div>
+      <img class="card-qr" src="qr-code.png" alt="QR code">
+    </div>
+  </div>
+
+  <div class="section-label">Back</div>
+
+  <!-- Card Back 1 -->
+  <div class="card back">
+    <div class="back-content">
+      <div class="logo-dots-lg">
+        <div class="dot-lg dot sage"></div>
+        <div class="dot-lg dot rose"></div>
+        <div class="dot-lg dot sky"></div>
+        <div class="dot-lg dot amber"></div>
+      </div>
+      <div class="back-title">Bloom</div>
+      <div class="back-sub">FREE &middot; PRIVATE &middot; OPEN SOURCE</div>
+      <div class="back-crisis">
+        Crisis? Call/text 988 &middot; Text 741741 &middot; findahelpline.com
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Back 2 -->
+  <div class="card back">
+    <div class="back-content">
+      <div class="logo-dots-lg">
+        <div class="dot-lg dot sage"></div>
+        <div class="dot-lg dot rose"></div>
+        <div class="dot-lg dot sky"></div>
+        <div class="dot-lg dot amber"></div>
+      </div>
+      <div class="back-title">Bloom</div>
+      <div class="back-sub">FREE &middot; PRIVATE &middot; OPEN SOURCE</div>
+      <div class="back-crisis">
+        Crisis? Call/text 988 &middot; Text 741741 &middot; findahelpline.com
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Back 3 -->
+  <div class="card back">
+    <div class="back-content">
+      <div class="logo-dots-lg">
+        <div class="dot-lg dot sage"></div>
+        <div class="dot-lg dot rose"></div>
+        <div class="dot-lg dot sky"></div>
+        <div class="dot-lg dot amber"></div>
+      </div>
+      <div class="back-title">Bloom</div>
+      <div class="back-sub">FREE &middot; PRIVATE &middot; OPEN SOURCE</div>
+      <div class="back-crisis">
+        Crisis? Call/text 988 &middot; Text 741741 &middot; findahelpline.com
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Back 4 -->
+  <div class="card back">
+    <div class="back-content">
+      <div class="logo-dots-lg">
+        <div class="dot-lg dot sage"></div>
+        <div class="dot-lg dot rose"></div>
+        <div class="dot-lg dot sky"></div>
+        <div class="dot-lg dot amber"></div>
+      </div>
+      <div class="back-title">Bloom</div>
+      <div class="back-sub">FREE &middot; PRIVATE &middot; OPEN SOURCE</div>
+      <div class="back-crisis">
+        Crisis? Call/text 988 &middot; Text 741741 &middot; findahelpline.com
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
