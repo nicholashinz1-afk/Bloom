@@ -12405,6 +12405,71 @@ function renderSettingsTab() {
     </div>
   `);
 
+  // ── FAQ & FEEDBACK ─────────────────────────────────────────
+  html += settingsSection('faq', '💬 FAQ & feedback', `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+      <div style="font-weight:500;color:var(--cream);margin-bottom:8px;font-size:14px">Common questions</div>
+
+      <div style="margin-bottom:14px">
+        <div style="font-weight:500;color:var(--cream);margin-bottom:2px">Where is my data stored?</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Everything stays on your device in your browser's local storage. Journal entries, mood logs, habits, and reflections are never uploaded to any server.</div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div style="font-weight:500;color:var(--cream);margin-bottom:2px">Can I use Bloom on multiple devices?</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Since data is stored locally, it doesn't sync between devices automatically. You can use the backup/restore feature in Data & Privacy to move your data manually.</div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div style="font-weight:500;color:var(--cream);margin-bottom:2px">Is Bloom a replacement for therapy?</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">No. Bloom is a self-care companion, not therapy, counseling, or medical advice. If you're struggling, please reach out to a licensed professional. The 🤍 in the header has crisis resources available anytime.</div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div style="font-weight:500;color:var(--cream);margin-bottom:2px">Will I lose my data if I clear my browser?</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Yes. Clearing browser data or cookies will erase your Bloom data. Safari may also delete data after 7 days of inactivity. Save a backup regularly in Data & Privacy to protect your information.</div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div style="font-weight:500;color:var(--cream);margin-bottom:2px">Is Bloom really free?</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Yes, forever. No premium tier, no ads, no paywalls. Bloom is open source (AGPL-3.0) and supported entirely by voluntary donations.</div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div style="font-weight:500;color:var(--cream);margin-bottom:2px">What does the AI see?</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">When you use AI features (journal reflections, weekly insights), only your prompt text is sent to generate a response. Nothing is stored or linked to your identity. For very low moods, Bloom uses pre-written responses instead of AI.</div>
+      </div>
+
+      <div style="border-top:1px solid rgba(255,255,255,0.06);margin:20px 0;padding-top:20px">
+        <div style="font-weight:500;color:var(--cream);margin-bottom:12px;font-size:14px">Get in touch</div>
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <a href="mailto:bloomhabits@proton.me?subject=Bloom feedback" style="display:flex;align-items:center;gap:10px;background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:var(--r-lg);padding:12px 14px;text-decoration:none;color:var(--cream);font-size:13px">
+            <span style="font-size:18px">✉️</span>
+            <div>
+              <div style="font-weight:500">Send feedback</div>
+              <div style="font-size:11px;color:var(--text-muted)">Ideas, suggestions, or just say hi</div>
+            </div>
+          </a>
+          <a href="mailto:bloomhabits@proton.me?subject=Bloom bug report" style="display:flex;align-items:center;gap:10px;background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:var(--r-lg);padding:12px 14px;text-decoration:none;color:var(--cream);font-size:13px">
+            <span style="font-size:18px">🐛</span>
+            <div>
+              <div style="font-weight:500">Report a bug</div>
+              <div style="font-size:11px;color:var(--text-muted)">Something broken? Let us know</div>
+            </div>
+          </a>
+          <a href="https://github.com/nicholashinz1-afk/Bloom" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:var(--r-lg);padding:12px 14px;text-decoration:none;color:var(--cream);font-size:13px">
+            <span style="font-size:18px">📂</span>
+            <div>
+              <div style="font-weight:500">View source code</div>
+              <div style="font-size:11px;color:var(--text-muted)">Bloom is open source on GitHub</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  `);
+
   html += `</div></div>`; // Close sg-body-about and settings-group
 
   // ── SHARE BLOOM ──────────────────────────────────────────────
