@@ -86,6 +86,7 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 
 ## Sustainability
 
+- **Ko-fi:** Live at ko-fi.com/bloomselfcare (Stripe, tips/donations)
 - **Open Collective:** Applied (pending approval for Open Source Collective fiscal sponsorship)
 - **Vercel OSS:** Emailed partnerships@vercel.com for sponsorship
 - **Upstash OSS:** Applied via oss@upstash.com
