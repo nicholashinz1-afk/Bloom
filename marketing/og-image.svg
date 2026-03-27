@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600&amp;family=Instrument+Sans:wght@400;500&amp;display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&amp;family=Instrument+Sans:wght@400;500&amp;display=swap');
     </style>
   </defs>
 
@@ -17,14 +17,12 @@
     </radialGradient>
   </defs>
 
-  <!-- Decorative circles (matching logo aesthetic) -->
-  <circle cx="950" cy="120" r="180" fill="#7a9e7e" opacity="0.08"/>
-  <circle cx="1050" cy="480" r="140" fill="#6a9ab0" opacity="0.06"/>
-  <circle cx="100" cy="550" r="120" fill="#b07878" opacity="0.06"/>
-  <circle cx="200" cy="100" r="100" fill="#c9954a" opacity="0.05"/>
+  <!-- Decorative circles -->
+  <circle cx="1000" cy="100" r="220" fill="#7a9e7e" opacity="0.04"/>
+  <circle cx="150" cy="530" r="180" fill="#6a9ab0" opacity="0.04"/>
 
-  <!-- Logo icon (simplified) -->
-  <g transform="translate(80, 180)">
+  <!-- Logo icon -->
+  <g transform="translate(80, 140)">
     <circle cx="40" cy="40" r="32" fill="#7a9e7e" opacity="0.9"/>
     <circle cx="40" cy="40" r="18" fill="#a8c5ab"/>
     <circle cx="100" cy="40" r="32" fill="#b07878" opacity="0.9"/>
@@ -36,14 +34,16 @@
   </g>
 
   <!-- App name -->
-  <text x="80" y="400" font-family="Fraunces, Georgia, serif" font-size="72" font-weight="600" fill="#e8e0d0">Bloom</text>
+  <text x="80" y="370" font-family="Fraunces, Georgia, serif" font-size="68" font-weight="300" fill="#e8e0d0">bloom</text>
 
   <!-- Tagline -->
-  <text x="83" y="450" font-family="Instrument Sans, sans-serif" font-size="28" font-weight="400" fill="#a3b5a5">self-care. no pressure.</text>
+  <text x="83" y="415" font-family="Fraunces, Georgia, serif" font-size="24" font-weight="300" font-style="italic" fill="#a8c5ab">a gentle self-care companion</text>
 
-  <!-- Description -->
-  <text x="83" y="510" font-family="Instrument Sans, sans-serif" font-size="20" font-weight="400" fill="#8a9e8c">Free. Private. No accounts needed.</text>
+  <!-- Core message in subtle card -->
+  <rect x="75" y="450" width="420" height="80" rx="12" ry="12" fill="#7a9e7e" opacity="0.08"/>
+  <text x="95" y="483" font-family="Fraunces, Georgia, serif" font-size="22" font-style="italic" fill="#e8e0d0">No guilt. No pressure.</text>
+  <text x="95" y="513" font-family="Fraunces, Georgia, serif" font-size="22" font-style="italic" fill="#e8e0d0">Just you, showing up.</text>
 
   <!-- URL -->
-  <text x="83" y="570" font-family="Instrument Sans, sans-serif" font-size="18" font-weight="500" fill="#7a9e7e">bloomselfcare.app</text>
+  <text x="83" y="580" font-family="Instrument Sans, sans-serif" font-size="20" font-weight="500" fill="#7a9e7e">bloomselfcare.app</text>
 </svg>
