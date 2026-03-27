@@ -271,7 +271,8 @@
   </div>
 
   <div class="tabs">
-    <div class="tab-btn active" onclick="switchAdminTab('overview')">Overview</div>
+    <div class="tab-btn active" onclick="switchAdminTab('project')">Project</div>
+    <div class="tab-btn" onclick="switchAdminTab('overview')">Overview</div>
     <div class="tab-btn" onclick="switchAdminTab('ai')">AI Feedback</div>
     <div class="tab-btn" onclick="switchAdminTab('errors')">Errors</div>
     <div class="tab-btn" onclick="switchAdminTab('events')">Events</div>
@@ -281,8 +282,124 @@
     <div class="tab-btn" onclick="switchAdminTab('wall')">Wall</div>
   </div>
 
+  <!-- Project -->
+  <div class="tab-panel active" id="panel-project">
+
+    <!-- Mission -->
+    <div class="card" style="border-left:3px solid var(--sage);margin-bottom:16px">
+      <div style="font-style:italic;font-size:15px;line-height:1.8;color:var(--cream)">
+        Bloom exists because mental health tools should be free, private, and gentle. Built by someone who's been through it, for people going through it. No company, no investors, no monetization — just a quiet place to show up for yourself on hard days. Bloom will always be free, and it will never sell, store, or exploit your data. If this app helps even one person feel a little less alone, it was worth building.
+      </div>
+    </div>
+
+    <!-- Infrastructure Status -->
+    <h2 style="font-size:16px;margin:20px 0 12px;color:var(--sage-light)">Infrastructure Status</h2>
+    <div class="grid">
+      <div class="card">
+        <h3 style="font-size:14px;color:var(--cream);margin-bottom:10px">🤖 Anthropic API</h3>
+        <div class="stat-row"><span class="stat-label">Daily reflections + reframes</span><span style="font-size:13px;color:var(--sage-light)">Haiku 4.5</span></div>
+        <div class="stat-row"><span class="stat-label">Weekly + monthly insights</span><span style="font-size:13px;color:var(--amber-light)">Sonnet 4</span></div>
+        <div class="stat-row"><span class="stat-label">Cost per reflection</span><span style="font-size:13px;color:var(--cream)">~$0.001</span></div>
+        <div class="stat-row"><span class="stat-label">Capacity on $5/mo</span><span style="font-size:13px;color:var(--sage-light)">~400 DAU</span></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:14px;color:var(--cream);margin-bottom:10px">▲ Vercel</h3>
+        <div class="stat-row"><span class="stat-label">Plan</span><span style="font-size:13px;color:var(--cream)">Free (Hobby)</span></div>
+        <div class="stat-row"><span class="stat-label">Function invocations</span><span style="font-size:13px;color:var(--cream)">100K/month</span></div>
+        <div class="stat-row"><span class="stat-label">Bandwidth</span><span style="font-size:13px;color:var(--cream)">100 GB/month</span></div>
+        <div class="stat-row"><span class="stat-label">Telemetry</span><span style="font-size:13px;color:var(--sage-light)">Batched (50-70% savings)</span></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:14px;color:var(--cream);margin-bottom:10px">🔴 Upstash Redis</h3>
+        <div class="stat-row"><span class="stat-label">Plan</span><span style="font-size:13px;color:var(--cream)">Free</span></div>
+        <div class="stat-row"><span class="stat-label">Commands</span><span style="font-size:13px;color:var(--cream)">10K/day</span></div>
+        <div class="stat-row"><span class="stat-label">Storage</span><span style="font-size:13px;color:var(--cream)">256 MB</span></div>
+        <div class="stat-row"><span class="stat-label">Used by</span><span style="font-size:13px;color:var(--cream)">Buddy, Wall, Telemetry</span></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:14px;color:var(--cream);margin-bottom:10px">🔔 OneSignal</h3>
+        <div class="stat-row"><span class="stat-label">Plan</span><span style="font-size:13px;color:var(--cream)">Free</span></div>
+        <div class="stat-row"><span class="stat-label">Web push</span><span style="font-size:13px;color:var(--sage-light)">Unlimited</span></div>
+        <div class="stat-row"><span class="stat-label">Status</span><span style="font-size:13px;color:var(--sage-light)">No bottleneck</span></div>
+      </div>
+    </div>
+
+    <!-- Sustainability Status -->
+    <h2 style="font-size:16px;margin:20px 0 12px;color:var(--sage-light)">Sustainability Status</h2>
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="stat-row"><span class="stat-label">🏛️ Open Collective (fiscal sponsorship)</span><span style="font-size:13px;color:var(--amber)">Applied — pending</span></div>
+        <div class="stat-row"><span class="stat-label">▲ Vercel OSS sponsorship</span><span style="font-size:13px;color:var(--amber)">Applied — pending</span></div>
+        <div class="stat-row"><span class="stat-label">🔴 Upstash OSS program</span><span style="font-size:13px;color:var(--amber)">Applied — pending</span></div>
+        <div class="stat-row"><span class="stat-label">💜 GitHub Sponsors</span><span style="font-size:13px;color:var(--text-secondary)">Waiting for Open Collective</span></div>
+        <div class="stat-row"><span class="stat-label">📜 License (AGPL-3.0)</span><span style="font-size:13px;color:var(--sage-light)">In place ✓</span></div>
+        <div class="stat-row"><span class="stat-label">📧 Project email</span><span style="font-size:13px;color:var(--cream)">bloomhabits@proton.me</span></div>
+      </div>
+    </div>
+
+    <!-- Scaling Roadmap -->
+    <h2 style="font-size:16px;margin:20px 0 12px;color:var(--sage-light)">Scaling Roadmap</h2>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+      <div class="card" style="border-left:3px solid var(--sage)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 1: Quick Wins</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Haiku/Sonnet split, telemetry batching, accessibility fixes, AGPL-3.0 license</div>
+          </div>
+          <span style="font-size:12px;color:var(--sage-light);font-weight:600">DONE ✓</span>
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--amber)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 2: Free AI Tier</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Cloudflare Workers AI as primary LLM, Claude as fallback for complex reflections</div>
+          </div>
+          <span style="font-size:12px;color:var(--amber);font-weight:600">NEXT</span>
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--text-muted)">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 3: Sustainability</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Open Collective approval, grant applications (Mozilla, McGovern, Google.org)</div>
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--text-muted)">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 4: Reach</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Internationalization, university counseling center partnerships, crisis org partnerships, app stores</div>
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--text-muted)">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 5: Architecture</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Cloudflare Pages + Workers migration if Vercel limits are hit. Target: 50K+ DAU at $0/month.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Documentation -->
+    <h2 style="font-size:16px;margin:20px 0 12px;color:var(--sage-light)">Documentation</h2>
+    <div class="card">
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <a href="https://github.com/nicholashinz1-afk/Bloom" target="_blank" style="color:var(--sky-light);font-size:13px;text-decoration:none">📂 GitHub Repository</a>
+        <a href="https://github.com/nicholashinz1-afk/Bloom/blob/main/CLAUDE.md" target="_blank" style="color:var(--sky-light);font-size:13px;text-decoration:none">📋 CLAUDE.md (README)</a>
+        <a href="https://github.com/nicholashinz1-afk/Bloom/blob/main/SCALABILITY_PROPOSAL.md" target="_blank" style="color:var(--sky-light);font-size:13px;text-decoration:none">📊 Scalability Proposal</a>
+        <a href="https://github.com/nicholashinz1-afk/Bloom/blob/main/LICENSE" target="_blank" style="color:var(--sky-light);font-size:13px;text-decoration:none">📜 License (AGPL-3.0)</a>
+      </div>
+    </div>
+
+    <!-- Admin Access Info -->
+    <h2 style="font-size:16px;margin:20px 0 12px;color:var(--sage-light)">Admin Access</h2>
+    <div class="card">
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+        This dashboard is protected by the <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-size:12px">ADMIN_KEY</code> environment variable in Vercel. To grant someone admin access, share the key. To revoke access, change the key in Vercel's environment variable settings and redeploy.
+      </div>
+    </div>
+  </div>
+
   <!-- Overview -->
-  <div class="tab-panel active" id="panel-overview">
+  <div class="tab-panel" id="panel-overview">
     <div class="grid" id="overview-cards">
       <div class="loading">Loading dashboard data...</div>
     </div>

@@ -1,5 +1,7 @@
 # Bloom
 
+> Bloom exists because mental health tools should be free, private, and gentle. Built by someone who's been through it, for people going through it. No company, no investors, no monetization — just a quiet place to show up for yourself on hard days. Bloom will always be free, and it will never sell, store, or exploit your data. If this app helps even one person feel a little less alone, it was worth building.
+
 Mental health self-care PWA. Compassionate, no-shame, no-pressure design philosophy.
 
 ## Architecture
@@ -70,3 +72,37 @@ Today | Weekly | Wellness | Progress | Community | Settings
 ## Deployment
 
 https://bloom-zeta-rouge.vercel.app
+
+## License
+
+AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must remain open source under the same terms. Nobody can take Bloom and make it proprietary or monetize a closed fork. This is intentional — Bloom is free forever.
+
+## Cost Model
+
+- **AI reflections:** Default to `claude-haiku-4-5-20251001` for daily journal reflections and cognitive reframes (cheap, fast). Use `claude-sonnet-4-20250514` for weekly insights and monthly reflections (richer, synthesizes more data). Model whitelist in `api/claude.js` prevents abuse.
+- **Telemetry:** Batched client-side (queue + flush every 30s or on page hide/unload via sendBeacon). Reduces Vercel invocations by ~50-70%.
+- **Free tier limits:** Vercel 100K invocations/month, Upstash 10K commands/day, OneSignal unlimited web push.
+- **Estimated capacity:** ~400 DAU on current setup. See `SCALABILITY_PROPOSAL.md` for full analysis.
+
+## Sustainability
+
+- **Open Collective:** Applied (pending approval for Open Source Collective fiscal sponsorship)
+- **Vercel OSS:** Emailed partnerships@vercel.com for sponsorship
+- **Upstash OSS:** Applied via oss@upstash.com
+- **GitHub Sponsors:** Pending (waiting for Open Collective fiscal host approval first)
+- **Contact:** bloomhabits@proton.me
+
+## Scaling Roadmap
+
+See `SCALABILITY_PROPOSAL.md` for the full proposal. Summary of phases:
+1. **Quick wins (done)** — Haiku/Sonnet split, telemetry batching, accessibility fixes
+2. **Free AI tier (next)** — Cloudflare Workers AI as primary LLM, Claude as fallback
+3. **Sustainability** — Open Collective, grants (Mozilla, McGovern Foundation, Google.org)
+4. **Reach** — Internationalization, university partnerships, crisis org partnerships
+5. **Architecture** — Cloudflare Pages + Workers migration if Vercel limits are hit
+
+## Admin Access
+
+- Admin dashboard at `/admin.html`, protected by `ADMIN_KEY` environment variable in Vercel
+- Share the key to grant access, change the key in Vercel env vars to revoke
+- Single shared key for now — no role-based access
