@@ -43,7 +43,7 @@ Use these when writing about Bloom in any context:
 
 Copy and paste. Adjust name/role as needed.
 
-### Simple version:
+### Plain text (any email client):
 ```
 [Your Name]
 Bloom — free, private self-care for hard days
@@ -66,6 +66,61 @@ Free, open-source mental health self-care
 https://bloom-zeta-rouge.vercel.app | bloomhabits@proton.me
 Source: https://github.com/nicholashinz1-afk/bloom
 ```
+
+### HTML signature with badge (Gmail, Outlook, Apple Mail)
+
+Paste this into your email client's HTML signature editor. The badge image
+links directly to Bloom when clicked.
+
+```html
+<table cellpadding="0" cellspacing="0" border="0" style="font-family: -apple-system, Arial, sans-serif; font-size: 14px; color: #333;">
+  <tr>
+    <td style="padding-bottom: 8px;">
+      <strong>[Your Name]</strong><br>
+      <span style="font-size: 12px; color: #666;">[Title / Role — optional]</span>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-top: 8px; border-top: 1px solid #ddd;">
+      <a href="https://bloom-zeta-rouge.vercel.app" style="text-decoration: none;">
+        <img src="https://bloom-zeta-rouge.vercel.app/email-badge.png"
+             alt="Bloom — gentle self-care for hard days"
+             width="200" height="43"
+             style="display: block; border: 0;" />
+      </a>
+    </td>
+  </tr>
+</table>
+```
+
+### Minimal icon link (for personal email signatures)
+
+If you just want a small Bloom icon next to your existing signature, add this
+anywhere in your signature HTML. It's a tiny clickable icon that links to Bloom,
+perfect for dropping under your name without making Bloom the focus.
+
+```html
+<a href="https://bloom-zeta-rouge.vercel.app" style="text-decoration: none;">
+  <img src="https://bloom-zeta-rouge.vercel.app/email-icon.png"
+       alt="Bloom"
+       width="20" height="20"
+       style="vertical-align: middle; border: 0;" />
+</a>
+```
+
+Or with text next to it:
+```html
+<a href="https://bloom-zeta-rouge.vercel.app" style="text-decoration: none; color: #7a9e7e; font-size: 12px;">
+  <img src="https://bloom-zeta-rouge.vercel.app/email-icon.png"
+       alt="Bloom"
+       width="20" height="20"
+       style="vertical-align: middle; border: 0; margin-right: 4px;" />Bloom
+</a>
+```
+
+**Asset files in this repo:**
+- `email-badge.png` (260x56) — full badge with name + tagline
+- `email-icon.png` (40x40) — just the four-circle logo, works as a tiny link
 
 ---
 
@@ -131,23 +186,19 @@ https://bloom-zeta-rouge.vercel.app
 
 ## QR Code
 
-### How to generate
-The simplest free option: go to any QR generator and enter the URL.
+Ready-to-use QR codes are included in this repo:
 
-**Recommended URL for QR codes:**
-```
-https://bloom-zeta-rouge.vercel.app
-```
+- **`qr-code.svg`** — vector, scales to any size for print (flyers, posters, cards)
+- **`qr-code.png`** — raster, good for digital use and quick sharing
 
-**Free QR generators (no tracking, no signup):**
-- https://www.qr-code-generator.com (download PNG/SVG, no account needed)
-- https://goqr.me (simple, fast)
+Both link to `https://bloom-zeta-rouge.vercel.app` with high error correction
+(scannable even if partially covered or printed small).
 
-**QR code tips:**
-- Download as SVG for print materials (scales without pixelation)
-- Use at least 1 inch (2.5 cm) square on printed materials
-- Test the QR code with your phone before printing
-- Dark QR on light background for best scanning reliability
+**Print tips:**
+- Use the SVG for anything that gets printed (scales without pixelation)
+- Minimum 1 inch (2.5 cm) square on printed materials
+- Test the QR code with your phone before printing a batch
+- Dark on light background for best scanning reliability
 
 ---
 
@@ -260,16 +311,31 @@ For Mozilla Foundation, Google.org, mental health foundations, etc.:
 
 ---
 
+## Assets Included
+
+| File | Size | Purpose |
+|------|------|---------|
+| `og-image.png` | 1200x630 | Social sharing preview (Facebook, Discord, iMessage, etc.) |
+| `og-image.svg` | 1200x630 | Editable source for the OG image |
+| `qr-code.svg` | Vector | Print-ready QR code linking to Bloom |
+| `qr-code.png` | ~820px | Digital QR code |
+| `email-badge.png` | 260x56 | Clickable email signature badge |
+| `email-icon.png` | 40x40 | Tiny logo icon for personal email signatures |
+| `bloom-logo-512.png` | 512x512 | App logo (PNG) |
+| `icon.svg` | 512x512 | App logo (vector) |
+
+---
+
 ## What's Next
 
 Things to consider as Bloom grows:
 
 - **Custom domain.** A short, memorable URL makes everything easier to share (flyers, word of mouth, QR codes). Something like `bloomselfcare.app` or similar.
 - **Social accounts.** Even a simple presence on Twitter/X or Instagram gives people a place to find you and share.
-- **OG image.** The `og-image.png` referenced in the HTML meta tags needs to be created (1200x630px). Use the brand colors, logo, and tagline.
 - **Press kit page.** A simple `/press` page with logo downloads, screenshots, and the elevator pitch.
 - **App store presence.** PWAs can be listed in the Microsoft Store and Google Play via PWABuilder. Free visibility.
 - **Testimonials.** As people use Bloom, collect quotes (with permission) for the site and outreach.
+- **App screenshots for README.** A few screenshots of the actual app would make the GitHub page more compelling.
 
 ---
 
