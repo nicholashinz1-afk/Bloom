@@ -217,22 +217,16 @@
     width: 100%;
     border-top: 2px dashed rgba(122, 158, 126, 0.3);
     margin-top: 24px;
-    padding-top: 0;
   }
 
   .tearoff-tab {
     flex: 1;
     border-right: 1px dashed rgba(122, 158, 126, 0.2);
-    padding: 6px 2px;
-    text-align: center;
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    height: 1in;
+    padding: 10px 4px 6px;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 6px;
+    gap: 4px;
   }
 
   .tearoff-tab:last-child {
@@ -240,29 +234,22 @@
   }
 
   .tearoff-tab .tab-qr {
-    width: 28px;
-    height: 28px;
+    width: 0.55in;
+    height: 0.55in;
     border-radius: 3px;
-    /* QR rotates with the writing mode */
-  }
-
-  .tearoff-tab .tab-logo {
-    width: 18px;
-    height: 18px;
-    border-radius: 4px;
   }
 
   .tearoff-tab .tab-name {
     font-family: 'Fraunces', Georgia, serif;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 600;
     color: #e8e0d0;
+    letter-spacing: 0.02em;
   }
 
   .tearoff-tab .tab-url {
     font-size: 6px;
     color: #7a9e7e;
-    letter-spacing: 0.02em;
   }
 </style>
 </head>
@@ -345,14 +332,14 @@
 
     <!-- Tear-off tabs -->
     <div class="tearoff-strip">
-      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><img class="tab-logo" src="bloom-logo-512.png" alt=""><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
-      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><img class="tab-logo" src="bloom-logo-512.png" alt=""><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
-      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><img class="tab-logo" src="bloom-logo-512.png" alt=""><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
-      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><img class="tab-logo" src="bloom-logo-512.png" alt=""><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
-      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><img class="tab-logo" src="bloom-logo-512.png" alt=""><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
-      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><img class="tab-logo" src="bloom-logo-512.png" alt=""><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
-      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><img class="tab-logo" src="bloom-logo-512.png" alt=""><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
-      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><img class="tab-logo" src="bloom-logo-512.png" alt=""><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
+      <div class="tearoff-tab"><img class="tab-qr" src="qr-code.png" alt="QR"><span class="tab-name">Bloom</span><span class="tab-url">bloomselfcare.app</span></div>
     </div>
 
   </div>
