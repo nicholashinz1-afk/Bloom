@@ -15669,47 +15669,71 @@ function completeOnboarding() {
 function initOneSignal() {
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: '90cb3151-0f7d-4848-afb4-1fb4c8c890a8',
-      safari_web_id: 'web.onesignal.auto.3cd6b41f-0715-4da8-9007-02ca4af2dc44',
-      notifyButton: { enable: false },
-      allowLocalhostAsSecureOrigin: true,
-      serviceWorkerParam: { scope: '/' },
-      serviceWorkerPath: '/OneSignalSDKWorker.js',
-    });
+    try {
+      await OneSignal.init({
+        appId: '90cb3151-0f7d-4848-afb4-1fb4c8c890a8',
+        safari_web_id: 'web.onesignal.auto.3cd6b41f-0715-4da8-9007-02ca4af2dc44',
+        notifyButton: { enable: false },
+        allowLocalhostAsSecureOrigin: true,
+        serviceWorkerParam: { scope: '/' },
+        serviceWorkerPath: '/OneSignalSDKWorker.js',
+      });
+      console.log('[bloom-onesignal] init success');
+    } catch(initErr) {
+      console.error('[bloom-onesignal] init FAILED:', initErr);
+      return;
+    }
 
     // Capture player ID for buddy notifications
     try {
       OneSignal.User.PushSubscription.addEventListener('change', (e) => {
+        console.log('[bloom-onesignal] subscription change:', JSON.stringify(e.current));
         if (e.current?.id) {
           save('bloom_onesignal_pid', e.current.id);
-          // Always re-register so the server has the current player ID
           buddyRegisterAndSync();
-          // Schedule push notifications now that we have a player ID
           setTimeout(() => scheduleAllPushNotifications(), 2000);
         }
       });
       const pid = OneSignal.User.PushSubscription.id;
+      const token = OneSignal.User.PushSubscription.token;
+      const optedIn = OneSignal.User.PushSubscription.optedIn;
+      console.log('[bloom-onesignal] pid:', pid, 'token:', token ? 'yes' : 'no', 'optedIn:', optedIn);
       if (pid) {
         save('bloom_onesignal_pid', pid);
-        // Sync with server in case the stored ID was lost or changed
         buddyRegisterAndSync();
+      } else {
+        console.warn('[bloom-onesignal] no player ID available after init');
       }
-    } catch(e) {}
+    } catch(e) {
+      console.error('[bloom-onesignal] subscription check failed:', e);
+    }
 
     // Request permission after a short delay if not yet granted
     setTimeout(async () => {
       try {
         const permission = await OneSignal.Notifications.permission;
+        console.log('[bloom-onesignal] permission:', permission);
         if (!permission) {
+          console.log('[bloom-onesignal] requesting permission...');
           await OneSignal.Notifications.requestPermission();
+          // After permission granted, check for pid again
+          const newPid = OneSignal.User.PushSubscription.id;
+          console.log('[bloom-onesignal] post-permission pid:', newPid);
+          if (newPid) {
+            save('bloom_onesignal_pid', newPid);
+            buddyRegisterAndSync();
+            setTimeout(() => scheduleAllPushNotifications(), 2000);
+          }
         }
-      } catch(e) {}
+      } catch(e) {
+        console.error('[bloom-onesignal] permission request failed:', e);
+      }
     }, 3000);
   });
   const script = document.createElement('script');
   script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
   script.defer = true;
+  script.onerror = () => console.error('[bloom-onesignal] SDK script failed to load');
   document.head.appendChild(script);
 }
 
