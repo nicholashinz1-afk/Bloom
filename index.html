@@ -992,6 +992,58 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 .toggle-row:last-child { border-bottom: none; }
+/* Habit reorder */
+.habit-reorder-item {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border-radius: var(--r-md);
+}
+.habit-reorder-item.dragging {
+  opacity: 0.85;
+  z-index: 10;
+  background: rgba(255,255,255,0.03);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  border-radius: var(--r-md);
+}
+.habit-drag-handle {
+  padding: 10px 8px 10px 0;
+  cursor: grab;
+  color: var(--text-muted);
+  font-size: 14px;
+  user-select: none;
+  touch-action: none;
+  opacity: 0.4;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.habit-drag-handle:hover,
+.habit-drag-handle:focus-visible { opacity: 0.8; }
+.habit-drag-handle:active { cursor: grabbing; }
+.habit-reorder-content { flex: 1; min-width: 0; }
+.habit-reorder-placeholder {
+  background: rgba(106,154,176,0.06);
+  border: 2px dashed rgba(106,154,176,0.2);
+  border-radius: var(--r-md);
+  transition: height 0.15s ease;
+}
+.habit-move-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 2px 6px;
+  cursor: pointer;
+  line-height: 1;
+}
+.habit-move-btn:disabled { opacity: 0.2; cursor: default; }
+.habit-move-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-secondary);
+}
 .toggle-label { font-size: 14px; color: var(--text-primary); }
 .toggle-sub { font-size: 12px; color: var(--text-secondary); }
 .toggle {
@@ -6611,6 +6663,19 @@ const DAILY_HABITS = [
 
 const MEDICATION_HABIT = { id: 'medication', icon: '💊', label: 'Medication', xp: 20, defaultTime: 'any' };
 
+function getOrderedDailyHabits() {
+  const order = state.prefs?.habitOrder;
+  if (!order || !order.length) return DAILY_HABITS;
+  const habitMap = {};
+  DAILY_HABITS.forEach(h => { habitMap[h.id] = h; });
+  (state.prefs?.customDailyHabits || []).forEach(h => { habitMap[h.id] = h; });
+  const ordered = order.map(id => habitMap[id]).filter(Boolean);
+  const inOrder = new Set(order);
+  DAILY_HABITS.forEach(h => { if (!inOrder.has(h.id)) ordered.push(h); });
+  (state.prefs?.customDailyHabits || []).forEach(h => { if (!inOrder.has(h.id)) ordered.push(h); });
+  return ordered;
+}
+
 // Weekly habits — appear on Today tab, tracked per-week
 const WEEKLY_HABITS = [
   { id: 'w_shower',   icon: '🚿', label: 'Shower',         xp: 20, defaultGoal: 3 },
@@ -8595,7 +8660,7 @@ function renderTodayTab() {
   // --- DAILY HABITS (grouped by time: AM / PM / Any) ---
   const dhPrefs = prefs?.dailyHabits || {};
   const htPrefs = prefs?.habitTimes || {};
-  let allDailyHabits = DAILY_HABITS.filter(h => dhPrefs[h.id]);
+  let allDailyHabits = getOrderedDailyHabits().filter(h => dhPrefs[h.id]);
   const medEnabled = !!dhPrefs.medication;
 
   // Adaptive difficulty: if mood is low (0 or 1) or gentle mode, mute non-priority habits
@@ -8817,8 +8882,7 @@ function renderTodayTab() {
           const task = SELF_CARE_TASKS.find(t2 => t2.id === id);
           if (!task) return;
           const done = scDone[id];
-          const scMuted = mutedAfterIndex > 0;
-          const scMutedStyle = scMuted && !done ? 'opacity:0.45;' : '';
+          const scMutedStyle = '';
           html += `<div class="habit-row" style="${scMutedStyle}" onclick="tapSelfCare('${id}', this)">
             <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : task.icon}</div>
             <div class="habit-info"><div class="habit-name">${task.label}</div></div>
@@ -11622,7 +11686,7 @@ function renderSettingsTab() {
     </div>`;
   }
 
-  function dailyHabitSettingsRow(h) {
+  function dailyHabitSettingsRow(h, index, total) {
     const on = !!dh[h.id];
     let row = `<div class="toggle-row" style="flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:10px;flex:1">
@@ -11643,10 +11707,25 @@ function renderSettingsTab() {
       }
     }
     row += `</div>`;
-    return row;
+    // Wrap in reorder item
+    return `<div class="habit-reorder-item" data-habit-id="${h.id}" aria-label="${h.label}, position ${index + 1} of ${total}">
+      <div class="habit-drag-handle" aria-label="Reorder ${h.label}" role="button" tabindex="0"
+           onkeydown="habitReorderKeydown(event,'${h.id}')">⠿</div>
+      <div class="habit-reorder-content">${row}</div>
+      <div style="display:flex;flex-direction:column;gap:2px;padding:6px 0;flex-shrink:0">
+        <button class="habit-move-btn" onclick="moveHabit('${h.id}',-1)" aria-label="Move ${h.label} up"${index === 0 ? ' disabled' : ''}>&uarr;</button>
+        <button class="habit-move-btn" onclick="moveHabit('${h.id}',1)" aria-label="Move ${h.label} down"${index === total - 1 ? ' disabled' : ''}>&darr;</button>
+      </div>
+    </div>`;
   }
 
-  let dailyHtml = DAILY_HABITS.map(h => dailyHabitSettingsRow(h)).join('');
+  const orderedHabits = getOrderedDailyHabits();
+  let dailyHtml = `<div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">
+    Drag to arrange your habits in order of importance. On harder days, your top two will be highlighted as gentle priorities.
+  </div>`;
+  dailyHtml += `<div id="habit-reorder-list">`;
+  dailyHtml += orderedHabits.map((h, i) => dailyHabitSettingsRow(h, i, orderedHabits.length)).join('');
+  dailyHtml += `</div>`;
 
   // Medication — visually separated
   const medOn = !!dh.medication;
@@ -12755,6 +12834,7 @@ function reRenderSettingsPreservingScroll() {
       if (sb) sb.style.transition = '';
     });
     if (settingsScroll) settingsScroll.scrollTop = savedScrollTop;
+    initHabitDragReorder();
   });
 }
 
@@ -12769,6 +12849,115 @@ function toggleDailyHabitPref(id) {
   }
   save('bloom_prefs', state.prefs);
   reRenderSettingsPreservingScroll();
+}
+
+// ============================================================
+//  HABIT REORDER
+// ============================================================
+
+function getHabitOrder() {
+  return state.prefs?.habitOrder || DAILY_HABITS.map(h => h.id);
+}
+
+function saveHabitOrder(order) {
+  if (!state.prefs) state.prefs = {};
+  state.prefs.habitOrder = order;
+  save('bloom_prefs', state.prefs);
+}
+
+function moveHabit(id, direction) {
+  const order = getHabitOrder().slice();
+  const idx = order.indexOf(id);
+  if (idx < 0) return;
+  const newIdx = idx + direction;
+  if (newIdx < 0 || newIdx >= order.length) return;
+  [order[idx], order[newIdx]] = [order[newIdx], order[idx]];
+  saveHabitOrder(order);
+  reRenderSettingsPreservingScroll();
+  haptic('light');
+}
+
+function habitReorderKeydown(e, habitId) {
+  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  e.preventDefault();
+  moveHabit(habitId, e.key === 'ArrowUp' ? -1 : 1);
+  setTimeout(() => {
+    const handle = document.querySelector('[data-habit-id="' + habitId + '"] .habit-drag-handle');
+    if (handle) handle.focus();
+  }, 50);
+}
+
+function initHabitDragReorder() {
+  const list = document.getElementById('habit-reorder-list');
+  if (!list) return;
+
+  let dragItem = null;
+  let startY = 0;
+
+  function onDragStart(e) {
+    const handle = e.target.closest('.habit-drag-handle');
+    if (!handle) return;
+    dragItem = handle.closest('.habit-reorder-item');
+    if (!dragItem) return;
+    e.preventDefault();
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+    dragItem.classList.add('dragging');
+    haptic('light');
+    document.addEventListener('touchmove', onDragMove, { passive: false });
+    document.addEventListener('touchend', onDragEnd);
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('mouseup', onDragEnd);
+  }
+
+  function onDragMove(e) {
+    if (!dragItem) return;
+    e.preventDefault();
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    dragItem.style.transform = 'translateY(' + (clientY - startY) + 'px)';
+    dragItem.style.zIndex = '100';
+  }
+
+  function onDragEnd(e) {
+    if (!dragItem) return;
+    const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+
+    // Find drop position
+    const items = [...list.querySelectorAll('.habit-reorder-item')];
+    const dragId = dragItem.dataset.habitId;
+    const order = getHabitOrder().slice();
+    const fromIdx = order.indexOf(dragId);
+    let toIdx = fromIdx;
+
+    const others = items.filter(it => it !== dragItem);
+    for (let i = 0; i < others.length; i++) {
+      const rect = others[i].getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      const oIdx = order.indexOf(others[i].dataset.habitId);
+      if (clientY < mid) { toIdx = oIdx; break; }
+      toIdx = oIdx + (oIdx > fromIdx ? 0 : 1);
+    }
+
+    if (fromIdx !== toIdx) {
+      order.splice(fromIdx, 1);
+      const insertAt = toIdx > fromIdx ? toIdx - 1 : toIdx;
+      order.splice(insertAt < 0 ? 0 : insertAt, 0, dragId);
+      saveHabitOrder(order);
+      haptic('medium');
+    }
+
+    dragItem.classList.remove('dragging');
+    dragItem.style.transform = '';
+    dragItem.style.zIndex = '';
+    document.removeEventListener('touchmove', onDragMove);
+    document.removeEventListener('touchend', onDragEnd);
+    document.removeEventListener('mousemove', onDragMove);
+    document.removeEventListener('mouseup', onDragEnd);
+    dragItem = null;
+    reRenderSettingsPreservingScroll();
+  }
+
+  list.addEventListener('touchstart', onDragStart, { passive: false });
+  list.addEventListener('mousedown', onDragStart);
 }
 
 function toggleHabitTimeSlot(id, slotBit) {
@@ -17871,6 +18060,10 @@ function addCustomDailyHabit() {
   if (state.prefs.customDailyHabits.length >= 10) return;
 
   state.prefs.customDailyHabits.push({ id, name, icon: '🌸', time: 'any' });
+  // Append to habit order
+  const order = getHabitOrder().slice();
+  order.push(id);
+  saveHabitOrder(order);
   save('bloom_prefs', state.prefs);
   nameInput.value = '';
   reRenderSettingsPreservingScroll();
@@ -17881,6 +18074,10 @@ function addCustomDailyHabit() {
 function removeCustomDailyHabit(id) {
   if (!state.prefs.customDailyHabits) return;
   state.prefs.customDailyHabits = state.prefs.customDailyHabits.filter(h => h.id !== id);
+  // Remove from habit order
+  if (state.prefs.habitOrder) {
+    state.prefs.habitOrder = state.prefs.habitOrder.filter(hid => hid !== id);
+  }
   save('bloom_prefs', state.prefs);
   reRenderSettingsPreservingScroll();
   renderTodayTab();
