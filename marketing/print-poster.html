@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bloom — Waiting Room Poster (Print)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @page {
+    size: letter;
+    margin: 0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Instrument Sans', -apple-system, sans-serif;
+    background: #fff;
+  }
+
+  .instructions {
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+    padding: 16px;
+    line-height: 1.5;
+    background: #f9f9f9;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .instructions strong { color: #333; }
+
+  @media print {
+    .instructions { display: none; }
+  }
+
+  .poster {
+    width: 8.5in;
+    min-height: 11in;
+    background: #0d1610;
+    color: #e8e0d0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75in;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+
+  /* Decorative background circles */
+  .poster::before {
+    content: '';
+    position: absolute;
+    top: -150px;
+    right: -150px;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: rgba(122, 158, 126, 0.05);
+  }
+
+  .poster::after {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    left: -120px;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: rgba(106, 154, 176, 0.04);
+  }
+
+  .poster-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    max-width: 6.5in;
+  }
+
+  /* Logo dots */
+  .logo-dots {
+    display: grid;
+    grid-template-columns: 44px 44px;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .dot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+  }
+
+  .dot.sage { background: #7a9e7e; }
+  .dot.rose { background: #b07878; }
+  .dot.sky { background: #6a9ab0; }
+  .dot.amber { background: #c9954a; }
+
+  /* Title */
+  .title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 64px;
+    font-weight: 600;
+    color: #e8e0d0;
+    margin-bottom: 16px;
+    letter-spacing: -0.01em;
+  }
+
+  /* Tagline */
+  .tagline {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 26px;
+    font-weight: 300;
+    font-style: italic;
+    color: #a8c5ab;
+    margin-bottom: 48px;
+    line-height: 1.4;
+  }
+
+  /* Description */
+  .description {
+    font-size: 18px;
+    line-height: 1.8;
+    color: #a3b5a5;
+    margin-bottom: 48px;
+    max-width: 5.5in;
+  }
+
+  /* Feature pills */
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 56px;
+  }
+
+  .pill {
+    background: rgba(122, 158, 126, 0.12);
+    border: 1px solid rgba(122, 158, 126, 0.25);
+    border-radius: 24px;
+    padding: 10px 22px;
+    font-size: 15px;
+    color: #a8c5ab;
+    white-space: nowrap;
+  }
+
+  /* QR + URL section */
+  .cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 48px;
+  }
+
+  .qr-img {
+    width: 2in;
+    height: 2in;
+    border-radius: 12px;
+  }
+
+  .scan-text {
+    font-size: 15px;
+    color: #8a9e8c;
+  }
+
+  .url {
+    font-size: 28px;
+    font-weight: 600;
+    color: #7a9e7e;
+    letter-spacing: 0.01em;
+  }
+
+  .free-line {
+    font-size: 14px;
+    color: #8a9e8c;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* Divider */
+  .divider {
+    width: 3in;
+    height: 1px;
+    background: rgba(122, 158, 126, 0.2);
+    margin-bottom: 24px;
+  }
+
+  /* Crisis footer */
+  .crisis {
+    font-size: 13px;
+    color: #8a9e8c;
+    line-height: 1.8;
+  }
+
+  .crisis strong {
+    color: #a3b5a5;
+    font-weight: 500;
+  }
+
+  /* Disclaimer */
+  .disclaimer {
+    font-size: 10px;
+    color: rgba(138, 158, 140, 0.5);
+    margin-top: 24px;
+  }
+</style>
+</head>
+<body>
+
+<div class="instructions">
+  <strong>Bloom Waiting Room Poster</strong><br>
+  Print this page (Ctrl/Cmd + P). Set margins to "None" and scale to 100%.<br>
+  Designed for therapist offices, wellness centers, and waiting rooms.
+</div>
+
+<div class="poster">
+  <div class="poster-content">
+
+    <!-- Logo -->
+    <div class="logo-dots">
+      <div class="dot sage"></div>
+      <div class="dot rose"></div>
+      <div class="dot sky"></div>
+      <div class="dot amber"></div>
+    </div>
+
+    <h1 class="title">Bloom</h1>
+    <p class="tagline">A quiet place to show up for yourself<br>on hard days.</p>
+
+    <p class="description">
+      Free, private self-care you can do from your phone.
+      Track habits without pressure, journal, practice breathing exercises,
+      and check in with how you're really feeling. No accounts, no data collection, no cost.
+    </p>
+
+    <!-- Feature pills -->
+    <div class="pills">
+      <span class="pill">Mood tracking</span>
+      <span class="pill">Journaling</span>
+      <span class="pill">Breathing exercises</span>
+      <span class="pill">Habit building</span>
+      <span class="pill">Hard day mode</span>
+      <span class="pill">Therapist reports</span>
+    </div>
+
+    <!-- QR / URL -->
+    <div class="cta">
+      <img class="qr-img" src="qr-code.png" alt="QR code to Bloom app">
+      <span class="scan-text">Scan with your phone camera, or visit:</span>
+      <span class="url">bloom-zeta-rouge.vercel.app</span>
+      <span class="free-line">Free &middot; Private &middot; Open Source</span>
+    </div>
+
+    <!-- Crisis resources -->
+    <div class="divider"></div>
+    <div class="crisis">
+      <strong>In crisis?</strong> Call or text <strong>988</strong> &middot;
+      Text HOME to <strong>741741</strong> &middot;
+      <strong>findahelpline.com</strong> (40+ languages)
+    </div>
+
+    <div class="disclaimer">
+      Bloom is a self-care companion, not a substitute for professional mental health care.
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

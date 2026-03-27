@@ -12183,14 +12183,6 @@ function renderSettingsTab() {
         </div>
       </a>
 
-      <div onclick="copyEmailSignature()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyEmailSignature()}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
-        <span style="font-size:22px">✉️</span>
-        <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream)">Email signature</div>
-          <div style="font-size:12px;color:var(--text-muted)">Copy a small Bloom link for your email signature</div>
-        </div>
-      </div>
-
       <div onclick="downloadQR()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadQR()}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
         <span style="font-size:22px">📱</span>
         <div>
@@ -12207,6 +12199,132 @@ function renderSettingsTab() {
         </div>
       </a>
 
+    </div>
+  `);
+
+  // ── PRINT MATERIALS ──────────────────────────────────────────
+  html += settingsSection('print', '🖨️ Print materials', `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+      Ready-to-print materials for therapist offices, waiting rooms, campus bulletin boards, or community centers. Open and print directly from your browser.
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <a href="/marketing/print-flyer.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">📄</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Flyer with tear-off tabs</div>
+          <div style="font-size:12px;color:var(--text-muted)">8.5 x 11 letter size, includes QR code and tear-off URL strips</div>
+        </div>
+      </a>
+
+      <a href="/marketing/print-business-card.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">🪪</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Business cards</div>
+          <div style="font-size:12px;color:var(--text-muted)">8 cards per page, standard 3.5 x 2 size with QR and crisis line</div>
+        </div>
+      </a>
+
+      <a href="/marketing/print-poster.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">🪧</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Waiting room poster</div>
+          <div style="font-size:12px;color:var(--text-muted)">Large format poster for therapy offices and wellness centers</div>
+        </div>
+      </a>
+
+    </div>
+  `);
+
+  // ── SOCIAL MEDIA CARDS ────────────────────────────────────────
+  html += settingsSection('social', '📲 Social media cards', `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+      Branded images sized for social platforms. Download and share to help Bloom reach people who need it.
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <div onclick="downloadSocialCard('instagram')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadSocialCard('instagram')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">📷</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Instagram / Facebook post</div>
+          <div style="font-size:12px;color:var(--text-muted)">1080 x 1080 square card</div>
+        </div>
+      </div>
+
+      <div onclick="downloadSocialCard('story')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadSocialCard('story')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">📱</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Instagram / TikTok story</div>
+          <div style="font-size:12px;color:var(--text-muted)">1080 x 1920 vertical card</div>
+        </div>
+      </div>
+
+      <div onclick="downloadSocialCard('twitter')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadSocialCard('twitter')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">🐦</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">X / Twitter card</div>
+          <div style="font-size:12px;color:var(--text-muted)">1200 x 675 landscape card</div>
+        </div>
+      </div>
+
+    </div>
+  `);
+
+  // ── EMAIL TEMPLATES ───────────────────────────────────────────
+  html += settingsSection('emailtemplates', '✉️ Email templates', `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+      Pre-written emails you can copy and personalize. One for therapists sharing with clients, one for sharing with a friend.
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <div onclick="copyEmailTemplate('therapist')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyEmailTemplate('therapist')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">🩺</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">For therapists / counselors</div>
+          <div style="font-size:12px;color:var(--text-muted)">Recommend Bloom to clients as a between-session self-care tool</div>
+        </div>
+      </div>
+
+      <div onclick="copyEmailTemplate('friend')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyEmailTemplate('friend')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">💌</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">For a friend</div>
+          <div style="font-size:12px;color:var(--text-muted)">A gentle way to share Bloom with someone you care about</div>
+        </div>
+      </div>
+
+    </div>
+  `);
+
+  // ── EMAIL SIGNATURE ───────────────────────────────────────────
+  html += settingsSection('emailsig', '🏷️ Email signature', `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+      Add a branded Bloom badge to your email signature. Copy the HTML version for rich email clients, or the plain text version as a fallback.
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:16px;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">Preview</div>
+      <div style="background:#fff;border-radius:8px;padding:14px 16px;display:inline-block">
+        <table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif">
+          <tr>
+            <td style="vertical-align:middle;padding-right:12px">
+              <img src="/email-badge.png" alt="Bloom" width="120" height="32" style="display:block;border-radius:6px">
+            </td>
+            <td style="vertical-align:middle;border-left:2px solid #7a9e7e;padding-left:12px">
+              <div style="font-size:12px;color:#2e4d32;font-weight:600">Free, private self-care</div>
+              <div style="font-size:11px;color:#7a9e7e;margin-top:2px">bloom-zeta-rouge.vercel.app</div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-secondary btn-block" onclick="copyHTMLEmailSignature()">📋 Copy HTML signature</button>
+      <button class="btn btn-ghost btn-block" onclick="copyEmailSignature()">📝 Copy plain text signature</button>
     </div>
   `);
 
@@ -12943,12 +13061,175 @@ function toggleNotif(key) {
 }
 
 function copyEmailSignature() {
-  const sig = 'Bloom — free, private self-care for hard days\nhttps://bloom-zeta-rouge.vercel.app';
+  const sig = 'Bloom -- free, private self-care for hard days\nhttps://bloom-zeta-rouge.vercel.app';
   navigator.clipboard?.writeText(sig).then(() => {
-    showToast('Email signature copied!');
+    showToast('Plain text signature copied!');
   }).catch(() => {
     alert('Copy this to your email signature:\n\n' + sig);
   });
+}
+
+function copyHTMLEmailSignature() {
+  const html = `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif"><tr><td style="vertical-align:middle;padding-right:12px"><a href="https://bloom-zeta-rouge.vercel.app" target="_blank" rel="noopener"><img src="https://bloom-zeta-rouge.vercel.app/email-badge.png" alt="Bloom" width="120" height="32" style="display:block;border-radius:6px;border:0"></a></td><td style="vertical-align:middle;border-left:2px solid #7a9e7e;padding-left:12px"><div style="font-size:12px;color:#2e4d32;font-weight:600;line-height:1.3">Free, private self-care</div><a href="https://bloom-zeta-rouge.vercel.app" target="_blank" rel="noopener" style="font-size:11px;color:#7a9e7e;text-decoration:none;line-height:1.3">bloom-zeta-rouge.vercel.app</a></td></tr></table>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const item = new ClipboardItem({ 'text/html': blob, 'text/plain': new Blob([html], { type: 'text/plain' }) });
+  navigator.clipboard.write([item]).then(() => {
+    showToast('HTML signature copied! Paste into your email client.');
+  }).catch(() => {
+    // Fallback: copy as plain HTML text
+    navigator.clipboard?.writeText(html).then(() => {
+      showToast('HTML copied! Paste into your email signature editor.');
+    }).catch(() => {
+      alert('Copy this HTML into your email signature settings:\n\n' + html);
+    });
+  });
+}
+
+function copyEmailTemplate(type) {
+  const templates = {
+    therapist: {
+      subject: 'A free self-care tool for between sessions',
+      body: `Hi [Client Name],
+
+I wanted to share a free app called Bloom that some of my clients have found helpful for tracking self-care between our sessions.
+
+It's a private, browser-based tool for mood tracking, journaling, breathing exercises, and building small daily habits. Everything stays on your device. There are no accounts, no data collection, and no cost.
+
+You can also export a therapist-friendly report from the app that we can review together in session.
+
+Try it here: https://bloom-zeta-rouge.vercel.app
+
+It's completely optional, and there's no pressure to use it. Just wanted you to know it's available.
+
+Take care,
+[Your Name]`
+    },
+    friend: {
+      subject: 'Thought of you',
+      body: `Hey,
+
+I came across this app called Bloom and thought you might like it. It's a free self-care app for tracking how you're feeling, journaling, breathing exercises, and building small habits.
+
+What I like about it: everything stays on your phone, there are no accounts to create, and it doesn't guilt you about missing days. It's just a quiet place to check in with yourself.
+
+Here's the link: https://bloom-zeta-rouge.vercel.app
+
+No pressure at all. Just wanted to pass it along.`
+    }
+  };
+
+  const t = templates[type];
+  if (!t) return;
+
+  const full = `Subject: ${t.subject}\n\n${t.body}`;
+  navigator.clipboard?.writeText(full).then(() => {
+    showToast('Email template copied!');
+  }).catch(() => {
+    alert(full);
+  });
+}
+
+function downloadSocialCard(type) {
+  const configs = {
+    instagram: { w: 1080, h: 1080, name: 'bloom-instagram-card.png' },
+    story:     { w: 1080, h: 1920, name: 'bloom-story-card.png' },
+    twitter:   { w: 1200, h: 675,  name: 'bloom-twitter-card.png' }
+  };
+  const cfg = configs[type];
+  if (!cfg) return;
+
+  showToast('Generating image...');
+
+  const canvas = document.createElement('canvas');
+  canvas.width = cfg.w;
+  canvas.height = cfg.h;
+  const ctx = canvas.getContext('2d');
+  const s = cfg.w / 1080; // scale factor relative to 1080
+
+  // Background
+  ctx.fillStyle = '#0d1610';
+  ctx.fillRect(0, 0, cfg.w, cfg.h);
+
+  // Decorative circles
+  ctx.globalAlpha = 0.04;
+  ctx.beginPath();
+  ctx.arc(cfg.w * 0.85, cfg.h * 0.15, cfg.w * 0.3, 0, Math.PI * 2);
+  ctx.fillStyle = '#7a9e7e';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cfg.w * 0.1, cfg.h * 0.85, cfg.w * 0.25, 0, Math.PI * 2);
+  ctx.fillStyle = '#6a9ab0';
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Logo dots
+  const dotR = 22 * s;
+  const dotGap = 52 * s;
+  const logoX = 100 * s;
+  const logoY = type === 'twitter' ? cfg.h * 0.28 : cfg.h * 0.22;
+  const dotColors = [['#7a9e7e', '#b07878'], ['#6a9ab0', '#c9954a']];
+  dotColors.forEach((row, ri) => {
+    row.forEach((color, ci) => {
+      const cx = logoX + ci * dotGap;
+      const cy = logoY + ri * dotGap;
+      ctx.beginPath();
+      ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.7;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      // Inner highlight
+      ctx.beginPath();
+      ctx.arc(cx - dotR * 0.2, cy - dotR * 0.2, dotR * 0.45, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.4;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+  });
+
+  // "bloom" text
+  const titleY = logoY + dotGap + dotR + 60 * s;
+  ctx.font = `bold ${72 * s}px Georgia, 'Times New Roman', serif`;
+  ctx.fillStyle = '#e8e0d0';
+  ctx.fillText('Bloom', logoX - 8 * s, titleY);
+
+  // Tagline
+  ctx.font = `${28 * s}px -apple-system, Arial, sans-serif`;
+  ctx.fillStyle = '#a8c5ab';
+  ctx.fillText('gentle self-care for hard days', logoX - 4 * s, titleY + 50 * s);
+
+  // Features (vary by card type)
+  const featureY = titleY + 110 * s;
+  ctx.font = `${22 * s}px -apple-system, Arial, sans-serif`;
+  ctx.fillStyle = '#8a9e8c';
+  const features = ['Free. Private. No accounts needed.', 'Mood tracking, journaling, breathing exercises.', 'Your data stays on your device.'];
+
+  if (type === 'twitter') {
+    // Compact: single line
+    ctx.fillText(features[0] + '  ' + features[2], logoX - 4 * s, featureY);
+  } else {
+    features.forEach((f, i) => {
+      ctx.fillText(f, logoX - 4 * s, featureY + i * 38 * s);
+    });
+  }
+
+  // URL
+  const urlY = type === 'twitter' ? cfg.h - 60 * s : cfg.h - 100 * s;
+  ctx.font = `${24 * s}px -apple-system, Arial, sans-serif`;
+  ctx.fillStyle = '#7a9e7e';
+  ctx.fillText('bloom-zeta-rouge.vercel.app', logoX - 4 * s, urlY);
+
+  // Download
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = cfg.name;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Social card downloaded!');
+  }, 'image/png');
 }
 
 function downloadQR() {
@@ -13179,118 +13460,456 @@ function exportTherapistPDF() {
   const dates = Object.keys(history).sort();
   if (dates.length === 0) { showToast('No history data to export yet.'); return; }
 
-  const name = state.prefs?.name || 'User';
-  const last30 = dates.slice(-30);
-  const moodLabels = ['Low', 'Rough', 'Okay', 'Good', 'Great'];
+  showToast('Generating PDF report...');
 
-  // Build mood data for chart
-  const moodData = last30.map(d => {
-    const day = history[d] || {};
-    return { date: d, mood: day.mood, sleep: day.sleep };
+  // Load jsPDF dynamically
+  const loadJsPDF = () => {
+    if (window.jspdf) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js';
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('Failed to load PDF library'));
+      document.head.appendChild(s);
+    });
+  };
+
+  loadJsPDF().then(() => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'letter' });
+
+    const name = state.prefs?.name || 'User';
+    const last30 = dates.slice(-30);
+    const moodLabels = ['Low', 'Rough', 'Okay', 'Good', 'Great'];
+
+    // Brand colors
+    const sage = [122, 158, 126];       // #7a9e7e
+    const sageDark = [46, 77, 50];      // #2e4d32
+    const cream = [232, 224, 208];      // #e8e0d0
+    const darkBg = [13, 22, 16];        // #0d1610
+    const amber = [201, 149, 74];       // #c9954a
+    const rose = [176, 120, 120];       // #b07878
+    const textDark = [30, 40, 32];
+    const textMed = [80, 95, 82];
+    const textLight = [120, 135, 122];
+
+    // Mood bar colors
+    const moodColors = [
+      [176, 120, 120], // Low - rose
+      [180, 140, 100], // Rough - muted amber
+      [160, 170, 140], // Okay - muted sage
+      [122, 158, 126], // Good - sage
+      [90, 140, 95]    // Great - deeper green
+    ];
+
+    const pageW = 215.9, pageH = 279.4;
+    const marginL = 20, marginR = 20;
+    const contentW = pageW - marginL - marginR;
+    let y = 0;
+
+    // Helper: check if we need a new page
+    function checkPage(needed) {
+      if (y + needed > pageH - 25) {
+        // Footer on current page
+        drawFooter();
+        doc.addPage();
+        y = 20;
+        return true;
+      }
+      return false;
+    }
+
+    function drawFooter() {
+      doc.setFontSize(7.5);
+      doc.setTextColor(...textLight);
+      doc.text('Generated by Bloom  |  bloom-zeta-rouge.vercel.app  |  This report is for informational purposes only.', pageW / 2, pageH - 10, { align: 'center' });
+      // Thin sage line above footer
+      doc.setDrawColor(...sage);
+      doc.setLineWidth(0.3);
+      doc.line(marginL, pageH - 15, pageW - marginR, pageH - 15);
+    }
+
+    // === HEADER ===
+    // Sage accent bar at top
+    doc.setFillColor(...sageDark);
+    doc.rect(0, 0, pageW, 38, 'F');
+
+    // Subtle gradient overlay
+    doc.setFillColor(...sage);
+    doc.setGState(new doc.GState({ opacity: 0.15 }));
+    doc.rect(0, 0, pageW, 38, 'F');
+    doc.setGState(new doc.GState({ opacity: 1 }));
+
+    // Bloom logo text
+    doc.setFontSize(28);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text('bloom', marginL, 18);
+
+    // Leaf accent (small circle)
+    doc.setFillColor(...cream);
+    doc.setGState(new doc.GState({ opacity: 0.3 }));
+    doc.circle(marginL + 47, 14, 3, 'F');
+    doc.setGState(new doc.GState({ opacity: 1 }));
+
+    // Subtitle
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...cream);
+    doc.text('Wellness Report for Therapist / Counselor', marginL, 26);
+
+    // Date and period info on right
+    const genDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    doc.setFontSize(8);
+    doc.setTextColor(255, 255, 255);
+    doc.text(genDate, pageW - marginR, 18, { align: 'right' });
+    doc.setTextColor(...cream);
+    doc.text(`${last30[0] || ''} to ${last30[last30.length - 1] || ''}`, pageW - marginR, 24, { align: 'right' });
+
+    y = 46;
+
+    // === CLIENT INFO BAR ===
+    doc.setFillColor(245, 243, 238);
+    doc.roundedRect(marginL, y, contentW, 14, 2, 2, 'F');
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...textDark);
+    doc.text('Client:', marginL + 5, y + 5.5);
+    doc.setFont('helvetica', 'normal');
+    doc.text(name, marginL + 22, y + 5.5);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Period:', marginL + 80, y + 5.5);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${last30.length} days`, marginL + 98, y + 5.5);
+
+    y += 18;
+
+    // === DISCLAIMER ===
+    doc.setFillColor(255, 248, 235);
+    doc.roundedRect(marginL, y, contentW, 16, 2, 2, 'F');
+    doc.setDrawColor(...amber);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(marginL, y, contentW, 16, 2, 2, 'S');
+
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...amber);
+    doc.text('NOTE', marginL + 5, y + 5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...textMed);
+    doc.setFontSize(7);
+    doc.text('This report was generated by Bloom, a self-care companion app. Bloom is not a clinical tool. This data reflects', marginL + 17, y + 5);
+    doc.text('self-reported mood and habit tracking, not clinical assessments. It is provided to support conversations with a', marginL + 17, y + 9.5);
+    doc.text('licensed mental health professional.', marginL + 17, y + 14);
+
+    y += 22;
+
+    // === MOOD SUMMARY SECTION ===
+    // Build mood data
+    const moodData = last30.map(d => {
+      const day = history[d] || {};
+      return { date: d, mood: day.mood, sleep: day.sleep };
+    });
+    const moodsRecorded = moodData.filter(d => d.mood !== undefined && d.mood >= 0);
+    const avgMood = moodsRecorded.length > 0 ? (moodsRecorded.reduce((s, d) => s + d.mood, 0) / moodsRecorded.length) : null;
+    const lowDays = moodsRecorded.filter(d => d.mood <= 1).length;
+    const journalDays = last30.filter(d => getJournalEntries(d).length > 0).length;
+
+    // Collect feeling words frequency
+    const feelingCounts = {};
+    last30.forEach(d => {
+      const day = history[d];
+      if (day?.feelings) day.feelings.forEach(f => { feelingCounts[f] = (feelingCounts[f] || 0) + 1; });
+    });
+    const topFeelings = Object.entries(feelingCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+    // Section header helper
+    function sectionHeader(title) {
+      checkPage(12);
+      doc.setFillColor(...sage);
+      doc.roundedRect(marginL, y, contentW, 8, 1.5, 1.5, 'F');
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.text(title, marginL + 5, y + 5.8);
+      y += 12;
+    }
+
+    sectionHeader('Mood Summary');
+
+    // Stats cards in a row
+    const cardW = contentW / 4 - 2;
+    const stats = [
+      { label: 'Average Mood', value: avgMood !== null ? avgMood.toFixed(1) + '/4' : 'N/A', sub: avgMood !== null ? moodLabels[Math.round(avgMood)] : '' },
+      { label: 'Days Recorded', value: `${moodsRecorded.length}`, sub: `of ${last30.length}` },
+      { label: 'Low/Rough Days', value: `${lowDays}`, sub: moodsRecorded.length > 0 ? `${Math.round(lowDays / moodsRecorded.length * 100)}%` : '0%' },
+      { label: 'Journal Entries', value: `${journalDays}`, sub: '' }
+    ];
+
+    stats.forEach((s, i) => {
+      const cx = marginL + i * (cardW + 2.5);
+      doc.setFillColor(248, 246, 242);
+      doc.roundedRect(cx, y, cardW, 20, 2, 2, 'F');
+
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...textLight);
+      doc.text(s.label, cx + cardW / 2, y + 5, { align: 'center' });
+
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...sageDark);
+      doc.text(s.value, cx + cardW / 2, y + 13.5, { align: 'center' });
+
+      if (s.sub) {
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...textLight);
+        doc.text(s.sub, cx + cardW / 2, y + 17.5, { align: 'center' });
+      }
+    });
+
+    y += 25;
+
+    // Top feelings tags
+    if (topFeelings.length > 0) {
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...textDark);
+      doc.text('Most Reported Feelings:', marginL, y + 4);
+      y += 7;
+
+      let tx = marginL;
+      topFeelings.forEach(([f, c]) => {
+        const label = `${f} (${c})`;
+        const tw = doc.getTextWidth(label) + 8;
+        if (tx + tw > pageW - marginR) { tx = marginL; y += 7; }
+        doc.setFillColor(232, 240, 233);
+        doc.roundedRect(tx, y - 1, tw, 6, 1.5, 1.5, 'F');
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...sageDark);
+        doc.text(label, tx + 4, y + 3.2);
+        tx += tw + 3;
+      });
+      y += 10;
+    }
+
+    // === DAILY MOOD LOG ===
+    sectionHeader('Daily Mood Log');
+
+    // Visual mood chart with colored bars
+    const barMaxW = 60;
+    const rowH = 5.5;
+
+    moodData.forEach(d => {
+      checkPage(rowH + 1);
+      // Date label
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...textMed);
+      doc.text(d.date, marginL, y + 3.8);
+
+      if (d.mood !== undefined && d.mood >= 0) {
+        // Colored bar
+        const barW = ((d.mood + 1) / 5) * barMaxW;
+        const color = moodColors[d.mood];
+        doc.setFillColor(...color);
+        doc.roundedRect(marginL + 28, y + 0.5, barW, 4, 1, 1, 'F');
+
+        // Mood label
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...color);
+        doc.text(moodLabels[d.mood], marginL + 28 + barW + 3, y + 3.8);
+      } else {
+        doc.setFontSize(7);
+        doc.setTextColor(...textLight);
+        doc.text('No data', marginL + 28, y + 3.8);
+      }
+      y += rowH;
+    });
+
+    y += 6;
+
+    // === HABIT COMPLETION ===
+    sectionHeader('Habit Completion');
+
+    // Table-style layout
+    doc.setFillColor(245, 243, 238);
+    doc.roundedRect(marginL, y, contentW, 6, 1, 1, 'F');
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...textMed);
+    doc.text('Date', marginL + 5, y + 4);
+    doc.text('Habits Completed', marginL + 50, y + 4);
+    y += 7;
+
+    last30.forEach((d, i) => {
+      checkPage(5.5);
+      const day = history[d] || {};
+      const habits = Object.keys(day).filter(k => (k.startsWith('m_') || k.startsWith('e_') || k.startsWith('w_')) && day[k] === true);
+
+      if (i % 2 === 0) {
+        doc.setFillColor(250, 249, 247);
+        doc.rect(marginL, y - 1, contentW, 5.5, 'F');
+      }
+
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...textDark);
+      doc.text(d, marginL + 5, y + 2.8);
+
+      doc.setTextColor(...textMed);
+      doc.text(`${habits.length} habit${habits.length !== 1 ? 's' : ''}`, marginL + 50, y + 2.8);
+
+      // Mini bar
+      if (habits.length > 0) {
+        doc.setFillColor(...sage);
+        doc.setGState(new doc.GState({ opacity: 0.3 }));
+        doc.roundedRect(marginL + 80, y, Math.min(habits.length * 8, 50), 3.5, 1, 1, 'F');
+        doc.setGState(new doc.GState({ opacity: 1 }));
+      }
+
+      y += 5.5;
+    });
+
+    y += 6;
+
+    // === JOURNAL EXCERPTS ===
+    sectionHeader('Journal Excerpts');
+
+    let hasJournals = false;
+    last30.forEach(d => {
+      const entries = getJournalEntries(d);
+      if (entries.length === 0) return;
+      hasJournals = true;
+
+      entries.forEach((e, i) => {
+        checkPage(20);
+        const time = e.savedAt ? new Date(e.savedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+        const label = entries.length > 1 ? ` (entry ${i + 1}${time ? ', ' + time : ''})` : (time ? ` (${time})` : '');
+
+        // Date badge
+        doc.setFillColor(...sageDark);
+        const dateLbl = d + label;
+        const badgeW = doc.setFontSize(7).getTextWidth(dateLbl) + 8;
+        doc.roundedRect(marginL, y, badgeW, 5.5, 1.5, 1.5, 'F');
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text(dateLbl, marginL + 4, y + 3.8);
+        y += 8;
+
+        // Journal text with wrapping
+        const excerpt = e.text.slice(0, 500) + (e.text.length > 500 ? '...' : '');
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...textDark);
+        const lines = doc.splitTextToSize(excerpt, contentW - 10);
+        lines.forEach(line => {
+          checkPage(5);
+          doc.text(line, marginL + 5, y);
+          y += 4;
+        });
+        y += 4;
+      });
+    });
+
+    if (!hasJournals) {
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(...textLight);
+      doc.text('No journal entries in this period.', marginL + 5, y);
+      y += 8;
+    }
+
+    // === COGNITIVE REFRAMES ===
+    const reframes = (state.wellnessData.reframeHistory || []).slice(-10);
+
+    sectionHeader('Cognitive Reframes');
+
+    if (reframes.length > 0) {
+      reframes.forEach(r => {
+        checkPage(20);
+        const date = r.savedAt ? new Date(r.savedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+
+        // Thought box
+        doc.setFillColor(255, 245, 245);
+        doc.setDrawColor(...rose);
+        doc.setLineWidth(0.3);
+        const thoughtLines = doc.setFontSize(7.5).splitTextToSize(`"${r.thought}"`, contentW - 30);
+        const thoughtH = thoughtLines.length * 4 + 5;
+        doc.roundedRect(marginL, y, contentW, thoughtH, 2, 2, 'FD');
+
+        doc.setFontSize(6.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...rose);
+        doc.text(date ? `THOUGHT  ${date}` : 'THOUGHT', marginL + 4, y + 4);
+
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(...textDark);
+        thoughtLines.forEach((line, li) => {
+          doc.text(line, marginL + 4, y + 8 + li * 4);
+        });
+        y += thoughtH + 2;
+
+        // Reframe box
+        doc.setFillColor(240, 248, 241);
+        doc.setDrawColor(...sage);
+        const reframeLines = doc.setFontSize(7.5).splitTextToSize(`"${r.reframe}"`, contentW - 30);
+        const reframeH = reframeLines.length * 4 + 5;
+        doc.roundedRect(marginL, y, contentW, reframeH, 2, 2, 'FD');
+
+        doc.setFontSize(6.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...sage);
+        doc.text('REFRAME', marginL + 4, y + 4);
+
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...textDark);
+        reframeLines.forEach((line, li) => {
+          doc.text(line, marginL + 4, y + 8 + li * 4);
+        });
+        y += reframeH + 6;
+      });
+    } else {
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(...textLight);
+      doc.text('No reframe exercises recorded.', marginL + 5, y);
+      y += 8;
+    }
+
+    // === FINAL DISCLAIMER ===
+    checkPage(20);
+    y += 4;
+    doc.setDrawColor(...sage);
+    doc.setLineWidth(0.3);
+    doc.line(marginL, y, pageW - marginR, y);
+    y += 6;
+
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(...textLight);
+    doc.text('This report is for informational purposes only and should be interpreted in context of a therapeutic conversation.', marginL, y);
+    y += 4;
+    doc.text('The mood scale is subjective and self-reported. Bloom is not a substitute for professional mental health care.', marginL, y);
+
+    // Footer on last page
+    drawFooter();
+
+    // Save
+    doc.save(`bloom-therapist-report-${today()}.pdf`);
+    showToast('Therapist report PDF exported!');
+  }).catch(err => {
+    console.error('PDF generation failed:', err);
+    showToast('Failed to generate PDF. Please try again.');
   });
-
-  // Calculate summary stats
-  const moodsRecorded = moodData.filter(d => d.mood !== undefined && d.mood >= 0);
-  const avgMood = moodsRecorded.length > 0 ? (moodsRecorded.reduce((s, d) => s + d.mood, 0) / moodsRecorded.length) : null;
-  const lowDays = moodsRecorded.filter(d => d.mood <= 1).length;
-  const journalDays = last30.filter(d => getJournalEntries(d).length > 0).length;
-
-  // Build simple text-based mood chart
-  const chartRows = moodData.map(d => {
-    const mStr = d.mood !== undefined && d.mood >= 0 ? moodLabels[d.mood] : '—';
-    const bar = d.mood !== undefined && d.mood >= 0 ? '█'.repeat(d.mood + 1) + '░'.repeat(4 - d.mood) : '     ';
-    return `${d.date}  ${bar}  ${mStr}`;
-  }).join('\n');
-
-  // Collect feeling words frequency
-  const feelingCounts = {};
-  last30.forEach(d => {
-    const day = history[d];
-    if (day?.feelings) day.feelings.forEach(f => { feelingCounts[f] = (feelingCounts[f] || 0) + 1; });
-  });
-  const topFeelings = Object.entries(feelingCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
-
-  // Build report
-  const report = `
-BLOOM — WELLNESS REPORT FOR THERAPIST/COUNSELOR
-Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-Name: ${name}
-Period: ${last30[0] || '—'} to ${last30[last30.length - 1] || '—'} (${last30.length} days)
-
-NOTE: This report was generated by bloom, a self-care companion app.
-bloom is not a clinical tool. This data reflects self-reported mood and
-habit tracking, not clinical assessments. It is provided to support
-conversations with a licensed mental health professional.
-
-═══════════════════════════════════════════════════════
- MOOD SUMMARY
-═══════════════════════════════════════════════════════
-
-Average mood: ${avgMood !== null ? avgMood.toFixed(1) + '/4 (' + moodLabels[Math.round(avgMood)] + ')' : 'No data'}
-Days recorded: ${moodsRecorded.length} of ${last30.length}
-Low/Rough days: ${lowDays} (${moodsRecorded.length > 0 ? Math.round(lowDays / moodsRecorded.length * 100) : 0}%)
-Journal entries: ${journalDays}
-
-${topFeelings.length > 0 ? `Most reported feelings:\n${topFeelings.map(([f, c]) => `  • ${f} (${c} days)`).join('\n')}` : ''}
-
-═══════════════════════════════════════════════════════
- DAILY MOOD LOG (Last ${last30.length} days)
-═══════════════════════════════════════════════════════
-Scale: Low(0) → Great(4)
-
-${chartRows}
-
-═══════════════════════════════════════════════════════
- HABIT COMPLETION
-═══════════════════════════════════════════════════════
-
-${last30.map(d => {
-  const day = history[d] || {};
-  const habits = Object.keys(day).filter(k => (k.startsWith('m_') || k.startsWith('e_') || k.startsWith('w_')) && day[k] === true);
-  return `${d}: ${habits.length} habit${habits.length !== 1 ? 's' : ''} completed`;
-}).join('\n')}
-
-═══════════════════════════════════════════════════════
- JOURNAL EXCERPTS (Last 30 days)
-═══════════════════════════════════════════════════════
-
-${last30.map(d => {
-  const entries = getJournalEntries(d);
-  if (entries.length === 0) return null;
-  return entries.map((e, i) => {
-    const time = e.savedAt ? new Date(e.savedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
-    const label = entries.length > 1 ? ` (entry ${i + 1}${time ? ', ' + time : ''})` : '';
-    return `[${d}${label}]\n${e.text.slice(0, 300)}${e.text.length > 300 ? '...' : ''}\n`;
-  }).join('\n');
-}).filter(Boolean).join('\n') || 'No journal entries in this period.'}
-
-═══════════════════════════════════════════════════════
- COGNITIVE REFRAMES
-═══════════════════════════════════════════════════════
-
-${(state.wellnessData.reframeHistory || []).slice(-10).map(r => {
-  const date = r.savedAt ? new Date(r.savedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-  return `[${date}] Thought: "${r.thought}"\n  → Reframe: "${r.reframe}"\n`;
-}).join('\n') || 'No reframe exercises recorded.'}
-
-═══════════════════════════════════════════════════════
-
-This report is for informational purposes only and should be
-interpreted in context of a therapeutic conversation. The mood
-scale is subjective and self-reported.
-
-Generated by bloom (bloom-zeta-rouge.vercel.app)
-`.trim();
-
-  // Download as text file (universally readable, no dependencies)
-  const blob = new Blob([report], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `bloom-therapist-report-${today()}.txt`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('Therapist report exported!');
 }
 
 async function importJSON(file) {
