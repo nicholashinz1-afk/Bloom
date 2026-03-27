@@ -12406,6 +12406,19 @@ function renderSettingsTab() {
     <button class="btn btn-primary" onclick="shareApp()" style="background:var(--sage);color:#0a1a0b;padding:12px 32px;font-size:15px">🌿 Share bloom</button>
   </div>`;
 
+  // ── SUPPORT BLOOM ──
+  const SUPPORT_URL = 'https://ko-fi.com/bloomselfcare';
+  if (SUPPORT_URL) {
+    html += `
+    <div style="margin:8px 0 4px;padding:20px 16px;background:linear-gradient(135deg,rgba(var(--sage-rgb),0.08),rgba(201,149,74,0.06));border:1px solid rgba(var(--sage-rgb),0.15);border-radius:var(--r-xl);text-align:center">
+      <div style="font-size:28px;margin-bottom:10px">💛</div>
+      <div style="font-family:Fraunces,serif;font-size:17px;font-weight:300;color:var(--cream);margin-bottom:6px">Support bloom</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px">Bloom is free forever — no ads, no data selling, no investors. If it's helped you and you're able to, a small contribution helps keep it running.</div>
+      <a href="${SUPPORT_URL}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="background:var(--sage);color:#0a1a0b;padding:12px 32px;font-size:15px;text-decoration:none;display:inline-block">💛 Support bloom</a>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:10px">No pressure. Sharing bloom is just as meaningful.</div>
+    </div>`;
+  }
+
   html += `<div style="text-align:center;padding:20px 0 8px;font-size:11px;color:var(--text-muted)">bloom v${VERSION} · made with care 🌿</div>`;
   html += `<div style="text-align:center;padding:0 0 16px">
     <a href="https://ko-fi.com/bloomselfcare" target="_blank" rel="noopener" style="font-size:13px;color:var(--text-secondary);text-decoration:none;font-family:Fraunces,serif;font-style:italic">
@@ -14040,9 +14053,9 @@ function openCrisisSheet() { openSheet('crisis-sheet'); trackFeature('crisis'); 
 const SCIENCE_SECTIONS = {
   mood: {
     title: 'Mood awareness',
-    tip: 'Naming how you feel helps regulate it. Psychologists call this "affect labeling" — it reduces amygdala activity.',
-    full: `<p>Research by Matthew Lieberman at UCLA found that simply putting a name to an emotion — what scientists call <strong>affect labeling</strong> — reduces activity in the amygdala, the brain's threat-detection center. This means the act of checking in with your mood isn't just tracking — it's actively calming your nervous system.</p>
-    <p>A 2019 study in <em>Psychological Science</em> also showed that people with higher <strong>emotional granularity</strong> (the ability to distinguish between similar emotions) are better at regulating their responses to stress. The more you practice noticing how you feel, the better you get at it.</p>`,
+    tip: 'Naming how you feel helps regulate it. Psychologists call this "affect labeling," and it reduces amygdala activity.',
+    full: `<p>Research by Matthew Lieberman at UCLA found that simply putting a name to an emotion, what scientists call <strong>affect labeling</strong>, reduces activity in the amygdala, the brain's threat-detection center. This means the act of checking in with your mood isn't just tracking. It's actively calming your nervous system.</p>
+    <p>A 2004 study in the <em>Journal of Personality</em> also showed that people with higher <strong>emotional granularity</strong> (the ability to distinguish between similar emotions) are better at regulating their responses to stress. The more you practice noticing how you feel, the better you get at it.</p>`,
     sources: [
       'Lieberman, M. D., et al. (2007). Putting feelings into words: Affect labeling disrupts amygdala activity. <em>Psychological Science</em>, 18(5), 421–428.',
       'Tugade, M. M., et al. (2004). Psychological resilience and positive emotional granularity. <em>Journal of Personality</em>, 72(6), 1161–1190.',
@@ -14051,18 +14064,18 @@ const SCIENCE_SECTIONS = {
   sleep: {
     title: 'Sleep tracking',
     tip: 'Simply being aware of your sleep patterns helps you make better choices around rest.',
-    full: `<p><strong>Sleep self-monitoring</strong> has been shown to improve sleep behavior even without formal intervention. A study in the <em>Journal of Clinical Sleep Medicine</em> found that participants who tracked their sleep made measurable improvements in sleep hygiene within weeks.</p>
-    <p>bloom doesn't judge your sleep or set goals — it just helps you notice patterns. Over time, you may start to see connections between how you slept and how your day went, which naturally guides better choices.</p>`,
+    full: `<p><strong>Sleep self-monitoring</strong> has been shown to improve sleep behavior even without formal intervention. A review in <em>Sleep Medicine Reviews</em> found that basic sleep hygiene awareness, simply paying attention to your patterns, leads to meaningful improvements over time. A pilot study of the CBT-I Coach app confirmed that even lightweight digital sleep tracking helps people build better habits.</p>
+    <p>bloom doesn't judge your sleep or set goals. It just helps you notice patterns. Over time, you may start to see connections between how you slept and how your day went, which naturally guides better choices.</p>`,
     sources: [
-      'Koffel, E., et al. (2015). A randomized controlled pilot study of CBT-I Coach. <em>Journal of Clinical Sleep Medicine</em>, 11(12), 1443–1449.',
+      'Koffel, E., et al. (2018). A randomized controlled pilot study of CBT-I Coach. <em>Health Informatics Journal</em>, 24(1), 3–13.',
       'Irish, L. A., et al. (2015). The role of sleep hygiene in promoting public health. <em>Sleep Medicine Reviews</em>, 22, 23–36.',
     ],
   },
   hydration: {
     title: 'Hydration',
     tip: 'Even mild dehydration can lower mood and increase fatigue. Three bottles is a simple, achievable daily baseline.',
-    full: `<p>A study at the University of Connecticut found that even <strong>mild dehydration</strong> (1–2% body water loss) significantly impaired mood, concentration, and increased perception of task difficulty — particularly in women. You don't need to be thirsty to be affected.</p>
-    <p>bloom uses three bottles as a <strong>minimum viable goal</strong> rather than an aggressive target. The aim isn't perfection — it's building awareness of a basic need that's easy to forget, especially on hard days.</p>`,
+    full: `<p>A study at the University of Connecticut found that even <strong>mild dehydration</strong> (1–2% body water loss) significantly impaired mood, concentration, and increased perception of task difficulty, particularly in women. You don't need to be thirsty to be affected.</p>
+    <p>bloom uses three bottles as a <strong>minimum viable goal</strong> rather than an aggressive target. The aim isn't perfection. It's building awareness of a basic need that's easy to forget, especially on hard days.</p>`,
     sources: [
       'Armstrong, L. E., et al. (2012). Mild dehydration affects mood in healthy young women. <em>The Journal of Nutrition</em>, 142(2), 382–388.',
       'Ganio, M. S., et al. (2011). Mild dehydration impairs cognitive performance and mood of men. <em>British Journal of Nutrition</em>, 106(10), 1535–1543.',
@@ -14070,19 +14083,19 @@ const SCIENCE_SECTIONS = {
   },
   nourishment: {
     title: 'Nourishment',
-    tip: 'Tracking meals isn\'t about diet — it\'s recognizing that feeding yourself is a fundamental act of self-care.',
-    full: `<p>bloom's nourishment tracking is intentionally <strong>anti-diet-culture</strong>. There are no calories, no "good" or "bad" foods — just a gentle acknowledgment that you ate. For people dealing with depression, anxiety, or executive dysfunction, <strong>remembering to eat</strong> can be genuinely difficult.</p>
+    tip: 'Tracking meals isn\'t about diet. It\'s recognizing that feeding yourself is a fundamental act of self-care.',
+    full: `<p>bloom's nourishment tracking is intentionally <strong>anti-diet-culture</strong>. There are no calories, no "good" or "bad" foods, just a gentle acknowledgment that you ate. For people dealing with depression, anxiety, or executive dysfunction, <strong>remembering to eat</strong> can be genuinely difficult.</p>
     <p>Research shows that regular meals stabilize blood sugar, which directly impacts mood, cognitive function, and emotional regulation. The simple act of noticing "I fed myself today" reinforces self-care as a practice.</p>`,
     sources: [
-      'Adan, A. (2012). Cognitive performance and dehydration. <em>Journal of the American College of Nutrition</em>, 31(2), 71–78.',
       'Gómez-Pinilla, F. (2008). Brain foods: The effects of nutrients on brain function. <em>Nature Reviews Neuroscience</em>, 9(7), 568–578.',
+      'Firth, J., et al. (2020). Food and mood: How do diet and nutrition affect mental wellbeing? <em>BMJ</em>, 369, m2382.',
     ],
   },
   streaks: {
     title: 'Showing up & consistency',
-    tip: 'What matters is how many days you show up — not whether they\'re in a row. Missing a day changes nothing.',
+    tip: 'What matters is how many days you show up, not whether they\'re in a row. Missing a day changes nothing.',
     full: `<p>Research on habit formation shows that missing a single day has <strong>no measurable impact</strong> on long-term habit strength. Phillippa Lally's research at University College London found that habits take an average of 66 days to become automatic, and occasional misses during that period didn't derail the process.</p>
-    <p>That's why bloom tracks <strong>total days you've shown up</strong> instead of consecutive streaks. Your total never goes down — missing a day is just missing a day, not losing progress. This removes the anxiety of "breaking a streak" while preserving the motivation of watching your number grow.</p>`,
+    <p>That's why bloom tracks <strong>total days you've shown up</strong> instead of consecutive streaks. Your total never goes down. Missing a day is just missing a day, not losing progress. This removes the anxiety of "breaking a streak" while preserving the motivation of watching your number grow.</p>`,
     sources: [
       'Lally, P., et al. (2010). How are habits formed: Modelling habit formation in the real world. <em>European Journal of Social Psychology</em>, 40(6), 998–1009.',
       'Gardner, B., et al. (2012). Making health habitual. <em>British Journal of General Practice</em>, 62(605), 664–666.',
@@ -14091,8 +14104,8 @@ const SCIENCE_SECTIONS = {
   journal: {
     title: 'Journaling',
     tip: 'Writing about your thoughts and feelings reduces anxiety and improves emotional processing.',
-    full: `<p>James Pennebaker's landmark research demonstrated that <strong>expressive writing</strong> — writing about thoughts and feelings for even 15–20 minutes — reduces anxiety, improves immune function, and helps process difficult experiences. Participants didn't need to write "well" — just honestly.</p>
-    <p>A meta-analysis of 146 studies confirmed that expressive writing produces significant benefits for psychological health, particularly for processing stressful or emotional events. bloom's journal prompts are designed to lower the barrier — you don't need to know what to write, just respond to what's asked.</p>`,
+    full: `<p>James Pennebaker's landmark research demonstrated that <strong>expressive writing</strong>, writing about thoughts and feelings for even 15–20 minutes, reduces anxiety, improves immune function, and helps process difficult experiences. Participants didn't need to write "well." Just honestly.</p>
+    <p>A meta-analysis of 146 studies confirmed that expressive writing produces significant benefits for psychological health, particularly for processing stressful or emotional events. bloom's journal prompts are designed to lower the barrier. You don't need to know what to write, just respond to what's asked.</p>`,
     sources: [
       'Pennebaker, J. W. (1997). Writing about emotional experiences as a therapeutic process. <em>Psychological Science</em>, 8(3), 162–166.',
       'Frattaroli, J. (2006). Experimental disclosure and its moderators: A meta-analysis. <em>Psychological Bulletin</em>, 132(6), 823–865.',
@@ -14101,7 +14114,7 @@ const SCIENCE_SECTIONS = {
   wins: {
     title: 'Small wins',
     tip: 'Noticing small wins rewires your brain\'s negativity bias and builds a sense of progress.',
-    full: `<p>Teresa Amabile's research at Harvard Business School identified <strong>the progress principle</strong>: of all the things that can boost motivation and positive emotion during a day, the single most important is making progress in meaningful work — even small progress.</p>
+    full: `<p>Teresa Amabile's research at Harvard Business School identified <strong>the progress principle</strong>: of all the things that can boost motivation and positive emotion during a day, the single most important is making progress in meaningful work. Even small progress.</p>
     <p>Our brains have a <strong>negativity bias</strong>, meaning we naturally pay more attention to what went wrong than what went right. Deliberately logging small wins counteracts this by training your attention toward positive evidence. Over time, this shifts your default perception from "nothing is working" to "I'm doing more than I thought."</p>`,
     sources: [
       'Amabile, T. M. & Kramer, S. J. (2011). The progress principle. <em>Harvard Business Review Press</em>.',
@@ -14111,7 +14124,7 @@ const SCIENCE_SECTIONS = {
   affirmations: {
     title: 'Affirmations',
     tip: 'Affirmations work best when they feel true. They help reinforce your values and sense of self.',
-    full: `<p><strong>Self-affirmation theory</strong> (Claude Steele, 1988) shows that reflecting on personal values reduces defensiveness and stress. The key finding: affirmations are most effective when they resonate with who you already are — not who you wish you were.</p>
+    full: `<p><strong>Self-affirmation theory</strong> (Claude Steele, 1988) shows that reflecting on personal values reduces defensiveness and stress. The key finding: affirmations are most effective when they resonate with who you already are, not who you wish you were.</p>
     <p>That's why bloom lets you write your own affirmations rather than providing generic ones. A statement that feels true to you ("I am trying my best") is far more powerful than an aspirational one that triggers resistance ("I am unstoppable"). bloom surfaces your saved affirmations randomly as you use the app, creating small moments of self-reinforcement throughout your day.</p>`,
     sources: [
       'Steele, C. M. (1988). The psychology of self-affirmation. <em>Advances in Experimental Social Psychology</em>, 21, 261–302.',
@@ -14121,18 +14134,18 @@ const SCIENCE_SECTIONS = {
   reflection: {
     title: 'Weekly reflection',
     tip: 'Looking back helps you learn from your own experience. Reflection turns lived days into lasting insight.',
-    full: `<p><strong>Metacognition</strong> — thinking about your own thinking — is one of the strongest predictors of personal growth and learning. Research by Giada Di Stefano at Harvard Business School showed that employees who spent 15 minutes at the end of the day reflecting on lessons learned performed <strong>23% better</strong> than those who didn't.</p>
+    full: `<p><strong>Metacognition</strong>, thinking about your own thinking, is one of the strongest predictors of personal growth and learning. Research by Giada Di Stefano at Harvard Business School showed that employees who spent 15 minutes at the end of the day reflecting on lessons learned performed <strong>23% better</strong> than those who didn't.</p>
     <p>bloom's weekly reflection is deliberately scheduled on weekends, when you have mental space to look back without the pressure of a weekday. The three questions are designed to balance acknowledgment (what went well), honesty (what was hard), and intention (what to carry forward).</p>`,
     sources: [
-      'Di Stefano, G., et al. (2016). Learning by thinking: How reflection aids performance. <em>Harvard Business School Working Paper</em>, 14-093.',
-      'Grant, A. M., et al. (2002). The impact of life coaching on goal attainment, metacognition, and mental health. <em>Social Behavior and Personality</em>, 31(3), 253–263.',
+      'Di Stefano, G., et al. (2014). Learning by thinking: How reflection aids performance. <em>Harvard Business School Working Paper</em>, No. 14-093.',
+      'Grant, A. M. (2003). The impact of life coaching on goal attainment, metacognition, and mental health. <em>Social Behavior and Personality</em>, 31(3), 253–264.',
     ],
   },
   breathing: {
     title: 'Breathing exercises',
     tip: 'The 4-7-8 technique activates your vagus nerve, shifting your body from stress mode to rest mode.',
-    full: `<p>The <strong>4-7-8 breathing technique</strong> (inhale 4, hold 7, exhale 8) was developed by Dr. Andrew Weil based on pranayama breathing practices. The extended exhale activates the <strong>vagus nerve</strong>, which triggers the parasympathetic nervous system — your body's "rest and digest" mode.</p>
-    <p>A 2017 study in <em>Frontiers in Psychology</em> found that diaphragmatic breathing significantly reduced cortisol levels (the stress hormone) after just 8 weeks of practice. Research suggests that even a single session may help you feel calmer and more grounded. bloom offers this without any streak or pressure — it's here whenever you need it.</p>`,
+    full: `<p>The <strong>4-7-8 breathing technique</strong> (inhale 4, hold 7, exhale 8) was developed by Dr. Andrew Weil based on pranayama breathing practices. The extended exhale activates the <strong>vagus nerve</strong>, which triggers the parasympathetic nervous system, your body's "rest and digest" mode.</p>
+    <p>A 2017 study in <em>Frontiers in Psychology</em> found that diaphragmatic breathing significantly reduced cortisol levels (the stress hormone) after just 8 weeks of practice. Research suggests that even a single session may help you feel calmer and more grounded. bloom offers this without any streak or pressure. It's here whenever you need it.</p>`,
     sources: [
       'Ma, X., et al. (2017). The effect of diaphragmatic breathing on attention, negative affect, and stress. <em>Frontiers in Psychology</em>, 8, 874.',
       'Gerritsen, R. J. S. & Band, G. P. H. (2018). Breath of life: The respiratory vagal stimulation model of contemplative activity. <em>Frontiers in Human Neuroscience</em>, 12, 397.',
@@ -14141,19 +14154,19 @@ const SCIENCE_SECTIONS = {
   cues: {
     title: 'Why cues help',
     tip: 'Linking a habit to something you already do makes you 2-3x more likely to follow through.',
-    full: `<p>The text fields beneath each habit are <strong>cues</strong> — a way to link a new habit to something you already do. "After I pour my coffee, I'll take my medication" is much easier to remember than "take medication at 9am."</p>
-    <p>Research by Peter Gollwitzer found that people who pair a behavior with a specific moment in their day are <strong>2–3x more likely</strong> to actually do it. You don't need motivation or willpower — the existing routine becomes your automatic reminder. Your cue shows beneath each habit on the Today tab as a gentle nudge.</p>`,
+    full: `<p>The text fields beneath each habit are <strong>cues</strong>, a way to link a new habit to something you already do. "After I pour my coffee, I'll take my medication" is much easier to remember than "take medication at 9am."</p>
+    <p>Research by Peter Gollwitzer found that people who pair a behavior with a specific moment in their day are <strong>2–3x more likely</strong> to actually do it. You don't need motivation or willpower. The existing routine becomes your automatic reminder. Your cue shows beneath each habit on the Today tab as a gentle nudge.</p>`,
     sources: [
       'Gollwitzer, P. M. (1999). Implementation intentions: Strong effects of simple plans. <em>American Psychologist</em>, 54(7), 493–503.',
-      'Milkman, K. L., et al. (2021). Megastudies: A framework for large-scale interventions. <em>Nature</em>, 600, 478–483.',
+      'Milkman, K. L., et al. (2021). Megastudies improve the impact of applied behavioural science. <em>Nature</em>, 600, 478–483.',
     ],
   },
   buddy: {
     title: 'Bloom buddy',
     tip: 'Having even one person who checks in on you significantly improves follow-through and emotional wellbeing.',
-    full: `<p>Decades of research on <strong>social support and health</strong> show that perceived social support — simply knowing someone is aware of your efforts — is one of the strongest predictors of sustained behavior change. A landmark meta-analysis by Holt-Lunstad et al. found that strong social connections improved the odds of survival by <strong>50%</strong>, making loneliness a health risk comparable to smoking.</p>
-    <p>bloom buddy applies this through <strong>mutual accountability</strong>: your buddy can see your streak and completion percentage (not your private data), and you can see theirs. This light-touch visibility leverages what behavioral scientists call the <strong>Köhler effect</strong> — people work harder when they know someone is counting on them. Research by Irwin et al. showed that partnered exercise adherence was significantly higher than solo exercise, even when partners never spoke.</p>
-    <p>Critically, bloom buddy is designed as <strong>encouragement, not surveillance</strong>. Your buddy gets notified when you're having a hard day so they can send support — not so they can judge. This mirrors findings from self-determination theory (Deci & Ryan) showing that autonomy-supportive relationships foster intrinsic motivation, while controlling ones undermine it.</p>`,
+    full: `<p>Decades of research on <strong>social support and health</strong> show that perceived social support, simply knowing someone is aware of your efforts, is one of the strongest predictors of sustained behavior change. A landmark meta-analysis by Holt-Lunstad et al. found that strong social connections improved the odds of survival by <strong>50%</strong>, making loneliness a health risk comparable to smoking.</p>
+    <p>bloom buddy applies this through <strong>mutual accountability</strong>: your buddy can see your streak and completion percentage (not your private data), and you can see theirs. This light-touch visibility leverages what behavioral scientists call the <strong>Köhler effect</strong>. People work harder when they know someone is counting on them. Research by Irwin et al. showed that partnered exercise adherence was significantly higher than solo exercise, even when partners never spoke.</p>
+    <p>Critically, bloom buddy is designed as <strong>encouragement, not surveillance</strong>. Your buddy gets notified when you're having a hard day so they can send support, not so they can judge. This mirrors findings from self-determination theory (Deci & Ryan) showing that autonomy-supportive relationships foster intrinsic motivation, while controlling ones undermine it.</p>`,
     sources: [
       'Holt-Lunstad, J., et al. (2010). Social relationships and mortality risk: A meta-analytic review. <em>PLoS Medicine</em>, 7(7), e1000316.',
       'Irwin, B. C., et al. (2012). Aerobic exercise is promoted when individual performance affects the group: A test of the Köhler motivation gain effect. <em>Annals of Behavioral Medicine</em>, 44(2), 151–159.',
@@ -14163,9 +14176,9 @@ const SCIENCE_SECTIONS = {
   wall: {
     title: 'Encouragement wall',
     tip: 'Giving kindness to strangers benefits you as much as receiving it. Anonymous generosity reduces stress and increases wellbeing.',
-    full: `<p>Research on <strong>prosocial behavior</strong> consistently shows that helping others — even strangers, even anonymously — improves the helper's own mood, reduces stress, and increases a sense of meaning. A study by Dunn et al. published in <em>Science</em> demonstrated that spending money on others produced greater happiness than spending on oneself, regardless of income.</p>
-    <p>The encouragement wall applies the concept of <strong>anonymous prosocial action</strong>: writing a kind word for a stranger you'll never meet. This removes social performance anxiety while preserving the wellbeing benefits. Research by Lyubomirsky et al. found that performing acts of kindness — particularly varied ones — significantly increased happiness over a 10-week period.</p>
-    <p>There's also a <strong>receiving</strong> benefit: reading kind words from anonymous strangers activates a sense of common humanity, a core component of Kristin Neff's model of <strong>self-compassion</strong>. Knowing that someone out there thought of you — without knowing you — can counter the isolation that often accompanies difficult mental health days.</p>`,
+    full: `<p>Research on <strong>prosocial behavior</strong> consistently shows that helping others, even strangers, even anonymously, improves the helper's own mood, reduces stress, and increases a sense of meaning. A study by Dunn et al. published in <em>Science</em> demonstrated that spending money on others produced greater happiness than spending on oneself, regardless of income.</p>
+    <p>The encouragement wall applies the concept of <strong>anonymous prosocial action</strong>: writing a kind word for a stranger you'll never meet. This removes social performance anxiety while preserving the wellbeing benefits. Research by Lyubomirsky et al. found that performing acts of kindness, particularly varied ones, significantly increased happiness over a 10-week period.</p>
+    <p>There's also a <strong>receiving</strong> benefit: reading kind words from anonymous strangers activates a sense of common humanity, a core component of Kristin Neff's model of <strong>self-compassion</strong>. Knowing that someone out there thought of you, without knowing you, can counter the isolation that often accompanies difficult mental health days.</p>`,
     sources: [
       'Dunn, E. W., et al. (2008). Spending money on others promotes happiness. <em>Science</em>, 319(5870), 1687–1688.',
       'Lyubomirsky, S., et al. (2005). Pursuing happiness: The architecture of sustainable change. <em>Review of General Psychology</em>, 9(2), 111–131.',
@@ -14176,18 +14189,18 @@ const SCIENCE_SECTIONS = {
     title: '5-4-3-2-1 Grounding',
     tip: 'Naming what your senses notice pulls your brain out of anxious thought loops and back into the present moment.',
     full: `<p>The <strong>5-4-3-2-1 grounding technique</strong> is one of the most widely recommended interventions for acute anxiety, panic, and dissociation. It works by redirecting attention from internal distress to <strong>sensory input</strong>, engaging the prefrontal cortex and interrupting the amygdala-driven fight-or-flight response.</p>
-    <p>A 2015 review in <em>Journal of EMDR Practice and Research</em> found that grounding techniques significantly reduced distress in trauma survivors. The mechanism is simple: when you force your brain to count and categorize sensory details, it can't simultaneously sustain a panic spiral. Research on <strong>attentional deployment</strong> (a core emotion regulation strategy identified by James Gross) confirms that deliberately shifting attention to neutral or positive stimuli reduces negative emotional intensity.</p>`,
+    <p>Grounding is a core component of both Seeking Safety (Najavits, 2002) and DBT distress tolerance skills (Linehan, 2015), two of the most established trauma and emotion regulation frameworks in clinical psychology. The mechanism is simple: when you force your brain to count and categorize sensory details, it can't simultaneously sustain a panic spiral. Research on <strong>attentional deployment</strong> (a core emotion regulation strategy identified by James Gross) confirms that deliberately shifting attention to neutral or positive stimuli reduces negative emotional intensity.</p>`,
     sources: [
       'Najavits, L. M. (2002). Seeking Safety: A treatment manual for PTSD and substance abuse. <em>Guilford Press</em>.',
       'Gross, J. J. (1998). The emerging field of emotion regulation: An integrative review. <em>Review of General Psychology</em>, 2(3), 271–299.',
-      'Brom, D., et al. (2017). A randomized controlled trial of EMDR and grounding exercises. <em>Journal of EMDR Practice and Research</em>, 11(4), 170–184.',
+      'Linehan, M. M. (2015). DBT Skills Training Manual (2nd ed.). <em>Guilford Press</em>. [Grounding and distress tolerance techniques]',
     ],
   },
   bodyscan: {
     title: 'Body scan',
-    tip: 'Noticing your body without trying to fix it builds interoceptive awareness — a skill linked to better emotional regulation.',
-    full: `<p>The <strong>body scan</strong> is a core component of Mindfulness-Based Stress Reduction (MBSR), developed by Jon Kabat-Zinn at UMass Medical School. It trains <strong>interoceptive awareness</strong> — the ability to sense internal body signals — which research has linked to improved emotional regulation, reduced anxiety, and greater self-awareness.</p>
-    <p>A 2019 study in <em>Frontiers in Psychology</em> found that body scan meditation reduced cortisol reactivity and improved participants' ability to identify and tolerate difficult emotions. Critically, the technique asks you to <strong>notice without fixing</strong> — this non-judgmental observation is itself therapeutic, teaching the brain that discomfort can be acknowledged without requiring an immediate response.</p>
+    tip: 'Noticing your body without trying to fix it builds interoceptive awareness, a skill linked to better emotional regulation.',
+    full: `<p>The <strong>body scan</strong> is a core component of Mindfulness-Based Stress Reduction (MBSR), developed by Jon Kabat-Zinn at UMass Medical School. It trains <strong>interoceptive awareness</strong>, the ability to sense internal body signals, which research has linked to improved emotional regulation, reduced anxiety, and greater self-awareness.</p>
+    <p>A 2015 study in <em>Frontiers in Psychology</em> found that three months of contemplative training significantly improved participants' interoceptive awareness, their ability to notice and understand signals from their own body. A broader review by Creswell (2017) confirmed that mindfulness interventions produce reliable benefits for stress, anxiety, and emotional regulation. The technique asks you to <strong>notice without fixing</strong>. This non-judgmental observation is itself therapeutic, teaching the brain that discomfort can be acknowledged without requiring an immediate response.</p>
     <p>Bloom's body scan is intentionally brief (~3 minutes) to keep the barrier low. Research suggests that even short mindfulness practices produce measurable benefits when done consistently.</p>`,
     sources: [
       'Kabat-Zinn, J. (1990). Full catastrophe living: Using the wisdom of your body and mind to face stress, pain, and illness. <em>Delacorte Press</em>.',
@@ -14199,23 +14212,23 @@ const SCIENCE_SECTIONS = {
     title: 'Cognitive reframing',
     tip: 'You can\'t always control what happens, but reframing how you interpret it changes how it affects you.',
     full: `<p><strong>Cognitive reframing</strong> (or cognitive restructuring) is one of the most evidence-backed techniques in psychology, forming the foundation of Cognitive Behavioral Therapy (CBT). The core principle: emotions are driven not by events themselves, but by our <strong>interpretation</strong> of those events. Changing the interpretation changes the emotional response.</p>
-    <p>A 2012 meta-analysis in <em>Clinical Psychology Review</em> found that cognitive reappraisal was associated with lower depression, lower anxiety, and greater wellbeing across 306 samples. Research by Ochsner et al. using fMRI showed that when people consciously reframed negative stimuli, activity in the prefrontal cortex increased while amygdala activity decreased — literally dampening the brain's threat response.</p>
-    <p>Bloom's "gentle reframe" is designed to be <strong>warm, not clinical</strong>. It validates the original feeling first, then offers a kinder perspective — mirroring the compassion-focused approach recommended by Paul Gilbert's research on compassionate mind training.</p>`,
+    <p>A 2010 meta-analysis in <em>Clinical Psychology Review</em> (Aldao et al.) found that cognitive reappraisal was associated with lower depression, lower anxiety, and greater wellbeing across hundreds of samples. Research by Ochsner et al. (2002) using fMRI showed that when people consciously reframed negative stimuli, activity in the prefrontal cortex increased while amygdala activity decreased, literally dampening the brain's threat response.</p>
+    <p>Bloom's "gentle reframe" is designed to be <strong>warm, not clinical</strong>. It validates the original feeling first, then offers a kinder perspective, mirroring the compassion-focused approach recommended by Paul Gilbert's research on compassionate mind training.</p>`,
     sources: [
-      'Beck, A. T. (1979). Cognitive therapy and the emotional disorders. <em>Penguin Books</em>.',
-      'Ochsner, K. N., et al. (2004). Reflecting upon feelings: An fMRI study of neural systems supporting the attribution of emotion to self and other. <em>Journal of Cognitive Neuroscience</em>, 16(10), 1746–1772.',
+      'Beck, A. T. (1976). Cognitive therapy and the emotional disorders. <em>International Universities Press</em>.',
+      'Ochsner, K. N., et al. (2002). Rethinking feelings: An fMRI study of the cognitive regulation of emotion. <em>Journal of Cognitive Neuroscience</em>, 14(8), 1215–1229.',
       'Aldao, A., et al. (2010). Emotion-regulation strategies across psychopathology: A meta-analytic review. <em>Clinical Psychology Review</em>, 30(2), 217–237.',
       'Gilbert, P. (2009). Introducing compassion-focused therapy. <em>Advances in Psychiatric Treatment</em>, 15(3), 199–208.',
     ],
   },
   hardday: {
     title: 'Hard day mode',
-    tip: 'Reducing expectations on hard days is protective — it prevents the "I failed at everything" spiral.',
-    full: `<p>When people are overwhelmed, long task lists create a <strong>perceived failure state</strong> — even completing 5 out of 10 tasks feels like failure rather than success. Research on <strong>goal adjustment</strong> shows that people who flexibly scale back their goals during difficult periods maintain better mental health than those who rigidly push through.</p>
-    <p>bloom's hard day mode reduces your visible habits to just the top 2, turning an overwhelming list into something manageable. This isn't giving up — it's <strong>strategic conservation</strong>. On a hard day, brushing your teeth and drinking water might genuinely be enough. Completing 2 out of 2 feels like a win, which preserves motivation for tomorrow.</p>`,
+    tip: 'Reducing expectations on hard days is protective. It prevents the "I failed at everything" spiral.',
+    full: `<p>When people are overwhelmed, long task lists create a <strong>perceived failure state</strong>. Even completing 5 out of 10 tasks feels like failure rather than success. Research on <strong>goal adjustment</strong> shows that people who flexibly scale back their goals during difficult periods maintain better mental health than those who rigidly push through.</p>
+    <p>bloom's hard day mode reduces your visible habits to just the top 2, turning an overwhelming list into something manageable. This isn't giving up. It's <strong>strategic conservation</strong>. On a hard day, brushing your teeth and drinking water might genuinely be enough. Completing 2 out of 2 feels like a win, which preserves motivation for tomorrow.</p>`,
     sources: [
       'Wrosch, C., et al. (2003). Adaptive self-regulation of unattainable goals. <em>Personality and Social Psychology Bulletin</em>, 29(12), 1494–1508.',
-      'Carver, C. S. & Scheier, M. F. (2000). Scaling back goals and recalibration of the affect system. <em>American Psychologist</em>, 55(11), 1241–1252.',
+      'Carver, C. S. & Scheier, M. F. (2000). Scaling back goals and recalibration of the affect system are processes in normal adaptive self-regulation. <em>Social Science & Medicine</em>, 50(12), 1715–1722.',
     ],
   },
 };

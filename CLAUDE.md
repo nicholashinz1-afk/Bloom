@@ -63,7 +63,7 @@ Always accessible via the white heart button in the header.
 - Low mood auto-surfaces breathing exercises and crisis resources
 - AI reflections use warm witness tone, never clinical advice
 - Disclaimer: "not a substitute for professional mental health care"
-- Moderation allows venting — don't over-filter emotional language
+- Moderation allows venting. Don't over-filter emotional language.
 
 ## Tabs
 
@@ -75,7 +75,7 @@ https://bloomselfcare.app
 
 ## License
 
-AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must remain open source under the same terms. Nobody can take Bloom and make it proprietary or monetize a closed fork. This is intentional — Bloom is free forever.
+AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must remain open source under the same terms. Nobody can take Bloom and make it proprietary or monetize a closed fork. This is intentional. Bloom is free forever.
 
 ## Cost Model
 
@@ -86,11 +86,11 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 
 ## Sustainability
 
-- **Ko-fi:** Live at ko-fi.com/bloomselfcare (Stripe, tips/donations)
-- **Open Collective:** Rejected (Open Source Collective fiscal sponsorship)
+- **Ko-fi:** Live at ko-fi.com/bloomselfcare. Linked in Settings tab and Today tab.
+- **Open Collective:** Rejected (project too early-stage for fiscal sponsorship, reapply when community grows)
+- **GitHub Sponsors:** Live (via Stripe)
 - **Vercel OSS:** Emailed partnerships@vercel.com for sponsorship
 - **Upstash OSS:** Applied via oss@upstash.com
-- **GitHub Sponsors:** Live (bank account)
 - **Contact:** bloomhabits@proton.me
 
 ## Scaling Roadmap
@@ -98,7 +98,7 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 See `SCALABILITY_PROPOSAL.md` for the full proposal. Summary of phases:
 1. **Quick wins (done)** — Haiku/Sonnet split, telemetry batching, accessibility fixes
 2. **Free AI tier (next)** — Cloudflare Workers AI as primary LLM, Claude as fallback
-3. **Sustainability** — Reapply to Open Collective at scale, grants (Mozilla, McGovern Foundation, Google.org)
+3. **Sustainability** — Ko-fi/GitHub Sponsors, grants (Mozilla doesn't require nonprofit), reapply Open Collective when community grows
 4. **Reach** — Internationalization, university partnerships, crisis org partnerships
 5. **Architecture** — Cloudflare Pages + Workers migration if Vercel limits are hit
 
@@ -106,7 +106,7 @@ See `SCALABILITY_PROPOSAL.md` for the full proposal. Summary of phases:
 
 - Admin dashboard at `/admin.html`, protected by `ADMIN_KEY` environment variable in Vercel
 - Share the key to grant access, change the key in Vercel env vars to revoke
-- Single shared key for now — no role-based access
+- Single shared key for now, no role-based access
 
 ## Writing Style
 

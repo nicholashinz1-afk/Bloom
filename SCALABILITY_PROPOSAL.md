@@ -171,7 +171,7 @@ These are real programs that exist today, ranked by how easy they are to set up:
 | **AWS for Nonprofits** | $2,000/yr AWS credits | aws.amazon.com/nonprofits (via TechSoup) |
 | **Microsoft AI for Good** | Azure credits + technical support | microsoft.com/ai/ai-for-good |
 
-**Why Open Collective matters:** It gives you fiscal sponsorship under their 501(c)(3) umbrella. That means you can accept tax-deductible donations and apply for grants -- without personally incorporating a nonprofit. This is the single most important non-technical step.
+**Open Collective update (March 2026):** Application was rejected. Project is too early-stage for fiscal sponsorship. They recommend Ko-fi, Patreon, or Buy Me a Coffee for individual-led projects, and invite reapplication once community involvement grows. **Revised immediate path:** GitHub Sponsors (via Stripe, no fiscal host needed) + Ko-fi for simple donations. Grants requiring nonprofit status are deferred until either (a) Open Collective accepts a future application, or (b) an alternative fiscal sponsor is found.
 
 ---
 
@@ -242,21 +242,24 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 **Result: ~2,000-3,000 DAU capacity, ~$0-2/month**
 
 ### Phase 3 -- Sustainability (Month 2-3)
-- [ ] Set up Open Collective with fiscal sponsorship
-- [ ] Add a small, non-intrusive "Support Bloom" link in settings
+- [x] Set up Ko-fi (ko-fi.com/bloomselfcare)
+- [x] Set up GitHub Sponsors (via Stripe)
+- [x] Add "Support Bloom" links in Settings and Today tabs
 - [ ] Apply for Cloudflare Project Galileo
-- [ ] Apply for Google/AWS nonprofit credits (via Open Collective fiscal sponsor)
-- [ ] Write and submit first grant application (Mozilla Foundation)
+- [ ] Reapply to Open Collective once community grows (contributors, issues, discussions)
+- [ ] Explore alternative fiscal sponsors (Software Freedom Conservancy, Hack Club, NumFOCUS)
+- [ ] Write and submit first grant application (Mozilla Foundation, doesn't require nonprofit status)
 
 **Result: Sustainable funding path, infrastructure credits covering costs**
 
 ### Phase 4 -- Reach (Month 3-6)
 - [ ] Purchase a custom domain (~$12/year) for a cleaner, more trustworthy URL
 - [ ] Internationalization framework + first community translations
-- [ ] Reach out to university counseling centers for partnerships
+- [ ] Reach out to university counseling centers for feedback (see `docs/outreach/EMAIL_TEMPLATES.md`)
 - [ ] Reach out to crisis organizations for cross-promotion
 - [ ] Reach out to Anthropic about social impact API credits
 - [ ] Apply for larger grants (McGovern Foundation, Google.org)
+- [ ] Submit Bloom to PsyberGuide for credibility review
 
 **Result: Thousands of users across multiple languages**
 
@@ -281,7 +284,7 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 
 These aren't fantasy numbers. They're based on the actual free tier limits of real services, with conservative estimates.
 
-**Bloom currently has zero hard costs** — hosting is on Vercel's free subdomain, and all services are on free tiers. If a custom domain is added later (~$12/year), that would be the only fixed cost. Everything else can be covered by free tiers, OSS programs, and modest community donations.
+**Bloom currently has zero hard costs.** Hosting is on Vercel's free subdomain, and all services are on free tiers. If a custom domain is added later (~$12/year), that would be the only fixed cost. Everything else can be covered by free tiers, OSS programs, and modest community donations.
 
 ---
 
@@ -292,10 +295,63 @@ You don't need to be a company to help a lot of people. You don't need venture c
 What you need is:
 1. **Smart architecture** that minimizes cost per user (tiered AI, caching, offline-first)
 2. **Free infrastructure programs** designed exactly for projects like this (OSS sponsorships, nonprofit credits)
-3. **A fiscal sponsor** to unlock grants and tax-deductible donations (Open Collective)
-4. **One small grant** to cover infrastructure for years
+3. **Simple donation channels** to cover modest costs (Ko-fi, GitHub Sponsors via Stripe -- no fiscal host needed)
+4. **Institutional credibility** to unlock partnerships and grants (see `docs/outreach/` for plan)
 5. **Community** -- translators, contributors, university partners, crisis org partnerships
 
 Bloom can realistically serve tens of thousands of people for effectively $0/month in ongoing costs. The path to getting there is mostly about applying to the right programs and making a few architectural changes -- not about spending money.
 
 The hardest part is already done. You built the thing. Now it's about making sure it reaches the people who need it.
+
+---
+
+## Part 6: Institutional Credibility Roadmap
+
+Open Collective rejected Bloom's fiscal sponsorship application (March 2026) -- the project is too early-stage for their model. This shifts the strategy: build credibility from the ground up before reapplying.
+
+### Immediate (this week)
+
+| Action | Why it matters | Status |
+|--------|---------------|--------|
+| One-pager with features, research basis, privacy model | Required for any institutional outreach | Done (`docs/outreach/BLOOM_ONE_PAGER.md`) |
+| Outreach email templates (counseling centers, therapists, crisis orgs, grants) | Reduces friction for outreach | Done (`docs/outreach/EMAIL_TEMPLATES.md`) |
+| Set up Ko-fi donation page | Simplest path to accepting support | Done (ko-fi.com/bloomselfcare) |
+| Support link in Settings and Today tabs | Users can find it naturally | Done |
+
+### Short-term (this month)
+
+| Action | Why it matters |
+|--------|---------------|
+| ~~Apply for GitHub Sponsors~~ | ~~Developer-facing donations, 0% fees~~ | Done |
+| Submit Bloom to PsyberGuide (psyberguide.org) | Credibility rating for digital mental health tools |
+| Email 5-10 university counseling centers asking for feedback | Feedback relationships turn into pilot programs |
+| Ask a licensed therapist/counselor to review Bloom and write a 2-3 sentence letter of support | One endorsement from a LCSW/psychologist opens institutional doors |
+| Add explicit "not a HIPAA covered entity / no PHI" statement to privacy policy | Makes institutional legal teams relax |
+
+### Medium-term (month 2-3)
+
+| Action | Why it matters |
+|--------|---------------|
+| Run an informal pilot at one school (recommend Bloom to students for a semester) | "Used by X students at Y university" is the strongest credibility signal |
+| Track anonymous usage data from the pilot (telemetry already exists) | Turns the pilot into a case study |
+| Apply for Mozilla MOSS grant (doesn't require nonprofit status) | $10K-50K, open to individual maintainers |
+| Explore alternative fiscal sponsors (Software Freedom Conservancy, Hack Club, NumFOCUS) | Alternatives to Open Collective for unlocking grant eligibility |
+| Reach out to crisis organizations (988, Crisis Text Line) for cross-listing | They maintain lists of recommended digital tools |
+
+### The credibility flywheel
+
+```
+Feedback from a professional
+    → One-pager with their endorsement
+        → Pilot at one small school
+            → Case study from the pilot
+                → Next school, next grant, reapply Open Collective
+```
+
+You only need one "yes" to start it. Start with small schools -- community colleges and smaller state universities are more responsive than large research universities.
+
+### Outreach materials
+
+All templates and materials are in `docs/outreach/`:
+- `BLOOM_ONE_PAGER.md` -- Features, research basis, privacy model, institutional use cases
+- `EMAIL_TEMPLATES.md` -- Ready-to-send templates for counseling centers, therapists, crisis orgs, and grant applications
