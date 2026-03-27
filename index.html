@@ -3418,6 +3418,26 @@ const JOURNAL_PROMPTS = [
   "What kind of support do you need right now?",
   "What are you proud of, even quietly?",
   "What does growth feel like for you lately?",
+  "What's something you've been avoiding thinking about?",
+  "What would 'good enough' look like today?",
+  "What's one thing you tolerated today that you shouldn't have to?",
+  "If you could change one thing about today, what would it be?",
+  "What's something kind someone did for you recently?",
+  "What part of your routine felt good today?",
+  "What's a thought you keep coming back to?",
+  "What did you do today that took effort, even if no one noticed?",
+  "What's something you're still figuring out?",
+  "How did you show up for yourself today?",
+  "What's one thing you'd like to do differently tomorrow?",
+  "What emotion showed up the most today?",
+  "What's something you need to hear right now?",
+  "What felt heavy today, and can you set it down for now?",
+  "What's a small moment from today worth holding onto?",
+  "What would you tell your future self about this time in your life?",
+  "What's something you did today just because you wanted to?",
+  "Where in your body do you feel today's stress?",
+  "What's one thing that went better than expected?",
+  "What are you learning to accept about yourself?",
 ];
 
 // Gentle prompts — shown when mood is low (0-1)
@@ -3440,14 +3460,56 @@ const JOURNAL_PROMPTS_LOW = [
   "You're allowed to not be okay. What's true right now?",
   "What's something gentle you can tell yourself today?",
   "What would it look like to go easy on yourself right now?",
+  "You're here, and that counts. What do you need right now?",
+  "What's one thing weighing on you that you can let be for now?",
+  "It's okay to feel this way. What would help you feel a little safer?",
+  "What's something you wish you could take a break from?",
+  "You don't owe anyone an explanation. What are you feeling?",
+  "What would a compassionate voice say to you right now?",
+  "What's one thing you can do in the next ten minutes just for you?",
+  "Sometimes just naming it helps. What's the feeling right now?",
+  "What's one small thing that still feels okay, even today?",
+  "You don't have to have it together. What's honest right now?",
+  "What would make the rest of today a little more bearable?",
+  "If you could wrap yourself in something comforting, what would it be?",
 ];
 
 
 function getJournalPrompt() {
-  const offset = state.journalPromptOffset || 0;
   const mood = state.todayData?.mood;
-  if (mood !== undefined && mood >= 0 && mood <= 1) return JOURNAL_PROMPTS_LOW[(getDayIndex() + offset) % JOURNAL_PROMPTS_LOW.length];
-  return JOURNAL_PROMPTS[(getDayIndex() + offset) % JOURNAL_PROMPTS.length];
+  const isLow = mood !== undefined && mood >= 0 && mood <= 1;
+  const prompts = isLow ? JOURNAL_PROMPTS_LOW : JOURNAL_PROMPTS;
+  const key = isLow ? 'shownPromptsLow' : 'shownPrompts';
+
+  // Track recently shown prompt indices to avoid repeats
+  if (!state[key]) state[key] = [];
+  const shown = state[key];
+
+  // Reset when we've shown most of the pool (keep last few to avoid immediate repeats after reset)
+  if (shown.length >= prompts.length - 2) {
+    state[key] = shown.slice(-3);
+  }
+
+  // Pick a prompt not recently shown, seeded by day + offset for consistency within a day
+  const offset = state.journalPromptOffset || 0;
+  const dayVal = getDayIndex() + offset;
+
+  // Build list of available indices
+  const available = [];
+  for (let i = 0; i < prompts.length; i++) {
+    if (!state[key].includes(i)) available.push(i);
+  }
+
+  // Use day value to pick deterministically from available prompts
+  const pick = available[dayVal % available.length];
+
+  // Record this prompt as shown (avoid duplicates for same-day consistency)
+  if (!state[key].includes(pick)) {
+    state[key].push(pick);
+    saveState();
+  }
+
+  return prompts[pick];
 }
 
 // ── Journal entry helpers (array-based storage) ─────────────
@@ -10970,7 +11032,11 @@ function openHistoryDetail(dateStr) {
   const moodEmojis = ['😔 Low','😕 Rough','😐 Okay','🙂 Good','😊 Great'];
   const sleepLabels = ['Rough','Poor','Okay','Good','Great'];
 
-  let html = `<div style="font-family:Fraunces,serif;font-size:22px;font-weight:300;color:var(--cream);margin-bottom:4px">${date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>`;
+  let html = '';
+  if (state._cameFromJournalHistory) {
+    html += `<button onclick="backToJournalHistory()" style="background:none;border:none;color:var(--sage);font-size:13px;cursor:pointer;padding:0 0 8px;display:flex;align-items:center;gap:4px" aria-label="Back to journal history"><span style="font-size:16px">‹</span> Back to history</button>`;
+  }
+  html += `<div style="font-family:Fraunces,serif;font-size:22px;font-weight:300;color:var(--cream);margin-bottom:4px">${date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>`;
 
   if (entry.mood !== undefined) {
     html += `<div style="font-size:24px;margin:12px 0 4px">${entry.mood === -1 ? '🤷 Unsure' : moodEmojis[entry.mood]}</div>`;
@@ -11133,6 +11199,35 @@ function toggleHistorySelfCare(dateStr, taskId, el) {
   openHistoryDetail(dateStr);
 }
 
+function openHistoryFromJournal(dateStr) {
+  state._cameFromJournalHistory = true;
+  // Close journal history sheet, then open the detail
+  const journalSheet = document.getElementById('journal-history-sheet');
+  if (journalSheet) {
+    releaseFocusTrap(journalSheet);
+    journalSheet.classList.remove('open');
+  }
+  document.getElementById('sheet-backdrop').classList.remove('open');
+  setTimeout(() => openHistoryDetail(dateStr), 300);
+}
+
+function backToJournalHistory() {
+  state._cameFromJournalHistory = false;
+  // Close history detail sheet, then re-open journal history list
+  const historySheet = document.getElementById('history-sheet');
+  if (historySheet) {
+    releaseFocusTrap(historySheet);
+    historySheet.classList.remove('open');
+  }
+  document.getElementById('sheet-backdrop').classList.remove('open');
+  // Handle dirty state from retroactive edits
+  if (state._historySheetDirty) {
+    state._historySheetDirty = false;
+    renderWeeklyTab();
+  }
+  setTimeout(() => openJournalHistory(), 300);
+}
+
 function openJournalHistory() {
   const todayStr = today();
   // Collect all dates with journal entries from both wellnessData and historyData
@@ -11186,7 +11281,7 @@ function openJournalHistory() {
 
       const dateLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px;cursor:pointer" onclick="closeAllSheets();setTimeout(()=>openHistoryDetail('${d}'),300)">
+      html += `<div class="card mb-0" style="padding:10px 14px;margin-bottom:6px;cursor:pointer" onclick="openHistoryFromJournal('${d}')">
         <div style="display:flex;align-items:center;gap:12px">
           <div style="font-size:22px;width:30px;text-align:center">📝</div>
           <div style="flex:1;min-width:0">
@@ -13277,6 +13372,7 @@ function closeAllSheets() {
   document.querySelectorAll('.bottom-sheet.open').forEach(s => releaseFocusTrap(s));
   document.getElementById('sheet-backdrop').classList.remove('open');
   document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('open'));
+  state._cameFromJournalHistory = false;
   // Restore focus to the element that opened the sheet
   if (_sheetTriggerElement && typeof _sheetTriggerElement.focus === 'function') {
     setTimeout(() => _sheetTriggerElement.focus(), 50);
@@ -13295,8 +13391,21 @@ function closeAllSheets() {
 
 // Android back button / back gesture closes sheets instead of leaving app
 window.addEventListener('popstate', () => {
-  const openSheet = document.querySelector('.bottom-sheet.open');
-  if (openSheet) {
+  const openSheetEl = document.querySelector('.bottom-sheet.open');
+  if (openSheetEl) {
+    // If we're viewing a history detail that came from journal history, go back to the list
+    if (openSheetEl.id === 'history-sheet' && state._cameFromJournalHistory) {
+      state._cameFromJournalHistory = false;
+      releaseFocusTrap(openSheetEl);
+      openSheetEl.classList.remove('open');
+      document.getElementById('sheet-backdrop').classList.remove('open');
+      if (state._historySheetDirty) {
+        state._historySheetDirty = false;
+        renderWeeklyTab();
+      }
+      setTimeout(() => openJournalHistory(), 300);
+      return;
+    }
     document.querySelectorAll('.bottom-sheet.open').forEach(s => releaseFocusTrap(s));
     document.getElementById('sheet-backdrop').classList.remove('open');
     document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('open'));
