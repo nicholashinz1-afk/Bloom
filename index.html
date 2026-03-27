@@ -12201,8 +12201,7 @@ function renderSettingsTab() {
       Bloom is free forever and grows by word of mouth. Here are some ways to help it reach people who need it.
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:10px">
-
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
       <a href="/press.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
         <span style="font-size:22px">📋</span>
         <div>
@@ -12210,7 +12209,6 @@ function renderSettingsTab() {
           <div style="font-size:12px;color:var(--text-muted)">Logo, brand colors, QR code, and key facts</div>
         </div>
       </a>
-
       <div onclick="downloadQR()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadQR()}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
         <span style="font-size:22px">📱</span>
         <div>
@@ -12218,7 +12216,6 @@ function renderSettingsTab() {
           <div style="font-size:12px;color:var(--text-muted)">Download a QR code for flyers, cards, or posters</div>
         </div>
       </div>
-
       <a href="https://github.com/nicholashinz1-afk/bloom" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
         <span style="font-size:22px">💻</span>
         <div>
@@ -12226,133 +12223,66 @@ function renderSettingsTab() {
           <div style="font-size:12px;color:var(--text-muted)">View on GitHub, star the repo, or contribute</div>
         </div>
       </a>
-
-    </div>
-  `);
-
-  // ── PRINT MATERIALS ──────────────────────────────────────────
-  html += settingsSection('print', '🖨️ Print materials', `
-    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
-      Ready-to-print materials for therapist offices, waiting rooms, campus bulletin boards, or community centers. Open and print directly from your browser.
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:10px">
-
-      <a href="/print-flyer.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
-        <span style="font-size:22px">📄</span>
+    <div style="font-weight:500;color:var(--sage-light);margin-bottom:10px;font-size:13px;margin-top:4px">🖨️ Print materials</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Open in your browser and print. Great for therapist offices, bulletin boards, and community centers.</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+      <a href="/print-flyer.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:12px 14px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:18px">📄</span>
         <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream)">Flyer with tear-off tabs</div>
-          <div style="font-size:12px;color:var(--text-muted)">8.5 x 11 letter size, includes QR code and tear-off URL strips</div>
+          <div style="font-size:13px;font-weight:500;color:var(--cream)">Flyer with tear-off tabs</div>
+          <div style="font-size:11px;color:var(--text-muted)">Letter size, includes QR code</div>
         </div>
       </a>
-
-      <a href="/print-business-card.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
-        <span style="font-size:22px">🪪</span>
+      <a href="/print-business-card.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:12px 14px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:18px">🪪</span>
         <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream)">Business cards</div>
-          <div style="font-size:12px;color:var(--text-muted)">8 cards per page, standard 3.5 x 2 size with QR and crisis line</div>
+          <div style="font-size:13px;font-weight:500;color:var(--cream)">Business cards</div>
+          <div style="font-size:11px;color:var(--text-muted)">4 per page, 3.5 x 2 with QR</div>
         </div>
       </a>
-
-      <a href="/print-poster.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
-        <span style="font-size:22px">🪧</span>
+      <a href="/print-poster.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:12px 14px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:18px">🪧</span>
         <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream)">Waiting room poster</div>
-          <div style="font-size:12px;color:var(--text-muted)">Large format for therapist offices and wellness centers</div>
+          <div style="font-size:13px;font-weight:500;color:var(--cream)">Waiting room poster</div>
+          <div style="font-size:11px;color:var(--text-muted)">Large format for offices</div>
         </div>
       </a>
-
-    </div>
-  `);
-
-  // ── SOCIAL MEDIA CARDS ────────────────────────────────────────
-  html += settingsSection('social', '📲 Social media cards', `
-    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
-      Branded images sized for social platforms. Download and share to help Bloom reach people who need it.
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:10px">
-
-      <div onclick="downloadSocialCard('instagram')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadSocialCard('instagram')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
-        <span style="font-size:22px">📷</span>
-        <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream)">Instagram / Facebook post</div>
-          <div style="font-size:12px;color:var(--text-muted)">1080 x 1080 square card</div>
-        </div>
+    <div style="font-weight:500;color:var(--sage-light);margin-bottom:10px;font-size:13px">📲 Social media cards</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+      <div onclick="downloadSocialCard('instagram')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadSocialCard('instagram')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:12px 14px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:18px">📷</span>
+        <div><div style="font-size:13px;font-weight:500;color:var(--cream)">Instagram / Facebook (1080x1080)</div></div>
       </div>
-
-      <div onclick="downloadSocialCard('story')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadSocialCard('story')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
-        <span style="font-size:22px">📱</span>
-        <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream)">Instagram / TikTok story</div>
-          <div style="font-size:12px;color:var(--text-muted)">1080 x 1920 vertical card</div>
-        </div>
+      <div onclick="downloadSocialCard('story')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadSocialCard('story')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:12px 14px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:18px">📱</span>
+        <div><div style="font-size:13px;font-weight:500;color:var(--cream)">Story / TikTok (1080x1920)</div></div>
       </div>
-
-      <div onclick="downloadSocialCard('twitter')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadSocialCard('twitter')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
-        <span style="font-size:22px">🐦</span>
-        <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream)">X / Twitter card</div>
-          <div style="font-size:12px;color:var(--text-muted)">1200 x 675 landscape card</div>
-        </div>
-      </div>
-
-    </div>
-  `);
-
-  // ── EMAIL TEMPLATES ───────────────────────────────────────────
-  html += settingsSection('emailtemplates', '✉️ Email templates', `
-    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
-      Pre-written emails you can copy and personalize. One for therapists sharing with clients, one for sharing with a friend.
-    </div>
-
-    <div style="display:flex;flex-direction:column;gap:10px">
-
-      <div onclick="copyEmailTemplate('therapist')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyEmailTemplate('therapist')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
-        <span style="font-size:22px">🩺</span>
-        <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream)">For therapists / counselors</div>
-          <div style="font-size:12px;color:var(--text-muted)">Recommend Bloom to clients as a between-session self-care tool</div>
-        </div>
-      </div>
-
-      <div onclick="copyEmailTemplate('friend')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyEmailTemplate('friend')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
-        <span style="font-size:22px">💌</span>
-        <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream)">For a friend</div>
-          <div style="font-size:12px;color:var(--text-muted)">A gentle way to share Bloom with someone you care about</div>
-        </div>
-      </div>
-
-    </div>
-  `);
-
-  // ── EMAIL SIGNATURE ───────────────────────────────────────────
-  html += settingsSection('emailsig', '🏷️ Email signature', `
-    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
-      Add a branded Bloom badge to your email signature. Copy the HTML version for rich email clients, or the plain text version as a fallback.
-    </div>
-
-    <div style="background:var(--bg-card);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:16px;margin-bottom:14px">
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">Preview</div>
-      <div style="background:#fff;border-radius:8px;padding:14px 16px;display:inline-block">
-        <table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif">
-          <tr>
-            <td style="vertical-align:middle;padding-right:12px">
-              <img src="/email-badge.png" alt="Bloom" width="120" height="32" style="display:block;border-radius:6px">
-            </td>
-            <td style="vertical-align:middle;border-left:2px solid #7a9e7e;padding-left:12px">
-              <div style="font-size:12px;color:#2e4d32;font-weight:600">Free, private self-care</div>
-              <div style="font-size:11px;color:#7a9e7e;margin-top:2px">bloomselfcare.app</div>
-            </td>
-          </tr>
-        </table>
+      <div onclick="downloadSocialCard('twitter')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadSocialCard('twitter')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:12px 14px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:18px">🐦</span>
+        <div><div style="font-size:13px;font-weight:500;color:var(--cream)">X / Twitter (1200x675)</div></div>
       </div>
     </div>
 
+    <div style="font-weight:500;color:var(--sage-light);margin-bottom:10px;font-size:13px">✉️ Email templates</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+      <div onclick="copyEmailTemplate('therapist')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyEmailTemplate('therapist')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:12px 14px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:18px">🩺</span>
+        <div><div style="font-size:13px;font-weight:500;color:var(--cream)">For therapists / counselors</div></div>
+      </div>
+      <div onclick="copyEmailTemplate('friend')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyEmailTemplate('friend')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:12px 14px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:18px">💌</span>
+        <div><div style="font-size:13px;font-weight:500;color:var(--cream)">For a friend</div></div>
+      </div>
+    </div>
+
+    <div style="font-weight:500;color:var(--sage-light);margin-bottom:10px;font-size:13px">🏷️ Email signature</div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <button class="btn btn-secondary btn-block" onclick="copyHTMLEmailSignature()">📋 Copy HTML signature</button>
-      <button class="btn btn-ghost btn-block" onclick="copyEmailSignature()">📝 Copy plain text signature</button>
+      <button class="btn btn-secondary btn-block" onclick="copyHTMLEmailSignature()" style="font-size:13px">📋 Copy HTML signature</button>
+      <button class="btn btn-ghost btn-block" onclick="copyEmailSignature()" style="font-size:13px">📝 Copy plain text signature</button>
     </div>
   `);
 

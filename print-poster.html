@@ -83,24 +83,13 @@
     max-width: 6.5in;
   }
 
-  /* Logo dots */
-  .logo-dots {
-    display: grid;
-    grid-template-columns: 44px 44px;
-    gap: 12px;
+  /* Logo */
+  .poster-logo {
+    width: 100px;
+    height: 100px;
+    border-radius: 22px;
     margin-bottom: 28px;
   }
-
-  .dot {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-  }
-
-  .dot.sage { background: #7a9e7e; }
-  .dot.rose { background: #b07878; }
-  .dot.sky { background: #6a9ab0; }
-  .dot.amber { background: #c9954a; }
 
   /* Title */
   .title {
@@ -226,12 +215,7 @@
   <div class="poster-content">
 
     <!-- Logo -->
-    <div class="logo-dots">
-      <div class="dot sage"></div>
-      <div class="dot rose"></div>
-      <div class="dot sky"></div>
-      <div class="dot amber"></div>
-    </div>
+    <img class="poster-logo" src="bloom-logo-512.png" alt="Bloom logo">
 
     <h1 class="title">Bloom</h1>
     <p class="tagline">A quiet place to show up for yourself<br>on hard days.</p>
