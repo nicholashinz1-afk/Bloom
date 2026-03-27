@@ -90,7 +90,7 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 - **Open Collective:** Rejected (Open Source Collective fiscal sponsorship)
 - **Vercel OSS:** Emailed partnerships@vercel.com for sponsorship
 - **Upstash OSS:** Applied via oss@upstash.com
-- **GitHub Sponsors:** Pending (needs alternate fiscal host)
+- **GitHub Sponsors:** Live (bank account)
 - **Contact:** bloomhabits@proton.me
 
 ## Scaling Roadmap
