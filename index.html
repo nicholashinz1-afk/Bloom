@@ -3602,7 +3602,7 @@ const HABIT_AFFIRMATIONS = {
   w_exercise: ["Your body says thank you.", "You showed up and moved.", "That took effort — and you did it."],
   w_outside: ["Fresh air is self-care.", "The world needed your presence today.", "Outside counts."],
   w_therapy: ["You showed up for yourself today.", "Asking for help is the bravest thing.", "That session matters more than you know."],
-  mood: ["Noted — thanks for checking in.", "Awareness is the first step."],
+
   water: ["Hydration is self-care.", "Your body thanks you.", "One sip at a time."],
   food: ["Nourishment matters.", "You fed yourself. That counts.", "Taking care from the inside."],
   journal: ["Words matter. Yours do.", "You made space for yourself.", "That was brave."],
@@ -9198,7 +9198,6 @@ function logMood(val) {
   bounceMoodBtn(btnIndex);
   const moodEl = document.querySelectorAll('.mood-btn')[btnIndex];
   celebrate('mood', moodEl);
-  if (val >= 0 && val <= 2 && !wasLow) showAffirmation('mood');
   scheduleBuddySync();
 }
 
