@@ -12183,14 +12183,6 @@ function renderSettingsTab() {
         </div>
       </a>
 
-      <div onclick="copyEmailSignature()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyEmailSignature()}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
-        <span style="font-size:22px">✉️</span>
-        <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream)">Email signature</div>
-          <div style="font-size:12px;color:var(--text-muted)">Copy a small Bloom link for your email signature</div>
-        </div>
-      </div>
-
       <div onclick="downloadQR()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadQR()}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
         <span style="font-size:22px">📱</span>
         <div>
@@ -12207,6 +12199,132 @@ function renderSettingsTab() {
         </div>
       </a>
 
+    </div>
+  `);
+
+  // ── PRINT MATERIALS ──────────────────────────────────────────
+  html += settingsSection('print', '🖨️ Print materials', `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+      Ready-to-print materials for therapist offices, waiting rooms, campus bulletin boards, or community centers. Open and print directly from your browser.
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <a href="/marketing/print-flyer.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">📄</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Flyer with tear-off tabs</div>
+          <div style="font-size:12px;color:var(--text-muted)">8.5 x 11 letter size, includes QR code and tear-off URL strips</div>
+        </div>
+      </a>
+
+      <a href="/marketing/print-business-card.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">🪪</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Business cards</div>
+          <div style="font-size:12px;color:var(--text-muted)">8 cards per page, standard 3.5 x 2 size with QR and crisis line</div>
+        </div>
+      </a>
+
+      <a href="/marketing/print-poster.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">🪧</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Waiting room poster</div>
+          <div style="font-size:12px;color:var(--text-muted)">Large format poster for therapy offices and wellness centers</div>
+        </div>
+      </a>
+
+    </div>
+  `);
+
+  // ── SOCIAL MEDIA CARDS ────────────────────────────────────────
+  html += settingsSection('social', '📲 Social media cards', `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+      Branded images sized for social platforms. Download and share to help Bloom reach people who need it.
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <div onclick="downloadSocialCard('instagram')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadSocialCard('instagram')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">📷</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Instagram / Facebook post</div>
+          <div style="font-size:12px;color:var(--text-muted)">1080 x 1080 square card</div>
+        </div>
+      </div>
+
+      <div onclick="downloadSocialCard('story')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadSocialCard('story')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">📱</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Instagram / TikTok story</div>
+          <div style="font-size:12px;color:var(--text-muted)">1080 x 1920 vertical card</div>
+        </div>
+      </div>
+
+      <div onclick="downloadSocialCard('twitter')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadSocialCard('twitter')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">🐦</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">X / Twitter card</div>
+          <div style="font-size:12px;color:var(--text-muted)">1200 x 675 landscape card</div>
+        </div>
+      </div>
+
+    </div>
+  `);
+
+  // ── EMAIL TEMPLATES ───────────────────────────────────────────
+  html += settingsSection('emailtemplates', '✉️ Email templates', `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+      Pre-written emails you can copy and personalize. One for therapists sharing with clients, one for sharing with a friend.
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <div onclick="copyEmailTemplate('therapist')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyEmailTemplate('therapist')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">🩺</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">For therapists / counselors</div>
+          <div style="font-size:12px;color:var(--text-muted)">Recommend Bloom to clients as a between-session self-care tool</div>
+        </div>
+      </div>
+
+      <div onclick="copyEmailTemplate('friend')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyEmailTemplate('friend')}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">💌</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">For a friend</div>
+          <div style="font-size:12px;color:var(--text-muted)">A gentle way to share Bloom with someone you care about</div>
+        </div>
+      </div>
+
+    </div>
+  `);
+
+  // ── EMAIL SIGNATURE ───────────────────────────────────────────
+  html += settingsSection('emailsig', '🏷️ Email signature', `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+      Add a branded Bloom badge to your email signature. Copy the HTML version for rich email clients, or the plain text version as a fallback.
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:16px;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">Preview</div>
+      <div style="background:#fff;border-radius:8px;padding:14px 16px;display:inline-block">
+        <table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif">
+          <tr>
+            <td style="vertical-align:middle;padding-right:12px">
+              <img src="/email-badge.png" alt="Bloom" width="120" height="32" style="display:block;border-radius:6px">
+            </td>
+            <td style="vertical-align:middle;border-left:2px solid #7a9e7e;padding-left:12px">
+              <div style="font-size:12px;color:#2e4d32;font-weight:600">Free, private self-care</div>
+              <div style="font-size:11px;color:#7a9e7e;margin-top:2px">bloom-zeta-rouge.vercel.app</div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-secondary btn-block" onclick="copyHTMLEmailSignature()">📋 Copy HTML signature</button>
+      <button class="btn btn-ghost btn-block" onclick="copyEmailSignature()">📝 Copy plain text signature</button>
     </div>
   `);
 
@@ -12943,12 +13061,175 @@ function toggleNotif(key) {
 }
 
 function copyEmailSignature() {
-  const sig = 'Bloom — free, private self-care for hard days\nhttps://bloom-zeta-rouge.vercel.app';
+  const sig = 'Bloom -- free, private self-care for hard days\nhttps://bloom-zeta-rouge.vercel.app';
   navigator.clipboard?.writeText(sig).then(() => {
-    showToast('Email signature copied!');
+    showToast('Plain text signature copied!');
   }).catch(() => {
     alert('Copy this to your email signature:\n\n' + sig);
   });
+}
+
+function copyHTMLEmailSignature() {
+  const html = `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif"><tr><td style="vertical-align:middle;padding-right:12px"><a href="https://bloom-zeta-rouge.vercel.app" target="_blank" rel="noopener"><img src="https://bloom-zeta-rouge.vercel.app/email-badge.png" alt="Bloom" width="120" height="32" style="display:block;border-radius:6px;border:0"></a></td><td style="vertical-align:middle;border-left:2px solid #7a9e7e;padding-left:12px"><div style="font-size:12px;color:#2e4d32;font-weight:600;line-height:1.3">Free, private self-care</div><a href="https://bloom-zeta-rouge.vercel.app" target="_blank" rel="noopener" style="font-size:11px;color:#7a9e7e;text-decoration:none;line-height:1.3">bloom-zeta-rouge.vercel.app</a></td></tr></table>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const item = new ClipboardItem({ 'text/html': blob, 'text/plain': new Blob([html], { type: 'text/plain' }) });
+  navigator.clipboard.write([item]).then(() => {
+    showToast('HTML signature copied! Paste into your email client.');
+  }).catch(() => {
+    // Fallback: copy as plain HTML text
+    navigator.clipboard?.writeText(html).then(() => {
+      showToast('HTML copied! Paste into your email signature editor.');
+    }).catch(() => {
+      alert('Copy this HTML into your email signature settings:\n\n' + html);
+    });
+  });
+}
+
+function copyEmailTemplate(type) {
+  const templates = {
+    therapist: {
+      subject: 'A free self-care tool for between sessions',
+      body: `Hi [Client Name],
+
+I wanted to share a free app called Bloom that some of my clients have found helpful for tracking self-care between our sessions.
+
+It's a private, browser-based tool for mood tracking, journaling, breathing exercises, and building small daily habits. Everything stays on your device. There are no accounts, no data collection, and no cost.
+
+You can also export a therapist-friendly report from the app that we can review together in session.
+
+Try it here: https://bloom-zeta-rouge.vercel.app
+
+It's completely optional, and there's no pressure to use it. Just wanted you to know it's available.
+
+Take care,
+[Your Name]`
+    },
+    friend: {
+      subject: 'Thought of you',
+      body: `Hey,
+
+I came across this app called Bloom and thought you might like it. It's a free self-care app for tracking how you're feeling, journaling, breathing exercises, and building small habits.
+
+What I like about it: everything stays on your phone, there are no accounts to create, and it doesn't guilt you about missing days. It's just a quiet place to check in with yourself.
+
+Here's the link: https://bloom-zeta-rouge.vercel.app
+
+No pressure at all. Just wanted to pass it along.`
+    }
+  };
+
+  const t = templates[type];
+  if (!t) return;
+
+  const full = `Subject: ${t.subject}\n\n${t.body}`;
+  navigator.clipboard?.writeText(full).then(() => {
+    showToast('Email template copied!');
+  }).catch(() => {
+    alert(full);
+  });
+}
+
+function downloadSocialCard(type) {
+  const configs = {
+    instagram: { w: 1080, h: 1080, name: 'bloom-instagram-card.png' },
+    story:     { w: 1080, h: 1920, name: 'bloom-story-card.png' },
+    twitter:   { w: 1200, h: 675,  name: 'bloom-twitter-card.png' }
+  };
+  const cfg = configs[type];
+  if (!cfg) return;
+
+  showToast('Generating image...');
+
+  const canvas = document.createElement('canvas');
+  canvas.width = cfg.w;
+  canvas.height = cfg.h;
+  const ctx = canvas.getContext('2d');
+  const s = cfg.w / 1080; // scale factor relative to 1080
+
+  // Background
+  ctx.fillStyle = '#0d1610';
+  ctx.fillRect(0, 0, cfg.w, cfg.h);
+
+  // Decorative circles
+  ctx.globalAlpha = 0.04;
+  ctx.beginPath();
+  ctx.arc(cfg.w * 0.85, cfg.h * 0.15, cfg.w * 0.3, 0, Math.PI * 2);
+  ctx.fillStyle = '#7a9e7e';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cfg.w * 0.1, cfg.h * 0.85, cfg.w * 0.25, 0, Math.PI * 2);
+  ctx.fillStyle = '#6a9ab0';
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Logo dots
+  const dotR = 22 * s;
+  const dotGap = 52 * s;
+  const logoX = 100 * s;
+  const logoY = type === 'twitter' ? cfg.h * 0.28 : cfg.h * 0.22;
+  const dotColors = [['#7a9e7e', '#b07878'], ['#6a9ab0', '#c9954a']];
+  dotColors.forEach((row, ri) => {
+    row.forEach((color, ci) => {
+      const cx = logoX + ci * dotGap;
+      const cy = logoY + ri * dotGap;
+      ctx.beginPath();
+      ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.7;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      // Inner highlight
+      ctx.beginPath();
+      ctx.arc(cx - dotR * 0.2, cy - dotR * 0.2, dotR * 0.45, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.4;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+  });
+
+  // "bloom" text
+  const titleY = logoY + dotGap + dotR + 60 * s;
+  ctx.font = `bold ${72 * s}px Georgia, 'Times New Roman', serif`;
+  ctx.fillStyle = '#e8e0d0';
+  ctx.fillText('Bloom', logoX - 8 * s, titleY);
+
+  // Tagline
+  ctx.font = `${28 * s}px -apple-system, Arial, sans-serif`;
+  ctx.fillStyle = '#a8c5ab';
+  ctx.fillText('gentle self-care for hard days', logoX - 4 * s, titleY + 50 * s);
+
+  // Features (vary by card type)
+  const featureY = titleY + 110 * s;
+  ctx.font = `${22 * s}px -apple-system, Arial, sans-serif`;
+  ctx.fillStyle = '#8a9e8c';
+  const features = ['Free. Private. No accounts needed.', 'Mood tracking, journaling, breathing exercises.', 'Your data stays on your device.'];
+
+  if (type === 'twitter') {
+    // Compact: single line
+    ctx.fillText(features[0] + '  ' + features[2], logoX - 4 * s, featureY);
+  } else {
+    features.forEach((f, i) => {
+      ctx.fillText(f, logoX - 4 * s, featureY + i * 38 * s);
+    });
+  }
+
+  // URL
+  const urlY = type === 'twitter' ? cfg.h - 60 * s : cfg.h - 100 * s;
+  ctx.font = `${24 * s}px -apple-system, Arial, sans-serif`;
+  ctx.fillStyle = '#7a9e7e';
+  ctx.fillText('bloom-zeta-rouge.vercel.app', logoX - 4 * s, urlY);
+
+  // Download
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = cfg.name;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Social card downloaded!');
+  }, 'image/png');
 }
 
 function downloadQR() {
