@@ -8560,20 +8560,21 @@ function renderTodayTab() {
   // --- GENTLE MODE TOGGLE ---
   const isGentleMode = !!td.gentleMode;
   const isLowMoodDay = td.mood !== undefined && td.mood >= 0 && td.mood <= 1;
-  if (!isLowMoodDay) {
-    html += `<div onclick="toggleGentleMode()" style="
-      display:flex;align-items:center;gap:10px;
-      padding:10px 16px;margin-bottom:12px;cursor:pointer;
-      background:${isGentleMode ? 'rgba(106,154,176,0.08)' : 'transparent'};
-      border:1px solid ${isGentleMode ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.06)'};
-      border-radius:var(--r-md);transition:all 0.2s">
-      <span style="font-size:16px">${isGentleMode ? '🌿' : '🍃'}</span>
-      <div style="flex:1;font-size:13px;color:${isGentleMode ? 'var(--sky-light)' : 'var(--text-muted)'}">
-        ${isGentleMode ? 'Gentle mode — showing less today' : 'Need a gentler day? Tap here'}
-      </div>
-      <div class="toggle${isGentleMode ? ' on' : ''}" style="pointer-events:none;transform:scale(0.8)"></div>
-    </div>`;
-  }
+  const gentleLabel = isGentleMode
+    ? 'Gentle mode — showing less today'
+    : (isLowMoodDay ? 'Gentle mode available — tap to reduce pressure' : 'Need a gentler day? Tap here');
+  html += `<div onclick="toggleGentleMode()" style="
+    display:flex;align-items:center;gap:10px;
+    padding:10px 16px;margin-bottom:12px;cursor:pointer;
+    background:${isGentleMode ? 'rgba(106,154,176,0.08)' : 'transparent'};
+    border:1px solid ${isGentleMode ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.06)'};
+    border-radius:var(--r-md);transition:all 0.2s">
+    <span style="font-size:16px">${isGentleMode ? '🌿' : '🍃'}</span>
+    <div style="flex:1;font-size:13px;color:${isGentleMode ? 'var(--sky-light)' : 'var(--text-muted)'}">
+      ${gentleLabel}
+    </div>
+    <div class="toggle${isGentleMode ? ' on' : ''}" style="pointer-events:none;transform:scale(0.8)"></div>
+  </div>`;
 
   // --- FOUNDATIONS: Water + Food (compact combined card) ---
   const waterCount = td.water || 0;
@@ -9243,6 +9244,10 @@ function logMood(val) {
   trackMoodPattern(val);
   // Clear feelings if mood changed
   if (prevMood !== val) state.todayData.feelings = [];
+  // Auto-enable gentle mode for low moods (user can toggle off)
+  if (val >= 0 && val <= 1 && !wasLow) {
+    state.todayData.gentleMode = true;
+  }
   saveState();
   archiveToday();
   haptic('light');
