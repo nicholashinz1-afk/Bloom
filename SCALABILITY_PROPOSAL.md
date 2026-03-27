@@ -29,7 +29,7 @@ Before optimizing, it helps to see where every dollar goes:
 | Vercel | Hosting + serverless functions | Free (100K invocations/mo) | Every API call, every page load |
 | Upstash Redis | Buddy system, wall, telemetry | Free (10K commands/day) | Every buddy sync, every wall post |
 | OneSignal | Push notifications | Free (unlimited web push) | Every notification sent |
-| Domain | bloom-zeta-rouge.vercel.app | ~$12/year | Fixed |
+| Hosting | bloom-zeta-rouge.vercel.app | Free (Vercel subdomain) | N/A |
 
 **The honest math:** At current usage patterns, Bloom can serve ~100-400 daily active users before anything breaks or costs real money. The AI reflections are the first cost wall. Vercel invocations are the second.
 
@@ -279,7 +279,7 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 
 These aren't fantasy numbers. They're based on the actual free tier limits of real services, with conservative estimates.
 
-**The $12/year domain is the only hard cost that never goes away.** Everything else can be covered by free tiers, OSS programs, and modest community donations.
+**Bloom currently has zero hard costs** — hosting is on Vercel's free subdomain, and all services are on free tiers. If a custom domain is added later (~$12/year), that would be the only fixed cost. Everything else can be covered by free tiers, OSS programs, and modest community donations.
 
 ---
 
