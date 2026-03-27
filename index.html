@@ -6634,16 +6634,18 @@ function isTodayScheduled(dayMask) {
 function getWeeklyHabitCount(habitId) {
   // Count how many days this week the habit was completed
   const dates = getWeekDates();
+  const t = today();
   let count = 0;
   dates.forEach(d => {
-    const hist = state.historyData[d];
-    if (hist?.habits?.[habitId]) count++;
-    // Also check todayData for today
-    if (d === today() && state.todayData[habitId]) count++;
+    if (d === t) {
+      // For today, check todayData (source of truth before archive)
+      if (state.todayData[habitId]) count++;
+    } else {
+      const hist = state.historyData[d];
+      if (hist?.habits?.[habitId]) count++;
+    }
   });
-  // Also count from weekData for backward compat
-  const wdCount = state.weekData?.[habitId] || 0;
-  return Math.max(count, wdCount);
+  return count;
 }
 
 // ============================================================
