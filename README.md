@@ -1,8 +1,8 @@
 # Bloom
 
-**Self-care. No pressure.**
+**A gentle self-care companion.**
 
-Bloom is a free, private mental health self-care app. Track habits without pressure, journal with AI reflections, breathe through tough moments. No accounts, no data collection, no cost. Just a quiet place to show up for yourself.
+Bloom is a free, private mental health self-care app. Track habits without pressure, journal, breathe through tough moments, and show up for yourself at your own pace. No accounts, no data collection, no cost.
 
 **[Use Bloom](https://bloomselfcare.app)**
 
