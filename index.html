@@ -12072,6 +12072,49 @@ function renderSettingsTab() {
     <button class="btn btn-ghost btn-sm" onclick="showWhatsNew(true)">📋 View release notes</button>
   `);
 
+  // ── SPREAD THE WORD ─────────────────────────────────────────
+  html += settingsSection('spread', '📣 Spread the word', `
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+      Bloom is free forever and grows by word of mouth. Here are some ways to help it reach people who need it.
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <a href="/press.html" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">📋</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Press kit</div>
+          <div style="font-size:12px;color:var(--text-muted)">Logo, brand colors, QR code, and key facts</div>
+        </div>
+      </a>
+
+      <div onclick="copyEmailSignature()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyEmailSignature()}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">✉️</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Email signature</div>
+          <div style="font-size:12px;color:var(--text-muted)">Copy a small Bloom link for your email signature</div>
+        </div>
+      </div>
+
+      <div onclick="downloadQR()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();downloadQR()}" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">📱</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">QR code</div>
+          <div style="font-size:12px;color:var(--text-muted)">Download a QR code for flyers, cards, or posters</div>
+        </div>
+      </div>
+
+      <a href="https://github.com/nicholashinz1-afk/bloom" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(var(--sage-rgb),0.3)'" onmouseout="this.style.borderColor='rgba(var(--sage-rgb),0.12)'">
+        <span style="font-size:22px">💻</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream)">Source code</div>
+          <div style="font-size:12px;color:var(--text-muted)">View on GitHub, star the repo, or contribute</div>
+        </div>
+      </a>
+
+    </div>
+  `);
+
   // ── ACCESSIBILITY ───────────────────────────────────────────
   html += settingsSection('accessibility', '♿ Accessibility', `
     <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
@@ -12802,6 +12845,24 @@ function toggleNotif(key) {
   save('bloom_prefs', state.prefs);
   reRenderSettingsPreservingScroll();
   setTimeout(() => scheduleAllPushNotifications(), 1000);
+}
+
+function copyEmailSignature() {
+  const sig = 'Bloom — free, private self-care for hard days\nhttps://bloom-zeta-rouge.vercel.app';
+  navigator.clipboard?.writeText(sig).then(() => {
+    showToast('Email signature copied!');
+  }).catch(() => {
+    alert('Copy this to your email signature:\n\n' + sig);
+  });
+}
+
+function downloadQR() {
+  const a = document.createElement('a');
+  a.href = '/qr-code.png';
+  a.download = 'bloom-qr-code.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 function shareApp() {
