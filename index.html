@@ -3754,7 +3754,7 @@ function checkDomainMigration() {
         We've moved to <strong style="color:var(--sage-light)">bloomselfcare.app</strong>. Save a backup first, then visit the new site to restore your data.
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-primary btn-sm" onclick="document.getElementById('migration-banner').style.display='none';showBackupSheet()" style="flex:1;min-width:120px">Save backup</button>
+        <button class="btn btn-primary btn-sm" onclick="showBackupSheet()" style="flex:1;min-width:120px">Save backup</button>
         <a href="https://bloomselfcare.app" class="btn btn-secondary btn-sm" style="flex:1;min-width:120px;text-align:center;text-decoration:none">Visit new site</a>
       </div>
       <button onclick="document.getElementById('migration-banner').remove();save('bloom_migration_dismissed',true)" style="position:absolute;top:10px;right:14px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;padding:4px" aria-label="Dismiss">&times;</button>
