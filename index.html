@@ -15813,6 +15813,18 @@ function initOneSignal() {
       if (pid) {
         save('bloom_onesignal_pid', pid);
         buddyRegisterAndSync();
+      } else if (Notification.permission === 'granted' && !optedIn) {
+        // Browser has permission but OneSignal subscription is not active.
+        // This happens after service worker re-registration wipes the subscription.
+        _osLog('re-opting in (browser granted but not opted in)');
+        await OneSignal.User.PushSubscription.optIn();
+        const newPid = OneSignal.User.PushSubscription.id;
+        _osLog('post-optIn pid', newPid);
+        if (newPid) {
+          save('bloom_onesignal_pid', newPid);
+          buddyRegisterAndSync();
+          setTimeout(() => scheduleAllPushNotifications(), 2000);
+        }
       } else {
         _osLog('no player ID after init');
       }
