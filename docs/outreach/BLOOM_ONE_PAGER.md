@@ -27,7 +27,7 @@ Bloom runs in any browser. No download, no account, no sign-up. Users open the l
 | **Hard day mode** | Automatically reduces habits to top 2, surfaces crisis resources | Reduces cognitive load during low-capacity moments |
 | **Bloom Buddy** | Anonymous peer accountability with encouragement nudges | Social support improves behavior change and wellbeing (Holt-Lunstad et al., 2010) |
 | **Small wins** | Daily positive evidence logging | Progress principle (Amabile & Kramer, 2011); counteracts negativity bias |
-| **Weekly reflection** | Structured look-back on weekends | Metacognitive reflection improves outcomes 23% (Di Stefano et al., 2016) |
+| **Weekly reflection** | Structured look-back on weekends | Metacognitive reflection improves outcomes 23% (Di Stefano et al., 2014) |
 | **Crisis resources** | Always-accessible 988, Crisis Text Line, international helplines | One tap from any screen via the heart button |
 
 ---
