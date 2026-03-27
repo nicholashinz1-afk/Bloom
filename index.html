@@ -8678,7 +8678,9 @@ function renderTodayTab() {
   }
 
   // Build a set of priority habit IDs (first N in the list) for muting
+  // Medication is always priority if enabled — it's the most important habit for anyone tracking it
   const priorityHabitIds = new Set(mutedAfterIndex > 0 ? allDailyHabits.slice(0, mutedAfterIndex).map(h => h.id) : []);
+  if (medEnabled && isReducedDay) priorityHabitIds.add('medication');
 
   // Collect AM habits
   const amHabits = allDailyHabits.filter(h => {
@@ -8762,8 +8764,8 @@ function renderTodayTab() {
   // --- MORNING SECTION ---
   if (amHabits.length > 0 || medInAm || customAm.length > 0) {
     html += `<div class="section-label">🌅 Morning</div><div class="card mb-0">`;
-    amHabits.forEach(h => { html += dailyHabitRow(h, 'am', isMuted(h)); });
     if (medInAm) html += medHabitRow('am', medMuted);
+    amHabits.forEach(h => { html += dailyHabitRow(h, 'am', isMuted(h)); });
     customAm.forEach(ch => { html += customDailyHabitRow(ch, 'am'); });
     html += `</div>`;
   }
@@ -8771,8 +8773,8 @@ function renderTodayTab() {
   // --- AFTERNOON SECTION ---
   if (afternoonHabits.length > 0 || medInAfternoon || customAfternoon.length > 0) {
     html += `<div class="section-label">🌤️ Afternoon</div><div class="card mb-0">`;
-    afternoonHabits.forEach(h => { html += dailyHabitRow(h, 'afternoon', isMuted(h)); });
     if (medInAfternoon) html += medHabitRow('afternoon', medMuted);
+    afternoonHabits.forEach(h => { html += dailyHabitRow(h, 'afternoon', isMuted(h)); });
     customAfternoon.forEach(ch => { html += customDailyHabitRow(ch, 'afternoon'); });
     html += `</div>`;
   }
@@ -8780,8 +8782,8 @@ function renderTodayTab() {
   // --- EVENING SECTION ---
   if (pmHabits.length > 0 || medInPm || customPm.length > 0) {
     html += `<div class="section-label">🌙 Evening</div><div class="card mb-0">`;
-    pmHabits.forEach(h => { html += dailyHabitRow(h, 'pm', isMuted(h)); });
     if (medInPm) html += medHabitRow('pm', medMuted);
+    pmHabits.forEach(h => { html += dailyHabitRow(h, 'pm', isMuted(h)); });
     customPm.forEach(ch => { html += customDailyHabitRow(ch, 'pm'); });
     html += `</div>`;
   }
@@ -8809,8 +8811,8 @@ function renderTodayTab() {
 
   if (hasAnytime) {
     html += `<div class="section-label"><span style="color:#f0c040">☀️</span> Anytime today</div><div class="card mb-0">`;
-    anyHabits.forEach(h => { html += dailyHabitRow(h, 'any', isMuted(h)); });
     if (medInAny) html += medHabitRow('any', medMuted);
+    anyHabits.forEach(h => { html += dailyHabitRow(h, 'any', isMuted(h)); });
     customAny.forEach(ch => { html += customDailyHabitRow(ch, 'any'); });
 
     // Weekly habits with weekly progress badge
