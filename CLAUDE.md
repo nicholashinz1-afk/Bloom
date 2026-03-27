@@ -98,7 +98,7 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 See `SCALABILITY_PROPOSAL.md` for the full proposal. Summary of phases:
 1. **Quick wins (done)** — Haiku/Sonnet split, telemetry batching, accessibility fixes
 2. **Free AI tier (next)** — Cloudflare Workers AI as primary LLM, Claude as fallback
-3. **Sustainability** — Alternate fiscal host, grants (Mozilla, McGovern Foundation, Google.org)
+3. **Sustainability** — Reapply to Open Collective at scale, grants (Mozilla, McGovern Foundation, Google.org)
 4. **Reach** — Internationalization, university partnerships, crisis org partnerships
 5. **Architecture** — Cloudflare Pages + Workers migration if Vercel limits are hit
 
