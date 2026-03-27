@@ -2,7 +2,7 @@
 // Enables real push notifications that fire even when the app is closed
 
 export default async function handler(req, res) {
-  const allowedOrigins = ['https://bloom-zeta-rouge.vercel.app', 'http://localhost:3000'];
+  const allowedOrigins = ['https://bloomselfcare.app', 'https://bloom-zeta-rouge.vercel.app', 'http://localhost:3000'];
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -65,7 +65,7 @@ export default async function handler(req, res) {
           include_subscription_ids: [playerId],
           headings: { en: title },
           contents: { en: message },
-          url: 'https://bloom-zeta-rouge.vercel.app',
+          url: 'https://bloomselfcare.app',
           send_after: sendAt,
           // Use external_id tag so we can cancel by tag later
           ...(tag ? { data: { bloom_tag: tag } } : {}),
@@ -142,7 +142,7 @@ export default async function handler(req, res) {
             include_subscription_ids: [playerId],
             headings: { en: title },
             contents: { en: message },
-            url: 'https://bloom-zeta-rouge.vercel.app',
+            url: 'https://bloomselfcare.app',
             send_after: sendAt,
             ...(tag ? { data: { bloom_tag: tag } } : {}),
           }),

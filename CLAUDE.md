@@ -36,7 +36,7 @@ This is intentional for a mental health app. Don't block words like "hurt", "har
 ## Security Headers
 
 Configured in `vercel.json`: CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy.
-CORS is locked to `bloom-zeta-rouge.vercel.app` + `localhost:3000` in the API files.
+CORS is locked to `bloomselfcare.app` + `bloom-zeta-rouge.vercel.app` + `localhost:3000` in the API files.
 
 ## Crisis Resources
 
@@ -71,7 +71,7 @@ Today | Weekly | Wellness | Progress | Community | Settings
 
 ## Deployment
 
-https://bloom-zeta-rouge.vercel.app
+https://bloomselfcare.app
 
 ## License
 

@@ -14,10 +14,10 @@
 
 <!-- Open Graph (Facebook, LinkedIn, iMessage, Discord, etc.) -->
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://bloom-zeta-rouge.vercel.app">
+<meta property="og:url" content="https://bloomselfcare.app">
 <meta property="og:title" content="Bloom — gentle self-care for hard days">
 <meta property="og:description" content="Free, private mental health self-care. Track habits without pressure, journal with AI reflections, breathe through tough moments. No accounts, no data collection, no cost. Just a quiet place to show up for yourself.">
-<meta property="og:image" content="https://bloom-zeta-rouge.vercel.app/og-image.png">
+<meta property="og:image" content="https://bloomselfcare.app/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Bloom — gentle self-care for hard days. Free, private, no accounts needed.">
@@ -27,7 +27,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Bloom — gentle self-care for hard days">
 <meta name="twitter:description" content="Free, private mental health self-care. Track habits, journal, breathe. No accounts, no data collection, no cost.">
-<meta name="twitter:image" content="https://bloom-zeta-rouge.vercel.app/og-image.png">
+<meta name="twitter:image" content="https://bloomselfcare.app/og-image.png">
 <meta name="twitter:image:alt" content="Bloom — gentle self-care for hard days">
 
 <!-- General SEO -->
@@ -13019,7 +13019,7 @@ function toggleNotif(key) {
 }
 
 function copyEmailSignature() {
-  const sig = 'Bloom -- free, private self-care for hard days\nhttps://bloom-zeta-rouge.vercel.app';
+  const sig = 'Bloom -- free, private self-care for hard days\nhttps://bloomselfcare.app';
   navigator.clipboard?.writeText(sig).then(() => {
     showToast('Plain text signature copied!');
   }).catch(() => {
@@ -13028,7 +13028,7 @@ function copyEmailSignature() {
 }
 
 function copyHTMLEmailSignature() {
-  const html = `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif"><tr><td style="vertical-align:middle;padding-right:12px"><a href="https://bloom-zeta-rouge.vercel.app" target="_blank" rel="noopener"><img src="https://bloom-zeta-rouge.vercel.app/email-badge.png" alt="Bloom" width="120" height="32" style="display:block;border-radius:6px;border:0"></a></td><td style="vertical-align:middle;border-left:2px solid #7a9e7e;padding-left:12px"><div style="font-size:12px;color:#2e4d32;font-weight:600;line-height:1.3">Free, private self-care</div><a href="https://bloom-zeta-rouge.vercel.app" target="_blank" rel="noopener" style="font-size:11px;color:#7a9e7e;text-decoration:none;line-height:1.3">bloom-zeta-rouge.vercel.app</a></td></tr></table>`;
+  const html = `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif"><tr><td style="vertical-align:middle;padding-right:12px"><a href="https://bloomselfcare.app" target="_blank" rel="noopener"><img src="https://bloomselfcare.app/email-badge.png" alt="Bloom" width="120" height="32" style="display:block;border-radius:6px;border:0"></a></td><td style="vertical-align:middle;border-left:2px solid #7a9e7e;padding-left:12px"><div style="font-size:12px;color:#2e4d32;font-weight:600;line-height:1.3">Free, private self-care</div><a href="https://bloomselfcare.app" target="_blank" rel="noopener" style="font-size:11px;color:#7a9e7e;text-decoration:none;line-height:1.3">bloomselfcare.app</a></td></tr></table>`;
   const blob = new Blob([html], { type: 'text/html' });
   const item = new ClipboardItem({ 'text/html': blob, 'text/plain': new Blob([html], { type: 'text/plain' }) });
   navigator.clipboard.write([item]).then(() => {
@@ -13055,7 +13055,7 @@ It's a private, browser-based tool for mood tracking, journaling, breathing exer
 
 You can also export a therapist-friendly report from the app that we can review together in session.
 
-Try it here: https://bloom-zeta-rouge.vercel.app
+Try it here: https://bloomselfcare.app
 
 It's completely optional, and there's no pressure to use it. Just wanted you to know it's available.
 
@@ -13070,7 +13070,7 @@ I came across this app called Bloom and thought you might like it. It's a free s
 
 What I like about it: everything stays on your phone, there are no accounts to create, and it doesn't guilt you about missing days. It's just a quiet place to check in with yourself.
 
-Here's the link: https://bloom-zeta-rouge.vercel.app
+Here's the link: https://bloomselfcare.app
 
 No pressure at all. Just wanted to pass it along.`
     }
@@ -13176,7 +13176,7 @@ function downloadSocialCard(type) {
   const urlY = type === 'twitter' ? cfg.h - 60 * s : cfg.h - 100 * s;
   ctx.font = `${24 * s}px -apple-system, Arial, sans-serif`;
   ctx.fillStyle = '#7a9e7e';
-  ctx.fillText('bloom-zeta-rouge.vercel.app', logoX - 4 * s, urlY);
+  ctx.fillText('bloomselfcare.app', logoX - 4 * s, urlY);
 
   // Download
   canvas.toBlob(blob => {
@@ -13480,7 +13480,7 @@ function exportTherapistPDF() {
     function drawFooter() {
       doc.setFontSize(7.5);
       doc.setTextColor(...textLight);
-      doc.text('Generated by Bloom  |  bloom-zeta-rouge.vercel.app  |  This report is for informational purposes only.', pageW / 2, pageH - 10, { align: 'center' });
+      doc.text('Generated by Bloom  |  bloomselfcare.app  |  This report is for informational purposes only.', pageW / 2, pageH - 10, { align: 'center' });
       // Thin sage line above footer
       doc.setDrawColor(...sage);
       doc.setLineWidth(0.3);
