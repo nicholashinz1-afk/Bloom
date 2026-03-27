@@ -254,12 +254,18 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 
 ### Phase 4 -- Reach (Month 3-6)
 - [x] Purchase a custom domain (bloomselfcare.app)
+- [x] Submit Bloom to PsyberGuide for credibility review (emailed March 2026)
+- [x] Reach out to university counseling centers for feedback (MCTS Rose, Schoolcraft, Wayne State)
 - [ ] Internationalization framework + first community translations
-- [ ] Reach out to university counseling centers for feedback (see `docs/outreach/EMAIL_TEMPLATES.md`)
 - [ ] Reach out to crisis organizations for cross-promotion
 - [ ] Reach out to Anthropic about social impact API credits
 - [ ] Apply for larger grants (McGovern Foundation, Google.org)
-- [ ] Submit Bloom to PsyberGuide for credibility review
+- [ ] Post on Product Hunt
+- [ ] Post on Hacker News (Show HN)
+- [ ] Set up Instagram account for Bloom
+- [ ] Apply for Cloudflare Project Galileo
+- [ ] Switch OneSignal Site URL to bloomselfcare.app
+- [ ] Remove OneSignal diagnostic logging after notifications confirmed working
 
 **Result: Thousands of users across multiple languages**
 
@@ -320,13 +326,22 @@ Open Collective rejected Bloom's fiscal sponsorship application (March 2026) -- 
 
 ### Short-term (this month)
 
-| Action | Why it matters |
-|--------|---------------|
+| Action | Why it matters | Status |
+|--------|---------------|--------|
 | ~~Apply for GitHub Sponsors~~ | ~~Developer-facing donations, 0% fees~~ | Done |
-| Submit Bloom to PsyberGuide (psyberguide.org) | Credibility rating for digital mental health tools |
-| Email 5-10 university counseling centers asking for feedback | Feedback relationships turn into pilot programs |
-| Ask a licensed therapist/counselor to review Bloom and write a 2-3 sentence letter of support | One endorsement from a LCSW/psychologist opens institutional doors |
-| Add explicit "not a HIPAA covered entity / no PHI" statement to privacy policy | Makes institutional legal teams relax |
+| Submit Bloom to PsyberGuide (psyberguide.org) | Credibility rating for digital mental health tools | Done (emailed info@psyberguide.org) |
+| Email 5-10 university counseling centers asking for feedback | Feedback relationships turn into pilot programs | In progress (MCTS Rose, Schoolcraft, Wayne State CAPS sent) |
+| Ask a licensed therapist/counselor to review Bloom and write a 2-3 sentence letter of support | One endorsement from a LCSW/psychologist opens institutional doors | In progress (therapist reviewing) |
+| Add explicit "not a HIPAA covered entity / no PHI" statement to privacy policy | Makes institutional legal teams relax | Done |
+| Add FAQ and feedback section in Settings | Users need a way to ask questions and give feedback | Done |
+| Fix push notifications (OneSignal) | Service worker and CSP issues breaking subscriptions | In progress (fixes deployed, verifying) |
+| Update onboarding tutorial to match current UX | Tutorial referenced old tab names and missing features | Done |
+| Fix science section citations (10 errors) | Clinicians reviewing the app need accurate sources | Done |
+| Remove em dashes from all user-facing text | Writing style consistency | Done |
+| Redesign social media cards to match app tone | Instagram/social posts need clean, on-brand images | Done |
+| Update og-image for link sharing | Old image had wrong tagline and URL | Done |
+| Rename Weekly tab to History | Tab name didn't match its content | Done |
+| Multi-hue mood colors | Old single-hue gradient was indistinguishable | Done |
 
 ### Medium-term (month 2-3)
 
