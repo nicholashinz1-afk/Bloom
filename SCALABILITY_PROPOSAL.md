@@ -242,9 +242,9 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 **Result: ~2,000-3,000 DAU capacity, ~$0-2/month**
 
 ### Phase 3 -- Sustainability (Month 2-3)
-- [ ] Set up Ko-fi or Buy Me a Coffee page
-- [ ] Set up GitHub Sponsors (via Stripe)
-- [x] Add "Support Bloom" link in settings (hidden until donation URL is configured — set SUPPORT_URL in renderSettingsTab)
+- [x] Set up Ko-fi (ko-fi.com/bloomselfcare)
+- [x] Set up GitHub Sponsors (via Stripe)
+- [x] Add "Support Bloom" links in Settings and Today tabs
 - [ ] Apply for Cloudflare Project Galileo
 - [ ] Reapply to Open Collective once community grows (contributors, issues, discussions)
 - [ ] Explore alternative fiscal sponsors (Software Freedom Conservancy, Hack Club, NumFOCUS)
@@ -315,14 +315,14 @@ Open Collective rejected Bloom's fiscal sponsorship application (March 2026) -- 
 |--------|---------------|--------|
 | One-pager with features, research basis, privacy model | Required for any institutional outreach | Done (`docs/outreach/BLOOM_ONE_PAGER.md`) |
 | Outreach email templates (counseling centers, therapists, crisis orgs, grants) | Reduces friction for outreach | Done (`docs/outreach/EMAIL_TEMPLATES.md`) |
-| Set up Ko-fi donation page | Simplest path to accepting support | TODO |
-| Set SUPPORT_URL in `index.html` `renderSettingsTab()` | Activates hidden Support Bloom card in Settings | TODO (waiting on Ko-fi link) |
+| Set up Ko-fi donation page | Simplest path to accepting support | Done (ko-fi.com/bloomselfcare) |
+| Support link in Settings and Today tabs | Users can find it naturally | Done |
 
 ### Short-term (this month)
 
 | Action | Why it matters |
 |--------|---------------|
-| Apply for GitHub Sponsors (via Stripe, no fiscal host needed) | Developer-facing donations, 0% fees |
+| ~~Apply for GitHub Sponsors~~ | ~~Developer-facing donations, 0% fees~~ | Done |
 | Submit Bloom to PsyberGuide (psyberguide.org) | Credibility rating for digital mental health tools |
 | Email 5-10 university counseling centers asking for feedback | Feedback relationships turn into pilot programs |
 | Ask a licensed therapist/counselor to review Bloom and write a 2-3 sentence letter of support | One endorsement from a LCSW/psychologist opens institutional doors |

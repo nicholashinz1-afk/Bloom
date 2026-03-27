@@ -87,11 +87,10 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 ## Sustainability
 
 - **Open Collective:** Rejected (project too early-stage for fiscal sponsorship — reapply when community grows)
-- **GitHub Sponsors:** Next step — set up via Stripe directly (no fiscal host needed)
-- **Ko-fi / Buy Me a Coffee:** Next step — simple donation page, zero overhead
+- **GitHub Sponsors:** Live (via Stripe)
+- **Ko-fi:** Live at ko-fi.com/bloomselfcare — linked in Settings tab and Today tab
 - **Vercel OSS:** Emailed partnerships@vercel.com for sponsorship
 - **Upstash OSS:** Applied via oss@upstash.com
-- **Support link in Settings:** Added but hidden — set `SUPPORT_URL` in `index.html` `renderSettingsTab()` once donation page is live
 - **Contact:** bloomhabits@proton.me
 
 ## Scaling Roadmap
