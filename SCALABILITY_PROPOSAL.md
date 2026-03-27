@@ -30,6 +30,7 @@ Before optimizing, it helps to see where every dollar goes:
 | Upstash Redis | Buddy system, wall, telemetry | Free (10K commands/day) | Every buddy sync, every wall post |
 | OneSignal | Push notifications | Free (unlimited web push) | Every notification sent |
 | Hosting | bloom-zeta-rouge.vercel.app | Free (Vercel subdomain) | N/A |
+| Custom domain (planned) | TBD | ~$12/year (when purchased) | N/A |
 
 **The honest math:** At current usage patterns, Bloom can serve ~100-400 daily active users before anything breaks or costs real money. The AI reflections are the first cost wall. Vercel invocations are the second.
 
@@ -250,6 +251,7 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 **Result: Sustainable funding path, infrastructure credits covering costs**
 
 ### Phase 4 -- Reach (Month 3-6)
+- [ ] Purchase a custom domain (~$12/year) for a cleaner, more trustworthy URL
 - [ ] Internationalization framework + first community translations
 - [ ] Reach out to university counseling centers for partnerships
 - [ ] Reach out to crisis organizations for cross-promotion
