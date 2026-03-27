@@ -14712,6 +14712,9 @@ function renderOBWelcomeAndName(body, footer) {
       <div style="width:100%;background:rgba(var(--sage-rgb),0.07);border:1px solid rgba(var(--sage-rgb),0.18);border-radius:20px;padding:20px 24px;margin-bottom:28px">
         <div style="font-family:Fraunces,serif;font-style:italic;font-size:17px;color:var(--sage-light);line-height:1.7">No guilt. No pressure.<br>Just you, showing up.</div>
       </div>
+      ${load('bloom_pending_buddy_invite', null) ? `<div style="background:rgba(var(--sage-rgb),0.1);border:1px solid rgba(var(--sage-rgb),0.25);border-radius:12px;padding:12px 16px;margin-bottom:20px;width:100%">
+        <div style="font-size:13px;color:var(--sage-light);text-align:center">🤝 A buddy invite is waiting for you! Complete setup to connect.</div>
+      </div>` : ''}
       <div style="width:100%;text-align:left;margin-bottom:8px">
         <div class="ob-sub" style="margin-bottom:8px">What should we call you?</div>
         <input type="text" id="ob-name-input" aria-label="Your name" placeholder="Your name..." value="${obData.name}" style="font-size:18px;padding:16px;width:100%">
@@ -17908,6 +17911,8 @@ function initApp() {
   const pendingBuddyInvite = load('bloom_pending_buddy_invite', null);
   if (pendingBuddyInvite) {
     save('bloom_pending_buddy_invite', null);
+    showToast('Connecting with your buddy...', 4000);
+    switchTab('community');
     setTimeout(() => {
       buddyRegisterAndSync().then(() => buddyAcceptInvite(pendingBuddyInvite));
     }, 1000);
