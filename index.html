@@ -13203,7 +13203,7 @@ function shareApp() {
   const shareData = {
     title: 'bloom — a gentle self-care app',
     text: 'I\'ve been using bloom to track my habits and take care of myself. No guilt, no pressure — just small steps every day. Thought you might like it 🌿',
-    url: window.location.origin + window.location.pathname,
+    url: 'https://bloomselfcare.app',
   };
   if (navigator.share) {
     navigator.share(shareData).catch(() => {});
@@ -16902,7 +16902,7 @@ function renderBuddyInviteView(code) {
   const container = document.getElementById('buddy-section');
   if (!container) return;
 
-  const shareUrl = location.origin + '/?buddy=' + code;
+  const shareUrl = 'https://bloomselfcare.app/?buddy=' + code;
 
   container.innerHTML = `
     <div style="text-align:center;padding:8px 0 16px">
