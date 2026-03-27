@@ -63,7 +63,7 @@ Always accessible via the white heart button in the header.
 - Low mood auto-surfaces breathing exercises and crisis resources
 - AI reflections use warm witness tone, never clinical advice
 - Disclaimer: "not a substitute for professional mental health care"
-- Moderation allows venting — don't over-filter emotional language
+- Moderation allows venting. Don't over-filter emotional language.
 
 ## Tabs
 
@@ -75,7 +75,7 @@ https://bloom-zeta-rouge.vercel.app
 
 ## License
 
-AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must remain open source under the same terms. Nobody can take Bloom and make it proprietary or monetize a closed fork. This is intentional — Bloom is free forever.
+AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must remain open source under the same terms. Nobody can take Bloom and make it proprietary or monetize a closed fork. This is intentional. Bloom is free forever.
 
 ## Cost Model
 
@@ -86,7 +86,7 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 
 ## Sustainability
 
-- **Open Collective:** Rejected (project too early-stage for fiscal sponsorship — reapply when community grows)
+- **Open Collective:** Rejected (project too early-stage for fiscal sponsorship, reapply when community grows)
 - **GitHub Sponsors:** Live (via Stripe)
 - **Ko-fi:** Live at ko-fi.com/bloomselfcare — linked in Settings tab and Today tab
 - **Vercel OSS:** Emailed partnerships@vercel.com for sponsorship
@@ -106,4 +106,4 @@ See `SCALABILITY_PROPOSAL.md` for the full proposal. Summary of phases:
 
 - Admin dashboard at `/admin.html`, protected by `ADMIN_KEY` environment variable in Vercel
 - Share the key to grant access, change the key in Vercel env vars to revoke
-- Single shared key for now — no role-based access
+- Single shared key for now, no role-based access

@@ -171,7 +171,7 @@ These are real programs that exist today, ranked by how easy they are to set up:
 | **AWS for Nonprofits** | $2,000/yr AWS credits | aws.amazon.com/nonprofits (via TechSoup) |
 | **Microsoft AI for Good** | Azure credits + technical support | microsoft.com/ai/ai-for-good |
 
-**Open Collective update (March 2026):** Application was rejected — project is too early-stage for fiscal sponsorship. They recommend Ko-fi, Patreon, or Buy Me a Coffee for individual-led projects, and invite reapplication once community involvement grows. **Revised immediate path:** GitHub Sponsors (via Stripe, no fiscal host needed) + Ko-fi for simple donations. Grants requiring nonprofit status are deferred until either (a) Open Collective accepts a future application, or (b) an alternative fiscal sponsor is found.
+**Open Collective update (March 2026):** Application was rejected. Project is too early-stage for fiscal sponsorship. They recommend Ko-fi, Patreon, or Buy Me a Coffee for individual-led projects, and invite reapplication once community involvement grows. **Revised immediate path:** GitHub Sponsors (via Stripe, no fiscal host needed) + Ko-fi for simple donations. Grants requiring nonprofit status are deferred until either (a) Open Collective accepts a future application, or (b) an alternative fiscal sponsor is found.
 
 ---
 
@@ -248,7 +248,7 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 - [ ] Apply for Cloudflare Project Galileo
 - [ ] Reapply to Open Collective once community grows (contributors, issues, discussions)
 - [ ] Explore alternative fiscal sponsors (Software Freedom Conservancy, Hack Club, NumFOCUS)
-- [ ] Write and submit first grant application (Mozilla Foundation — doesn't require nonprofit status)
+- [ ] Write and submit first grant application (Mozilla Foundation, doesn't require nonprofit status)
 
 **Result: Sustainable funding path, infrastructure credits covering costs**
 
@@ -284,7 +284,7 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 
 These aren't fantasy numbers. They're based on the actual free tier limits of real services, with conservative estimates.
 
-**Bloom currently has zero hard costs** — hosting is on Vercel's free subdomain, and all services are on free tiers. If a custom domain is added later (~$12/year), that would be the only fixed cost. Everything else can be covered by free tiers, OSS programs, and modest community donations.
+**Bloom currently has zero hard costs.** Hosting is on Vercel's free subdomain, and all services are on free tiers. If a custom domain is added later (~$12/year), that would be the only fixed cost. Everything else can be covered by free tiers, OSS programs, and modest community donations.
 
 ---
 
