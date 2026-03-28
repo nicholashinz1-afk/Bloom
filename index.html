@@ -14856,9 +14856,11 @@ function checkDomainMigration() {
 
   const prefs = load('bloom_prefs');
 
-  // No data on old domain: silent redirect
+  // No data on old domain: show interstitial with recovery option
+  // (Don't silently redirect — iOS Safari may have wiped localStorage,
+  //  and the user might need to recover data via backup file)
   if (!prefs || !prefs.onboarded) {
-    location.replace('https://' + PRODUCTION_DOMAIN);
+    showLegacyRedirectScreen();
     return true;
   }
 
@@ -14876,6 +14878,63 @@ function checkDomainMigration() {
 
   showMigrationBanner();
   return true;
+}
+
+function showLegacyRedirectScreen() {
+  trackEvent('legacy_redirect_screen_shown');
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10002;background:var(--bg-main);display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML = `
+    <div style="max-width:360px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🌱</div>
+      <h2 style="color:var(--sage);margin-bottom:8px;font-family:Fraunces,serif;font-size:22px">Bloom has moved!</h2>
+      <p style="color:var(--text-secondary);font-size:14px;line-height:1.7;margin-bottom:24px">
+        Bloom now lives at <strong>bloomselfcare.app</strong>. Tap below to head to your new home.
+      </p>
+      <a href="https://${PRODUCTION_DOMAIN}" target="_blank" rel="noopener" id="legacy-go"
+         style="display:block;padding:14px 24px;background:var(--sage);color:var(--text-on-sage);border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;margin-bottom:16px">
+        Go to bloomselfcare.app
+      </a>
+      <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:16px">
+        <p style="color:var(--text-muted);font-size:12px;margin-bottom:10px">Had data here before? iOS Safari may have cleared it.</p>
+        <button id="legacy-recover-file" style="display:block;width:100%;padding:10px 16px;background:rgba(var(--sage-rgb),0.15);border:1px solid rgba(var(--sage-rgb),0.25);color:var(--sage-light);border-radius:10px;font-size:13px;cursor:pointer;font-weight:500;margin-bottom:8px">Import a backup file</button>
+        <a href="https://${PRODUCTION_DOMAIN}/?recover=1" target="_blank" rel="noopener"
+           style="display:block;padding:10px 16px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--text-secondary);border-radius:10px;font-size:13px;cursor:pointer;text-decoration:none;text-align:center">Recover data on the new site</a>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#legacy-go').addEventListener('click', function(e) {
+    const w = window.open('https://' + PRODUCTION_DOMAIN, '_blank');
+    if (w) e.preventDefault();
+  });
+
+  // File import right here on the old domain, then redirect with data
+  overlay.querySelector('#legacy-recover-file').addEventListener('click', function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.addEventListener('change', async function() {
+      const file = this.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        applyRestoreData(data);
+        const prefs = load('bloom_prefs') || {};
+        prefs.onboarded = true;
+        prefs.onboardDate = prefs.onboardDate || today();
+        save('bloom_prefs', prefs);
+        trackEvent('legacy_file_restored');
+        // Now re-trigger migration with restored data
+        overlay.remove();
+        showMigrationBanner();
+      } catch(e) {
+        alert('Could not read this file. Make sure it is a Bloom backup (.json) file.');
+      }
+    });
+    input.click();
+  });
 }
 
 function showMigrationBanner() {
@@ -15044,9 +15103,17 @@ function showMigrationComplete() {
   });
 
   overlay.querySelector('#migration-retry').addEventListener('click', function() {
-    save('bloom_migration_complete', null);
     localStorage.removeItem('bloom_migration_complete');
-    location.reload();
+    dbSet('bloom_migration_complete', null);
+    const prefs = load('bloom_prefs');
+    if (prefs && prefs.onboarded) {
+      // Data still exists, reload to show migration banner
+      location.reload();
+    } else {
+      // Data was wiped (iOS Safari 7-day rule) — show redirect screen with recovery
+      overlay.remove();
+      showLegacyRedirectScreen();
+    }
   });
 
   overlay.querySelector('#migration-export').addEventListener('click', function() {
@@ -19401,6 +19468,13 @@ async function main() {
   if (migratedParam === 'file') {
     history.replaceState({}, '', location.pathname);
     showMigrationImportPrompt();
+  }
+
+  // Recovery landing (from legacy redirect screen)
+  const recoverParam = new URLSearchParams(location.search).get('recover');
+  if (recoverParam === '1') {
+    history.replaceState({}, '', location.pathname);
+    setTimeout(() => { openSheet('recover-sheet'); showRecoverOptions(); }, 500);
   }
 
   // Check for buddy invite link (?buddy=CODE)
