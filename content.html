@@ -322,6 +322,43 @@
     border-radius: 999px;
   }
 
+  .engagement-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .eng-tag {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .eng-tag.save { background: rgba(106, 154, 176, 0.15); color: var(--sky); }
+  .eng-tag.share { background: rgba(168, 197, 171, 0.15); color: var(--sage-light); }
+  .eng-tag.comment { background: rgba(201, 149, 74, 0.15); color: var(--amber); }
+  .eng-tag.swipe { background: rgba(176, 120, 120, 0.15); color: var(--rose); }
+  .eng-tag.reel { background: rgba(201, 149, 74, 0.15); color: var(--amber); }
+
+  .strategy-note {
+    background: var(--bg-elevated);
+    border-left: 3px solid var(--sky);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .strategy-note strong {
+    color: var(--cream);
+  }
+
   .posting-guide {
     background: var(--bg-card);
     border-radius: 16px;
@@ -428,6 +465,34 @@
     </div>
   </div>
   <p style="margin-top: 16px; font-size: 0.8rem; color: var(--text-muted);">Once you have 100+ followers, check Instagram Insights > Audience > Most Active Times. Your actual data beats any generic advice.</p>
+
+  <h2 style="margin-top: 28px;">Engagement Types</h2>
+  <p>Each post is tagged with the kind of engagement it's designed to drive. This isn't about gaming the algorithm. It's about understanding what each post does so you can lean into it.</p>
+  <div class="time-grid">
+    <div class="time-slot">
+      <div class="slot-label"><span class="eng-tag save" style="font-size: 0.68rem;">Save-driven</span></div>
+      <div class="slot-why" style="margin-top: 8px;">Educational or resource content people bookmark for later. Saves are the strongest algorithm signal on Instagram. These posts build long-term reach.</div>
+    </div>
+    <div class="time-slot">
+      <div class="slot-label"><span class="eng-tag share" style="font-size: 0.68rem;">Share-driven</span></div>
+      <div class="slot-why" style="margin-top: 8px;">Values-based content people send to friends or repost in Stories. Shares expand your audience beyond your followers. This is how you grow organically.</div>
+    </div>
+    <div class="time-slot">
+      <div class="slot-label"><span class="eng-tag comment" style="font-size: 0.68rem;">Comment-driven</span></div>
+      <div class="slot-why" style="margin-top: 8px;">Relatable or emotional content that makes people want to respond. Comments boost visibility and build community. Reply to every comment in the first hour.</div>
+    </div>
+    <div class="time-slot">
+      <div class="slot-label"><span class="eng-tag swipe" style="font-size: 0.68rem;">Swipe-driven</span></div>
+      <div class="slot-why" style="margin-top: 8px;">Carousel posts designed to make people swipe. Swipe-through rate is a strong signal. Bait-and-switch openers and curiosity gaps drive this.</div>
+    </div>
+  </div>
+
+  <h2 style="margin-top: 28px;">General Playbook</h2>
+  <p><strong>First hour matters most.</strong> Reply to every comment and DM within 60 minutes of posting. Instagram's algorithm decides reach in the first hour based on early engagement velocity.</p>
+  <p><strong>Stories are the second post.</strong> Every feed post should have a companion Story. Use polls, questions, or "share this" prompts. Stories keep you at the top of people's feeds and drive traffic back to the post.</p>
+  <p><strong>Don't sell. Show up.</strong> Bloom's content philosophy is the same as its design philosophy: no pressure, no shame. Don't beg for follows, don't use "link in bio" in every caption (only where it's natural), and don't post engagement bait that feels hollow. People can tell when something is real. Be real.</p>
+  <p><strong>Consistency over virality.</strong> Posting every 2 days matters more than any single post going viral. The algorithm rewards accounts that show up reliably. This calendar is designed for that rhythm.</p>
+  <p><strong>Let people feel seen.</strong> The mental health niche is full of accounts that talk at people. Bloom talks with them. When someone comments something vulnerable, honor that. A genuine two-word reply beats a paragraph.</p>
 </div>
 
 <div class="batch-label">Batch 1 — Week 1</div>
@@ -436,9 +501,14 @@
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Mar 29</span>
+    <span class="time-badge">Sun · 10:00 AM</span>
     <span class="post-theme">Intro / Launch</span>
   </div>
   <h3>The First Post</h3>
+  <div class="engagement-row">
+    <span class="eng-tag share">Share-driven</span>
+    <span class="eng-tag comment">Comment-driven</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-1">I built Bloom during a time when I needed better tools and couldn't find them. So I made one.
@@ -467,15 +537,21 @@ Link in bio.<button class="copy-btn" onclick="copyCaption('caption-1')">Copy</bu
     </div>
   </div>
   <p class="tip">Use the first graphic as a single post, or both as a carousel with an app screenshot as slide 3.</p>
+  <div class="strategy-note"><strong>Strategy:</strong> Sunday morning launches catch people in relaxed browsing mode. Pin this post to your profile. First impressions matter. The "I built this because I needed it" angle is authentic and gets comments from people who relate.</div>
 </div>
 
 <!-- POST 2 -->
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Mar 31</span>
+    <span class="time-badge">Tue · 9:00 AM</span>
     <span class="post-theme">Feature — No Streak Pressure</span>
   </div>
   <h3>Your Streak Didn't Break</h3>
+  <div class="engagement-row">
+    <span class="eng-tag swipe">Swipe-driven</span>
+    <span class="eng-tag save">Save-driven</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-2">Most habit apps punish you for missing a day. Bloom doesn't.
@@ -506,15 +582,21 @@ That's the whole point. No guilt. No shame. Just you, showing up when you can.<b
     </div>
   </div>
   <p class="tip">Carousel. The bait-and-switch on slide 1 drives engagement. Swipe rate is an algorithm signal.</p>
+  <div class="strategy-note"><strong>Strategy:</strong> Tuesday morning catches people at the start of their routine. Anti-streak messaging resonates hard with people burnt out on Duolingo-style guilt. Expect "I needed to hear this" comments. Reply to every one in the first hour.</div>
 </div>
 
 <!-- POST 3 -->
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Apr 2</span>
+    <span class="time-badge">Thu · 7:00 PM</span>
     <span class="post-theme">Feature — Hard Day Mode</span>
   </div>
   <h3>Hard Days Are Expected</h3>
+  <div class="engagement-row">
+    <span class="eng-tag save">Save-driven</span>
+    <span class="eng-tag comment">Comment-driven</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-3">Some days, brushing your teeth and drinking water is enough.
@@ -539,15 +621,21 @@ Because hard days are expected. They're not failure. They're part of it. And you
       <div class="url">bloomselfcare.app</div>
     </div>
   </div>
+  <div class="strategy-note"><strong>Strategy:</strong> Evening post. Emotional content lands when people are winding down and more reflective. "Hard day mode" is the kind of feature people screenshot and share in Stories. Post a Story the same evening asking "Did you have a hard day today?" with a yes/no poll to boost interaction.</div>
 </div>
 
 <!-- POST 4 -->
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Apr 4</span>
+    <span class="time-badge">Sat · 10:00 AM</span>
     <span class="post-theme">Value — Privacy</span>
   </div>
   <h3>Bloom Doesn't Know Who You Are</h3>
+  <div class="engagement-row">
+    <span class="eng-tag swipe">Swipe-driven</span>
+    <span class="eng-tag share">Share-driven</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-4">Bloom doesn't know who you are. That's on purpose.
@@ -575,6 +663,7 @@ Mental health tools shouldn't cost your privacy.<button class="copy-btn" onclick
     </div>
   </div>
   <p class="tip">Another bait-and-switch carousel. "What Bloom knows about you:" makes people swipe.</p>
+  <div class="strategy-note"><strong>Strategy:</strong> Saturday morning, people have time to read and think. Privacy content gets shared by people who care about data rights. Cross-post the "Nothing." slide as a Story with a link sticker. The contrast between slide 1 and 2 is designed for screenshots.</div>
 </div>
 
 <div class="batch-label">Batch 1 — Week 2</div>
@@ -583,9 +672,14 @@ Mental health tools shouldn't cost your privacy.<button class="copy-btn" onclick
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Apr 6</span>
+    <span class="time-badge">Mon · 9:00 AM</span>
     <span class="post-theme">Science — Affect Labeling</span>
   </div>
   <h3>Naming It Changes It</h3>
+  <div class="engagement-row">
+    <span class="eng-tag save">Save-driven</span>
+    <span class="eng-tag share">Share-driven</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-5">Naming how you feel actually changes what's happening in your brain.
@@ -613,15 +707,21 @@ Lieberman et al., 2007. Putting Feelings into Words.<button class="copy-btn" onc
       <div class="url">bloomselfcare.app</div>
     </div>
   </div>
+  <div class="strategy-note"><strong>Strategy:</strong> Monday morning, science-backed content sets a credible tone for the week. Educational posts get saved heavily. The "How are you feeling today?" graphic works as a standalone Story too. People tag friends who are into psychology and neuroscience.</div>
 </div>
 
 <!-- POST 6 -->
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Apr 8</span>
+    <span class="time-badge">Wed · 7:00 PM</span>
     <span class="post-theme">Feature — Breathing</span>
   </div>
   <h3>4-7-8</h3>
+  <div class="engagement-row">
+    <span class="eng-tag save">Save-driven</span>
+    <span class="eng-tag reel">Reel potential</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-6">4 seconds in. 7 seconds hold. 8 seconds out.
@@ -649,15 +749,21 @@ Next time you feel your chest tighten or your thoughts start racing, try it. It'
     </div>
   </div>
   <p class="tip">This one works great as a Reel too. Screen record the breathing exercise in the app with calm music.</p>
+  <div class="strategy-note"><strong>Strategy:</strong> Wednesday evening, when midweek stress peaks. Breathing content is the most saved category in mental health niches. If you make a Reel, post it at the same time. Reels get 2-3x the reach of static posts. Add "Save this for when you need it" as the last line of a Story version.</div>
 </div>
 
 <!-- POST 7 -->
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Apr 10</span>
+    <span class="time-badge">Fri · 6:00 PM</span>
     <span class="post-theme">Crisis Resources</span>
   </div>
   <h3>Save This Post</h3>
+  <div class="engagement-row">
+    <span class="eng-tag save">Save-driven</span>
+    <span class="eng-tag share">Share-driven</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-7">If you or someone you know is struggling right now:
@@ -691,6 +797,7 @@ Save this post. You might not need it today, but someone might.<button class="co
     </div>
   </div>
   <p class="tip">Crisis resource posts get saved and shared heavily. This one builds reach and does something that matters.</p>
+  <div class="strategy-note"><strong>Strategy:</strong> Friday evening, intentionally. People are more alone on Friday nights than the internet admits. Crisis posts get the highest save-to-impression ratio of any content type. Post the "You are not alone" graphic as a Story too with a share prompt. This post should stay pinned to your profile alongside Post 1.</div>
 </div>
 
 <div class="batch-label">Batch 2 — Week 3</div>
@@ -699,9 +806,14 @@ Save this post. You might not need it today, but someone might.<button class="co
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Apr 12</span>
+    <span class="time-badge">Sun · 10:00 AM</span>
     <span class="post-theme">Feature — Journaling</span>
   </div>
   <h3>Write It Down</h3>
+  <div class="engagement-row">
+    <span class="eng-tag save">Save-driven</span>
+    <span class="eng-tag comment">Comment-driven</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-8">Writing about what you're going through helps you process it. Not because it fixes anything, but because putting it into words creates distance between you and the feeling.
@@ -729,15 +841,21 @@ Link in bio.<button class="copy-btn" onclick="copyCaption('caption-8')">Copy</bu
       <div class="url">bloomselfcare.app</div>
     </div>
   </div>
+  <div class="strategy-note"><strong>Strategy:</strong> Sunday morning is when people are most open to introspection. Journaling posts attract people already in the self-improvement space. End your Story with a question: "Do you journal? What does it do for you?" to drive DMs and comments. People who journal love talking about journaling.</div>
 </div>
 
 <!-- POST 9 -->
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Apr 14</span>
+    <span class="time-badge">Tue · 9:00 AM</span>
     <span class="post-theme">Feature — Small Wins</span>
   </div>
   <h3>What Went Right Today?</h3>
+  <div class="engagement-row">
+    <span class="eng-tag comment">Comment-driven</span>
+    <span class="eng-tag save">Save-driven</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-9">Your brain has a negativity bias. It's wired to remember what went wrong and forget what went right. It's not your fault. It's evolution.
@@ -763,15 +881,20 @@ Research calls it the progress principle (Amabile & Kramer, 2011). Of all the th
       <div class="url">bloomselfcare.app</div>
     </div>
   </div>
+  <div class="strategy-note"><strong>Strategy:</strong> Tuesday morning, when people need a gentle reset. Add a CTA in your Story: "Drop one small win from today in the comments." Comment prompts that are easy to answer (one word, one sentence) get 3-5x more replies than open-ended ones. Reply to every comment with something genuine.</div>
 </div>
 
 <!-- POST 10 -->
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Apr 16</span>
+    <span class="time-badge">Thu · 9:00 AM</span>
     <span class="post-theme">Value — Open Source</span>
   </div>
   <h3>The Code Is Public</h3>
+  <div class="engagement-row">
+    <span class="eng-tag share">Share-driven</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-10">Bloom is open source. The entire codebase is public. Anyone can read it, audit it, or contribute to it.
@@ -799,15 +922,21 @@ github.com/nicholashinz1-afk/bloom<button class="copy-btn" onclick="copyCaption(
       <div class="url">github.com/nicholashinz1-afk/bloom</div>
     </div>
   </div>
+  <div class="strategy-note"><strong>Strategy:</strong> Thursday morning targets the dev and tech-adjacent audience who are active early. This post reaches a different audience than your mental health posts, and that crossover is valuable. Share to any open-source or indie dev communities you're in. Tag #buildinpublic in your Story for discoverability in that niche.</div>
 </div>
 
 <!-- POST 11 -->
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Apr 18</span>
+    <span class="time-badge">Sat · 10:00 AM</span>
     <span class="post-theme">Feature — 5-4-3-2-1 Grounding</span>
   </div>
   <h3>Come Back to Right Now</h3>
+  <div class="engagement-row">
+    <span class="eng-tag save">Save-driven</span>
+    <span class="eng-tag reel">Reel potential</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-11">When anxiety pulls you out of the present, your senses can bring you back.
@@ -834,6 +963,7 @@ Bloom walks you through it step by step. Takes about 2 minutes.<button class="co
       <div class="url">bloomselfcare.app</div>
     </div>
   </div>
+  <div class="strategy-note"><strong>Strategy:</strong> Saturday morning, calm energy. Grounding exercises are the second-most-saved content type after breathing. This is another strong Reel candidate: film yourself doing the exercise in a calm space. Authentic, low-production Reels outperform polished ones in this niche. People don't want a brand. They want a person.</div>
 </div>
 
 <div class="batch-label">Batch 2 — Week 4</div>
@@ -842,9 +972,14 @@ Bloom walks you through it step by step. Takes about 2 minutes.<button class="co
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Apr 20</span>
+    <span class="time-badge">Mon · 9:00 AM</span>
     <span class="post-theme">Philosophy — Not Therapy</span>
   </div>
   <h3>Bloom Is Not Therapy</h3>
+  <div class="engagement-row">
+    <span class="eng-tag comment">Comment-driven</span>
+    <span class="eng-tag share">Share-driven</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-12">Bloom is not therapy. It's not a replacement for professional care. It says so right in the app, and that disclaimer is permanent.
@@ -870,15 +1005,21 @@ If you need professional help, please get it. Bloom is for the other 23 hours of
       <div class="url">bloomselfcare.app</div>
     </div>
   </div>
+  <div class="strategy-note"><strong>Strategy:</strong> Monday morning. Honesty about what Bloom is not builds more trust than overselling what it is. This post will get shared by therapists and mental health professionals who appreciate the boundary. That audience crossover is gold. If any therapist accounts engage, respond and build that relationship.</div>
 </div>
 
 <!-- POST 13 -->
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Apr 22</span>
+    <span class="time-badge">Wed · 9:00 AM</span>
     <span class="post-theme">Feature — Accessibility</span>
   </div>
   <h3>Built for Everyone</h3>
+  <div class="engagement-row">
+    <span class="eng-tag share">Share-driven</span>
+    <span class="eng-tag save">Save-driven</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-13">Mental health tools should work for everyone. Not just people with perfect vision or steady hands.
@@ -904,15 +1045,21 @@ This isn't a feature list to check a box. It's because the people who need self-
       <div class="url">bloomselfcare.app</div>
     </div>
   </div>
+  <div class="strategy-note"><strong>Strategy:</strong> Wednesday morning. Accessibility content gets shared by disability advocates, UX designers, and a11y communities. That's a completely different audience than your usual mental health followers, and it expands your reach into tech and design circles. Use #a11y and #inclusivedesign in your Story.</div>
 </div>
 
 <!-- POST 14 -->
 <div class="post">
   <div class="post-header">
     <span class="day-badge">Apr 24</span>
+    <span class="time-badge">Fri · 7:00 PM</span>
     <span class="post-theme">Feature — Bloom Buddy</span>
   </div>
   <h3>Someone Who Checks In</h3>
+  <div class="engagement-row">
+    <span class="eng-tag comment">Comment-driven</span>
+    <span class="eng-tag share">Share-driven</span>
+  </div>
 
   <div class="caption-label">Caption</div>
   <div class="caption" id="caption-14">Sometimes you just need someone who checks in. Not someone who judges. Not someone who fixes. Just someone who's there.
@@ -940,6 +1087,7 @@ Research shows social connection improves odds of survival by 50% (Holt-Lunstad 
       <div class="url">bloomselfcare.app</div>
     </div>
   </div>
+  <div class="strategy-note"><strong>Strategy:</strong> Friday evening. Connection content hits hardest when people feel isolated, and Friday nights are peak loneliness hours for a lot of people. The "Sometimes you just need someone who checks in" line is designed to be screenshotted. End the calendar strong. Post a Story asking "Tag someone who checks in on you" to close out the batch with community energy.</div>
 </div>
 
 </div>
