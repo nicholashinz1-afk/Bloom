@@ -1687,13 +1687,6 @@ function downloadGraphic(btn) {
   btn.textContent = 'Rendering...';
   btn.disabled = true;
 
-  var w = isStory ? 1080 : 1080;
-  var h = isStory ? 1920 : 1080;
-
-  var origStyles = el.getAttribute('style') || '';
-  var origTransform = el.style.transform;
-  var origTransformOrigin = el.style.transformOrigin;
-
   if (isStory) {
     // Story graphics: capture at preview size, use html2canvas scale to output 1080x1920
     // Preview is 9:16 ratio at ~320px wide, so scale factor = 1080 / previewWidth
@@ -1724,47 +1717,28 @@ function downloadGraphic(btn) {
     return;
   }
 
-  // Feed graphics: force to 1080x1080
-  var origWidth = el.style.width;
-  var origHeight = el.style.height;
-  var origAspect = el.style.aspectRatio;
-  var origMinWidth = el.style.minWidth;
-  var origMaxWidth = el.style.maxWidth;
-  el.style.width = w + 'px';
-  el.style.height = h + 'px';
-  el.style.aspectRatio = 'auto';
-  el.style.minWidth = 'auto';
-  el.style.maxWidth = 'none';
+  // Feed graphics: capture at preview size, scale up to 1080x1080
+  var previewWidth = el.offsetWidth;
+  var previewHeight = el.offsetHeight;
+  var scaleFactor = 1080 / previewWidth;
 
   html2canvas(el, {
     backgroundColor: null,
-    scale: 1,
-    width: w,
-    height: h,
+    scale: scaleFactor,
+    width: previewWidth,
+    height: previewHeight,
     useCORS: true,
     logging: false
   }).then(function(canvas) {
-    el.style.width = origWidth;
-    el.style.height = origHeight;
-    el.style.aspectRatio = origAspect;
-    el.style.minWidth = origMinWidth;
-    el.style.maxWidth = origMaxWidth;
-
     var link = document.createElement('a');
     link.download = targetId + '.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
 
-    btn.textContent = isStory ? 'Download Story PNG' : 'Download PNG';
+    btn.textContent = 'Download PNG';
     btn.disabled = false;
   }).catch(function() {
-    el.style.width = origWidth;
-    el.style.height = origHeight;
-    el.style.aspectRatio = origAspect;
-    el.style.minWidth = origMinWidth;
-    el.style.maxWidth = origMaxWidth;
-
-    btn.textContent = isStory ? 'Download Story PNG' : 'Download PNG';
+    btn.textContent = 'Download PNG';
     btn.disabled = false;
     alert('Download failed. Try screenshotting instead.');
   });
