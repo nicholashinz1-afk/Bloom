@@ -14630,13 +14630,38 @@ function showMigrationComplete() {
          style="display:block;padding:14px 24px;background:var(--sage);color:var(--text-on-sage);border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;margin-bottom:12px">
         Open Bloom
       </a>
-      <p style="color:var(--text-muted);font-size:12px;margin-top:8px">Long-press this app's icon on your home screen to remove it.</p>
+      <p style="color:var(--text-muted);font-size:12px;margin-top:8px;margin-bottom:20px">Long-press this app's icon on your home screen to remove it.</p>
+      <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:16px">
+        <p style="color:var(--text-muted);font-size:12px;margin-bottom:10px">Data didn't transfer? You can try again or export manually.</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button id="migration-retry" style="padding:10px 16px;background:rgba(var(--sage-rgb),0.15);border:1px solid rgba(var(--sage-rgb),0.25);color:var(--sage-light);border-radius:10px;font-size:13px;cursor:pointer;font-weight:500">Try migration again</button>
+          <button id="migration-export" style="padding:10px 16px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--text-secondary);border-radius:10px;font-size:13px;cursor:pointer">Download backup file</button>
+        </div>
+      </div>
     </div>`;
   document.body.appendChild(overlay);
 
   overlay.querySelector('#migration-done-open').addEventListener('click', function(e) {
     const w = window.open('https://' + PRODUCTION_DOMAIN, '_blank');
     if (w) e.preventDefault();
+  });
+
+  overlay.querySelector('#migration-retry').addEventListener('click', function() {
+    save('bloom_migration_complete', null);
+    localStorage.removeItem('bloom_migration_complete');
+    location.reload();
+  });
+
+  overlay.querySelector('#migration-export').addEventListener('click', function() {
+    const data = gatherFullBackupData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bloom-backup-' + today() + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Backup file saved! Import it on bloomselfcare.app via Settings > Import backup file.');
   });
 }
 
