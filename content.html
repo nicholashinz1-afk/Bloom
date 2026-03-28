@@ -1715,61 +1715,20 @@ function downloadGraphic(btn) {
   var origTransformOrigin = el.style.transformOrigin;
 
   if (isStory) {
-    // Story graphics: resize element to 1080x1920 and scale up all text/spacing
+    // Story graphics: capture at preview size, use html2canvas scale to output 1080x1920
+    // Preview is 9:16 ratio at ~320px wide, so scale factor = 1080 / previewWidth
     var previewWidth = el.offsetWidth;
-    var scaleFactor = w / previewWidth;
-    el.style.width = w + 'px';
-    el.style.height = h + 'px';
-    el.style.aspectRatio = 'auto';
-    el.style.minWidth = 'auto';
-    el.style.maxWidth = 'none';
-    el.style.padding = (60 * scaleFactor) + 'px ' + (36 * scaleFactor) + 'px ' + (72 * scaleFactor) + 'px';
-    el.style.borderRadius = (12 * scaleFactor) + 'px';
-    // Scale all child text elements
-    var children = el.querySelectorAll('.big-text, .sub-text, .url, .sticker-hint, .logo-small');
-    var origChildStyles = [];
-    children.forEach(function(child) {
-      origChildStyles.push(child.getAttribute('style') || '');
-      var computed = window.getComputedStyle(child);
-      var fontSize = parseFloat(computed.fontSize);
-      var lineHeight = parseFloat(computed.lineHeight);
-      var marginBottom = parseFloat(computed.marginBottom);
-      var marginTop = parseFloat(computed.marginTop);
-      child.style.fontSize = (fontSize * scaleFactor) + 'px';
-      if (!isNaN(lineHeight)) child.style.lineHeight = (lineHeight * scaleFactor) + 'px';
-      if (marginBottom) child.style.marginBottom = (marginBottom * scaleFactor) + 'px';
-      if (marginTop) child.style.marginTop = (marginTop * scaleFactor) + 'px';
-      if (child.classList.contains('logo-small')) {
-        child.style.width = (48 * scaleFactor) + 'px';
-        child.style.height = (48 * scaleFactor) + 'px';
-        child.style.borderRadius = (12 * scaleFactor) + 'px';
-        child.style.marginBottom = (24 * scaleFactor) + 'px';
-      }
-      if (child.classList.contains('sticker-hint')) {
-        child.style.padding = (12 * scaleFactor) + 'px ' + (20 * scaleFactor) + 'px';
-        child.style.borderRadius = (12 * scaleFactor) + 'px';
-        child.style.marginTop = (20 * scaleFactor) + 'px';
-      }
-      if (child.classList.contains('url')) {
-        child.style.bottom = (24 * scaleFactor) + 'px';
-      }
-    });
+    var previewHeight = el.offsetHeight;
+    var scaleFactor = 1080 / previewWidth;
 
     html2canvas(el, {
       backgroundColor: null,
-      scale: 1,
-      width: w,
-      height: h,
+      scale: scaleFactor,
+      width: previewWidth,
+      height: previewHeight,
       useCORS: true,
       logging: false
     }).then(function(canvas) {
-      // Restore original styles
-      el.setAttribute('style', origStyles);
-      children.forEach(function(child, i) {
-        if (origChildStyles[i]) child.setAttribute('style', origChildStyles[i]);
-        else child.removeAttribute('style');
-      });
-
       var link = document.createElement('a');
       link.download = targetId + '.png';
       link.href = canvas.toDataURL('image/png');
@@ -1778,12 +1737,6 @@ function downloadGraphic(btn) {
       btn.textContent = 'Download Story PNG';
       btn.disabled = false;
     }).catch(function() {
-      el.setAttribute('style', origStyles);
-      children.forEach(function(child, i) {
-        if (origChildStyles[i]) child.setAttribute('style', origChildStyles[i]);
-        else child.removeAttribute('style');
-      });
-
       btn.textContent = 'Download Story PNG';
       btn.disabled = false;
       alert('Download failed. Try screenshotting instead.');
