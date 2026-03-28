@@ -3353,6 +3353,8 @@ function buddyIcon(size = 24) {
 }
 
 const VERSION = '3.2.0';
+const LEGACY_DOMAINS = ['bloom-zeta-rouge.vercel.app'];
+const PRODUCTION_DOMAIN = 'bloomselfcare.app';
 
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
@@ -14325,8 +14327,205 @@ async function tryRestoreFromURL() {
     applyRestoreData(data);
     trackEvent('backup_restored');
     history.replaceState({}, '', location.pathname);
+    setTimeout(() => showToast('Welcome home! You can add Bloom to your home screen from here.', 6000), 2000);
     return true;
   } catch(e) { return false; }
+}
+
+// ============================================================
+//  DOMAIN MIGRATION (old Vercel URL -> production domain)
+// ============================================================
+
+function checkDomainMigration() {
+  if (!LEGACY_DOMAINS.includes(location.hostname)) return false;
+
+  // Swap manifest so installed PWA shows "Bloom (old)"
+  try {
+    const manifest = {
+      name: 'Bloom (old)',
+      short_name: 'Bloom (old)',
+      description: 'A gentle self-care habit tracker',
+      start_url: '/',
+      display: 'standalone',
+      background_color: '#0d1610',
+      theme_color: '#0d1610',
+      orientation: 'portrait',
+      icons: [
+        { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+        { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+    const link = document.querySelector('link[rel="manifest"]');
+    if (link) link.href = URL.createObjectURL(blob);
+  } catch(e) {}
+
+  const prefs = load('bloom_prefs');
+
+  // No data on old domain: silent redirect
+  if (!prefs || !prefs.onboarded) {
+    location.replace('https://' + PRODUCTION_DOMAIN);
+    return true;
+  }
+
+  // Already migrated: show "delete old app" message
+  if (load('bloom_migration_complete')) {
+    showMigrationComplete();
+    return true;
+  }
+
+  // Dismissed within 24 hours: skip banner
+  const dismissed = load('bloom_migration_dismissed');
+  if (dismissed && (Date.now() - dismissed) < 24 * 60 * 60 * 1000) {
+    return false;
+  }
+
+  showMigrationBanner();
+  return true;
+}
+
+function showMigrationBanner() {
+  const prefs = load('bloom_prefs');
+  const name = prefs?.name || '';
+  const greeting = name ? ('Hey ' + name + '!') : 'Hey there!';
+
+  trackEvent('migration_banner_shown');
+
+  const banner = document.createElement('div');
+  banner.id = 'migration-banner';
+  banner.setAttribute('role', 'alert');
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10001;background:rgba(var(--sage-rgb),0.97);color:var(--text-on-sage);padding:20px;font-size:14px;line-height:1.6;display:flex;flex-direction:column;gap:12px;animation:slideDown 0.3s ease;backdrop-filter:blur(12px)';
+  banner.innerHTML = `
+    <div style="font-weight:600;font-size:16px">${greeting} Bloom has a proper home now.</div>
+    <div style="font-size:13px;opacity:0.9;line-height:1.7">You're using an older link that can't send you reminders or notifications. Moving to <strong>bloomselfcare.app</strong> gets you push notifications for habits, medication, and check-ins, plus a more reliable experience. All your data comes with you in one tap.</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+      <button id="migration-later" style="background:transparent;border:1px solid rgba(255,255,255,0.3);color:inherit;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer">Later</button>
+      <button id="migration-go" style="background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.5);color:inherit;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600">Move my data</button>
+    </div>`;
+  document.body.appendChild(banner);
+
+  banner.querySelector('#migration-later').addEventListener('click', () => {
+    banner.remove();
+    save('bloom_migration_dismissed', Date.now());
+    trackEvent('migration_dismissed');
+  });
+  banner.querySelector('#migration-go').addEventListener('click', () => startMigration(banner));
+}
+
+async function startMigration(banner) {
+  const goBtn = banner.querySelector('#migration-go');
+  goBtn.textContent = 'Preparing...';
+  goBtn.disabled = true;
+
+  try {
+    const data = {
+      prefs: load('bloom_prefs'),
+      xp: load('bloom_xp'),
+      today: load('bloom_today_' + today()),
+      history: load('bloom_history'),
+      wellness: load('bloom_wellness'),
+    };
+    const jsonStr = JSON.stringify(data);
+    const encoded = await compressString(jsonStr);
+    const url = 'https://' + PRODUCTION_DOMAIN + '/?restore=' + encoded;
+
+    if (url.length <= 16000) {
+      save('bloom_migration_complete', true);
+      trackEvent('migration_url');
+      location.href = url;
+    } else {
+      await migrationFileDownloadFallback(data, banner);
+    }
+  } catch(e) {
+    goBtn.textContent = 'Move my data';
+    goBtn.disabled = false;
+    showToast('Something went wrong. Try again or use Settings > Export.');
+  }
+}
+
+async function migrationFileDownloadFallback(data, banner) {
+  trackEvent('migration_file');
+
+  banner.innerHTML = `
+    <div style="font-weight:600;font-size:16px">Your data needs a two-step move</div>
+    <div style="font-size:13px;opacity:0.9;line-height:1.7">You have a lot of history (that's great!), so we'll save a backup file first, then open your new home where you can import it.<br><br><strong>Step 1:</strong> Backup file is downloading now<br><strong>Step 2:</strong> Import it on the next page</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+      <button id="migration-file-continue" style="background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.5);color:inherit;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600">Open bloomselfcare.app</button>
+    </div>`;
+
+  // Trigger file download
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'bloom-migration-' + today() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  banner.querySelector('#migration-file-continue').addEventListener('click', () => {
+    save('bloom_migration_complete', true);
+    location.href = 'https://' + PRODUCTION_DOMAIN + '/?migrated=file';
+  });
+}
+
+function showMigrationComplete() {
+  trackEvent('migration_complete_shown');
+  const banner = document.createElement('div');
+  banner.id = 'migration-banner';
+  banner.setAttribute('role', 'alert');
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10001;background:rgba(var(--sage-rgb),0.97);color:var(--text-on-sage);padding:20px;font-size:14px;line-height:1.6;display:flex;flex-direction:column;gap:12px;animation:slideDown 0.3s ease;backdrop-filter:blur(12px)';
+  banner.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">✅</span>
+      <div>
+        <div style="font-weight:600">You're all set on bloomselfcare.app!</div>
+        <div style="font-size:13px;opacity:0.85;margin-top:4px">You can safely delete this app from your home screen. Your data is on the new site.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="migration-done-dismiss" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:inherit;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500">Got it</button>
+    </div>`;
+  document.body.appendChild(banner);
+  banner.querySelector('#migration-done-dismiss').addEventListener('click', () => banner.remove());
+}
+
+function showMigrationImportPrompt() {
+  const overlay = document.createElement('div');
+  overlay.id = 'migration-import-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:var(--bg-main);display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML = `
+    <div style="max-width:360px;text-align:center">
+      <div style="font-size:40px;margin-bottom:16px">🌱</div>
+      <h2 style="color:var(--sage);margin-bottom:8px;font-family:Fraunces,serif">Welcome to your new home</h2>
+      <p style="color:var(--text-secondary);font-size:14px;line-height:1.6;margin-bottom:20px">One last step: import the backup file that just downloaded.</p>
+      <label style="display:inline-block;padding:12px 24px;background:var(--sage);color:var(--text-on-sage);border-radius:12px;cursor:pointer;font-weight:600;font-size:14px">
+        Choose file
+        <input type="file" accept=".json" style="display:none" id="migration-file-picker">
+      </label>
+      <p style="color:var(--text-muted);font-size:12px;margin-top:12px">Look for <em>bloom-migration-${today()}.json</em> in your Downloads.</p>
+      <button id="migration-skip" style="background:transparent;border:none;color:var(--text-muted);font-size:12px;margin-top:16px;cursor:pointer;text-decoration:underline">Skip and start fresh</button>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#migration-file-picker').addEventListener('change', async function() {
+    const file = this.files[0];
+    if (!file) return;
+    try {
+      const success = await importJSON(file);
+      if (success) {
+        overlay.remove();
+        trackEvent('migration_file_restored');
+        showToast('Welcome home!');
+        setTimeout(() => location.reload(), 1200);
+      }
+    } catch(e) {
+      alert('Could not read this file. Make sure it is the Bloom backup (.json) you just downloaded.');
+    }
+  });
+
+  overlay.querySelector('#migration-skip').addEventListener('click', () => {
+    overlay.remove();
+  });
 }
 
 // ============================================================
@@ -18535,10 +18734,20 @@ async function main() {
   await initDB();
   await restoreFromDB();
 
+  // Domain migration: may redirect away, so run early
+  if (checkDomainMigration()) return;
+
   // Try restore from URL
   const restored = await tryRestoreFromURL();
   if (restored) {
     loadState();
+  }
+
+  // File-based migration landing (from old domain fallback)
+  const migratedParam = new URLSearchParams(location.search).get('migrated');
+  if (migratedParam === 'file') {
+    history.replaceState({}, '', location.pathname);
+    showMigrationImportPrompt();
   }
 
   // Check for buddy invite link (?buddy=CODE)
