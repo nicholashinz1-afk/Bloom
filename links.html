@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d1610">
+<title>Bloom — Links</title>
+<meta name="description" content="All the links for Bloom, a free and private mental health self-care app.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://bloomselfcare.app/links">
+<meta property="og:title" content="Bloom — Links">
+<meta property="og:description" content="All the links for Bloom. Free, private self-care.">
+<meta property="og:image" content="https://bloomselfcare.app/og-image.png">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d1610;
+    color: #e8e0d0;
+    font-family: 'Instrument Sans', -apple-system, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 48px 20px 64px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .logo {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .tagline {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 1rem;
+    font-weight: 300;
+    font-style: italic;
+    color: #a8c5ab;
+    margin-bottom: 8px;
+  }
+
+  .bio {
+    font-size: 0.85rem;
+    color: #8a9e8c;
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 32px;
+    max-width: 320px;
+  }
+
+  .links {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+
+  .link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 16px 20px;
+    border-radius: 14px;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: transform 0.15s, background 0.2s;
+  }
+
+  .link:active {
+    transform: scale(0.98);
+  }
+
+  .link-primary {
+    background: #7a9e7e;
+    color: #0d1610;
+  }
+
+  .link-primary:hover {
+    background: #a8c5ab;
+  }
+
+  .link-secondary {
+    background: rgba(122, 158, 126, 0.1);
+    border: 1px solid rgba(122, 158, 126, 0.25);
+    color: #e8e0d0;
+  }
+
+  .link-secondary:hover {
+    background: rgba(122, 158, 126, 0.18);
+  }
+
+  .link-warm {
+    background: rgba(201, 149, 74, 0.12);
+    border: 1px solid rgba(201, 149, 74, 0.3);
+    color: #e0b87a;
+  }
+
+  .link-warm:hover {
+    background: rgba(201, 149, 74, 0.22);
+  }
+
+  .divider {
+    width: 60px;
+    height: 1px;
+    background: rgba(122, 158, 126, 0.2);
+    margin-bottom: 24px;
+  }
+
+  .crisis {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #8a9e8c;
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  .crisis strong {
+    color: #a3b5a5;
+    font-weight: 500;
+  }
+
+  .footer {
+    font-size: 0.75rem;
+    color: rgba(138, 158, 140, 0.4);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <img class="logo" src="/bloom-logo-512.png" alt="Bloom logo">
+  <h1>Bloom</h1>
+  <p class="tagline">Self-care. No pressure. Just you, showing up.</p>
+  <p class="bio">Free, private self-care app. No accounts, no tracking, no cost. Just a quiet place to show up for yourself.</p>
+
+  <div class="links">
+    <a href="https://bloomselfcare.app" class="link link-primary" target="_blank" rel="noopener">Open Bloom</a>
+    <a href="https://bloomselfcare.app/press" class="link link-secondary" target="_blank" rel="noopener">Press Kit</a>
+    <a href="https://github.com/nicholashinz1-afk/bloom" class="link link-secondary" target="_blank" rel="noopener">Source Code (GitHub)</a>
+    <a href="https://www.instagram.com/bloomselfcare.app" class="link link-secondary" target="_blank" rel="noopener">Instagram</a>
+    <a href="https://ko-fi.com/bloomselfcare" class="link link-warm" target="_blank" rel="noopener">Support Bloom on Ko-fi</a>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="crisis">
+    <strong>In crisis?</strong><br>
+    Call or text <strong>988</strong> · Text HOME to <strong>741741</strong><br>
+    <strong>findahelpline.com</strong> (40+ languages)
+  </div>
+
+  <div class="footer">
+    Free and open source. Always will be.
+  </div>
+
+</div>
+</body>
+</html>
