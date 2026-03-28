@@ -1,0 +1,99 @@
+{
+  "version": "v1.0.0",
+  "entity": {
+    "type": "individual",
+    "role": "owner",
+    "name": "Nick Hinz",
+    "email": "bloomhabits@proton.me",
+    "phone": "",
+    "description": "Solo developer building Bloom, a free and open-source mental health self-care app. No company, no investors, no monetization. Bloom will always be free.",
+    "webpageUrl": {
+      "url": "https://bloomselfcare.app"
+    }
+  },
+  "projects": [
+    {
+      "guid": "bloom",
+      "name": "Bloom",
+      "description": "A free, open-source progressive web app for daily mental health self-care. Mood tracking, journaling with AI reflections, breathing exercises, habit building, peer encouragement. All data stays on-device. Built for people who are going through it and need a quiet place to show up for themselves.",
+      "webpageUrl": {
+        "url": "https://bloomselfcare.app"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/nicholashinz1-afk/Bloom"
+      },
+      "licenses": [
+        "spdx:AGPL-3.0-only"
+      ],
+      "tags": [
+        "mental-health",
+        "self-care",
+        "privacy",
+        "progressive-web-app",
+        "open-source",
+        "ai",
+        "wellness",
+        "accessibility",
+        "local-first"
+      ]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "github-sponsors",
+        "type": "payment-provider",
+        "address": "https://github.com/sponsors/nicholashinz1-afk",
+        "description": "GitHub Sponsors (via Stripe, 0% fees)"
+      },
+      {
+        "guid": "kofi",
+        "type": "payment-provider",
+        "address": "https://ko-fi.com/bloomselfcare",
+        "description": "Ko-fi donations"
+      }
+    ],
+    "plans": [
+      {
+        "guid": "one-time",
+        "status": "active",
+        "name": "One-time donation",
+        "description": "Any amount helps keep Bloom free. Even a few dollars covers AI costs for dozens of users.",
+        "amount": 0,
+        "currency": "USD",
+        "frequency": "one-time",
+        "channels": ["github-sponsors", "kofi"]
+      },
+      {
+        "guid": "monthly-supporter",
+        "status": "active",
+        "name": "Monthly supporter",
+        "description": "Covers Bloom's AI reflection costs for approximately 50 users per month.",
+        "amount": 5,
+        "currency": "USD",
+        "frequency": "monthly",
+        "channels": ["github-sponsors", "kofi"]
+      },
+      {
+        "guid": "infrastructure",
+        "status": "active",
+        "name": "Infrastructure sponsor",
+        "description": "Covers API costs, domain, and infrastructure for hundreds of daily active users.",
+        "amount": 25,
+        "currency": "USD",
+        "frequency": "monthly",
+        "channels": ["github-sponsors", "kofi"]
+      }
+    ],
+    "history": [
+      {
+        "year": 2026,
+        "income": 0,
+        "expenses": 60,
+        "taxes": 0,
+        "currency": "USD",
+        "description": "Domain registration ($14/yr), Anthropic API costs (~$3-5/mo at current usage). All other infrastructure on free tiers."
+      }
+    ]
+  }
+}
