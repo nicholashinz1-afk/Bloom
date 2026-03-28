@@ -14327,7 +14327,8 @@ async function tryRestoreFromURL() {
     applyRestoreData(data);
     trackEvent('backup_restored');
     history.replaceState({}, '', location.pathname);
-    setTimeout(() => showToast('Welcome home! You can add Bloom to your home screen from here.', 6000), 2000);
+    // Show install instructions after app loads (delayed so UI is ready)
+    setTimeout(() => showInstallPrompt(), 2500);
     return true;
   } catch(e) { return false; }
 }
@@ -14555,8 +14556,14 @@ function showMigrationImportPrompt() {
       if (success) {
         overlay.remove();
         trackEvent('migration_file_restored');
-        showToast('Welcome home!');
-        setTimeout(() => location.reload(), 1200);
+        // Ensure prefs.onboarded so app skips onboarding after reload
+        const prefs = load('bloom_prefs') || {};
+        if (!prefs.onboarded) {
+          prefs.onboarded = true;
+          prefs.onboardDate = prefs.onboardDate || today();
+          save('bloom_prefs', prefs);
+        }
+        showInstallPrompt();
       }
     } catch(e) {
       alert('Could not read this file. Make sure it is the Bloom backup (.json) you just downloaded.');
@@ -14565,6 +14572,47 @@ function showMigrationImportPrompt() {
 
   overlay.querySelector('#migration-skip').addEventListener('click', () => {
     overlay.remove();
+  });
+}
+
+function showInstallPrompt() {
+  // Don't show if already running as installed PWA
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
+
+  const isSafari = isSafariBrowser();
+  const instructions = isSafari
+    ? 'Tap the <strong>Share</strong> button (the square with an arrow), then tap <strong>"Add to Home Screen"</strong>.'
+    : 'Tap the <strong>menu</strong> (three dots in Chrome), then tap <strong>"Add to Home Screen"</strong> or <strong>"Install app"</strong>.';
+
+  const overlay = document.createElement('div');
+  overlay.id = 'install-prompt-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)';
+  overlay.innerHTML = `
+    <div style="max-width:360px;background:var(--card-bg);border-radius:20px;padding:28px 24px;text-align:center;border:1px solid rgba(var(--sage-rgb),0.2)">
+      <div style="font-size:40px;margin-bottom:12px">🏠</div>
+      <h2 style="color:var(--sage);margin-bottom:6px;font-family:Fraunces,serif;font-size:20px">Welcome home!</h2>
+      <p style="color:var(--text-secondary);font-size:14px;line-height:1.7;margin-bottom:16px">
+        Your data made it safely. To get the full experience with notifications, install Bloom on your home screen.
+      </p>
+      <div style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:12px;padding:14px 16px;margin-bottom:20px;text-align:left">
+        <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0">${instructions}</p>
+      </div>
+      <button id="install-prompt-dismiss" style="padding:12px 32px;background:var(--sage);color:var(--text-on-sage);border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;width:100%">Got it</button>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#install-prompt-dismiss').addEventListener('click', () => {
+    overlay.remove();
+    // Reload to fully initialize the app with restored data
+    location.reload();
+  });
+
+  // Also dismiss by tapping backdrop
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+      location.reload();
+    }
   });
 }
 
