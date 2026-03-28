@@ -13613,11 +13613,25 @@ async function showBackupSheet() {
   await generateBackupLink();
   trackFeature('backup');
   trackEvent('backup_created');
-  save('bloom_backup_date', Date.now());
+  markBackupDone();
 }
 
 function markBackupDone() {
   save('bloom_backup_date', Date.now());
+  silentBackupDownload();
+}
+
+function silentBackupDownload() {
+  try {
+    const data = gatherFullBackupData();
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bloom-backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch(e) {}
 }
 
 function gatherFullBackupData() {
