@@ -18359,7 +18359,24 @@ function initApp() {
   renderTodayTab();
   updateStreak();
   checkMilestones();
-  initOneSignal();
+  // One-time service worker cleanup for existing users with broken registrations.
+  // Waits for cleanup to finish before initializing OneSignal to avoid race conditions.
+  const swRepairKey = 'bloom_sw_repair_v2';
+  if (!load(swRepairKey, false)) {
+    save(swRepairKey, true);
+    (async () => {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) await reg.unregister();
+        _osLog('sw-cleanup: unregistered ' + regs.length + ' worker(s)');
+      } catch(e) {
+        _osLog('sw-cleanup failed', e?.message);
+      }
+      initOneSignal();
+    })();
+  } else {
+    initOneSignal();
+  }
   // Buddy: register once, then sync if paired (sync includes conditional re-register)
   buddyRegisterAndSync().then(() => {
     fetchBuddyData();
