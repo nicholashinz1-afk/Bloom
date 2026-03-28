@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d1610">
+<title>Bloom — Content Calendar</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1610;
+    --bg-card: #162019;
+    --bg-elevated: #1c2a1f;
+    --sage: #7a9e7e;
+    --sage-light: #a8c5ab;
+    --cream: #e8e0d0;
+    --text-secondary: #a3b5a5;
+    --text-muted: #8a9e8c;
+    --amber: #c9954a;
+    --rose: #b07878;
+    --sky: #6a9ab0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Instrument Sans', -apple-system, sans-serif;
+    line-height: 1.6;
+    padding: 32px 20px 80px;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  header h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  header p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .batch-label {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 1.3rem;
+    color: var(--amber);
+    margin-bottom: 24px;
+    margin-top: 48px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(201, 149, 74, 0.2);
+  }
+
+  .post {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 32px;
+  }
+
+  .post-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .day-badge {
+    background: var(--sage);
+    color: var(--bg);
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+
+  .post-theme {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .post h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  /* Caption area */
+  .caption {
+    background: var(--bg-elevated);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--cream);
+    white-space: pre-wrap;
+    position: relative;
+  }
+
+  .caption-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--sage);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Instrument Sans', sans-serif;
+    transition: background 0.2s;
+  }
+
+  .copy-btn:hover { background: var(--sage-light); }
+
+  /* Hashtags */
+  .hashtags {
+    background: var(--bg-elevated);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 0.8rem;
+    color: var(--sky);
+    line-height: 1.8;
+    position: relative;
+  }
+
+  /* Graphics area */
+  .graphics-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  .graphics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  /* Instagram graphic (1080x1080 ratio) */
+  .ig-graphic {
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ig-graphic.dark {
+    background: #0d1610;
+    border: 1px solid rgba(122, 158, 126, 0.15);
+  }
+
+  .ig-graphic.sage-bg {
+    background: linear-gradient(145deg, #1a2e1e, #0d1610);
+    border: 1px solid rgba(122, 158, 126, 0.15);
+  }
+
+  .ig-graphic.warm-bg {
+    background: linear-gradient(145deg, #2a1f14, #0d1610);
+    border: 1px solid rgba(201, 149, 74, 0.15);
+  }
+
+  .ig-graphic.rose-bg {
+    background: linear-gradient(145deg, #2a1a1a, #0d1610);
+    border: 1px solid rgba(176, 120, 120, 0.15);
+  }
+
+  .ig-graphic::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(122, 158, 126, 0.04);
+  }
+
+  .ig-graphic .logo-small {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ig-graphic .big-text {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: #e8e0d0;
+    line-height: 1.3;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ig-graphic .sub-text {
+    font-size: 15px;
+    color: #a3b5a5;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+    max-width: 80%;
+  }
+
+  .ig-graphic .accent-text {
+    color: var(--sage-light);
+  }
+
+  .ig-graphic .amber-text {
+    color: var(--amber);
+  }
+
+  .ig-graphic .url {
+    position: absolute;
+    bottom: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sage);
+    z-index: 1;
+  }
+
+  /* Carousel slides */
+  .carousel {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .carousel .ig-graphic {
+    min-width: 280px;
+    scroll-snap-align: start;
+  }
+
+  .tip {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 12px;
+  }
+
+  .divider {
+    height: 1px;
+    background: rgba(122, 158, 126, 0.1);
+    margin: 8px 0 32px;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 20px 14px 64px; }
+    header h1 { font-size: 1.6rem; }
+    .post { padding: 20px; }
+    .ig-graphic { padding: 28px; }
+    .ig-graphic .big-text { font-size: 22px; }
+    .ig-graphic .sub-text { font-size: 13px; }
+    .graphics-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Content Calendar</h1>
+  <p>Batch 1 — 2 weeks, 7 posts. Screenshot the graphics or save them directly.</p>
+</header>
+
+<div class="batch-label">Batch 1 — Week 1</div>
+
+<!-- POST 1 -->
+<div class="post">
+  <div class="post-header">
+    <span class="day-badge">Day 1</span>
+    <span class="post-theme">Intro / Launch</span>
+  </div>
+  <h3>The First Post</h3>
+
+  <div class="caption-label">Caption</div>
+  <div class="caption" id="caption-1">I built Bloom during a time when I needed better tools and couldn't find them. So I made one.
+
+It's a free self-care app. Mood tracking, journaling, breathing exercises, habit building. No accounts, no tracking, no cost. Your data never leaves your phone.
+
+It's open source and it will always be free. If it helps even one person feel a little less alone, it was worth building.
+
+Link in bio.<button class="copy-btn" onclick="copyCaption('caption-1')">Copy</button></div>
+
+  <div class="hashtags" id="tags-1">#mentalhealth #selfcare #mentalhealthmatters #mentalhealthawareness #selfcareapp #freeapp #opensource #journaling #moodtracking #breathingexercises #anxiety #depression #mentalhealthtools #wellness #mindfulness #selfhelp #buildinpublic #indiedev<button class="copy-btn" onclick="copyCaption('tags-1')">Copy</button></div>
+
+  <div class="graphics-label">Graphics</div>
+  <div class="graphics-grid">
+    <div class="ig-graphic sage-bg">
+      <img class="logo-small" src="/bloom-logo-512.png" alt="">
+      <div class="big-text">I built this because I needed it to exist.</div>
+      <div class="sub-text">Free, private self-care. No accounts. No tracking. No cost. Just a quiet place to show up for yourself.</div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+    <div class="ig-graphic dark">
+      <img class="logo-small" src="/bloom-logo-512.png" alt="">
+      <div class="big-text">Bloom</div>
+      <div class="sub-text"><span class="accent-text">Self-care. No pressure.</span><br><br>Mood tracking · Journaling · Breathing exercises · Habit building · Crisis resources</div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+  </div>
+  <p class="tip">Use the first graphic as a single post, or both as a carousel with an app screenshot as slide 3.</p>
+</div>
+
+<!-- POST 2 -->
+<div class="post">
+  <div class="post-header">
+    <span class="day-badge">Day 3</span>
+    <span class="post-theme">Feature — No Streak Pressure</span>
+  </div>
+  <h3>Your Streak Didn't Break</h3>
+
+  <div class="caption-label">Caption</div>
+  <div class="caption" id="caption-2">Most habit apps punish you for missing a day. Bloom doesn't.
+
+Your total only goes up. Miss a day, miss a week, it doesn't matter. Your progress is still there. Research shows that missing one day has no measurable impact on long-term habit formation (Lally et al., 2010). What matters is showing up over time, not showing up perfectly.
+
+That's the whole point. No guilt. No shame. Just you, showing up when you can.<button class="copy-btn" onclick="copyCaption('caption-2')">Copy</button></div>
+
+  <div class="hashtags" id="tags-2">#habittracking #nostreaks #mentalhealthmatters #selfcare #nopressure #wellness #anxiety #selfcareapp #mentalhealth #habits #dailyhabits #mindfulness #selfcompassion #progress #freeapp<button class="copy-btn" onclick="copyCaption('tags-2')">Copy</button></div>
+
+  <div class="graphics-label">Graphics (carousel — 3 slides)</div>
+  <div class="carousel">
+    <div class="ig-graphic warm-bg">
+      <div class="big-text" style="color: #e0b87a;">Your streak broke.</div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+    <div class="ig-graphic sage-bg">
+      <img class="logo-small" src="/bloom-logo-512.png" alt="">
+      <div class="big-text">Just kidding.<br><span class="accent-text">Bloom doesn't do streaks.</span></div>
+      <div class="sub-text">Your total only goes up. Missing a day changes nothing.</div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+    <div class="ig-graphic dark">
+      <img class="logo-small" src="/bloom-logo-512.png" alt="">
+      <div class="big-text" style="font-size: 22px;">Missing one day has no measurable impact on habit formation.</div>
+      <div class="sub-text" style="margin-top: 12px; font-size: 13px;">Lally et al., 2010<br>European Journal of Social Psychology</div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+  </div>
+  <p class="tip">Carousel. The bait-and-switch on slide 1 drives engagement. Swipe rate is an algorithm signal.</p>
+</div>
+
+<!-- POST 3 -->
+<div class="post">
+  <div class="post-header">
+    <span class="day-badge">Day 5</span>
+    <span class="post-theme">Feature — Hard Day Mode</span>
+  </div>
+  <h3>Hard Days Are Expected</h3>
+
+  <div class="caption-label">Caption</div>
+  <div class="caption" id="caption-3">Some days, brushing your teeth and drinking water is enough.
+
+Bloom has a hard day mode. When you turn it on, it drops your habits down to your top 2. No long checklist. No pressure to perform. Just the basics.
+
+Because hard days are expected. They're not failure. They're part of it. And you still showed up.<button class="copy-btn" onclick="copyCaption('caption-3')">Copy</button></div>
+
+  <div class="hashtags" id="tags-3">#harddays #mentalhealth #selfcare #itsokaytonotbeokay #mentalhealthawareness #selfcompassion #anxiety #depression #wellness #gentlereminder #selfcareapp #mentalhealthtools #healing #recovery #freeapp<button class="copy-btn" onclick="copyCaption('tags-3')">Copy</button></div>
+
+  <div class="graphics-label">Graphics</div>
+  <div class="graphics-grid">
+    <div class="ig-graphic rose-bg">
+      <img class="logo-small" src="/bloom-logo-512.png" alt="">
+      <div class="big-text">On hard days, Bloom asks less of you.<br><br><span style="font-weight: 300; font-style: italic; font-size: 22px; color: #d4a8a8;">Not more.</span></div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+    <div class="ig-graphic dark">
+      <img class="logo-small" src="/bloom-logo-512.png" alt="">
+      <div class="big-text" style="font-size: 24px;">Hard day mode</div>
+      <div class="sub-text">Overwhelmed? Bloom reduces your habits to just your top 2.<br><br>Brushing your teeth and drinking water might genuinely be enough today.</div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+  </div>
+</div>
+
+<!-- POST 4 -->
+<div class="post">
+  <div class="post-header">
+    <span class="day-badge">Day 7</span>
+    <span class="post-theme">Value — Privacy</span>
+  </div>
+  <h3>Bloom Doesn't Know Who You Are</h3>
+
+  <div class="caption-label">Caption</div>
+  <div class="caption" id="caption-4">Bloom doesn't know who you are. That's on purpose.
+
+No account. No email. No sign-up. No tracking. No analytics. Your journal entries, your moods, your habits, all of it stays on your device. Nobody sees it but you.
+
+Mental health tools shouldn't cost your privacy.<button class="copy-btn" onclick="copyCaption('caption-4')">Copy</button></div>
+
+  <div class="hashtags" id="tags-4">#privacy #dataprivacy #mentalhealth #selfcare #noaccount #notracking #freeapp #opensource #mentalhealthtools #selfcareapp #digitalwellness #wellness #mentalhealthmatters #safespace<button class="copy-btn" onclick="copyCaption('tags-4')">Copy</button></div>
+
+  <div class="graphics-label">Graphics (carousel — 3 slides)</div>
+  <div class="carousel">
+    <div class="ig-graphic dark">
+      <div class="big-text">What Bloom knows about you:</div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+    <div class="ig-graphic sage-bg">
+      <div class="big-text" style="font-size: 48px;">Nothing.</div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+    <div class="ig-graphic dark">
+      <img class="logo-small" src="/bloom-logo-512.png" alt="">
+      <div class="sub-text" style="font-size: 16px; line-height: 2.2; max-width: 90%;"><span style="color: #e8e0d0; font-weight: 600;">No accounts.</span> <span style="color: #8a9e8c;">No email.</span><br><span style="color: #e8e0d0; font-weight: 600;">No tracking.</span> <span style="color: #8a9e8c;">No analytics.</span><br><span style="color: #e8e0d0; font-weight: 600;">No data collection.</span><br><br><span style="color: #a8c5ab;">Everything stays on your device.</span></div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+  </div>
+  <p class="tip">Another bait-and-switch carousel. "What Bloom knows about you:" makes people swipe.</p>
+</div>
+
+<div class="batch-label">Batch 1 — Week 2</div>
+
+<!-- POST 5 -->
+<div class="post">
+  <div class="post-header">
+    <span class="day-badge">Day 9</span>
+    <span class="post-theme">Science — Affect Labeling</span>
+  </div>
+  <h3>Naming It Changes It</h3>
+
+  <div class="caption-label">Caption</div>
+  <div class="caption" id="caption-5">Naming how you feel actually changes what's happening in your brain.
+
+It's called affect labeling. When you put words to your emotions, activity in the amygdala (your brain's alarm system) goes down. You're not just venting. You're regulating.
+
+That's why Bloom starts with a mood check-in every day. Not to judge how you're feeling. Just to name it.
+
+Lieberman et al., 2007. Putting Feelings into Words.<button class="copy-btn" onclick="copyCaption('caption-5')">Copy</button></div>
+
+  <div class="hashtags" id="tags-5">#neuroscience #mentalhealth #moodtracking #affectlabeling #emotionalintelligence #psychology #selfcare #anxiety #brainscience #mentalhealthtools #selfawareness #wellness #research #selfcareapp #freeapp<button class="copy-btn" onclick="copyCaption('tags-5')">Copy</button></div>
+
+  <div class="graphics-label">Graphics</div>
+  <div class="graphics-grid">
+    <div class="ig-graphic sage-bg">
+      <img class="logo-small" src="/bloom-logo-512.png" alt="">
+      <div class="big-text">Naming your emotions reduces activity in the amygdala.</div>
+      <div class="sub-text">It's called affect labeling. You're not just venting. You're regulating.</div>
+      <div class="url">Lieberman et al., 2007 · bloomselfcare.app</div>
+    </div>
+    <div class="ig-graphic dark">
+      <img class="logo-small" src="/bloom-logo-512.png" alt="">
+      <div class="big-text" style="font-size: 22px;">How are you<br>feeling today?</div>
+      <div class="sub-text" style="margin-top: 16px;">That question isn't small talk.<br>It's neuroscience.</div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+  </div>
+</div>
+
+<!-- POST 6 -->
+<div class="post">
+  <div class="post-header">
+    <span class="day-badge">Day 11</span>
+    <span class="post-theme">Feature — Breathing</span>
+  </div>
+  <h3>4-7-8</h3>
+
+  <div class="caption-label">Caption</div>
+  <div class="caption" id="caption-6">4 seconds in. 7 seconds hold. 8 seconds out.
+
+The 4-7-8 breathing technique activates your parasympathetic nervous system. That's the part of you that calms down, slows your heart rate, and tells your body it's safe.
+
+It takes less than 2 minutes. Bloom walks you through it.
+
+Next time you feel your chest tighten or your thoughts start racing, try it. It's free and it's in the app.<button class="copy-btn" onclick="copyCaption('caption-6')">Copy</button></div>
+
+  <div class="hashtags" id="tags-6">#breathingexercises #478breathing #anxiety #anxietyrelief #mentalhealth #selfcare #calmdown #nervoussystem #parasympathetic #wellness #mindfulness #stressrelief #mentalhealthtools #selfcareapp #freeapp<button class="copy-btn" onclick="copyCaption('tags-6')">Copy</button></div>
+
+  <div class="graphics-label">Graphics</div>
+  <div class="graphics-grid">
+    <div class="ig-graphic dark">
+      <div class="big-text"><span style="color: #6a9ab0;">4</span> seconds in.<br><span style="color: #a8c5ab;">7</span> seconds hold.<br><span style="color: #c9954a;">8</span> seconds out.</div>
+      <div class="sub-text" style="margin-top: 16px;">Activates your parasympathetic nervous system in under 2 minutes.</div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+    <div class="ig-graphic sage-bg">
+      <img class="logo-small" src="/bloom-logo-512.png" alt="">
+      <div class="big-text" style="font-size: 22px;">Next time your chest tightens or your thoughts start racing:</div>
+      <div class="sub-text" style="margin-top: 12px; font-size: 18px; color: #e8e0d0;">Breathe in 4. Hold 7. Out 8.<br><br><span style="color: #8a9e8c; font-size: 14px;">Bloom walks you through it. Free.</span></div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+  </div>
+  <p class="tip">This one works great as a Reel too. Screen record the breathing exercise in the app with calm music.</p>
+</div>
+
+<!-- POST 7 -->
+<div class="post">
+  <div class="post-header">
+    <span class="day-badge">Day 13</span>
+    <span class="post-theme">Crisis Resources</span>
+  </div>
+  <h3>Save This Post</h3>
+
+  <div class="caption-label">Caption</div>
+  <div class="caption" id="caption-7">If you or someone you know is struggling right now:
+
+988 — Call or text, anytime (Suicide & Crisis Lifeline)
+741741 — Text HOME (Crisis Text Line)
+findahelpline.com — International support in 40+ languages
+
+These resources are always one tap away in Bloom. No digging through menus. No barriers.
+
+Save this post. You might not need it today, but someone might.<button class="copy-btn" onclick="copyCaption('caption-7')">Copy</button></div>
+
+  <div class="hashtags" id="tags-7">#988lifeline #crisisresources #suicideprevention #mentalhealthmatters #youarenotalone #mentalhealth #crisishotline #741741 #help #mentalhealthawareness #savethispost #wellness #selfcare<button class="copy-btn" onclick="copyCaption('tags-7')">Copy</button></div>
+
+  <div class="graphics-label">Graphics</div>
+  <div class="graphics-grid">
+    <div class="ig-graphic dark">
+      <img class="logo-small" src="/bloom-logo-512.png" alt="">
+      <div class="big-text" style="font-size: 22px; margin-bottom: 24px;">If you need help right now:</div>
+      <div class="sub-text" style="font-size: 18px; line-height: 2.4; max-width: 90%; text-align: left;">
+        <span style="color: #e8e0d0; font-weight: 600;">988</span> <span style="color: #8a9e8c;">— Call or text anytime</span><br>
+        <span style="color: #e8e0d0; font-weight: 600;">741741</span> <span style="color: #8a9e8c;">— Text HOME</span><br>
+        <span style="color: #e8e0d0; font-weight: 600;">findahelpline.com</span><br><span style="color: #8a9e8c;">40+ languages, worldwide</span>
+      </div>
+      <div class="url">Always one tap away in Bloom</div>
+    </div>
+    <div class="ig-graphic rose-bg">
+      <div class="big-text" style="font-size: 24px;">You are not alone.</div>
+      <div class="sub-text" style="margin-top: 16px; font-size: 15px;">Save this post.<br>You might not need it today,<br>but someone might.</div>
+      <div class="url">bloomselfcare.app</div>
+    </div>
+  </div>
+  <p class="tip">Crisis resource posts get saved and shared heavily. This one builds reach and does something that matters.</p>
+</div>
+
+</div>
+
+<script>
+function copyCaption(id) {
+  var el = document.getElementById(id);
+  var text = el.textContent.replace('Copy', '').trim();
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = el.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+  });
+}
+</script>
+
+</body>
+</html>
