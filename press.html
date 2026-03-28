@@ -534,16 +534,31 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
+async function blobToDataURI(blob) {
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onloadend = function() { resolve(reader.result); };
+    reader.readAsDataURL(blob);
+  });
+}
+
 document.getElementById('download-kit').addEventListener('click', async function() {
-  const btn = this;
-  const originalText = btn.textContent;
+  var btn = this;
+  var originalText = btn.textContent;
   btn.disabled = true;
   btn.textContent = 'Preparing download...';
 
   try {
-    const zip = new JSZip();
+    var zip = new JSZip();
 
-    const files = [
+    // Fetch images as blobs and data URIs for embedding
+    var logoBlob = await fetch('/bloom-logo-512.png').then(function(r) { return r.blob(); });
+    var qrBlob = await fetch('/qr-code.png').then(function(r) { return r.blob(); });
+    var logoDataURI = await blobToDataURI(logoBlob);
+    var qrDataURI = await blobToDataURI(qrBlob);
+
+    // Static asset files (kept as-is in the zip)
+    var assetFiles = [
       { path: '/bloom-logo-512.png', name: 'logos/bloom-logo-512.png' },
       { path: '/icon.svg', name: 'logos/bloom-logo.svg' },
       { path: '/og-image.png', name: 'social/og-image-1200x630.png' },
@@ -551,30 +566,55 @@ document.getElementById('download-kit').addEventListener('click', async function
       { path: '/qr-code.svg', name: 'qr-code/qr-code.svg' },
       { path: '/email-badge.png', name: 'email/email-badge-260x56.png' },
       { path: '/email-icon.png', name: 'email/email-icon-40x40.png' },
+    ];
+
+    var assetResults = await Promise.all(
+      assetFiles.map(function(f) {
+        return fetch(f.path)
+          .then(function(r) {
+            if (!r.ok) throw new Error(f.path + ' not found');
+            return r.blob();
+          })
+          .then(function(blob) { return { name: f.name, blob: blob }; })
+          .catch(function() { return null; });
+      })
+    );
+
+    for (var i = 0; i < assetResults.length; i++) {
+      if (assetResults[i]) zip.file(assetResults[i].name, assetResults[i].blob);
+    }
+
+    // HTML templates: embed images as base64 so they work offline
+    var htmlTemplates = [
       { path: '/print-poster.html', name: 'print-templates/poster-letter-size.html' },
       { path: '/print-flyer.html', name: 'print-templates/flyer-with-tear-offs.html' },
       { path: '/print-business-card.html', name: 'print-templates/business-cards.html' },
     ];
 
-    const results = await Promise.all(
-      files.map(f =>
-        fetch(f.path)
-          .then(r => {
+    var htmlResults = await Promise.all(
+      htmlTemplates.map(function(f) {
+        return fetch(f.path)
+          .then(function(r) {
             if (!r.ok) throw new Error(f.path + ' not found');
-            return r.blob();
+            return r.text();
           })
-          .then(blob => ({ name: f.name, blob }))
-          .catch(() => null)
-      )
+          .then(function(html) {
+            // Replace image references with embedded data URIs
+            html = html.replace(/src=["'](?:\.\/|\/)?bloom-logo-512\.png["']/g, 'src="' + logoDataURI + '"');
+            html = html.replace(/src=["'](?:\.\/|\/)?qr-code\.png["']/g, 'src="' + qrDataURI + '"');
+            return { name: f.name, content: html };
+          })
+          .catch(function() { return null; });
+      })
     );
 
-    for (const result of results) {
-      if (result) zip.file(result.name, result.blob);
+    for (var j = 0; j < htmlResults.length; j++) {
+      if (htmlResults[j]) zip.file(htmlResults[j].name, htmlResults[j].content);
     }
 
-    const blob = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    var blob = await zip.generateAsync({ type: 'blob' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
     a.href = url;
     a.download = 'bloom-press-kit.zip';
     document.body.appendChild(a);
