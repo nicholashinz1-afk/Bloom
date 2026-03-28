@@ -297,6 +297,34 @@
     border-radius: 10px;
   }
 
+  .download-kit-btn {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 14px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: 'Instrument Sans', -apple-system, sans-serif;
+    color: var(--bg);
+    background: var(--sage);
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .download-kit-btn:hover {
+    background: var(--sage-light);
+  }
+
+  .download-kit-btn:active {
+    transform: scale(0.97);
+  }
+
+  .download-kit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
   @media (max-width: 600px) {
     .press-header h1 { font-size: 2rem; }
     .container { padding: 32px 16px 64px; }
@@ -311,6 +339,7 @@
   <header class="press-header">
     <h1>Bloom Press Kit</h1>
     <p class="tagline">A gentle self-care companion</p>
+    <button id="download-kit" class="download-kit-btn">Download Full Press Kit (.zip)</button>
   </header>
 
   <!-- About -->
@@ -441,6 +470,30 @@
     <a href="/qr-code.png" download class="download-link">Download PNG</a>
   </div>
 
+  <!-- Print Templates -->
+  <h2>Print Templates</h2>
+  <p>Ready-to-print materials. Open and print directly from your browser (Ctrl/Cmd + P, margins set to "None").</p>
+  <div class="logo-grid">
+    <div class="logo-item">
+      <span class="label" style="font-size: 2rem;">📄</span>
+      <span class="label">Waiting Room Poster</span>
+      <a href="/print-poster.html" class="download-link">View</a>
+    </div>
+    <div class="logo-item">
+      <span class="label" style="font-size: 2rem;">✂️</span>
+      <span class="label">Flyer with Tear-offs</span>
+      <a href="/print-flyer.html" class="download-link">View</a>
+    </div>
+    <div class="logo-item">
+      <span class="label" style="font-size: 2rem;">🪪</span>
+      <span class="label">Business Cards</span>
+      <a href="/print-business-card.html" class="download-link">View</a>
+    </div>
+  </div>
+  <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 12px;">
+    All print templates are included in the full press kit download above.
+  </p>
+
   <!-- Links -->
   <h2>Links</h2>
   <div class="card">
@@ -478,5 +531,63 @@
   </footer>
 
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+document.getElementById('download-kit').addEventListener('click', async function() {
+  const btn = this;
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Preparing download...';
+
+  try {
+    const zip = new JSZip();
+
+    const files = [
+      { path: '/bloom-logo-512.png', name: 'logos/bloom-logo-512.png' },
+      { path: '/icon.svg', name: 'logos/bloom-logo.svg' },
+      { path: '/og-image.png', name: 'social/og-image-1200x630.png' },
+      { path: '/qr-code.png', name: 'qr-code/qr-code.png' },
+      { path: '/qr-code.svg', name: 'qr-code/qr-code.svg' },
+      { path: '/email-badge.png', name: 'email/email-badge-260x56.png' },
+      { path: '/email-icon.png', name: 'email/email-icon-40x40.png' },
+      { path: '/print-poster.html', name: 'print-templates/poster-letter-size.html' },
+      { path: '/print-flyer.html', name: 'print-templates/flyer-with-tear-offs.html' },
+      { path: '/print-business-card.html', name: 'print-templates/business-cards.html' },
+    ];
+
+    const results = await Promise.all(
+      files.map(f =>
+        fetch(f.path)
+          .then(r => {
+            if (!r.ok) throw new Error(f.path + ' not found');
+            return r.blob();
+          })
+          .then(blob => ({ name: f.name, blob }))
+          .catch(() => null)
+      )
+    );
+
+    for (const result of results) {
+      if (result) zip.file(result.name, result.blob);
+    }
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bloom-press-kit.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert('Something went wrong building the zip. Try downloading assets individually.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = originalText;
+});
+</script>
 </body>
 </html>
