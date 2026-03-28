@@ -33,11 +33,22 @@
 
   @media print {
     .instructions { display: none; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 8.5in;
+      height: 11in;
+      overflow: hidden;
+    }
+    .poster {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
   }
 
   .poster {
     width: 8.5in;
-    min-height: 11in;
+    height: 11in;
     background: #0d1610;
     color: #e8e0d0;
     display: flex;
@@ -48,6 +59,8 @@
     position: relative;
     overflow: hidden;
     text-align: center;
+    page-break-after: avoid;
+    page-break-inside: avoid;
   }
 
   /* Decorative background circles */
