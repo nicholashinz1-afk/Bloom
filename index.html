@@ -3262,6 +3262,28 @@ select:focus {
   </div>
 </div>
 
+<div class="bottom-sheet" id="transfer-qr-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:0 20px 20px">
+    <h2 class="sheet-title">Transfer to another device</h2>
+    <p class="text-sm text-muted" style="line-height:1.6;margin-bottom:12px">Scan this QR code with your new phone's camera. It will open Bloom and load all your data automatically.</p>
+    <div style="background:rgba(255,180,80,0.08);border:1px solid rgba(255,180,80,0.15);border-radius:var(--r-lg);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--amber-light);line-height:1.6">
+      ⚠️ This QR code contains your private data including journal entries. Only show it to your own devices.
+    </div>
+    <div id="transfer-qr-container" style="display:flex;justify-content:center;margin-bottom:16px;min-height:200px;align-items:center">
+      <div style="color:var(--text-muted);font-size:13px">Generating QR code...</div>
+    </div>
+    <div id="transfer-qr-fallback" style="display:none;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">Your data is too large for a QR code. Use one of these instead:</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" style="flex:1;font-size:12px" onclick="closeAllSheets();showBackupSheet()">Copy link</button>
+        <button class="btn btn-secondary" style="flex:1;font-size:12px" onclick="closeAllSheets();exportJSON()">Export file</button>
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-block" onclick="closeAllSheets()">Done</button>
+  </div>
+</div>
+
 <!-- Buddy match sheet -->
 <div class="bottom-sheet" id="buddy-match-sheet">
   <div class="sheet-handle"></div>
@@ -12277,6 +12299,11 @@ function renderSettingsTab() {
       <button class="btn btn-secondary btn-block" onclick="exportCSV()">📊 Export history as CSV</button>
       <button class="btn btn-secondary btn-block" onclick="exportTherapistPDF()">📋 Export therapist-friendly report</button>
       <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:8px;padding-top:8px">
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;font-weight:500">Transfer to another device</div>
+        <button class="btn btn-secondary btn-block" onclick="showTransferQR()">📱 Show QR code</button>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5">Scan this QR code on your new device to transfer all your Bloom data instantly.</div>
+      </div>
+      <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:8px;padding-top:8px">
         <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;font-weight:500">Restore from backup</div>
         <button class="btn btn-secondary btn-block" onclick="triggerImportFile()">📥 Import backup file</button>
         <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImportFile(this)">
@@ -13591,6 +13618,82 @@ async function showBackupSheet() {
 
 function markBackupDone() {
   save('bloom_backup_date', Date.now());
+}
+
+async function showTransferQR() {
+  openSheet('transfer-qr-sheet');
+  trackFeature('transfer_qr');
+  markBackupDone();
+
+  const container = document.getElementById('transfer-qr-container');
+  const fallback = document.getElementById('transfer-qr-fallback');
+
+  try {
+    const data = {
+      prefs: load('bloom_prefs'),
+      xp: load('bloom_xp'),
+      history: load('bloom_history'),
+      wellness: load('bloom_wellness'),
+    };
+    const jsonStr = JSON.stringify(data);
+    const encoded = await compressString(jsonStr);
+    const url = 'https://' + PRODUCTION_DOMAIN + '/?restore=' + encoded;
+
+    // QR codes can hold ~4296 alphanumeric chars or ~2953 bytes. URLs over ~2500 chars
+    // will produce very dense QR codes that are hard to scan. Check URL length.
+    if (url.length > 2500) {
+      container.style.display = 'none';
+      fallback.style.display = 'block';
+      return;
+    }
+
+    // Load QR code library on demand
+    await loadQRLib();
+    const qr = qrcode(0, 'L');
+    qr.addData(url);
+    qr.make();
+
+    const moduleCount = qr.getModuleCount();
+    const cellSize = Math.floor(Math.min(280, window.innerWidth - 80) / moduleCount);
+    const size = moduleCount * cellSize;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    canvas.style.cssText = 'border-radius:12px;max-width:100%';
+    const ctx = canvas.getContext('2d');
+
+    // White background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+
+    // Draw modules
+    ctx.fillStyle = '#0d1610';
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount; col++) {
+        if (qr.isDark(row, col)) {
+          ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    container.innerHTML = '';
+    container.appendChild(canvas);
+  } catch(e) {
+    container.style.display = 'none';
+    fallback.style.display = 'block';
+  }
+}
+
+function loadQRLib() {
+  if (window.qrcode && typeof window.qrcode === 'function') return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Failed to load QR library'));
+    document.head.appendChild(s);
+  });
 }
 
 // ── Backup encryption helpers (AES-GCM via Web Crypto) ────
