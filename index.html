@@ -14339,27 +14339,6 @@ async function tryRestoreFromURL() {
 function checkDomainMigration() {
   if (!LEGACY_DOMAINS.includes(location.hostname)) return false;
 
-  // Swap manifest so installed PWA shows "Bloom (old)"
-  try {
-    const manifest = {
-      name: 'Bloom (old)',
-      short_name: 'Bloom (old)',
-      description: 'A gentle self-care habit tracker',
-      start_url: '/',
-      display: 'standalone',
-      background_color: '#0d1610',
-      theme_color: '#0d1610',
-      orientation: 'portrait',
-      icons: [
-        { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
-        { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' }
-      ]
-    };
-    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-    const link = document.querySelector('link[rel="manifest"]');
-    if (link) link.href = URL.createObjectURL(blob);
-  } catch(e) {}
-
   const prefs = load('bloom_prefs');
 
   // No data on old domain: silent redirect
@@ -14368,7 +14347,7 @@ function checkDomainMigration() {
     return true;
   }
 
-  // Already migrated: show "delete old app" message
+  // Already migrated: show full-screen "delete this app" takeover
   if (load('bloom_migration_complete')) {
     showMigrationComplete();
     return true;
@@ -14432,7 +14411,7 @@ async function startMigration(banner) {
     if (url.length <= 16000) {
       save('bloom_migration_complete', true);
       trackEvent('migration_url');
-      location.href = url;
+      showMigrationSuccess(url);
     } else {
       await migrationFileDownloadFallback(data, banner);
     }
@@ -14443,50 +14422,111 @@ async function startMigration(banner) {
   }
 }
 
+function showMigrationSuccess(url) {
+  // Full-screen takeover with link that opens in browser (not inside PWA)
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10002;background:var(--bg-main);display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML = `
+    <div style="max-width:360px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">✅</div>
+      <h2 style="color:var(--sage);margin-bottom:8px;font-family:Fraunces,serif;font-size:22px">Your data is ready!</h2>
+      <p style="color:var(--text-secondary);font-size:14px;line-height:1.7;margin-bottom:24px">
+        Tap the link below to open Bloom at its new home. Your data will be there waiting for you.
+      </p>
+      <a href="${url}" target="_blank" rel="noopener" id="migration-open-link"
+         style="display:block;padding:14px 24px;background:var(--sage);color:var(--text-on-sage);border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;margin-bottom:16px">
+        Open bloomselfcare.app
+      </a>
+      <div style="background:rgba(255,180,80,0.08);border:1px solid rgba(255,180,80,0.15);border-radius:12px;padding:12px 16px;margin-bottom:16px">
+        <p style="color:var(--amber-light);font-size:12px;line-height:1.6;margin:0">
+          <strong>Next steps:</strong><br>
+          1. Install the new app from Chrome's menu<br>
+          2. Come back here and delete this old app from your home screen
+        </p>
+      </div>
+      <p style="color:var(--text-muted);font-size:11px;line-height:1.5">If the link opens inside this app, copy it and paste it into Chrome instead.</p>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  // Also try window.open as a fallback to break out of PWA
+  overlay.querySelector('#migration-open-link').addEventListener('click', function(e) {
+    // Try window.open first to force external browser
+    const w = window.open(url, '_blank');
+    if (w) {
+      e.preventDefault(); // window.open worked, don't follow the link
+    }
+    // If window.open was blocked, the <a target="_blank"> will handle it
+  });
+}
+
 async function migrationFileDownloadFallback(data, banner) {
   trackEvent('migration_file');
 
-  banner.innerHTML = `
-    <div style="font-weight:600;font-size:16px">Your data needs a two-step move</div>
-    <div style="font-size:13px;opacity:0.9;line-height:1.7">You have a lot of history (that's great!), so we'll save a backup file first, then open your new home where you can import it.<br><br><strong>Step 1:</strong> Backup file is downloading now<br><strong>Step 2:</strong> Import it on the next page</div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
-      <button id="migration-file-continue" style="background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.5);color:inherit;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600">Open bloomselfcare.app</button>
-    </div>`;
-
   // Trigger file download
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
+  const dlUrl = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
+  a.href = dlUrl;
   a.download = 'bloom-migration-' + today() + '.json';
   a.click();
-  URL.revokeObjectURL(url);
+  URL.revokeObjectURL(dlUrl);
 
-  banner.querySelector('#migration-file-continue').addEventListener('click', () => {
-    save('bloom_migration_complete', true);
-    location.href = 'https://' + PRODUCTION_DOMAIN + '/?migrated=file';
+  save('bloom_migration_complete', true);
+
+  const targetUrl = 'https://' + PRODUCTION_DOMAIN + '/?migrated=file';
+
+  // Full-screen takeover with instructions
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10002;background:var(--bg-main);display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML = `
+    <div style="max-width:360px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">📦</div>
+      <h2 style="color:var(--sage);margin-bottom:8px;font-family:Fraunces,serif;font-size:22px">Backup saved!</h2>
+      <p style="color:var(--text-secondary);font-size:14px;line-height:1.7;margin-bottom:8px">
+        Your data was too large for a quick transfer, so we saved a backup file. Now open your new home and import it there.
+      </p>
+      <a href="${targetUrl}" target="_blank" rel="noopener" id="migration-file-open"
+         style="display:block;padding:14px 24px;background:var(--sage);color:var(--text-on-sage);border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;margin-bottom:16px">
+        Open bloomselfcare.app
+      </a>
+      <div style="background:rgba(255,180,80,0.08);border:1px solid rgba(255,180,80,0.15);border-radius:12px;padding:12px 16px">
+        <p style="color:var(--amber-light);font-size:12px;line-height:1.6;margin:0">
+          <strong>On the new site:</strong> You'll be asked to upload the file that just downloaded (<em>bloom-migration-${today()}.json</em>).
+        </p>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#migration-file-open').addEventListener('click', function(e) {
+    const w = window.open(targetUrl, '_blank');
+    if (w) e.preventDefault();
   });
 }
 
 function showMigrationComplete() {
   trackEvent('migration_complete_shown');
-  const banner = document.createElement('div');
-  banner.id = 'migration-banner';
-  banner.setAttribute('role', 'alert');
-  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10001;background:rgba(var(--sage-rgb),0.97);color:var(--text-on-sage);padding:20px;font-size:14px;line-height:1.6;display:flex;flex-direction:column;gap:12px;animation:slideDown 0.3s ease;backdrop-filter:blur(12px)';
-  banner.innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px">
-      <span style="font-size:20px">✅</span>
-      <div>
-        <div style="font-weight:600">You're all set on bloomselfcare.app!</div>
-        <div style="font-size:13px;opacity:0.85;margin-top:4px">You can safely delete this app from your home screen. Your data is on the new site.</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button id="migration-done-dismiss" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:inherit;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500">Got it</button>
+  // Full-screen takeover so user knows this is the OLD app
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10002;background:var(--bg-main);display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML = `
+    <div style="max-width:360px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">👋</div>
+      <h2 style="color:var(--sage);margin-bottom:8px;font-family:Fraunces,serif;font-size:22px">You've already moved!</h2>
+      <p style="color:var(--text-secondary);font-size:14px;line-height:1.7;margin-bottom:24px">
+        Your data is on <strong>bloomselfcare.app</strong> now. This is the old app, and you can safely delete it from your home screen.
+      </p>
+      <a href="https://${PRODUCTION_DOMAIN}" target="_blank" rel="noopener" id="migration-done-open"
+         style="display:block;padding:14px 24px;background:var(--sage);color:var(--text-on-sage);border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;margin-bottom:12px">
+        Open Bloom
+      </a>
+      <p style="color:var(--text-muted);font-size:12px;margin-top:8px">Long-press this app's icon on your home screen to remove it.</p>
     </div>`;
-  document.body.appendChild(banner);
-  banner.querySelector('#migration-done-dismiss').addEventListener('click', () => banner.remove());
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#migration-done-open').addEventListener('click', function(e) {
+    const w = window.open('https://' + PRODUCTION_DOMAIN, '_blank');
+    if (w) e.preventDefault();
+  });
 }
 
 function showMigrationImportPrompt() {
