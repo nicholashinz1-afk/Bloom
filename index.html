@@ -18359,23 +18359,6 @@ function initApp() {
   renderTodayTab();
   updateStreak();
   checkMilestones();
-  // Auto-repair: if notifications are enabled but no OneSignal player ID exists,
-  // re-register the service worker to pick up the fixed OneSignalSDKWorker.js.
-  // Only runs once per device to prevent reload loops.
-  const swRepairKey = 'bloom_sw_repair_v1';
-  if (Notification.permission === 'granted' && !load('bloom_onesignal_pid', null) && !load(swRepairKey, false)) {
-    save(swRepairKey, true);
-    (async () => {
-      try {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        for (const reg of regs) await reg.unregister();
-        await navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' });
-        _osLog('auto-repair: re-registered service worker');
-      } catch(e) {
-        _osLog('auto-repair failed', e?.message);
-      }
-    })();
-  }
   initOneSignal();
   // Buddy: register once, then sync if paired (sync includes conditional re-register)
   buddyRegisterAndSync().then(() => {
