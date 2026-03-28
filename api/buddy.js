@@ -22,6 +22,43 @@ const TARGETED_ABUSE = [
   /\b(bitch|cunt|faggot|retard|tranny|n[i1]gg[ae3]r)\b/i,
 ];
 
+// Grooming / predatory language — blocked unconditionally
+const GROOMING_PATTERNS = [
+  /\bhow\s*old\s*are\s*you\b/i,
+  /\bwhat\s*('s\s*your|is\s*your)\s*(age|grade)\b/i,
+  /\bwhere\s*(do\s*you|u)\s*(live|stay|go\s*to\s*school)\b/i,
+  /\bwhat\s*school\s*(do\s*you|u)\b/i,
+  /\bsend\s*(me\s*)?(a\s*)?(pic|photo|selfie|image)\b/i,
+  /\bdon'?t\s*tell\s*(anyone|your\s*(parents?|mom|dad|teacher))\b/i,
+  /\bkeep\s*this\s*(between\s*us|a\s*secret|our\s*secret)\b/i,
+  /\bjust\s*between\s*(us|you\s*and\s*me)\b/i,
+  /\b(meet|hang)\s*(up|out|me)\s*(in\s*person|irl|somewhere)\b/i,
+  /\bmeet\s*in\s*(real\s*life|person)\b/i,
+];
+
+// Contact exchange — blocked to prevent off-platform communication
+const CONTACT_EXCHANGE = [
+  /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/,                         // US phone numbers
+  /\b\+\d{1,3}[-.\s]?\d{6,14}\b/,                               // international phone numbers
+  /\b(snap(chat)?|insta(gram)?|discord|tiktok|telegram|whatsapp|signal|kik|wechat)\s*[:\-]?\s*@?\w/i,
+  /\b(add|hmu|hit\s*me\s*up|dm\s*me|message\s*me)\s*(on|at)\b/i,
+  /\bmy\s*(snap|insta|discord|tiktok|number|#)\s*(is|:)\b/i,
+  /\b(follow|add)\s*me\s*(on|@)\b/i,
+  /\bwhat'?s\s*your\s*(snap|insta|discord|number|ig|tiktok|username)\b/i,
+];
+
+// Crude / sexual content — blocked in buddy (1-on-1), soft-flagged on wall (public)
+const CRUDE_PATTERNS = [
+  /\b(hog|dong|wiener|schlong|pp|peen|johnson|boner)\b/i,
+  /\bcrank\b.*\b(hog|one|it)\b/i,
+  /\b(jerk|jack|wank|beat)\s*(off|it|ing)\b/i,
+  /\b(dick|cock|penis|balls|nuts|tits|boobs|ass|booty)\b/i,
+  /\b(horny|sexy|bang|hookup|hook up|smash|69)\b/i,
+  /\b(porn|onlyfans|nsfw|nude|naked)\b/i,
+  /\b(shit|fuck|damn|hell|crap|piss)\b/i,
+  /\b(stfu|gtfo|lmao.*ass|dumbass|badass|jackass)\b/i,
+];
+
 // Spam / link / injection prevention
 const SPAM_PATTERNS = [
   /\b(http|www\.|\.\bcom\b|\.\borg\b|\.\bnet\b)\b/i,
@@ -34,7 +71,7 @@ const SELF_HARM_PATTERNS = [
   /\b(suicide|suicidal|self[- ]?harm|cut myself|hurt myself)\b/i,
 ];
 
-function moderateMessage(text) {
+function moderateMessage(text, source = 'buddy') {
   const lower = text.toLowerCase().trim();
   if (lower.length < 1 || lower.length > 200) return { ok: false, reason: 'length' };
 
@@ -46,6 +83,24 @@ function moderateMessage(text) {
   // Block targeted slurs/abuse
   for (const pat of TARGETED_ABUSE) {
     if (pat.test(lower)) return { ok: false, reason: 'harmful' };
+  }
+
+  // Block grooming / predatory language
+  for (const pat of GROOMING_PATTERNS) {
+    if (pat.test(lower)) return { ok: false, reason: 'safety' };
+  }
+
+  // Block contact exchange attempts
+  for (const pat of CONTACT_EXCHANGE) {
+    if (pat.test(lower)) return { ok: false, reason: 'safety' };
+  }
+
+  // Crude/sexual content: hard-block in buddy (1-on-1), soft-flag on wall (public)
+  for (const pat of CRUDE_PATTERNS) {
+    if (pat.test(lower)) {
+      if (source === 'buddy') return { ok: false, reason: 'inappropriate' };
+      return { ok: true, flag: 'crude' };
+    }
   }
 
   // Block spam/links
@@ -148,6 +203,19 @@ async function recordStrike(userId, reason, source, messageText) {
   if (strikes[userId].incidents.length > 50) {
     strikes[userId].incidents = strikes[userId].incidents.slice(-50);
   }
+
+  // Auto-ban: 3+ blocked messages within 24 hours
+  if (!strikes[userId].banned) {
+    const oneDayAgo = Date.now() - 86400000;
+    const recentBlocked = strikes[userId].incidents.filter(
+      i => i.ts > oneDayAgo && (i.reason === 'harmful' || i.reason === 'safety' || i.reason === 'inappropriate')
+    );
+    if (recentBlocked.length >= 3) {
+      strikes[userId].banned = true;
+      strikes[userId].autoBannedAt = Date.now();
+    }
+  }
+
   await saveStrikes(strikes);
 }
 
@@ -675,7 +743,7 @@ export default async function handler(req, res) {
       return res.json({ ok: false, reason: 'filtered' });
     }
 
-    const check = moderateMessage(text);
+    const check = moderateMessage(text, 'buddy');
     await logModeration('buddy_message', check);
     if (!check.ok) {
       await recordStrike(buddyId, check.reason, 'buddy', text);

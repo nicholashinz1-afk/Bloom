@@ -22,6 +22,31 @@ const TARGETED_ABUSE = [
   /\b(bitch|cunt|faggot|retard|tranny|n[i1]gg[ae3]r)\b/i,
 ];
 
+// Grooming / predatory language — blocked unconditionally
+const GROOMING_PATTERNS = [
+  /\bhow\s*old\s*are\s*you\b/i,
+  /\bwhat\s*('s\s*your|is\s*your)\s*(age|grade)\b/i,
+  /\bwhere\s*(do\s*you|u)\s*(live|stay|go\s*to\s*school)\b/i,
+  /\bwhat\s*school\s*(do\s*you|u)\b/i,
+  /\bsend\s*(me\s*)?(a\s*)?(pic|photo|selfie|image)\b/i,
+  /\bdon'?t\s*tell\s*(anyone|your\s*(parents?|mom|dad|teacher))\b/i,
+  /\bkeep\s*this\s*(between\s*us|a\s*secret|our\s*secret)\b/i,
+  /\bjust\s*between\s*(us|you\s*and\s*me)\b/i,
+  /\b(meet|hang)\s*(up|out|me)\s*(in\s*person|irl|somewhere)\b/i,
+  /\bmeet\s*in\s*(real\s*life|person)\b/i,
+];
+
+// Contact exchange — blocked to prevent off-platform communication
+const CONTACT_EXCHANGE = [
+  /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/,                         // US phone numbers
+  /\b\+\d{1,3}[-.\s]?\d{6,14}\b/,                               // international phone numbers
+  /\b(snap(chat)?|insta(gram)?|discord|tiktok|telegram|whatsapp|signal|kik|wechat)\s*[:\-]?\s*@?\w/i,
+  /\b(add|hmu|hit\s*me\s*up|dm\s*me|message\s*me)\s*(on|at)\b/i,
+  /\bmy\s*(snap|insta|discord|tiktok|number|#)\s*(is|:)\b/i,
+  /\b(follow|add)\s*me\s*(on|@)\b/i,
+  /\bwhat'?s\s*your\s*(snap|insta|discord|number|ig|tiktok|username)\b/i,
+];
+
 // Spam / link / injection prevention
 const SPAM_PATTERNS = [
   /\b(http|www\.|\.com|\.org|\.net)\b/i,
@@ -59,6 +84,16 @@ function moderateMessage(text) {
   // Block targeted slurs/abuse
   for (const pat of TARGETED_ABUSE) {
     if (pat.test(lower)) return { ok: false, reason: 'harmful' };
+  }
+
+  // Block grooming / predatory language
+  for (const pat of GROOMING_PATTERNS) {
+    if (pat.test(lower)) return { ok: false, reason: 'safety' };
+  }
+
+  // Block contact exchange attempts
+  for (const pat of CONTACT_EXCHANGE) {
+    if (pat.test(lower)) return { ok: false, reason: 'safety' };
   }
 
   // Block spam/links
@@ -160,6 +195,19 @@ async function recordStrike(fp, reason, source, messageText) {
   if (strikes[fp].incidents.length > 50) {
     strikes[fp].incidents = strikes[fp].incidents.slice(-50);
   }
+
+  // Auto-ban: 3+ blocked messages within 24 hours
+  if (!strikes[fp].banned) {
+    const oneDayAgo = Date.now() - 86400000;
+    const recentBlocked = strikes[fp].incidents.filter(
+      i => i.ts > oneDayAgo && (i.reason === 'harmful' || i.reason === 'safety' || i.reason === 'inappropriate')
+    );
+    if (recentBlocked.length >= 3) {
+      strikes[fp].banned = true;
+      strikes[fp].autoBannedAt = Date.now();
+    }
+  }
+
   await saveStrikes(strikes);
 }
 

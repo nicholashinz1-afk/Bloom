@@ -26,12 +26,19 @@ Mental health self-care PWA. Compassionate, no-shame, no-pressure design philoso
 
 ## Content Moderation
 
-Moderation filters in `api/buddy.js` and `api/wall.js` use a three-tier approach:
+Moderation filters in `api/buddy.js` and `api/wall.js` use a multi-tier approach:
 1. **Blocked** — directed harm toward others, targeted slurs
-2. **Flagged (allowed but surfaces crisis resources)** — self-harm language
-3. **Allowed** — venting, frustration, general expression
+2. **Blocked** — grooming/predatory language (age, location, school questions, secrecy, requests to meet)
+3. **Blocked** — contact exchange (phone numbers, social media handles, requests to move off-platform)
+4. **Blocked (buddy only)** — crude/sexual content is hard-blocked in 1-on-1 buddy messages, soft-flagged on the public wall
+5. **Auto-ban** — 3+ blocked messages within 24 hours triggers automatic restriction from all community features
+6. **Flagged (allowed but surfaces crisis resources)** — self-harm language
+7. **Soft-flagged (wall only, allowed with content warning)** — crude/off-topic content
+8. **Allowed** — venting, frustration, general expression
 
-This is intentional for a mental health app. Don't block words like "hurt", "harm", "stupid", etc.
+Client-side also warns users before sending personal info (phone, email, SSN, addresses, social handles) with a two-step confirmation. Server-side blocks it regardless.
+
+This is intentional for a mental health app used by young people. Don't block words like "hurt", "harm", "stupid", etc. Don't weaken grooming or contact exchange protections.
 
 ## Security Headers
 

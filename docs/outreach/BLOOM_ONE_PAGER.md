@@ -55,6 +55,23 @@ Built by someone who's been through it, for people going through it.
 
 ---
 
+## Safety and content moderation
+
+Bloom's community features (buddy system, encouragement wall) are protected by multi-layered automated moderation:
+
+- **Directed harm and slurs** are blocked and cannot be posted
+- **Grooming and predatory language** is detected and blocked (age/location questions, secrecy language, requests to meet)
+- **Contact exchange** is blocked (phone numbers, social media handles, requests to move off-platform)
+- **Crude and sexual content** is blocked in buddy conversations (1-on-1 messaging)
+- **Self-harm language** is allowed but automatically surfaces crisis resources (988, Crisis Text Line)
+- **Automatic restrictions** remove repeat offenders from community features in real time, without waiting for admin review
+- **User reporting** allows the community to flag concerning content. Messages with multiple reports are removed automatically.
+- **Rate limiting** prevents spam and flooding across all community features
+
+All moderation is transparent. Users can read exactly how it works in Settings. Bloom is intended for users aged 16 and older.
+
+---
+
 ## Who Bloom is for
 
 - Students managing stress, anxiety, or depression
@@ -72,6 +89,7 @@ Bloom can complement existing mental health services:
 - **Zero cost.** No licensing fees, no contracts, no per-seat pricing.
 - **Zero IT overhead.** Runs in any browser, no download required. Nothing to maintain.
 - **No data liability.** All data stays on the student's device. No PHI, no FERPA concerns.
+- **Youth safety protections.** Automated moderation blocks grooming, contact exchange, and inappropriate content in all community features. Repeat offenders are auto-restricted.
 - **Crisis integration.** 988, Crisis Text Line, and international resources always one tap away.
 - **Open source.** Full source code is public and auditable.
 

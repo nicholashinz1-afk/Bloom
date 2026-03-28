@@ -12574,29 +12574,39 @@ function renderSettingsTab() {
     <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
       <div style="font-weight:500;color:var(--cream);margin-bottom:8px;font-size:14px">Keeping this space safe</div>
 
-      <p style="margin-bottom:10px">Bloom automatically screens messages on the encouragement wall and in buddy conversations. Here's how it works:</p>
+      <p style="margin-bottom:10px">Bloom automatically screens every message on the encouragement wall and in buddy conversations before it's posted. Here's how it works:</p>
 
       <div style="background:rgba(176,120,120,0.08);border:1px solid rgba(176,120,120,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
         <div style="font-weight:500;color:var(--rose-light);margin-bottom:4px">Blocked</div>
-        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Directed harm toward others and targeted slurs are blocked and cannot be posted. This keeps the community safe.</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Directed harm toward others and targeted slurs are blocked and cannot be posted.</div>
+      </div>
+
+      <div style="background:rgba(176,120,120,0.08);border:1px solid rgba(176,120,120,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
+        <div style="font-weight:500;color:var(--rose-light);margin-bottom:4px">Safety protections</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Grooming language, requests for personal information (age, location, school), and attempts to exchange contact info (phone numbers, social media handles) are blocked automatically. In buddy conversations, crude and sexual content is also blocked. These protections exist because Bloom is used by young people and we take that seriously.</div>
+      </div>
+
+      <div style="background:rgba(176,120,120,0.08);border:1px solid rgba(176,120,120,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
+        <div style="font-weight:500;color:var(--rose-light);margin-bottom:4px">Automatic restrictions</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Users who repeatedly post blocked content are automatically restricted from community features. This happens without admin intervention to protect the community in real time.</div>
       </div>
 
       <div style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
         <div style="font-weight:500;color:var(--amber-light);margin-bottom:4px">Content warning (allowed)</div>
-        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Some messages may be flagged as potentially inappropriate for this space — crude language, off-topic content, etc. These messages are still posted but appear blurred with a content warning. You can choose to view them or leave them hidden. This keeps the wall focused on encouragement while respecting that the message was shared.</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">On the encouragement wall, some messages may be flagged as potentially inappropriate for this space. These messages are still posted but appear blurred with a content warning. You can choose to view them or leave them hidden.</div>
       </div>
 
       <div style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
         <div style="font-weight:500;color:var(--amber-light);margin-bottom:4px">Crisis support (allowed)</div>
-        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">If we detect language that suggests you might be in crisis, your message is still posted — but we'll gently surface crisis resources. Your feelings are always valid here.</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">If we detect language that suggests you might be in crisis, your message is still posted, but we'll gently surface crisis resources. Your feelings are always valid here.</div>
       </div>
 
       <div style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
         <div style="font-weight:500;color:var(--sage-light);margin-bottom:4px">Allowed</div>
-        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Venting, frustration, and honest expression are welcome. This is a mental health app — we don't filter difficult emotions. Words like "hurt," "struggling," and "overwhelmed" belong here.</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Venting, frustration, and honest expression are welcome. This is a mental health app. We don't filter difficult emotions. Words like "hurt," "struggling," and "overwhelmed" belong here.</div>
       </div>
 
-      <p style="margin-top:12px;font-size:12px;color:var(--text-muted)">Bloom is designed to hold space for hard feelings, not suppress them. If you see something concerning on the wall, use the "flag" button to report it. Messages with repeated moderation flags may result in restricted access to community features.</p>
+      <p style="margin-top:12px;font-size:12px;color:var(--text-muted)">Bloom is designed to hold space for hard feelings, not suppress them. If you see something concerning, use the "flag" button to report it.</p>
     </div>
   `);
 
@@ -12635,7 +12645,7 @@ function renderSettingsTab() {
         AI reflections are generated by a language model. They may occasionally be inaccurate, unhelpful, or inappropriate. They should not be relied upon for mental health decisions. A "Did this feel helpful?" option is provided so you can flag unhelpful responses.</p>
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Buddy system:</strong><br>
-        Bloom Buddy connects you with other users for encouragement. We provide content moderation but cannot guarantee the behavior of other users. Never share personal identifying information with buddies you don't know. You can unpair at any time.</p>
+        Bloom Buddy connects you with other users for encouragement. All messages are screened for harmful content, grooming language, and contact exchange attempts. Crude and sexual content is blocked in buddy conversations. Users who repeatedly violate these rules are automatically restricted. Despite these protections, we cannot guarantee the behavior of other users. You can unpair at any time.</p>
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Age requirement:</strong><br>
         Bloom is intended for users aged 16 and older.</p>
@@ -17858,6 +17868,8 @@ async function buddySendMessage(pairId) {
     const reasons = {
       'rate-limit': 'Easy there! Try again in a bit.',
       'harmful': 'Let\u2019s keep things gentle. Try rephrasing?',
+      'safety': 'For everyone\u2019s safety, personal info and contact details can\u2019t be shared here.',
+      'inappropriate': 'Let\u2019s keep buddy conversations respectful. Try rephrasing?',
       'filtered': 'Some words aren\u2019t allowed. Try rephrasing?',
       'not-paired': 'You\u2019re not paired with a buddy.',
     };
@@ -18740,8 +18752,9 @@ async function postToWall() {
       const reasons = {
         'length': 'Message should be 3-140 characters.',
         'harmful': 'Let\'s keep this space gentle and safe. Try rephrasing?',
+        'safety': 'For everyone\'s safety, personal info and contact details can\'t be shared here.',
         'filtered': 'Some words aren\'t allowed here to keep this space safe. Try rephrasing?',
-        'rate-limit': 'You\'ve shared recently — come back in a bit to post again.',
+        'rate-limit': 'You\'ve shared recently -- come back in a bit to post again.',
         'no-text': 'Write a few words of encouragement.',
       };
       showWallStatus(reasons[data.reason] || 'Something went wrong. Try again?', 'var(--amber)');
