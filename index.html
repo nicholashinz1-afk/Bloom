@@ -3284,6 +3284,73 @@ select:focus {
   </div>
 </div>
 
+<!-- Vault setup sheet -->
+<div class="bottom-sheet" id="vault-setup-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:0 20px 20px" id="vault-setup-body">
+    <h2 class="sheet-title">Protect your data, no account needed</h2>
+    <p class="text-sm text-muted" style="line-height:1.7;margin-bottom:16px">This creates an encrypted safety net in the cloud. Your data is scrambled on your device before it ever leaves. We never see it, and no one else can read it. Not even us.</p>
+    <p class="text-sm text-muted" style="line-height:1.7;margin-bottom:16px">All you need to get your data back is a recovery code and a passphrase you choose. No email. No login. No identity.</p>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px">Choose a passphrase (min 6 characters)</label>
+      <input type="password" id="vault-pass-1" placeholder="Your passphrase..." style="width:100%;padding:12px;font-size:15px" autocomplete="new-password">
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px">Confirm passphrase</label>
+      <input type="password" id="vault-pass-2" placeholder="Confirm passphrase..." style="width:100%;padding:12px;font-size:15px" autocomplete="new-password">
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Pick something you'll remember. This is the key to your data.</div>
+    <button class="btn btn-primary btn-block" id="vault-setup-btn" onclick="handleVaultSetup()">Create cloud vault</button>
+    <div id="vault-setup-error" style="display:none;margin-top:10px;font-size:13px;color:var(--amber-light);text-align:center"></div>
+  </div>
+</div>
+
+<!-- Recover data sheet (unified: vault, file import, restore link) -->
+<div class="bottom-sheet" id="recover-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:0 20px 20px" id="recover-body">
+    <h2 class="sheet-title">Recover your data</h2>
+    <p class="text-sm text-muted" style="line-height:1.6;margin-bottom:16px">Choose how you'd like to restore your Bloom data.</p>
+    <div style="display:flex;flex-direction:column;gap:10px" id="recover-options">
+      <button class="btn btn-secondary btn-block" onclick="showRecoverVault()" style="text-align:left;padding:14px 16px">
+        <div style="font-weight:500">☁️ Cloud vault</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Enter your recovery code and passphrase</div>
+      </button>
+      <button class="btn btn-secondary btn-block" onclick="triggerRecoverFile()" style="text-align:left;padding:14px 16px">
+        <div style="font-weight:500">📥 Import backup file</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Upload a .json backup from your device</div>
+      </button>
+      <input type="file" id="recover-file-input" accept=".json" style="display:none" onchange="handleRecoverFile(this)">
+      <button class="btn btn-secondary btn-block" onclick="showRecoverLink()" style="text-align:left;padding:14px 16px">
+        <div style="font-weight:500">🔗 Paste a restore link</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">If you saved a backup link, paste it here</div>
+      </button>
+    </div>
+    <div id="recover-vault-form" style="display:none">
+      <button class="btn btn-ghost" onclick="showRecoverOptions()" style="font-size:12px;margin-bottom:12px">← Back to options</button>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px">Recovery code</label>
+        <input type="text" id="recover-vault-code" placeholder="BLOOM-XXXX-XXXX" style="width:100%;padding:12px;font-size:16px;letter-spacing:1px;text-transform:uppercase" autocomplete="off" autocapitalize="characters">
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px">Passphrase</label>
+        <input type="password" id="recover-vault-pass" placeholder="Your passphrase..." style="width:100%;padding:12px;font-size:15px" autocomplete="off">
+      </div>
+      <button class="btn btn-primary btn-block" id="recover-vault-btn" onclick="handleRecoverVault()">Restore my data</button>
+      <div id="recover-vault-error" style="display:none;margin-top:10px;font-size:13px;color:var(--amber-light);text-align:center;line-height:1.5"></div>
+    </div>
+    <div id="recover-link-form" style="display:none">
+      <button class="btn btn-ghost" onclick="showRecoverOptions()" style="font-size:12px;margin-bottom:12px">← Back to options</button>
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px">Paste your restore link</label>
+        <input type="url" id="recover-link-input" placeholder="https://bloomselfcare.app/?restore=..." style="width:100%;padding:12px;font-size:13px" autocomplete="off">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="handleRecoverLink()">Restore my data</button>
+      <div id="recover-link-error" style="display:none;margin-top:10px;font-size:13px;color:var(--amber-light);text-align:center;line-height:1.5"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Buddy match sheet -->
 <div class="bottom-sheet" id="buddy-match-sheet">
   <div class="sheet-handle"></div>
@@ -5913,6 +5980,7 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 function handleVisibilityChange() {
   if (document.visibilityState === 'hidden') {
     save('bloom_last_active', Date.now());
+    syncToVault(); // Background vault sync on app hide
     // Pause buddy polling while tab is hidden to conserve Vercel invocations
     stopBuddyPolling();
   } else {
@@ -12292,6 +12360,25 @@ function renderSettingsTab() {
     ${isSafariBrowser() ? `<div style="background:rgba(255,180,80,0.08);border:1px solid rgba(255,180,80,0.15);border-radius:var(--r-lg);padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--amber-light);line-height:1.6">
       ⚠️ <strong>Safari users:</strong> Safari may delete website data after 7 days of inactivity. Save a backup link regularly to protect your data.
     </div>` : ''}
+    ${(() => {
+      const vs = load('bloom_vault_state');
+      if (vs && vs.codeHash) {
+        const lastSync = vs.lastSync ? new Date(vs.lastSync).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Never';
+        return '<div style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.2);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:12px">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:14px">☁️</span><span style="font-size:13px;font-weight:500;color:var(--sage-light)">Cloud vault active</span></div>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Last synced: ' + lastSync + '</div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+          '<button class="btn btn-secondary btn-sm" onclick="syncToVaultManual()">Sync now</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="showVaultCode()">View recovery code</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="confirmDeleteVault()">Remove</button>' +
+          '</div></div>';
+      }
+      return '<div style="background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:12px">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:14px">☁️</span><span style="font-size:13px;font-weight:500;color:var(--text-secondary)">Cloud vault</span></div>' +
+        '<div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">An encrypted safety net for your data. If you ever lose this device, you can restore everything with just a recovery code and passphrase. No account. No email. Fully encrypted.</div>' +
+        '<button class="btn btn-secondary btn-block" onclick="openSheet(\\\'vault-setup-sheet\\\')">Set up cloud vault</button>' +
+        '</div>';
+    })()}
     <div style="display:flex;flex-direction:column;gap:8px">
       <button class="btn btn-secondary btn-block" onclick="showBackupSheet()">💾 Save restore link</button>
       <button class="btn btn-secondary btn-block" onclick="exportEncryptedJSON()">🔐 Export encrypted backup</button>
@@ -12305,9 +12392,8 @@ function renderSettingsTab() {
       </div>
       <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:8px;padding-top:8px">
         <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;font-weight:500">Restore from backup</div>
-        <button class="btn btn-secondary btn-block" onclick="triggerImportFile()">📥 Import backup file</button>
-        <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImportFile(this)">
-        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5">Accepts encrypted or unencrypted .json backup files exported from Bloom. Your current data will be replaced.</div>
+        <button class="btn btn-secondary btn-block" onclick="openSheet('recover-sheet');showRecoverOptions()">Recover your data</button>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5">Cloud vault, backup file, or restore link.</div>
       </div>
       <button class="btn btn-ghost btn-block" onclick="resetToday()">↺ Reset today's data</button>
       <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:8px;padding-top:8px">
@@ -13619,6 +13705,7 @@ async function showBackupSheet() {
 function markBackupDone() {
   save('bloom_backup_date', Date.now());
   silentBackupDownload();
+  syncToVault();
 }
 
 function silentBackupDownload() {
@@ -13655,6 +13742,9 @@ function gatherFullBackupData() {
     onesignalPid: load('bloom_onesignal_pid'),
     wallFp: load('bloom_wall_fp'),
     wallHearted: load('bloom_wall_hearted'),
+    // Vault (metadata only, not passphrase)
+    vaultCodeHash: load('bloom_vault_state')?.codeHash || null,
+    vaultLastSync: load('bloom_vault_state')?.lastSync || null,
     // Meta
     version: VERSION,
     exported: new Date().toISOString(),
@@ -13767,6 +13857,299 @@ async function decryptData(encoded, passphrase) {
   const key = await deriveKey(passphrase, salt);
   const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
   return JSON.parse(new TextDecoder().decode(decrypted));
+}
+
+// ── Encrypted Cloud Vault ──────────────────────────────────
+// Safety deposit box model: encrypted client-side, stored server-side.
+// Server never sees plaintext data, passphrase, or recovery code.
+
+function generateVaultCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'BLOOM-';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  code += '-';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+async function hashVaultCode(code) {
+  const normalized = code.replace(/-/g, '').toUpperCase();
+  const encoded = new TextEncoder().encode(normalized);
+  const hash = await crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function setupVault(passphrase) {
+  // Generate unique recovery code (retry on collision)
+  let code, codeHash;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    code = generateVaultCode();
+    codeHash = await hashVaultCode(code);
+    const checkRes = await fetch('/api/vault', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'check', codeHash })
+    });
+    const checkResult = await checkRes.json();
+    if (checkResult.ok && !checkResult.exists) break;
+    if (attempt === 2) throw new Error('Could not generate unique code');
+  }
+
+  // Encrypt and save
+  const data = gatherFullBackupData();
+  const blob = await encryptData(data, passphrase);
+  const res = await fetch('/api/vault', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'save', codeHash, blob })
+  });
+  const result = await res.json();
+  if (!result.ok) throw new Error('Failed to create vault');
+
+  save('bloom_vault_state', { codeHash, passphrase, lastSync: Date.now() });
+  trackEvent('vault_created');
+  return code;
+}
+
+async function syncToVault() {
+  const vaultState = load('bloom_vault_state');
+  if (!vaultState || !vaultState.codeHash || !vaultState.passphrase) return;
+
+  // Debounce: max once per hour
+  if (vaultState.lastSync && Date.now() - vaultState.lastSync < 3600000) return;
+
+  try {
+    const data = gatherFullBackupData();
+    const blob = await encryptData(data, vaultState.passphrase);
+    const res = await fetch('/api/vault', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save', codeHash: vaultState.codeHash, blob })
+    });
+    const result = await res.json();
+    if (result.ok) {
+      vaultState.lastSync = Date.now();
+      save('bloom_vault_state', vaultState);
+    }
+  } catch(e) { /* silent background failure */ }
+}
+
+async function restoreFromVault(code, passphrase) {
+  const codeHash = await hashVaultCode(code);
+  const res = await fetch('/api/vault', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'load', codeHash })
+  });
+  const result = await res.json();
+  if (result.error === 'rate_limited') throw new Error('rate_limited');
+  if (!result.ok || !result.blob) throw new Error('not_found');
+
+  const data = await decryptData(result.blob, passphrase);
+  applyRestoreData(data);
+
+  // Re-establish vault on this device
+  save('bloom_vault_state', { codeHash, passphrase, lastSync: Date.now() });
+  trackEvent('vault_restored');
+  return data;
+}
+
+async function deleteVault() {
+  const vaultState = load('bloom_vault_state');
+  if (!vaultState || !vaultState.codeHash) return;
+  try {
+    await fetch('/api/vault', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', codeHash: vaultState.codeHash })
+    });
+  } catch(e) {}
+  save('bloom_vault_state', null);
+  trackEvent('vault_deleted');
+}
+
+// ── Vault & Recovery UI handlers ────────────────────────────
+
+async function handleVaultSetup() {
+  const p1 = document.getElementById('vault-pass-1').value;
+  const p2 = document.getElementById('vault-pass-2').value;
+  const err = document.getElementById('vault-setup-error');
+  err.style.display = 'none';
+
+  if (!p1 || p1.length < 6) { err.textContent = 'Passphrase must be at least 6 characters.'; err.style.display = 'block'; return; }
+  if (p1 !== p2) { err.textContent = 'Passphrases don\'t match.'; err.style.display = 'block'; return; }
+
+  const btn = document.getElementById('vault-setup-btn');
+  btn.textContent = 'Creating vault...';
+  btn.disabled = true;
+
+  try {
+    const code = await setupVault(p1);
+    // Show recovery code
+    document.getElementById('vault-setup-body').innerHTML = `
+      <h2 class="sheet-title">Your recovery code</h2>
+      <div style="background:rgba(var(--sage-rgb),0.1);border:2px solid rgba(var(--sage-rgb),0.3);border-radius:16px;padding:20px;text-align:center;margin-bottom:16px">
+        <div style="font-size:24px;font-weight:700;letter-spacing:3px;color:var(--sage-light);font-family:monospace">${code}</div>
+      </div>
+      <button class="btn btn-secondary btn-block" onclick="navigator.clipboard?.writeText('${code}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy code',2000)">Copy code</button>
+      <div style="background:rgba(255,180,80,0.08);border:1px solid rgba(255,180,80,0.15);border-radius:var(--r-lg);padding:12px 14px;margin:16px 0;font-size:12px;color:var(--amber-light);line-height:1.7">
+        <strong>Write this down and keep it somewhere safe.</strong> Without this code and your passphrase, your data cannot be recovered. We don't store either one.
+      </div>
+      <button class="btn btn-primary btn-block" onclick="closeAllSheets();showToast('Cloud vault active')">Done</button>`;
+  } catch(e) {
+    btn.textContent = 'Create cloud vault';
+    btn.disabled = false;
+    err.textContent = 'Could not create vault. Check your connection and try again.';
+    err.style.display = 'block';
+  }
+}
+
+function showRecoverOptions() {
+  document.getElementById('recover-options').style.display = 'flex';
+  document.getElementById('recover-vault-form').style.display = 'none';
+  document.getElementById('recover-link-form').style.display = 'none';
+}
+
+function showRecoverVault() {
+  document.getElementById('recover-options').style.display = 'none';
+  document.getElementById('recover-vault-form').style.display = 'block';
+  document.getElementById('recover-vault-error').style.display = 'none';
+  setTimeout(() => document.getElementById('recover-vault-code')?.focus(), 100);
+}
+
+function showRecoverLink() {
+  document.getElementById('recover-options').style.display = 'none';
+  document.getElementById('recover-link-form').style.display = 'block';
+  document.getElementById('recover-link-error').style.display = 'none';
+  setTimeout(() => document.getElementById('recover-link-input')?.focus(), 100);
+}
+
+function triggerRecoverFile() {
+  document.getElementById('recover-file-input').click();
+}
+
+async function handleRecoverFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  try {
+    const success = await importJSON(file);
+    if (success) {
+      const prefs = load('bloom_prefs') || {};
+      if (!prefs.onboarded) {
+        prefs.onboarded = true;
+        prefs.onboardDate = prefs.onboardDate || today();
+        save('bloom_prefs', prefs);
+      }
+      closeAllSheets();
+      showToast('Data restored! Reloading...');
+      setTimeout(() => location.reload(), 1200);
+    }
+  } catch(e) {
+    alert('Could not read this file. Make sure it is a valid Bloom backup (.json).');
+  }
+  input.value = '';
+}
+
+async function handleRecoverVault() {
+  const code = document.getElementById('recover-vault-code').value.trim();
+  const pass = document.getElementById('recover-vault-pass').value;
+  const err = document.getElementById('recover-vault-error');
+  err.style.display = 'none';
+
+  if (!code) { err.textContent = 'Please enter your recovery code.'; err.style.display = 'block'; return; }
+  if (!pass) { err.textContent = 'Please enter your passphrase.'; err.style.display = 'block'; return; }
+
+  const btn = document.getElementById('recover-vault-btn');
+  btn.textContent = 'Restoring...';
+  btn.disabled = true;
+
+  try {
+    await restoreFromVault(code, pass);
+    const prefs = load('bloom_prefs') || {};
+    if (!prefs.onboarded) {
+      prefs.onboarded = true;
+      prefs.onboardDate = prefs.onboardDate || today();
+      save('bloom_prefs', prefs);
+    }
+    closeAllSheets();
+    showToast('Welcome back! Your data is restored.');
+    setTimeout(() => location.reload(), 1200);
+  } catch(e) {
+    btn.textContent = 'Restore my data';
+    btn.disabled = false;
+    if (e.message === 'rate_limited') {
+      err.textContent = 'Too many attempts. Please wait an hour and try again.';
+    } else if (e.message === 'not_found') {
+      err.textContent = 'We couldn\'t find a vault with that code. Double-check and try again.';
+    } else {
+      err.textContent = 'That passphrase didn\'t work. It\'s the one you chose when you set up the vault.';
+    }
+    err.style.display = 'block';
+  }
+}
+
+async function syncToVaultManual() {
+  const vaultState = load('bloom_vault_state');
+  if (!vaultState || !vaultState.codeHash || !vaultState.passphrase) return;
+  try {
+    const data = gatherFullBackupData();
+    const blob = await encryptData(data, vaultState.passphrase);
+    const res = await fetch('/api/vault', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save', codeHash: vaultState.codeHash, blob })
+    });
+    const result = await res.json();
+    if (result.ok) {
+      vaultState.lastSync = Date.now();
+      save('bloom_vault_state', vaultState);
+      showToast('Vault synced!');
+      renderSettingsTab();
+    }
+  } catch(e) {
+    showToast('Sync failed. Check your connection.');
+  }
+}
+
+function showVaultCode() {
+  alert('Your recovery code is stored only on this device. If you need it, check wherever you wrote it down when you set up the vault.\n\nFor security, Bloom cannot display your recovery code again.');
+}
+
+function confirmDeleteVault() {
+  if (confirm('Remove your cloud vault? Your encrypted backup on the server will be deleted. Make sure you have another backup method before doing this.')) {
+    deleteVault();
+    showToast('Cloud vault removed.');
+    renderSettingsTab();
+  }
+}
+
+async function handleRecoverLink() {
+  const input = document.getElementById('recover-link-input').value.trim();
+  const err = document.getElementById('recover-link-error');
+  err.style.display = 'none';
+
+  if (!input) { err.textContent = 'Please paste a restore link.'; err.style.display = 'block'; return; }
+
+  try {
+    const url = new URL(input);
+    const encoded = url.searchParams.get('restore');
+    if (!encoded) throw new Error('no restore param');
+    const jsonStr = await decompressString(encoded);
+    const data = JSON.parse(jsonStr);
+    applyRestoreData(data);
+    const prefs = load('bloom_prefs') || {};
+    if (!prefs.onboarded) {
+      prefs.onboarded = true;
+      prefs.onboardDate = prefs.onboardDate || today();
+      save('bloom_prefs', prefs);
+    }
+    closeAllSheets();
+    showToast('Data restored! Reloading...');
+    setTimeout(() => location.reload(), 1200);
+  } catch(e) {
+    err.textContent = 'That doesn\'t look like a valid restore link. Make sure you copied the full URL.';
+    err.style.display = 'block';
+  }
 }
 
 // Simple compression using built-in CompressionStream API (gzip)
@@ -15563,9 +15946,8 @@ function renderOBWelcomeAndName(body, footer) {
       </div>` : ''}
       <div style="background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:16px;padding:16px 20px;margin-bottom:24px;width:100%">
         <div style="font-size:13px;color:var(--text-secondary);text-align:center;margin-bottom:10px">Been here before?</div>
-        <button class="btn btn-secondary btn-block" onclick="triggerOnboardingImport()" style="font-size:14px">📥 Import a backup to restore your data</button>
-        <input type="file" id="ob-import-file" accept=".json" style="display:none" onchange="handleOnboardingImport(this)">
-        <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:8px;line-height:1.5">If you exported a backup file before, you can skip setup entirely.</div>
+        <button class="btn btn-secondary btn-block" onclick="openSheet('recover-sheet');showRecoverOptions()" style="font-size:14px">Recover your data</button>
+        <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:8px;line-height:1.5">Cloud vault, backup file, or restore link.</div>
       </div>
       <div style="width:100%;text-align:left;margin-bottom:8px">
         <div class="ob-sub" style="margin-bottom:8px">What should we call you?</div>
@@ -16700,6 +17082,41 @@ function showBackupNudge(message, isFirst) {
 
   // Auto-dismiss after 15 seconds
   setTimeout(() => { if (banner.parentNode) banner.remove(); }, 15000);
+}
+
+function checkVaultNudge() {
+  if (load('bloom_vault_state')) return; // already set up
+  if (load('bloom_vault_nudge_dismissed')) return; // permanently dismissed
+  const historyData = load('bloom_history', {});
+  if (Object.keys(historyData).length < 7) return; // not enough data yet
+
+  setTimeout(() => {
+    const banner = document.createElement('div');
+    banner.setAttribute('role', 'alert');
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;background:rgba(var(--sage-rgb),0.95);color:var(--text-on-sage);padding:16px 20px;font-size:13px;line-height:1.6;display:flex;flex-direction:column;gap:10px;animation:slideDown 0.3s ease;backdrop-filter:blur(8px)';
+    banner.innerHTML = `
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <span style="font-size:18px;flex-shrink:0">☁️</span>
+        <div>You've been showing up for a while now. Want to protect your data with an encrypted cloud vault? No account needed. Your data stays fully private.</div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="vault-nudge-dismiss" style="background:transparent;border:1px solid rgba(255,255,255,0.3);color:inherit;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer">Not now</button>
+        <button id="vault-nudge-go" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:inherit;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:500">Set it up</button>
+      </div>`;
+    document.body.appendChild(banner);
+
+    banner.querySelector('#vault-nudge-dismiss').addEventListener('click', () => {
+      banner.remove();
+      save('bloom_vault_nudge_dismissed', true);
+    });
+    banner.querySelector('#vault-nudge-go').addEventListener('click', () => {
+      banner.remove();
+      save('bloom_vault_nudge_dismissed', true);
+      openSheet('vault-setup-sheet');
+    });
+
+    setTimeout(() => { if (banner.parentNode) banner.remove(); }, 20000);
+  }, 10000);
 }
 
 // ============================================================
@@ -18945,6 +19362,7 @@ function initApp() {
     showWhatsNew();
   }
   checkBackupReminder();
+  checkVaultNudge();
   checkSafariDataWarning();
   checkShowTutorial();
   // Local fallback reminders — only fire if push notifications aren't active
