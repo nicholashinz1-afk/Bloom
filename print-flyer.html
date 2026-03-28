@@ -33,18 +33,32 @@
 
   @media print {
     .instructions { display: none; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 8.5in;
+      height: 11in;
+      overflow: hidden;
+    }
+    .flyer {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
   }
 
   .flyer {
     width: 8.5in;
-    min-height: 11in;
+    height: 11in;
     background: #0d1610;
     color: #e8e0d0;
     padding: 0.75in;
+    padding-bottom: 0;
     display: flex;
     flex-direction: column;
     position: relative;
     overflow: hidden;
+    page-break-after: avoid;
+    page-break-inside: avoid;
   }
 
   /* Decorative background circles */
@@ -214,9 +228,11 @@
   /* Tear-off strip */
   .tearoff-strip {
     display: flex;
-    width: 100%;
+    width: calc(100% + 1.5in);
+    margin-left: -0.75in;
+    margin-right: -0.75in;
     border-top: 2px dashed rgba(122, 158, 126, 0.3);
-    margin-top: 24px;
+    margin-top: auto;
   }
 
   .tearoff-tab {
