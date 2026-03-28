@@ -233,6 +233,10 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 /* ============================================================
    STAGGERED CARD ENTRANCE
@@ -12270,6 +12274,12 @@ function renderSettingsTab() {
       <button class="btn btn-secondary btn-block" onclick="exportJSON()">📤 Export my data (unencrypted)</button>
       <button class="btn btn-secondary btn-block" onclick="exportCSV()">📊 Export history as CSV</button>
       <button class="btn btn-secondary btn-block" onclick="exportTherapistPDF()">📋 Export therapist-friendly report</button>
+      <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:8px;padding-top:8px">
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;font-weight:500">Restore from backup</div>
+        <button class="btn btn-secondary btn-block" onclick="triggerImportFile()">📥 Import backup file</button>
+        <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImportFile(this)">
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5">Accepts encrypted or unencrypted .json backup files exported from Bloom. Your current data will be replaced.</div>
+      </div>
       <button class="btn btn-ghost btn-block" onclick="resetToday()">↺ Reset today's data</button>
       <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:8px;padding-top:8px">
         <button class="btn btn-ghost btn-block" onclick="exportDiagnostics()">🔧 Export diagnostics (for bug reports)</button>
@@ -13574,6 +13584,11 @@ async function showBackupSheet() {
   await generateBackupLink();
   trackFeature('backup');
   trackEvent('backup_created');
+  save('bloom_backup_date', Date.now());
+}
+
+function markBackupDone() {
+  save('bloom_backup_date', Date.now());
 }
 
 // ── Backup encryption helpers (AES-GCM via Web Crypto) ────
@@ -13701,6 +13716,7 @@ async function exportEncryptedJSON() {
     a.click();
     URL.revokeObjectURL(url);
     showToast('Encrypted backup saved!');
+    markBackupDone();
   } catch(e) {
     alert('Encryption failed. Try again or use the unencrypted export.');
   }
@@ -13724,6 +13740,7 @@ function exportJSON() {
   a.download = `bloom-export-${today()}.json`;
   a.click();
   URL.revokeObjectURL(url);
+  markBackupDone();
 }
 
 function exportCSV() {
@@ -14210,6 +14227,57 @@ function exportTherapistPDF() {
     console.error('PDF generation failed:', err);
     showToast('Failed to generate PDF. Please try again.');
   });
+}
+
+function triggerImportFile() {
+  document.getElementById('import-file-input').click();
+}
+
+function triggerOnboardingImport() {
+  document.getElementById('ob-import-file').click();
+}
+
+async function handleOnboardingImport(input) {
+  const file = input.files[0];
+  if (!file) return;
+  try {
+    const success = await importJSON(file);
+    if (success) {
+      // Backup has prefs with onboarded:true, so just reload and main() will skip onboarding
+      const prefs = load('bloom_prefs');
+      if (prefs && prefs.onboarded) {
+        showToast('Welcome back! Restoring your data...');
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        // Backup didn't have prefs.onboarded (older backup), mark onboarded and reload
+        const restored = load('bloom_prefs') || {};
+        restored.onboarded = true;
+        restored.onboardDate = restored.onboardDate || today();
+        save('bloom_prefs', restored);
+        showToast('Welcome back! Restoring your data...');
+        setTimeout(() => location.reload(), 1200);
+      }
+    }
+  } catch(e) {
+    alert('Could not read this file. Make sure it is a valid Bloom backup (.json).');
+  }
+  input.value = '';
+}
+
+async function handleImportFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  try {
+    const success = await importJSON(file);
+    if (success) {
+      loadState();
+      showToast('Backup restored! Reloading...');
+      setTimeout(() => location.reload(), 1200);
+    }
+  } catch(e) {
+    alert('Could not read this file. Make sure it is a valid Bloom backup (.json).');
+  }
+  input.value = '';
 }
 
 async function importJSON(file) {
@@ -15057,6 +15125,12 @@ function renderOBWelcomeAndName(body, footer) {
       ${load('bloom_pending_buddy_invite', null) ? `<div style="background:rgba(var(--sage-rgb),0.1);border:1px solid rgba(var(--sage-rgb),0.25);border-radius:12px;padding:12px 16px;margin-bottom:20px;width:100%">
         <div style="font-size:13px;color:var(--sage-light);text-align:center">🤝 A buddy invite is waiting for you! Complete setup to connect.</div>
       </div>` : ''}
+      <div style="background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:16px;padding:16px 20px;margin-bottom:24px;width:100%">
+        <div style="font-size:13px;color:var(--text-secondary);text-align:center;margin-bottom:10px">Been here before?</div>
+        <button class="btn btn-secondary btn-block" onclick="triggerOnboardingImport()" style="font-size:14px">📥 Import a backup to restore your data</button>
+        <input type="file" id="ob-import-file" accept=".json" style="display:none" onchange="handleOnboardingImport(this)">
+        <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:8px;line-height:1.5">If you exported a backup file before, you can skip setup entirely.</div>
+      </div>
       <div style="width:100%;text-align:left;margin-bottom:8px">
         <div class="ob-sub" style="margin-bottom:8px">What should we call you?</div>
         <input type="text" id="ob-name-input" aria-label="Your name" placeholder="Your name..." value="${obData.name}" style="font-size:18px;padding:16px;width:100%">
@@ -16125,29 +16199,71 @@ function checkSafariDataWarning() {
 
 function checkBackupReminder() {
   const backupDate = load('bloom_backup_date');
-  const history = load('bloom_history', {});
-  const hasData = Object.keys(history).length > 0;
-  if (!hasData) return;
+  const historyData = load('bloom_history', {});
+  const entryCount = Object.keys(historyData).length;
+  if (entryCount === 0) return;
 
   const now = Date.now();
-  // Safari users get reminded every 7 days; others every 30
-  const reminderInterval = isSafariBrowser()
-    ? 7 * 24 * 60 * 60 * 1000
-    : 30 * 24 * 60 * 60 * 1000;
 
-  if (!backupDate || (now - backupDate) > reminderInterval) {
+  // First-time nudge: user has 3+ days of data but has never backed up
+  if (!backupDate && entryCount >= 3) {
     setTimeout(() => {
-      const safariNote = isSafariBrowser() ? ' Safari may clear data after 7 days of inactivity — backups are especially important.' : '';
-      if (confirm('Friendly reminder 🌿 — it\'s been a while since you saved a backup link.' + safariNote + ' Want to do that now?')) {
-        switchTab('settings');
-        setTimeout(() => {
-          toggleSettingsSection('data');
-          showBackupSheet();
-        }, 400);
-      }
-      save('bloom_backup_date', now);
-    }, 5000);
+      showBackupNudge(
+        'You\'ve been showing up for ' + entryCount + ' days! Your data only lives on this device. Save a quick backup so you never lose it.',
+        true
+      );
+    }, 8000);
+    return;
   }
+
+  // Recurring reminder: Safari every 5 days, others every 14 days
+  const reminderInterval = isSafariBrowser()
+    ? 5 * 24 * 60 * 60 * 1000
+    : 14 * 24 * 60 * 60 * 1000;
+
+  if (backupDate && (now - backupDate) > reminderInterval) {
+    setTimeout(() => {
+      const daysSince = Math.floor((now - backupDate) / (24 * 60 * 60 * 1000));
+      const safariNote = isSafariBrowser() ? ' Safari can clear data after 7 days of inactivity.' : '';
+      showBackupNudge(
+        'It\'s been ' + daysSince + ' days since your last backup.' + safariNote + ' A quick export keeps your ' + entryCount + ' days of progress safe.',
+        false
+      );
+    }, 8000);
+  }
+}
+
+function showBackupNudge(message, isFirst) {
+  // Non-blocking banner instead of confirm() dialog
+  const banner = document.createElement('div');
+  banner.setAttribute('role', 'alert');
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;background:rgba(var(--sage-rgb),0.95);color:var(--text-on-sage);padding:16px 20px;font-size:13px;line-height:1.6;display:flex;flex-direction:column;gap:10px;animation:slideDown 0.3s ease;backdrop-filter:blur(8px)';
+  banner.innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <span style="font-size:18px;flex-shrink:0">${isFirst ? '🌱' : '🌿'}</span>
+      <div>${message}</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="backup-nudge-dismiss" style="background:transparent;border:1px solid rgba(255,255,255,0.3);color:inherit;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer">Later</button>
+      <button id="backup-nudge-go" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:inherit;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:500">Back up now</button>
+    </div>`;
+  document.body.appendChild(banner);
+
+  banner.querySelector('#backup-nudge-dismiss').addEventListener('click', () => {
+    banner.remove();
+    save('bloom_backup_date', Date.now());
+  });
+  banner.querySelector('#backup-nudge-go').addEventListener('click', () => {
+    banner.remove();
+    switchTab('settings');
+    setTimeout(() => {
+      toggleSettingsSection('data');
+      showBackupSheet();
+    }, 400);
+  });
+
+  // Auto-dismiss after 15 seconds
+  setTimeout(() => { if (banner.parentNode) banner.remove(); }, 15000);
 }
 
 // ============================================================
