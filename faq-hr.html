@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d1610">
+<title>Bloom — FAQ for HR &amp; Compliance Teams</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @page {
+    size: letter;
+    margin: 0;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Instrument Sans', -apple-system, sans-serif;
+    background: #fff;
+  }
+
+  .instructions {
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+    padding: 16px;
+    line-height: 1.5;
+    background: #f9f9f9;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .instructions strong { color: #333; }
+
+  @media print {
+    .instructions { display: none; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 8.5in;
+      height: 11in;
+      overflow: hidden;
+    }
+    .page {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+
+  .page {
+    width: 8.5in;
+    height: 11in;
+    background: #0d1610;
+    color: #e8e0d0;
+    padding: 0.5in 0.6in;
+    position: relative;
+    overflow: hidden;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  .page::before {
+    content: '';
+    position: absolute;
+    top: -120px;
+    right: -120px;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: rgba(122, 158, 126, 0.04);
+  }
+
+  .content {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 6px;
+  }
+
+  .header img {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+  }
+
+  .header-text h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+
+  .header-text .tagline {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 13px;
+    font-weight: 300;
+    font-style: italic;
+    color: #a8c5ab;
+    margin-top: 2px;
+  }
+
+  .audience-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #c9954a;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(122, 158, 126, 0.2);
+  }
+
+  .intro {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #a3b5a5;
+    margin-bottom: 18px;
+  }
+
+  /* FAQ items */
+  .faq-item {
+    margin-bottom: 14px;
+  }
+
+  .faq-q {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e8e0d0;
+    margin-bottom: 4px;
+  }
+
+  .faq-a {
+    font-size: 12px;
+    line-height: 1.65;
+    color: #a3b5a5;
+  }
+
+  .faq-a strong {
+    color: #c8d0c4;
+    font-weight: 600;
+  }
+
+  /* Divider */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: rgba(122, 158, 126, 0.15);
+    margin: 16px 0;
+  }
+
+  .section-label {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #a8c5ab;
+    margin-bottom: 14px;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid rgba(122, 158, 126, 0.2);
+  }
+
+  .footer-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .footer-url {
+    font-size: 18px;
+    font-weight: 600;
+    color: #7a9e7e;
+  }
+
+  .footer-contact {
+    font-size: 11px;
+    color: #8a9e8c;
+  }
+
+  .footer-source {
+    font-size: 11px;
+    color: #8a9e8c;
+  }
+
+  .footer img {
+    width: 0.9in;
+    height: 0.9in;
+    border-radius: 8px;
+  }
+
+  .footer-meta {
+    text-align: right;
+  }
+
+  .footer-meta .scan {
+    font-size: 10px;
+    color: #8a9e8c;
+    margin-bottom: 4px;
+  }
+
+  .footer-free {
+    font-size: 10px;
+    color: #8a9e8c;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .disclaimer {
+    font-size: 9px;
+    color: rgba(138, 158, 140, 0.5);
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="instructions">
+  <strong>Bloom FAQ for HR &amp; Compliance Teams</strong><br>
+  Print this page (Ctrl/Cmd + P). Set margins to "None" and scale to 100%.<br>
+  Designed to answer common questions from HR, legal, and compliance teams.
+</div>
+
+<div class="page">
+  <div class="content">
+
+    <div class="header">
+      <img src="bloom-logo-512.png" alt="Bloom logo">
+      <div class="header-text">
+        <h1>Bloom</h1>
+        <div class="tagline">Self-care. No pressure.</div>
+      </div>
+    </div>
+    <div class="audience-label">Frequently Asked Questions for HR &amp; Compliance</div>
+
+    <p class="intro">
+      These questions come up when organizations evaluate Bloom as a wellness resource.
+      The short version: Bloom collects nothing, costs nothing, and requires nothing from IT.
+    </p>
+
+    <h2 class="section-label">Privacy &amp; Compliance</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">Is Bloom HIPAA-compliant?</div>
+      <div class="faq-a"><strong>HIPAA does not apply.</strong> Bloom is not a covered entity and collects no protected health information (PHI). All data stays on the employee's device. Nothing is transmitted to or stored on Bloom's servers.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Do we need a Business Associate Agreement (BAA)?</div>
+      <div class="faq-a"><strong>No.</strong> A BAA is only required when a vendor handles PHI on your behalf. Bloom never receives, processes, or stores any employee health data.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Can we see what data Bloom collects?</div>
+      <div class="faq-a"><strong>Zero data is collected.</strong> No accounts, no analytics, no tracking, no cookies for identification. The entire source code is public and auditable at github.com/nicholashinz1-afk/bloom.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Can managers or HR see employee usage?</div>
+      <div class="faq-a"><strong>No.</strong> There is no admin dashboard, no usage reporting, and no way to identify who uses Bloom. It is completely anonymous by design.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What about the AI journal reflections?</div>
+      <div class="faq-a">When an employee chooses to use AI reflections, only the journal text is sent to generate a response. <strong>Nothing is stored, logged, or linked to any identity.</strong> This feature is optional and off by default.</div>
+    </div>
+
+    <div class="divider"></div>
+    <h2 class="section-label">Cost &amp; Logistics</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">What does Bloom cost?</div>
+      <div class="faq-a"><strong>Nothing. Free forever.</strong> No licensing fees, no per-seat pricing, no contracts, no premium tier. Bloom is open source (AGPL-3.0) and will never be monetized.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What does IT need to do?</div>
+      <div class="faq-a"><strong>Nothing.</strong> Bloom runs in any web browser. No installation, no SSO integration, no provisioning. Employees visit bloomselfcare.app and start using it. There is nothing to maintain or update.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Is this a replacement for our EAP?</div>
+      <div class="faq-a"><strong>No.</strong> Bloom is a daily self-care companion, not therapy. It works alongside your EAP as a low-barrier tool employees can use on their own. The app includes a permanent disclaimer and always-accessible crisis resources (988, Crisis Text Line).</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">How do we share it with employees?</div>
+      <div class="faq-a">Share the link (bloomselfcare.app) or QR code in a wellness newsletter, benefits page, intranet, or awareness event. That's all it takes. No onboarding, no enrollment.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What if Bloom goes away?</div>
+      <div class="faq-a">Bloom is open source. Even if the hosted version disappeared, <strong>the code is permanently public</strong> and anyone can run it. Employee data is unaffected regardless, since it lives only on their own device.</div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-left">
+        <div class="footer-url">bloomselfcare.app</div>
+        <div class="footer-contact">Questions? bloomhabits@proton.me</div>
+        <div class="footer-source">Open source: github.com/nicholashinz1-afk/bloom</div>
+        <div class="disclaimer">
+          Bloom is a self-care companion, not a substitute for professional mental health care or EAP services.
+        </div>
+      </div>
+      <div class="footer-meta">
+        <div class="scan">Scan to try Bloom</div>
+        <img src="qr-code.png" alt="QR code to Bloom app">
+        <div class="footer-free">Free · Private · Open Source</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
