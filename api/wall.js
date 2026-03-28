@@ -272,6 +272,22 @@ export default async function handler(req, res) {
       return res.json({ ok: true, hearts: msg?.hearts || 0 });
     }
 
+    // Batch hearts: increment multiple messages in a single API call (1 read + 1 write instead of N reads + N writes)
+    if (action === 'heart-batch') {
+      const { ids } = body;
+      if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'Missing ids' });
+      // Cap batch size to prevent abuse
+      const batch = ids.slice(0, 50);
+      const messages = await getMessages();
+      let changed = false;
+      for (const id of batch) {
+        const msg = messages.find(m => m.id === id);
+        if (msg) { msg.hearts = (msg.hearts || 0) + 1; changed = true; }
+      }
+      if (changed) await saveMessages(messages);
+      return res.json({ ok: true, count: batch.length });
+    }
+
     if (action === 'report') {
       const { id } = body;
       if (!id) return res.status(400).json({ error: 'Missing id' });

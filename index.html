@@ -5885,7 +5885,13 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 function handleVisibilityChange() {
   if (document.visibilityState === 'hidden') {
     save('bloom_last_active', Date.now());
+    // Pause buddy polling while tab is hidden to conserve Vercel invocations
+    stopBuddyPolling();
   } else {
+    // Resume buddy polling when tab becomes visible again
+    if (buddyState.status === 'paired' || buddyState.status === 'searching') {
+      startBuddyPolling();
+    }
     // Check for app updates on every foreground return
     checkForUpdate();
     checkNudgeCredit();
@@ -17843,6 +17849,23 @@ function showWallStatus(text, color) {
   setTimeout(() => { if (status) status.style.display = 'none'; }, 5000);
 }
 
+// Batch heart writes: queue hearts and flush every 5s to reduce Redis commands
+let _wallHeartQueue = [];
+let _wallHeartFlushTimer = null;
+
+function _flushWallHearts() {
+  if (_wallHeartQueue.length === 0) return;
+  const ids = [..._wallHeartQueue];
+  _wallHeartQueue = [];
+  _wallHeartFlushTimer = null;
+  // Send all queued hearts in one request
+  fetch('/api/wall', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'heart-batch', ids }),
+  }).catch(() => {});
+}
+
 async function heartWallMessage(id) {
   if (wallHearted[id]) return;
   trackFeature('wall');
@@ -17855,14 +17878,21 @@ async function heartWallMessage(id) {
   if (msg) msg.hearts = (msg.hearts || 0) + 1;
   renderWallMessages();
 
-  try {
-    await timedFetch('/api/wall', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'heart', id }),
-    });
-  } catch(e) {}
+  // Queue the heart and flush after 5 seconds of inactivity
+  _wallHeartQueue.push(id);
+  if (_wallHeartFlushTimer) clearTimeout(_wallHeartFlushTimer);
+  _wallHeartFlushTimer = setTimeout(_flushWallHearts, 5000);
 }
+
+// Flush any pending hearts when leaving the page
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && _wallHeartQueue.length > 0) {
+    const ids = [..._wallHeartQueue];
+    _wallHeartQueue = [];
+    if (_wallHeartFlushTimer) { clearTimeout(_wallHeartFlushTimer); _wallHeartFlushTimer = null; }
+    navigator.sendBeacon('/api/wall', new Blob([JSON.stringify({ action: 'heart-batch', ids })], { type: 'application/json' }));
+  }
+});
 
 async function reportWallMessage(id) {
   if (confirm('Report this message as inappropriate?')) {
