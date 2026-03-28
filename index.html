@@ -17600,15 +17600,29 @@ if (!wallFingerprint) {
   save('bloom_wall_fp', wallFingerprint);
 }
 
-async function fetchWallMessages() {
+async function fetchWallMessages(forceRefresh) {
+  // Client-side cache: avoid hitting Redis on every Community tab visit
+  const WALL_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  if (!forceRefresh) {
+    const cached = load('bloom_wall_cache', null);
+    const cachedAt = load('bloom_wall_cache_ts', 0);
+    if (cached && (Date.now() - cachedAt) < WALL_CACHE_TTL) {
+      wallMessages = cached;
+      return;
+    }
+  }
   wallLoading = true;
   try {
     const res = await timedFetch('/api/wall');
     const data = await res.json();
     wallMessages = data.messages || [];
+    save('bloom_wall_cache', wallMessages);
+    save('bloom_wall_cache_ts', Date.now());
   } catch(e) {
-    // Fallback: show seed messages if API unavailable
-    wallMessages = getWallSeedMessages();
+    // Fallback: show cached messages, then seed messages
+    const cached = load('bloom_wall_cache', null);
+    if (cached) { wallMessages = cached; }
+    else { wallMessages = getWallSeedMessages(); }
   }
   wallLoading = false;
 }
@@ -17798,8 +17812,8 @@ async function postToWall() {
       haptic('medium');
       trackEvent('wall_post');
       showWallStatus('Your words are out there now, making someone\'s day a little brighter.', 'var(--sage)');
-      // Refresh messages only, preserve textarea
-      await fetchWallMessages();
+      // Refresh messages only, preserve textarea (force refresh to bypass cache)
+      await fetchWallMessages(true);
       renderWallMessages();
       // If self-harm language detected, gently surface crisis resources
       if (data.flag === 'self-harm') setTimeout(() => openCrisisSheet(), 800);
