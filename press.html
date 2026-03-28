@@ -489,6 +489,16 @@
       <span class="label">Business Cards</span>
       <a href="/print-business-card.html" class="download-link">View</a>
     </div>
+    <div class="logo-item">
+      <span class="label" style="font-size: 2rem;">📋</span>
+      <span class="label">One-Pager (General)</span>
+      <a href="/one-pager.html" class="download-link">View</a>
+    </div>
+    <div class="logo-item">
+      <span class="label" style="font-size: 2rem;">🏢</span>
+      <span class="label">One-Pager (HR / Workplace)</span>
+      <a href="/one-pager-hr.html" class="download-link">View</a>
+    </div>
   </div>
   <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 12px;">
     All print templates are included in the full press kit download above.
@@ -557,6 +567,10 @@ document.getElementById('download-kit').addEventListener('click', async function
     var logoDataURI = await blobToDataURI(logoBlob);
     var qrDataURI = await blobToDataURI(qrBlob);
 
+    // Fetch the OG image for embedding in the press page
+    var ogBlob = await fetch('/og-image.png').then(function(r) { return r.blob(); });
+    var ogDataURI = await blobToDataURI(ogBlob);
+
     // Static asset files (kept as-is in the zip)
     var assetFiles = [
       { path: '/bloom-logo-512.png', name: 'logos/bloom-logo-512.png' },
@@ -589,6 +603,9 @@ document.getElementById('download-kit').addEventListener('click', async function
       { path: '/print-poster.html', name: 'print-templates/poster-letter-size.html' },
       { path: '/print-flyer.html', name: 'print-templates/flyer-with-tear-offs.html' },
       { path: '/print-business-card.html', name: 'print-templates/business-cards.html' },
+      { path: '/one-pager.html', name: 'one-pagers/bloom-one-pager.html' },
+      { path: '/one-pager-hr.html', name: 'one-pagers/bloom-for-workplace-wellness.html' },
+      { path: '/press.html', name: 'bloom-press-kit.html' },
     ];
 
     var htmlResults = await Promise.all(
@@ -602,6 +619,9 @@ document.getElementById('download-kit').addEventListener('click', async function
             // Replace image references with embedded data URIs
             html = html.replace(/src=["'](?:\.\/|\/)?bloom-logo-512\.png["']/g, 'src="' + logoDataURI + '"');
             html = html.replace(/src=["'](?:\.\/|\/)?qr-code\.png["']/g, 'src="' + qrDataURI + '"');
+            html = html.replace(/src=["'](?:\.\/|\/)?og-image\.png["']/g, 'src="' + ogDataURI + '"');
+            // Remove absolute hrefs that won't work offline
+            html = html.replace(/href=["']\/(?!\/)/g, 'href="https://bloomselfcare.app/');
             return { name: f.name, content: html };
           })
           .catch(function() { return null; });

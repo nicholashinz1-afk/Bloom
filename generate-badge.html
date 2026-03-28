@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Generate Email Badge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { font-family: sans-serif; text-align: center; padding: 40px; background: #1a1a2e; color: #e8e0d0; }
+  canvas { display: block; margin: 20px auto; border: 1px solid #333; }
+  button { padding: 12px 24px; font-size: 16px; cursor: pointer; border: none; border-radius: 8px; background: #7a9e7e; color: #0d1610; font-weight: 600; margin: 8px; }
+  button:hover { background: #a8c5ab; }
+  p { color: #8a9e8c; margin-top: 12px; font-size: 14px; }
+  .preview { margin: 20px auto; max-width: 400px; }
+</style>
+</head>
+<body>
+<h2>Email Badge Generator</h2>
+<p>Wait for fonts to load (1-2 seconds), then click generate.</p>
+
+<canvas id="badge" width="640" height="140"></canvas>
+<div>
+  <button id="generate">Generate Badge</button>
+  <button id="save" disabled>Download email-badge.png</button>
+</div>
+<p>Renders at 2x resolution for crisp display. Display size: 320x70.</p>
+
+<script>
+function drawBadge() {
+  var canvas = document.getElementById('badge');
+  var ctx = canvas.getContext('2d');
+  var s = 2;
+
+  // Clear
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background rounded rect
+  var radius = 14 * s;
+  ctx.beginPath();
+  ctx.moveTo(radius, 0);
+  ctx.lineTo(canvas.width - radius, 0);
+  ctx.quadraticCurveTo(canvas.width, 0, canvas.width, radius);
+  ctx.lineTo(canvas.width, canvas.height - radius);
+  ctx.quadraticCurveTo(canvas.width, canvas.height, canvas.width - radius, canvas.height);
+  ctx.lineTo(radius, canvas.height);
+  ctx.quadraticCurveTo(0, canvas.height, 0, canvas.height - radius);
+  ctx.lineTo(0, radius);
+  ctx.quadraticCurveTo(0, 0, radius, 0);
+  ctx.closePath();
+  ctx.fillStyle = '#162019';
+  ctx.fill();
+
+  // Logo circles
+  var logoX = 30 * s;
+  var logoY = 35 * s;
+  var circleR = 8 * s;
+  var gap = 9 * s;
+  var colors = ['#a8c5ab', '#c9954a', '#b07878', '#6a9ab0'];
+  var offsets = [[-gap/2, -gap/2], [gap/2, -gap/2], [-gap/2, gap/2], [gap/2, gap/2]];
+  for (var i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.arc(logoX + offsets[i][0], logoY + offsets[i][1], circleR, 0, Math.PI * 2);
+    ctx.fillStyle = colors[i];
+    ctx.globalAlpha = 0.85;
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  var textX = 56 * s;
+
+  // "Bloom" title
+  ctx.font = '600 ' + (18 * s) + 'px Fraunces, Georgia, serif';
+  ctx.fillStyle = '#e8e0d0';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Bloom', textX, 22 * s);
+
+  // "Self-care. No pressure." in Instrument Sans
+  ctx.font = '500 ' + (9.5 * s) + 'px "Instrument Sans", -apple-system, sans-serif';
+  ctx.fillStyle = '#a8c5ab';
+  ctx.fillText('Self-care. No pressure.', textX, 36 * s);
+
+  // "Just you, showing up." in Fraunces italic
+  ctx.font = 'italic 300 ' + (9.5 * s) + 'px Fraunces, Georgia, serif';
+  ctx.fillStyle = '#8a9e8c';
+  ctx.fillText('Just you, showing up.', textX, 50 * s);
+
+  document.getElementById('save').disabled = false;
+}
+
+document.getElementById('generate').addEventListener('click', drawBadge);
+
+document.getElementById('save').addEventListener('click', function() {
+  var link = document.createElement('a');
+  link.download = 'email-badge.png';
+  link.href = document.getElementById('badge').toDataURL('image/png');
+  link.click();
+});
+
+// Auto-generate after fonts load
+document.fonts.ready.then(function() {
+  setTimeout(drawBadge, 200);
+});
+</script>
+</body>
+</html>
