@@ -13620,6 +13620,33 @@ function markBackupDone() {
   save('bloom_backup_date', Date.now());
 }
 
+function gatherFullBackupData() {
+  return {
+    prefs: load('bloom_prefs'),
+    xp: load('bloom_xp'),
+    today: load('bloom_today_' + today()),
+    history: load('bloom_history'),
+    wellness: load('bloom_wellness'),
+    week: load('bloom_week_' + weekStart()),
+    // Identity and buddy system
+    buddyId: load('bloom_buddy_id'),
+    buddyState: load('bloom_buddy_state'),
+    buddyList: load('bloom_buddy_list'),
+    buddyPrefs: load('bloom_buddy_prefs'),
+    uid: load('bloom_uid'),
+    // Milestones
+    milestones: load('bloom_milestones'),
+    shownMilestones: load('bloom_shown_milestones'),
+    // Push and community
+    onesignalPid: load('bloom_onesignal_pid'),
+    wallFp: load('bloom_wall_fp'),
+    wallHearted: load('bloom_wall_hearted'),
+    // Meta
+    version: VERSION,
+    exported: new Date().toISOString(),
+  };
+}
+
 async function showTransferQR() {
   openSheet('transfer-qr-sheet');
   trackFeature('transfer_qr');
@@ -13629,12 +13656,7 @@ async function showTransferQR() {
   const fallback = document.getElementById('transfer-qr-fallback');
 
   try {
-    const data = {
-      prefs: load('bloom_prefs'),
-      xp: load('bloom_xp'),
-      history: load('bloom_history'),
-      wellness: load('bloom_wellness'),
-    };
+    const data = gatherFullBackupData();
     const jsonStr = JSON.stringify(data);
     const encoded = await compressString(jsonStr);
     const url = 'https://' + PRODUCTION_DOMAIN + '/?restore=' + encoded;
@@ -13760,12 +13782,7 @@ async function decompressString(b64) {
 
 async function generateBackupLink() {
   try {
-    const data = {
-      prefs: load('bloom_prefs'),
-      xp: load('bloom_xp'),
-      history: load('bloom_history'),
-      wellness: load('bloom_wellness'),
-    };
+    const data = gatherFullBackupData();
     const jsonStr = JSON.stringify(data);
     const encoded = await compressString(jsonStr);
     const url = `https://bloomselfcare.app/?restore=${encoded}`;
@@ -13800,15 +13817,7 @@ async function exportEncryptedJSON() {
   if (!passphrase) return;
   if (passphrase.length < 4) { alert('Passphrase must be at least 4 characters.'); return; }
 
-  const data = {
-    version: VERSION,
-    exported: new Date().toISOString(),
-    prefs: load('bloom_prefs'),
-    xp: load('bloom_xp'),
-    today: load('bloom_today_' + today()),
-    history: load('bloom_history'),
-    wellness: load('bloom_wellness'),
-  };
+  const data = gatherFullBackupData();
 
   try {
     const encrypted = await encryptData(data, passphrase);
@@ -13829,15 +13838,7 @@ async function exportEncryptedJSON() {
 
 function exportJSON() {
   trackFeature('backup');
-  const data = {
-    version: VERSION,
-    exported: new Date().toISOString(),
-    prefs: load('bloom_prefs'),
-    xp: load('bloom_xp'),
-    today: load('bloom_today_' + today()),
-    history: load('bloom_history'),
-    wellness: load('bloom_wellness'),
-  };
+  const data = gatherFullBackupData();
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -14417,6 +14418,19 @@ function applyRestoreData(data) {
   if (data.today) save('bloom_today_' + today(), data.today);
   if (data.history) save('bloom_history', data.history);
   if (data.wellness) save('bloom_wellness', data.wellness);
+  // Extended data (buddy identity, milestones, weekly, etc.)
+  if (data.buddyId) save('bloom_buddy_id', data.buddyId);
+  if (data.buddyState) save('bloom_buddy_state', data.buddyState);
+  if (data.buddyList) save('bloom_buddy_list', data.buddyList);
+  if (data.buddyPrefs) save('bloom_buddy_prefs', data.buddyPrefs);
+  if (data.uid) save('bloom_uid', data.uid);
+  if (data.milestones) save('bloom_milestones', data.milestones);
+  if (data.shownMilestones) save('bloom_shown_milestones', data.shownMilestones);
+  if (data.week) save('bloom_week_' + weekStart(), data.week);
+  if (data.onesignalPid) save('bloom_onesignal_pid', data.onesignalPid);
+  if (data.wallFp) save('bloom_wall_fp', data.wallFp);
+  if (data.wallHearted) save('bloom_wall_hearted', data.wallHearted);
+  if (data.version) save('bloom_version', data.version);
 }
 
 async function tryRestoreFromURL() {
@@ -14501,23 +14515,29 @@ async function startMigration(banner) {
   goBtn.disabled = true;
 
   try {
-    const data = {
-      prefs: load('bloom_prefs'),
-      xp: load('bloom_xp'),
-      today: load('bloom_today_' + today()),
-      history: load('bloom_history'),
-      wellness: load('bloom_wellness'),
-    };
+    const data = gatherFullBackupData();
+
+    // Always download a backup file as a safety net
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const dlUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = dlUrl;
+    a.download = 'bloom-migration-' + today() + '.json';
+    a.click();
+    URL.revokeObjectURL(dlUrl);
+
     const jsonStr = JSON.stringify(data);
     const encoded = await compressString(jsonStr);
     const url = 'https://' + PRODUCTION_DOMAIN + '/?restore=' + encoded;
 
+    save('bloom_migration_complete', true);
+
     if (url.length <= 16000) {
-      save('bloom_migration_complete', true);
       trackEvent('migration_url');
       showMigrationSuccess(url);
     } else {
-      await migrationFileDownloadFallback(data, banner);
+      trackEvent('migration_file');
+      showMigrationSuccessFileOnly();
     }
   } catch(e) {
     goBtn.textContent = 'Move my data';
@@ -14544,49 +14564,36 @@ function showMigrationSuccess(url) {
       <div style="background:rgba(255,180,80,0.08);border:1px solid rgba(255,180,80,0.15);border-radius:12px;padding:12px 16px;margin-bottom:16px">
         <p style="color:var(--amber-light);font-size:12px;line-height:1.6;margin:0">
           <strong>Next steps:</strong><br>
-          1. Install the new app from Chrome's menu<br>
+          1. Install the new app from your browser's menu<br>
           2. Come back here and delete this old app from your home screen
         </p>
       </div>
-      <p style="color:var(--text-muted);font-size:11px;line-height:1.5">If the link opens inside this app, copy it and paste it into Chrome instead.</p>
+      <div style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:12px;padding:12px 16px;margin-bottom:12px">
+        <p style="color:var(--text-secondary);font-size:12px;line-height:1.6;margin:0">
+          <strong>Backup file also saved.</strong> If the link doesn't work, open bloomselfcare.app on your new device and use Settings > Import backup file to restore from <em>bloom-migration-${today()}.json</em> in your Downloads.
+        </p>
+      </div>
+      <p style="color:var(--text-muted);font-size:11px;line-height:1.5">If the link opens inside this app, copy it and paste it into your browser instead.</p>
     </div>`;
   document.body.appendChild(overlay);
 
   // Also try window.open as a fallback to break out of PWA
   overlay.querySelector('#migration-open-link').addEventListener('click', function(e) {
-    // Try window.open first to force external browser
     const w = window.open(url, '_blank');
-    if (w) {
-      e.preventDefault(); // window.open worked, don't follow the link
-    }
-    // If window.open was blocked, the <a target="_blank"> will handle it
+    if (w) e.preventDefault();
   });
 }
 
-async function migrationFileDownloadFallback(data, banner) {
-  trackEvent('migration_file');
-
-  // Trigger file download
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const dlUrl = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = dlUrl;
-  a.download = 'bloom-migration-' + today() + '.json';
-  a.click();
-  URL.revokeObjectURL(dlUrl);
-
-  save('bloom_migration_complete', true);
-
-  const targetUrl = 'https://' + PRODUCTION_DOMAIN + '/?migrated=file';
-
-  // Full-screen takeover with instructions
+function showMigrationSuccessFileOnly() {
+  // When data is too large for URL, file was already downloaded
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:10002;background:var(--bg-main);display:flex;align-items:center;justify-content:center;padding:24px';
+  const targetUrl = 'https://' + PRODUCTION_DOMAIN + '/?migrated=file';
   overlay.innerHTML = `
     <div style="max-width:360px;text-align:center">
       <div style="font-size:48px;margin-bottom:16px">📦</div>
       <h2 style="color:var(--sage);margin-bottom:8px;font-family:Fraunces,serif;font-size:22px">Backup saved!</h2>
-      <p style="color:var(--text-secondary);font-size:14px;line-height:1.7;margin-bottom:8px">
+      <p style="color:var(--text-secondary);font-size:14px;line-height:1.7;margin-bottom:24px">
         Your data was too large for a quick transfer, so we saved a backup file. Now open your new home and import it there.
       </p>
       <a href="${targetUrl}" target="_blank" rel="noopener" id="migration-file-open"
@@ -14595,7 +14602,7 @@ async function migrationFileDownloadFallback(data, banner) {
       </a>
       <div style="background:rgba(255,180,80,0.08);border:1px solid rgba(255,180,80,0.15);border-radius:12px;padding:12px 16px">
         <p style="color:var(--amber-light);font-size:12px;line-height:1.6;margin:0">
-          <strong>On the new site:</strong> You'll be asked to upload the file that just downloaded (<em>bloom-migration-${today()}.json</em>).
+          <strong>On the new site:</strong> Use Settings > Import backup file to restore from <em>bloom-migration-${today()}.json</em> in your Downloads.
         </p>
       </div>
     </div>`;
