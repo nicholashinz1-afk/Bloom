@@ -51,29 +51,28 @@ Not every AI response needs the most powerful model. Bloom's responses fall into
 | Weekly insights | 1x/week | Medium (synthesizes a week of data) | Claude Haiku or Sonnet |
 | Monthly reflections | 1x/month | Medium-High (synthesizes a month) | Claude Sonnet |
 
-**Implementation: Groq as primary, Claude as premium**
+**Implementation: Cloudflare Workers AI as primary, Claude as premium**
 
-Groq offers free inference for open-source models like Llama 3 8B with extremely fast response times (200-500ms). For short, warm, empathetic responses, Llama 3 8B performs well.
+Cloudflare Workers AI offers free inference for open-source models at the edge. For short, warm, empathetic responses, open models perform well.
 
 ```
-Daily reflections + reframes  -->  Groq (Llama 3 8B) -- FREE
+Daily reflections + reframes  -->  Cloudflare Workers AI (open model) -- FREE
 Weekly insights               -->  Claude Haiku       -- ~$0.001/call
 Monthly reflections           -->  Claude Sonnet      -- ~$0.004/call
-Fallback if Groq is down      -->  Claude Haiku       -- graceful degradation
+Fallback if Workers AI is down -->  Claude Haiku       -- graceful degradation
 ```
 
 **Cost impact:**
 - Before: ~$0.003/reflection x 12 reflections/user/month = $0.036/user/month
-- After: ~$0.002/user/month (2 Claude calls for weekly/monthly, rest free via Groq)
+- After: ~$0.002/user/month (2 Claude calls for weekly/monthly, rest free via Workers AI)
 - **$5/month supports ~2,500 daily active users instead of ~110**
 
 **Guardrails stay intact:** `filterAIResponse()` runs on every response regardless of which model generated it. The system prompt, clinical language blocking, and crisis resource surfacing are all client-side.
 
 **Fallback chain:**
-1. Try Groq (free, fast)
-2. If Groq fails, try Cloudflare Workers AI (free tier, slower)
-3. If both fail, try Claude Haiku (paid, reliable)
-4. If everything fails, return the scripted fallback response (already implemented)
+1. Try Cloudflare Workers AI (free tier)
+2. If that fails, try Claude Haiku (paid, reliable)
+3. If everything fails, return the scripted fallback response (already implemented)
 
 This means Bloom works even if every external AI service goes down.
 
@@ -233,9 +232,8 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 **Result: ~400 DAU capacity, $0/month additional cost**
 
 ### Phase 2 -- Free AI Tier (Week 3-4)
-- [ ] Add Groq integration as primary LLM for daily reflections
-- [ ] Add Cloudflare Workers AI as secondary fallback
-- [ ] Implement fallback chain (Groq -> Workers AI -> Claude Haiku -> scripted)
+- [ ] Add Cloudflare Workers AI as primary LLM for daily reflections
+- [ ] Implement fallback chain (Workers AI -> Claude Haiku -> scripted)
 - [ ] Add client-side wall caching
 - [ ] Remove client-side health checks
 
