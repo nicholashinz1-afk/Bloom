@@ -3293,11 +3293,11 @@ select:focus {
     <p class="text-sm text-muted" style="line-height:1.7;margin-bottom:16px">All you need to get your data back is a recovery code and a passphrase you choose. No email. No login. No identity.</p>
     <div style="margin-bottom:12px">
       <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px">Choose a passphrase (min 6 characters)</label>
-      <input type="password" id="vault-pass-1" placeholder="Your passphrase..." style="width:100%;padding:12px;font-size:15px" autocomplete="new-password">
+      <input type="text" id="vault-pass-1" placeholder="Your passphrase..." style="width:100%;padding:12px;font-size:15px;-webkit-text-security:disc" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
     </div>
     <div style="margin-bottom:16px">
       <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px">Confirm passphrase</label>
-      <input type="password" id="vault-pass-2" placeholder="Confirm passphrase..." style="width:100%;padding:12px;font-size:15px" autocomplete="new-password">
+      <input type="text" id="vault-pass-2" placeholder="Confirm passphrase..." style="width:100%;padding:12px;font-size:15px;-webkit-text-security:disc" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
     </div>
     <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Pick something you'll remember. This is the key to your data.</div>
     <button class="btn btn-primary btn-block" id="vault-setup-btn" onclick="handleVaultSetup()">Create cloud vault</button>
@@ -3334,7 +3334,7 @@ select:focus {
       </div>
       <div style="margin-bottom:16px">
         <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px">Passphrase</label>
-        <input type="password" id="recover-vault-pass" placeholder="Your passphrase..." style="width:100%;padding:12px;font-size:15px" autocomplete="off">
+        <input type="text" id="recover-vault-pass" placeholder="Your passphrase..." style="width:100%;padding:12px;font-size:15px;-webkit-text-security:disc" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
       </div>
       <button class="btn btn-primary btn-block" id="recover-vault-btn" onclick="handleRecoverVault()">Restore my data</button>
       <div id="recover-vault-error" style="display:none;margin-top:10px;font-size:13px;color:var(--amber-light);text-align:center;line-height:1.5"></div>
