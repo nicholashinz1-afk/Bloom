@@ -183,6 +183,126 @@
     overflow: hidden;
   }
 
+  /* Instagram Story graphic (1080x1920 ratio) */
+  .ig-story {
+    aspect-ratio: 9 / 16;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 36px 72px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    max-width: 320px;
+  }
+
+  .ig-story.dark {
+    background: #0d1610;
+    border: 1px solid rgba(122, 158, 126, 0.15);
+  }
+
+  .ig-story.sage-bg {
+    background: linear-gradient(145deg, #1a2e1e, #0d1610);
+    border: 1px solid rgba(122, 158, 126, 0.15);
+  }
+
+  .ig-story.warm-bg {
+    background: linear-gradient(145deg, #2a1f14, #0d1610);
+    border: 1px solid rgba(201, 149, 74, 0.15);
+  }
+
+  .ig-story.rose-bg {
+    background: linear-gradient(145deg, #2a1a1a, #0d1610);
+    border: 1px solid rgba(176, 120, 120, 0.15);
+  }
+
+  .ig-story::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: rgba(122, 158, 126, 0.04);
+  }
+
+  .ig-story .logo-small {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ig-story .big-text {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: #e8e0d0;
+    line-height: 1.4;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ig-story .sub-text {
+    font-size: 15px;
+    color: #a3b5a5;
+    line-height: 1.7;
+    position: relative;
+    z-index: 1;
+    max-width: 90%;
+  }
+
+  .ig-story .accent-text {
+    color: var(--sage-light);
+  }
+
+  .ig-story .amber-text {
+    color: var(--amber);
+  }
+
+  .ig-story .url {
+    position: absolute;
+    bottom: 24px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--sage);
+    z-index: 1;
+    opacity: 0.7;
+  }
+
+  .ig-story .sticker-hint {
+    background: rgba(122, 158, 126, 0.12);
+    border: 1px dashed rgba(122, 158, 126, 0.3);
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .story-graphics-grid {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x mandatory;
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
+
+  .story-graphics-grid .ig-story {
+    min-width: 270px;
+    scroll-snap-align: start;
+  }
+
   .ig-graphic.dark {
     background: #0d1610;
     border: 1px solid rgba(122, 158, 126, 0.15);
@@ -505,7 +625,11 @@
     .ig-graphic { padding: 28px 28px 48px; }
     .ig-graphic .big-text { font-size: 22px; }
     .ig-graphic .sub-text { font-size: 13px; }
+    .ig-story { max-width: 260px; padding: 48px 28px 60px; }
+    .ig-story .big-text { font-size: 20px; }
+    .ig-story .sub-text { font-size: 13px; }
     .graphics-grid { grid-template-columns: 1fr; }
+    .story-graphics-grid { flex-wrap: nowrap; }
     .time-grid { grid-template-columns: 1fr; }
   }
 </style>
@@ -624,29 +748,25 @@ You don't have to do anything. But it's there when you're ready.<button class="c
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post within 1 hour of feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-0a">New here?
-
-Bloom is a free self-care app. No accounts. No tracking. No cost.
-
-Your data stays on your phone.</div>
-      <button class="copy-btn" onclick="copyCaption('story-0a')">Copy</button>
-      <div class="slide-instruction">Plain text on solid dark background. Short, welcoming. This is for people who just landed on your profile and are checking Stories first.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">App screenshot</span></div>
-      <div class="slide-content" id="story-0b">This is what it looks like inside.</div>
-      <button class="copy-btn" onclick="copyCaption('story-0b')">Copy</button>
-      <div class="slide-instruction">Screenshot of the Bloom Daily tab (the one with habits and mood). Let people see the actual app. Real screenshots build trust faster than graphics.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 3 <span class="slide-type">Link sticker</span></div>
-      <div class="slide-content" id="story-0c">Try it. It's free.
-
-bloomselfcare.app</div>
-      <button class="copy-btn" onclick="copyCaption('story-0c')">Copy</button>
-      <div class="slide-instruction">Add a link sticker to bloomselfcare.app. Keep it dead simple. No pressure language. The "try it, it's free" angle removes the last barrier.</div>
+    <div class="story-graphics-grid">
+      <div class="ig-story dark">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text">New here?</div>
+        <div class="sub-text">Bloom is a free self-care app. No accounts. No tracking. No cost.<br><br>Your data stays on your phone.</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story sage-bg">
+        <div class="big-text" style="font-size: 20px;">This is what it looks like inside.</div>
+        <div class="sub-text"><span class="accent-text">Use an app screenshot for this slide.</span><br><br>Screenshot the Bloom Daily tab (habits and mood). Real screenshots build trust faster than graphics.</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story warm-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text">Try it. It's free.</div>
+        <div class="sub-text">bloomselfcare.app</div>
+        <div class="sticker-hint">Add a link sticker to bloomselfcare.app</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post all 3 slides at once, within 1 hour of the feed post going live. If the share from the larger account happens tomorrow, these Stories will still be up (24h window).</div>
   </div>
@@ -698,29 +818,26 @@ Link in bio.<button class="copy-btn" onclick="copyCaption('caption-1')">Copy</bu
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post within 1 hour of feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-1a">I built a free mental health app.
-
-No accounts. No cost. No data collection.
-
-Just a quiet place to show up for yourself.</div>
-      <button class="copy-btn" onclick="copyCaption('story-1a')">Copy</button>
-      <div class="slide-instruction">Plain text on solid dark background. Keep it simple. No graphic needed.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Poll sticker</span></div>
-      <div class="slide-content" id="story-1b">Would you use a free self-care app?</div>
-      <button class="copy-btn" onclick="copyCaption('story-1b')">Copy</button>
-      <div class="slide-instruction">Add a poll sticker with "Yes" / "Tell me more" as the two options. Both answers are positive. This drives engagement and makes people feel included from day one.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 3 <span class="slide-type">Link sticker</span></div>
-      <div class="slide-content" id="story-1c">It's called Bloom.
-
-bloomselfcare.app</div>
-      <button class="copy-btn" onclick="copyCaption('story-1c')">Copy</button>
-      <div class="slide-instruction">Add a link sticker to bloomselfcare.app. Text on dark background. Short and clean. This is the only slide with the link. Don't overdo it.</div>
+    <div class="story-graphics-grid">
+      <div class="ig-story dark">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text">I built a free mental health app.</div>
+        <div class="sub-text">No accounts. No cost. No data collection.<br><br>Just a quiet place to show up for yourself.</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story sage-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text">Would you use a free self-care app?</div>
+        <div class="sticker-hint">Add a poll sticker: "Yes" / "Tell me more"</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story warm-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text">It's called Bloom.</div>
+        <div class="sub-text">bloomselfcare.app</div>
+        <div class="sticker-hint">Add a link sticker to bloomselfcare.app</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post all 3 slides at once, within 1 hour of the feed post going live.</div>
   </div>
@@ -772,19 +889,18 @@ That's the whole point. No guilt. No shame. Just you, showing up when you can.<b
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post 30 min after feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-2a">Your streak broke.
-
-Just kidding. Bloom doesn't do streaks.</div>
-      <button class="copy-btn" onclick="copyCaption('story-2a')">Copy</button>
-      <div class="slide-instruction">White text on solid dark background. The pause between lines creates the same bait-and-switch as the carousel. Keep people reading.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Poll sticker</span></div>
-      <div class="slide-content" id="story-2b">Has a broken streak ever made you quit an app entirely?</div>
-      <button class="copy-btn" onclick="copyCaption('story-2b')">Copy</button>
-      <div class="slide-instruction">Poll sticker: "Yes, multiple times" / "I'm immune somehow." Both options are relatable. This question gets people thinking about their own experience, which leads to DMs and shares.</div>
+    <div class="story-graphics-grid">
+      <div class="ig-story warm-bg">
+        <div class="big-text" style="color: #e0b87a;">Your streak broke.</div>
+        <div class="sub-text" style="margin-top: 24px;">Just kidding.<br><br><span class="accent-text">Bloom doesn't do streaks.</span></div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story sage-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 20px;">Has a broken streak ever made you quit an app entirely?</div>
+        <div class="sticker-hint">Add a poll: "Yes, multiple times" / "I'm immune somehow"</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post 30 minutes after the feed post. The carousel needs time to accumulate swipes first.</div>
   </div>
@@ -830,27 +946,25 @@ Because hard days are expected. They're not failure. They're part of it. And you
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post 30 min after feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Poll sticker</span></div>
-      <div class="slide-content" id="story-3a">Did you have a hard day today?</div>
-      <button class="copy-btn" onclick="copyCaption('story-3a')">Copy</button>
-      <div class="slide-instruction">Plain text on dark background. Poll sticker: "Yeah" / "Hanging in there." No negative option. Both answers are valid and gentle. This question alone will drive more engagement than the feed post.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-3b">Bloom has a hard day mode.
-
-It drops your habits down to your top 2. No long checklist. No pressure.
-
-Because hard days are expected. They're not failure.</div>
-      <button class="copy-btn" onclick="copyCaption('story-3b')">Copy</button>
-      <div class="slide-instruction">Text on dark background. Let the words do the work. No link sticker on this one. It's not a sales moment. It's an empathy moment.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 3 <span class="slide-type">Question sticker</span></div>
-      <div class="slide-content" id="story-3c">What's one kind thing you did for yourself today?</div>
-      <button class="copy-btn" onclick="copyCaption('story-3c')">Copy</button>
-      <div class="slide-instruction">Question sticker. Responses go to your DMs, which you can reshare as Stories the next day (with permission or anonymized). This creates a content loop and makes followers feel heard.</div>
+    <div class="story-graphics-grid">
+      <div class="ig-story rose-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text">Did you have a hard day today?</div>
+        <div class="sticker-hint">Add a poll: "Yeah" / "Hanging in there"</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story dark">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 20px;">Bloom has a hard day mode.</div>
+        <div class="sub-text">It drops your habits down to your top 2. No long checklist. No pressure.<br><br><span class="accent-text">Because hard days are expected. They're not failure.</span></div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story sage-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 20px;">What's one kind thing you did for yourself today?</div>
+        <div class="sticker-hint">Add a question sticker. Reshare responses tomorrow.</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post 30 min after the feed post. Evening Stories get high completion rates because people browse more slowly at night.</div>
   </div>
@@ -899,30 +1013,24 @@ Mental health tools shouldn't cost your privacy.<button class="copy-btn" onclick
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post 45 min after feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-4a">What Bloom knows about you:</div>
-      <button class="copy-btn" onclick="copyCaption('story-4a')">Copy</button>
-      <div class="slide-instruction">White text, centered, dark background. This is the hook. People will tap to the next slide to see the answer.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-4b">Nothing.
-
-No account. No email. No tracking. Your data never leaves your phone.</div>
-      <button class="copy-btn" onclick="copyCaption('story-4b')">Copy</button>
-      <div class="slide-instruction">The word "Nothing." should be large. The rest smaller below it. This mirrors the carousel bait-and-switch. Add a "Share" button sticker or write "Send this to someone who cares about privacy" at the bottom.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 3 <span class="slide-type">Quiz sticker</span></div>
-      <div class="slide-content" id="story-4c">How many mental health apps collect your personal data?
-
-A) Some of them
-B) Most of them
-C) Almost all of them
-D) All of the above</div>
-      <button class="copy-btn" onclick="copyCaption('story-4c')">Copy</button>
-      <div class="slide-instruction">Quiz sticker. Set "C" as the correct answer. Quiz stickers get extremely high interaction rates. People love testing themselves. This also educates without lecturing.</div>
+    <div class="story-graphics-grid">
+      <div class="ig-story dark">
+        <div class="big-text">What Bloom knows about you:</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story sage-bg">
+        <div class="big-text" style="font-size: 36px;">Nothing.</div>
+        <div class="sub-text" style="margin-top: 24px;">No account. No email. No tracking.<br><br>Your data never leaves your phone.</div>
+        <div class="sticker-hint">Add a share sticker: "Send this to someone who cares about privacy"</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story warm-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 18px;">How many mental health apps collect your personal data?</div>
+        <div class="sub-text" style="text-align: left; margin-top: 16px;">A) Some of them<br>B) Most of them<br>C) Almost all of them<br>D) All of the above</div>
+        <div class="sticker-hint">Add a quiz sticker. Correct answer: C</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post 45 min after the feed post. Saturday mornings have slower engagement so give the feed post more breathing room.</div>
   </div>
@@ -973,19 +1081,19 @@ Lieberman et al., 2007. Putting Feelings into Words.<button class="copy-btn" onc
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post 30 min after feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-5a">Naming how you feel actually changes what's happening in your brain.
-
-It's called affect labeling. When you put words to your emotions, activity in your brain's alarm system goes down.</div>
-      <button class="copy-btn" onclick="copyCaption('story-5a')">Copy</button>
-      <div class="slide-instruction">Plain text on dark background. Let the science speak. No flashy design needed. This is the kind of content people screenshot and send to friends.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Emoji slider sticker</span></div>
-      <div class="slide-content" id="story-5b">How are you feeling right now?</div>
-      <button class="copy-btn" onclick="copyCaption('story-5b')">Copy</button>
-      <div class="slide-instruction">Use an emoji slider sticker (the sliding scale one). Pick a calm emoji like the leaf or cloud. This lets people actually do the thing the post is about. They name their feeling. That's the whole point. Very high interaction rate.</div>
+    <div class="story-graphics-grid">
+      <div class="ig-story dark">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 20px;">Naming how you feel actually changes what's happening in your brain.</div>
+        <div class="sub-text" style="margin-top: 16px;">It's called affect labeling. When you put words to your emotions, activity in your brain's alarm system goes down.</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story sage-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text">How are you feeling right now?</div>
+        <div class="sticker-hint">Add an emoji slider sticker (leaf or cloud emoji)</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post 30 min after the feed post. Monday morning attention spans are short so keep it to 2 slides.</div>
   </div>
@@ -1034,24 +1142,21 @@ Next time you feel your chest tighten or your thoughts start racing, try it. It'
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post 15 min after feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Screen recording</span></div>
-      <div class="slide-content" id="story-6a">Screen record the 4-7-8 breathing exercise in Bloom. Just the animation. No talking. No editing.</div>
-      <div class="slide-instruction">Open Bloom, go to the breathing exercise, hit screen record, do one full cycle (about 20 seconds). Trim the beginning and end so it starts clean. This is your highest-performing Story format for this niche. People watch it and actually breathe along.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-6b">4 seconds in. 7 seconds hold. 8 seconds out.
-
-Save the post for when you need it.</div>
-      <button class="copy-btn" onclick="copyCaption('story-6b')">Copy</button>
-      <div class="slide-instruction">Plain text. Add a "See post" link sticker pointing to the feed post. "Save the post" is a direct call to action that actually works because you're offering something useful, not just asking for engagement.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 3 (optional) <span class="slide-type">Poll sticker</span></div>
-      <div class="slide-content" id="story-6c">Did you actually just breathe along with that?</div>
-      <button class="copy-btn" onclick="copyCaption('story-6c')">Copy</button>
-      <div class="slide-instruction">Poll sticker: "Yeah, actually" / "Saved it for later." Both answers are wins. This slide is optional but it's fun and people love admitting they did the thing.</div>
+    <p class="tip" style="margin-bottom: 12px;">Slide 1: Screen record the 4-7-8 breathing exercise in Bloom. Just the animation, no talking, no editing. ~20 seconds.</p>
+    <div class="story-graphics-grid">
+      <div class="ig-story dark">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 22px;">4 seconds in.<br>7 seconds hold.<br>8 seconds out.</div>
+        <div class="sub-text" style="margin-top: 24px;"><span class="accent-text">Save the post for when you need it.</span></div>
+        <div class="sticker-hint">Add a "See post" link sticker to the feed post</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story sage-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 20px;">Did you actually just breathe along with that?</div>
+        <div class="sticker-hint">Add a poll: "Yeah, actually" / "Saved it for later"</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post 15 min after the feed post. Breathing content is urgent-feeling so the Story should come fast. Wednesday evening people are looking for something calming.</div>
   </div>
@@ -1106,18 +1211,14 @@ Save this post. You might not need it today, but someone might.<button class="co
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post 15 min after feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Graphic repost</span></div>
-      <div class="slide-content" id="story-7a">Repost the "If you need help right now" graphic directly from the feed post.</div>
-      <div class="slide-instruction">This is the one time a direct repost is the right call. Use Instagram's "Share to Story" button on the feed post itself. The numbers (988, 741741) need to be visible without tapping into the post. Lives can depend on this being easy to find.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-7b">You are not alone.
-
-If you or someone you know is struggling, save this. Share it. You might not need it today, but someone in your life might.</div>
-      <button class="copy-btn" onclick="copyCaption('story-7b')">Copy</button>
-      <div class="slide-instruction">Plain text, dark background. Add a "Share" sticker. No poll, no question, no engagement gimmick on this one. The content matters more than the metrics. Let it be what it is.</div>
+    <p class="tip" style="margin-bottom: 12px;">Slide 1: Repost the "If you need help right now" graphic directly from the feed post using Instagram's Share to Story button.</p>
+    <div class="story-graphics-grid">
+      <div class="ig-story rose-bg">
+        <div class="big-text">You are not alone.</div>
+        <div class="sub-text" style="margin-top: 20px;">If you or someone you know is struggling, save this. Share it.<br><br>You might not need it today, but someone in your life might.</div>
+        <div class="sticker-hint">Add a share sticker. No engagement gimmick on this one.</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post within 15 min. Crisis content should go out fast. Don't overthink this one. Just get it out there.</div>
   </div>
@@ -1168,24 +1269,20 @@ Link in bio.<button class="copy-btn" onclick="copyCaption('caption-8')">Copy</bu
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post 30 min after feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Screen recording</span></div>
-      <div class="slide-content" id="story-8a">Screen record yourself opening Bloom's journal and typing a few words. Just 10-15 seconds. Show what the experience feels like.</div>
-      <div class="slide-instruction">Don't type anything too personal. Something simple like "Today I'm feeling tired but I showed up anyway." Trim to 10-15 seconds. The point is to show how easy and low-pressure the journal is. People need to see it's not a blank page staring at them.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-8b">Writing about what you're going through helps you process it.
-
-Not because it fixes anything. Because putting it into words creates distance between you and the feeling.</div>
-      <button class="copy-btn" onclick="copyCaption('story-8b')">Copy</button>
-      <div class="slide-instruction">Plain text, dark background. This is the key quote from the caption. It works on its own.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 3 <span class="slide-type">Question sticker</span></div>
-      <div class="slide-content" id="story-8c">Do you journal? What does it do for you?</div>
-      <button class="copy-btn" onclick="copyCaption('story-8c')">Copy</button>
-      <div class="slide-instruction">Question sticker. People who journal love talking about it. You'll get responses you can reshare as Stories throughout the week (anonymized or with permission). This creates content from your community and makes people feel valued.</div>
+    <p class="tip" style="margin-bottom: 12px;">Slide 1: Screen record yourself opening Bloom's journal and typing a few words. 10-15 seconds. Show how easy it is.</p>
+    <div class="story-graphics-grid">
+      <div class="ig-story dark">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 20px;">Writing about what you're going through helps you process it.</div>
+        <div class="sub-text" style="margin-top: 16px;">Not because it fixes anything. Because putting it into words creates distance between you and the feeling.</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story sage-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 20px;">Do you journal? What does it do for you?</div>
+        <div class="sticker-hint">Add a question sticker. Reshare responses throughout the week.</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post 30 min after feed post. Sunday morning people take their time with Stories.</div>
   </div>
@@ -1232,26 +1329,21 @@ Research calls it the progress principle (Amabile & Kramer, 2011). Of all the th
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post 30 min after feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-9a">Your brain is wired to remember what went wrong.
-
-Small wins push back.</div>
-      <button class="copy-btn" onclick="copyCaption('story-9a')">Copy</button>
-      <div class="slide-instruction">Plain text, dark background. Short and punchy. This sets up the interactive slide.</div>
+    <div class="story-graphics-grid">
+      <div class="ig-story dark">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 22px;">Your brain is wired to remember what went wrong.</div>
+        <div class="sub-text" style="margin-top: 16px;"><span class="accent-text">Small wins push back.</span></div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story warm-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 22px;">One small win from today. Anything counts.</div>
+        <div class="sticker-hint">Add a question sticker. Reshare 3-5 responses next morning.</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Question sticker</span></div>
-      <div class="slide-content" id="story-9b">One small win from today. Anything counts.</div>
-      <button class="copy-btn" onclick="copyCaption('story-9b')">Copy</button>
-      <div class="slide-instruction">Question sticker. The "anything counts" part is important. It lowers the bar so people actually respond. "I drank water." "I got out of bed." "I texted my mom back." All valid. Reshare a few responses as Stories later that day or the next morning. This is your content loop.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 3 (next day) <span class="slide-type">Reshared responses</span></div>
-      <div class="slide-content" id="story-9c">Reshare 3-5 of the best responses from the question sticker.</div>
-      <div class="slide-instruction">Post these the next morning. Add a small comment to each one like "This counts." or "See? You showed up." Keep your responses short and warm. This makes the people who replied feel seen, and it shows new followers that your community is real and active.</div>
-    </div>
-    <div class="story-timing">Slide 1-2: post 30 min after feed post. Slide 3: next morning around 9 AM. This stretches the post's engagement across two days.</div>
+    <div class="story-timing">Slides 1-2: post 30 min after feed post. Next morning ~9 AM: reshare responses with "This counts." or "See? You showed up."</div>
   </div>
 </div>
 
@@ -1297,21 +1389,21 @@ github.com/nicholashinz1-afk/bloom<button class="copy-btn" onclick="copyCaption(
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post 30 min after feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-10a">When a mental health app says "we don't collect your data" you shouldn't have to take their word for it.
-
-Bloom is 100% open source. Every line of code is public.</div>
-      <button class="copy-btn" onclick="copyCaption('story-10a')">Copy</button>
-      <div class="slide-instruction">Plain text, dark background. Add hashtag stickers: #buildinpublic #opensource. These hashtags have active discovery communities on Instagram. Dev and indie maker accounts follow these tags.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Link sticker</span></div>
-      <div class="slide-content" id="story-10b">The whole codebase is here.
-
-github.com/nicholashinz1-afk/bloom</div>
-      <button class="copy-btn" onclick="copyCaption('story-10b')">Copy</button>
-      <div class="slide-instruction">Add a link sticker to the GitHub repo. This is the only post where linking to GitHub makes more sense than linking to the app. The dev audience wants to see the code, not the landing page.</div>
+    <div class="story-graphics-grid">
+      <div class="ig-story dark">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 18px;">When a mental health app says "we don't collect your data" you shouldn't have to take their word for it.</div>
+        <div class="sub-text" style="margin-top: 16px;"><span class="accent-text">Bloom is 100% open source. Every line of code is public.</span></div>
+        <div class="sticker-hint">Add hashtag stickers: #buildinpublic #opensource</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story sage-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 22px;">The whole codebase is here.</div>
+        <div class="sub-text">github.com/nicholashinz1-afk/bloom</div>
+        <div class="sticker-hint">Add a link sticker to the GitHub repo</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post 30 min after feed post. This one's straightforward. Two slides is enough.</div>
   </div>
@@ -1359,28 +1451,21 @@ Bloom walks you through it step by step. Takes about 2 minutes.<button class="co
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post 30 min after feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Screen recording</span></div>
-      <div class="slide-content" id="story-11a">Screen record the 5-4-3-2-1 grounding exercise in Bloom. Walk through the whole thing. About 30 seconds.</div>
-      <div class="slide-instruction">Open Bloom, start the grounding exercise, screen record yourself going through each step. Longer than the breathing recording because grounding has more steps. Trim the start and end. No narration needed. The exercise guides itself.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-11b">5 things you can see.
-4 you can touch.
-3 you can hear.
-2 you can smell.
-1 you can taste.
-
-Try it right now. Takes 2 minutes.</div>
-      <button class="copy-btn" onclick="copyCaption('story-11b')">Copy</button>
-      <div class="slide-instruction">Plain text, dark background. The "Try it right now" is a soft CTA. People actually do grounding exercises when prompted in Stories because the format is intimate and in-the-moment. Add a "Save the post" link sticker pointing back to the feed post.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 3 <span class="slide-type">Emoji slider sticker</span></div>
-      <div class="slide-content" id="story-11c">How anxious are you feeling right now?</div>
-      <button class="copy-btn" onclick="copyCaption('story-11c')">Copy</button>
-      <div class="slide-instruction">Emoji slider with a calm face or leaf emoji. This gives people permission to check in with themselves. High interaction rate. The data doesn't matter. The act of pausing to answer does.</div>
+    <p class="tip" style="margin-bottom: 12px;">Slide 1: Screen record the 5-4-3-2-1 grounding exercise in Bloom. Walk through the whole thing. ~30 seconds.</p>
+    <div class="story-graphics-grid">
+      <div class="ig-story dark">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 20px;">5 things you can see.<br>4 you can touch.<br>3 you can hear.<br>2 you can smell.<br>1 you can taste.</div>
+        <div class="sub-text" style="margin-top: 20px;"><span class="accent-text">Try it right now. Takes 2 minutes.</span></div>
+        <div class="sticker-hint">Add a "Save the post" link sticker to the feed post</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story sage-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text">How anxious are you feeling right now?</div>
+        <div class="sticker-hint">Add an emoji slider (leaf or calm face emoji)</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post 30 min after feed post. Saturday mornings are calm. Match the energy.</div>
   </div>
@@ -1429,20 +1514,19 @@ If you need professional help, please get it. Bloom is for the other 23 hours of
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post 30 min after feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-12a">Bloom is not therapy.
-And it never pretends to be.
-
-If you need professional help, please get it. Bloom is for the other 23 hours of the day.</div>
-      <button class="copy-btn" onclick="copyCaption('story-12a')">Copy</button>
-      <div class="slide-instruction">Plain text, dark background. This is a values statement. It should feel honest and direct. No stickers, no engagement prompts. Let it stand on its own. Therapists and counselors will share this because so few apps draw this boundary clearly.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Poll sticker</span></div>
-      <div class="slide-content" id="story-12b">Do you think apps should be more honest about what they can and can't do?</div>
-      <button class="copy-btn" onclick="copyCaption('story-12b')">Copy</button>
-      <div class="slide-instruction">Poll sticker: "Absolutely" / "Long overdue." Both options agree. This isn't really a question. It's a value signal. People who vote feel aligned with you. That's how you build community, not just followers.</div>
+    <div class="story-graphics-grid">
+      <div class="ig-story dark">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 20px;">Bloom is not therapy.<br><span style="font-weight: 300; font-style: italic; color: #a3b5a5;">And it never pretends to be.</span></div>
+        <div class="sub-text" style="margin-top: 20px;">If you need professional help, please get it. Bloom is for the other 23 hours of the day.</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story sage-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 18px;">Do you think apps should be more honest about what they can and can't do?</div>
+        <div class="sticker-hint">Add a poll: "Absolutely" / "Long overdue"</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post 30 min after feed post. This is a trust-building post. Don't rush it with a fast Story.</div>
   </div>
@@ -1489,20 +1573,15 @@ This isn't a feature list to check a box. It's because the people who need self-
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post 30 min after feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Screen recording</span></div>
-      <div class="slide-content" id="story-13a">Screen record toggling between Bloom's accessibility modes: high contrast on/off, large text on/off. About 15 seconds.</div>
-      <div class="slide-instruction">Open Bloom's settings, toggle high contrast mode and large text mode on camera. Show the before and after. Seeing it is more powerful than reading about it. Trim to 15 seconds.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-13b">Mental health tools should work for everyone.
-
-Screen readers. Keyboard navigation. High contrast. Large text. 44px touch targets. Reduced motion.
-
-The people who need these tools the most are often the ones other apps forget about.</div>
-      <button class="copy-btn" onclick="copyCaption('story-13b')">Copy</button>
-      <div class="slide-instruction">Plain text, dark background. Add hashtag stickers: #a11y #inclusivedesign. These hashtags reach the accessibility and UX design communities. Share sticker with "Know someone who works in accessibility? Send this to them."</div>
+    <p class="tip" style="margin-bottom: 12px;">Slide 1: Screen record toggling Bloom's accessibility modes (high contrast, large text). ~15 seconds.</p>
+    <div class="story-graphics-grid">
+      <div class="ig-story dark">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 18px;">Mental health tools should work for everyone.</div>
+        <div class="sub-text" style="margin-top: 16px;">Screen readers. Keyboard navigation. High contrast. Large text. 44px touch targets. Reduced motion.<br><br><span class="accent-text">The people who need these tools the most are often the ones other apps forget about.</span></div>
+        <div class="sticker-hint">Add hashtag stickers: #a11y #inclusivedesign</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post 30 min after feed post. This one's simple. Two slides, let the screen recording do the talking.</div>
   </div>
@@ -1551,27 +1630,25 @@ Research shows social connection improves odds of survival by 50% (Holt-Lunstad 
 
   <div class="story-section">
     <div class="story-section-label">Story Companion — post 20 min after feed post</div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 1 <span class="slide-type">Text on dark background</span></div>
-      <div class="slide-content" id="story-14a">Sometimes you just need someone who checks in.
-
-Not someone who judges. Not someone who fixes. Just someone who's there.</div>
-      <button class="copy-btn" onclick="copyCaption('story-14a')">Copy</button>
-      <div class="slide-instruction">Plain text, dark background. This line is designed to be screenshotted. It works on its own. No branding needed. Let the words carry it.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 2 <span class="slide-type">Mention sticker</span></div>
-      <div class="slide-content" id="story-14b">Tag someone who checks in on you.</div>
-      <button class="copy-btn" onclick="copyCaption('story-14b')">Copy</button>
-      <div class="slide-instruction">Text on dark background. Add a mention sticker or just write "Tag them" with an arrow pointing to the mention field. When people tag someone, that person sees the Story, visits your profile, and often follows. This is the strongest organic growth mechanic on Instagram. It's also genuinely nice. People like being appreciated.</div>
-    </div>
-    <div class="story-slide">
-      <div class="slide-number">Slide 3 <span class="slide-type">Link sticker</span></div>
-      <div class="slide-content" id="story-14c">Bloom Buddy pairs you with an anonymous peer who checks in. No names. No pressure. Just two people being gentle with each other.
-
-bloomselfcare.app</div>
-      <button class="copy-btn" onclick="copyCaption('story-14c')">Copy</button>
-      <div class="slide-instruction">Add a link sticker to bloomselfcare.app. This is the last Story of the calendar. Close it with the product and the mission. Keep it warm.</div>
+    <div class="story-graphics-grid">
+      <div class="ig-story dark">
+        <div class="big-text" style="font-size: 20px;">Sometimes you just need someone who checks in.</div>
+        <div class="sub-text" style="margin-top: 16px;">Not someone who judges. Not someone who fixes. Just someone who's there.</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story sage-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 22px;">Tag someone who checks in on you.</div>
+        <div class="sticker-hint">Add a mention sticker. This is the strongest organic growth mechanic on Instagram.</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
+      <div class="ig-story warm-bg">
+        <img class="logo-small" src="/bloom-logo-512.png" alt="">
+        <div class="big-text" style="font-size: 18px;">Bloom Buddy pairs you with an anonymous peer who checks in.</div>
+        <div class="sub-text" style="margin-top: 16px;">No names. No pressure. Just two people being gentle with each other.</div>
+        <div class="sticker-hint">Add a link sticker to bloomselfcare.app</div>
+        <div class="url">bloomselfcare.app</div>
+      </div>
     </div>
     <div class="story-timing">Post 20 min after feed post. Friday evening, people are on their phones. Don't wait too long. This is your closing statement for the entire batch. Make it count.</div>
   </div>
@@ -1593,6 +1670,7 @@ function copyCaption(id) {
 
 // Add download buttons to all graphics after page loads
 document.addEventListener('DOMContentLoaded', function() {
+  // Feed graphics (1080x1080)
   var graphics = document.querySelectorAll('.ig-graphic');
   graphics.forEach(function(graphic, i) {
     graphic.id = 'graphic-' + i;
@@ -1600,34 +1678,54 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.className = 'dl-btn';
     btn.textContent = 'Download PNG';
     btn.setAttribute('data-target', 'graphic-' + i);
+    btn.setAttribute('data-type', 'feed');
     btn.addEventListener('click', function() {
       downloadGraphic(this);
     });
     graphic.parentNode.insertBefore(btn, graphic.nextSibling);
   });
+  // Story graphics (1080x1920)
+  var stories = document.querySelectorAll('.ig-story');
+  stories.forEach(function(story, i) {
+    story.id = 'story-graphic-' + i;
+    var btn = document.createElement('button');
+    btn.className = 'dl-btn';
+    btn.textContent = 'Download Story PNG';
+    btn.setAttribute('data-target', 'story-graphic-' + i);
+    btn.setAttribute('data-type', 'story');
+    btn.addEventListener('click', function() {
+      downloadGraphic(this);
+    });
+    story.parentNode.insertBefore(btn, story.nextSibling);
+  });
 });
 
 function downloadGraphic(btn) {
   var targetId = btn.getAttribute('data-target');
+  var isStory = btn.getAttribute('data-type') === 'story';
   var el = document.getElementById(targetId);
   btn.textContent = 'Rendering...';
   btn.disabled = true;
 
-  // Temporarily force the graphic to 1080x1080 for high-res export
+  var w = isStory ? 1080 : 1080;
+  var h = isStory ? 1920 : 1080;
+
   var origWidth = el.style.width;
   var origHeight = el.style.height;
   var origAspect = el.style.aspectRatio;
   var origMinWidth = el.style.minWidth;
-  el.style.width = '1080px';
-  el.style.height = '1080px';
+  var origMaxWidth = el.style.maxWidth;
+  el.style.width = w + 'px';
+  el.style.height = h + 'px';
   el.style.aspectRatio = 'auto';
   el.style.minWidth = 'auto';
+  el.style.maxWidth = 'none';
 
   html2canvas(el, {
     backgroundColor: null,
     scale: 1,
-    width: 1080,
-    height: 1080,
+    width: w,
+    height: h,
     useCORS: true,
     logging: false
   }).then(function(canvas) {
@@ -1635,21 +1733,23 @@ function downloadGraphic(btn) {
     el.style.height = origHeight;
     el.style.aspectRatio = origAspect;
     el.style.minWidth = origMinWidth;
+    el.style.maxWidth = origMaxWidth;
 
     var link = document.createElement('a');
     link.download = targetId + '.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
 
-    btn.textContent = 'Download PNG';
+    btn.textContent = isStory ? 'Download Story PNG' : 'Download PNG';
     btn.disabled = false;
   }).catch(function() {
     el.style.width = origWidth;
     el.style.height = origHeight;
     el.style.aspectRatio = origAspect;
     el.style.minWidth = origMinWidth;
+    el.style.maxWidth = origMaxWidth;
 
-    btn.textContent = 'Download PNG';
+    btn.textContent = isStory ? 'Download Story PNG' : 'Download PNG';
     btn.disabled = false;
     alert('Download failed. Try screenshotting instead.');
   });
