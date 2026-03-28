@@ -5944,7 +5944,7 @@ window.addEventListener('pageshow', (e) => {
 const _localNotifCount = { count: 0, resetTs: 0 };
 async function sendLocalNotification(title, body, tag) {
   try {
-    if (Notification.permission !== 'granted') return;
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
     // Rate limit: max 3 local notifications per 60 seconds to prevent flood on app open
     const now = Date.now();
     if (now - _localNotifCount.resetTs > 60000) {
@@ -6161,6 +6161,10 @@ async function testPushNotification() {
   if (!statusEl) return;
 
   // Check permission
+  if (typeof Notification === 'undefined') {
+    statusEl.textContent = '⚠ Notifications not supported in this browser.';
+    return;
+  }
   if (Notification.permission === 'default') {
     statusEl.textContent = 'Requesting permission...';
     const result = await Notification.requestPermission();
@@ -6249,7 +6253,7 @@ function checkNudgeCredit() {
 
 // Returns true if real push notifications are active (OneSignal player ID exists + permission granted)
 function pushNotificationsActive() {
-  return !!load('bloom_onesignal_pid', null) && Notification.permission === 'granted';
+  return !!load('bloom_onesignal_pid', null) && typeof Notification !== 'undefined' && Notification.permission === 'granted';
 }
 
 // Check reminders every 15 minutes (fallback ONLY when push notifications are not active)
@@ -13220,6 +13224,11 @@ function testNotification() {
   ];
   update(lines.join('\n'));
 
+  if (typeof Notification === 'undefined') {
+    lines.push('Notifications not supported in this browser');
+    update(lines.join('\n'));
+    return;
+  }
   if (Notification.permission !== 'granted') {
     Notification.requestPermission().then(p => {
       lines.push('Permission result: ' + p);
@@ -16603,6 +16612,7 @@ if (!bloomBuddyId) {
   save('bloom_buddy_id', bloomBuddyId);
 }
 let buddyState = load('bloom_buddy_state', { status: 'none' }); // none | searching | paired
+let buddySearchStartedAt = load('bloom_buddy_search_started', null); // timestamp when search began
 let buddyCachedBuddies = load('bloom_buddy_list', []); // array of buddy objects
 let buddyCachedMessages = {}; // keyed by pairId
 let buddyLoading = false;
@@ -16739,7 +16749,26 @@ function startBuddyPolling() {
       fetchBuddyMessages();
     }, 300000); // 5 minutes
   } else if (buddyState.status === 'searching') {
-    buddyPollTimer = setInterval(() => {
+    buddyPollTimer = setInterval(async () => {
+      // After 30 minutes unmatched, auto-retry find-match to trigger admin fallback
+      if (buddySearchStartedAt && (Date.now() - buddySearchStartedAt) >= 30 * 60 * 1000) {
+        const prefs = load('bloom_buddy_prefs', {});
+        const data = await buddyApi({
+          action: 'find-match',
+          buddyId: ensureBuddyId(),
+          prefs,
+        });
+        if (data.ok && data.matched) {
+          buddyState = { status: 'paired' };
+          buddySearchStartedAt = null;
+          save('bloom_buddy_state', buddyState);
+          save('bloom_buddy_search_started', null);
+          haptic('medium');
+          fetchBuddyData();
+          trackEvent('buddy_pair_fallback');
+          return;
+        }
+      }
       fetchBuddyData(); // check if matched
     }, 30000); // 30 seconds while searching
   }
@@ -16819,14 +16848,19 @@ async function buddyFindMatch(prefs) {
   });
   if (data.ok && data.matched) {
     buddyState = { status: 'paired' };
+    buddySearchStartedAt = null;
     save('bloom_buddy_state', buddyState);
+    save('bloom_buddy_search_started', null);
     haptic('medium');
     closeAllSheets();
     fetchBuddyData();
     trackEvent('buddy_pair');
   } else if (data.ok && data.queued) {
     buddyState = { status: 'searching' };
+    buddySearchStartedAt = Date.now();
     save('bloom_buddy_state', buddyState);
+    save('bloom_buddy_search_started', buddySearchStartedAt);
+    save('bloom_buddy_prefs', prefs || {});
     closeAllSheets();
     renderBuddyContent();
     startBuddyPolling();
@@ -16836,7 +16870,9 @@ async function buddyFindMatch(prefs) {
 async function buddyCancelSearch() {
   await buddyApi({ action: 'cancel-search', buddyId: ensureBuddyId() });
   buddyState = { status: 'none' };
+  buddySearchStartedAt = null;
   save('bloom_buddy_state', buddyState);
+  save('bloom_buddy_search_started', null);
   stopBuddyPolling();
   renderBuddyContent();
 }
