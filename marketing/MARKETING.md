@@ -326,13 +326,50 @@ For Mozilla Foundation, Google.org, mental health foundations, etc.:
 
 ---
 
+## Content Calendar
+
+A full content calendar lives at [`/content.html`](/content.html) with ready-to-use captions, hashtags, graphics, and Story companions for every post. Everything has copy buttons. Graphics can be downloaded as PNGs directly from the page.
+
+**Schedule:** Every 2 days, starting Mar 28. Four weeks of content (12 posts + a pre-launch bonus post).
+
+**Posting strategy:**
+- **Best times:** Weekday mornings (9-11 AM EST), weekend late mornings (10 AM-12 PM), evening posts (7-8 PM) for emotional/crisis content
+- **Stories come second, not simultaneously.** Post the feed post first. Wait 15-60 minutes, then post the Story companion. The feed post needs its own engagement window before you drive attention to Stories.
+- **First hour matters most.** Reply to every comment and DM within 60 minutes. Instagram decides reach based on early engagement velocity.
+- **Engagement types:** Each post is tagged (save-driven, share-driven, comment-driven, swipe-driven) so you know what each post is designed to do.
+
+**Content themes rotate through:**
+1. Origin / mission ("I built this because I needed it")
+2. Feature highlights (no streak pressure, hard day mode, journaling, breathing, buddy system)
+3. Values (privacy, open source, free forever)
+4. Science-backed concepts (affect labeling, grounding)
+5. Crisis resources
+6. Philosophy (not therapy, accessibility)
+
+### Pre-launch strategy (Mar 28)
+
+When expecting a traffic spike (e.g., a larger account sharing Bloom), post a "welcome mat" the day before:
+- A feed post that explains what Bloom is, written for people seeing it for the first time
+- Pin it to the grid so new profile visitors see it immediately
+- Post a Story companion with an app screenshot and link sticker timed so it's still live (24h window) when the share goes out
+- Don't acknowledge the incoming share. Just look like an active, cared-for project.
+
+### Technical prep for traffic spikes
+
+Before any expected traffic spike, the following changes reduce the risk of hitting free-tier limits:
+- **Client-side wall caching** (5-minute localStorage TTL) cuts ~80% of wall-related Redis reads
+- **Visibility-based buddy polling** pauses polling when the browser tab is hidden, saves ~40-60% of buddy Vercel invocations
+- **Batched wall hearts** queues heart taps for 5 seconds and sends them in a single API call instead of one per tap
+- **Static asset caching headers** (images 30 days, JS/CSS 1 day) reduces edge bandwidth on repeat visits
+
+These are documented in the commit history and implemented in `index.html`, `api/wall.js`, and `vercel.json`.
+
+---
+
 ## What's Next
 
 Things to consider as Bloom grows:
 
-- **Custom domain.** A short, memorable URL makes everything easier to share (flyers, word of mouth, QR codes). Something like `bloomselfcare.app` or similar.
-- **Social accounts.** Even a simple presence on Twitter/X or Instagram gives people a place to find you and share.
-- **Press kit page.** A simple `/press` page with logo downloads, screenshots, and the elevator pitch.
 - **App store presence.** PWAs can be listed in the Microsoft Store and Google Play via PWABuilder. Free visibility.
 - **Testimonials.** As people use Bloom, collect quotes (with permission) for the site and outreach.
 - **App screenshots for README.** A few screenshots of the actual app would make the GitHub page more compelling.
