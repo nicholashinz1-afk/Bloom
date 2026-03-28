@@ -181,11 +181,21 @@ ${(() => {
 
 ## Community & Social Events
 ${(() => {
-    const pairs = data.events.filter(e => e.event === 'buddy_pair').length;
+    const findMatch = data.events.filter(e => e.event === 'buddy_find_match').length;
+    const pairMatch = data.events.filter(e => e.event === 'buddy_pair_match').length;
+    const pairInvite = data.events.filter(e => e.event === 'buddy_pair_invite').length;
+    const pairFallback = data.events.filter(e => e.event === 'buddy_pair_fallback').length;
+    const createInvite = data.events.filter(e => e.event === 'buddy_create_invite').length;
+    const acceptInvite = data.events.filter(e => e.event === 'buddy_accept_invite').length;
+    const cancelSearch = data.events.filter(e => e.event === 'buddy_cancel_search').length;
+    const messages = data.events.filter(e => e.event === 'buddy_send_message').length;
+    const nudges = data.events.filter(e => e.event === 'buddy_send_nudge').length;
+    const blooms = data.events.filter(e => e.event === 'buddy_send_bloom').length;
     const unpairs = data.events.filter(e => e.event === 'buddy_unpair').length;
     const wallPosts = data.events.filter(e => e.event === 'wall_post').length;
     const onboarding = data.events.filter(e => e.event === 'onboarding_complete').length;
-    return `Buddy pairings: ${pairs}, Buddy unpairings: ${unpairs}, Wall posts: ${wallPosts}, Onboarding completions: ${onboarding}`;
+    const totalPairings = pairMatch + pairInvite + pairFallback;
+    return `Buddy find-match attempts: ${findMatch}, Successful pairings: ${totalPairings} (${pairMatch} anonymous match, ${pairInvite} invite, ${pairFallback} admin fallback), Invites created: ${createInvite}, Invites accepted: ${acceptInvite}, Searches cancelled: ${cancelSearch}, Messages sent: ${messages}, Nudges sent: ${nudges}, Blooms sent: ${blooms}, Unpairings: ${unpairs}, Wall posts: ${wallPosts}, Onboarding completions: ${onboarding}`;
   })()}
 
 ## Recent Events
@@ -201,7 +211,7 @@ Provide your audit as JSON with this structure:
   "summary": "1-2 sentence overall UX health summary"
 }
 
-Focus on: engagement patterns, underused features, AI reflection journey (which features drive AI usage), hard day mode discoverability, session performance, mood logging patterns, navigation friction, onboarding completion, buddy adoption and retention (pair vs unpair ratio). Be specific and actionable. Remember this is an early-stage app — frame findings as growth opportunities rather than failures.`;
+Focus on: engagement patterns, underused features, AI reflection journey (which features drive AI usage), hard day mode discoverability, session performance, mood logging patterns, navigation friction, onboarding completion, buddy system health (find-match attempts vs successful pairings, anonymous match vs invite vs admin fallback ratio, message/nudge activity, unpair rate). Be specific and actionable. Remember this is an early-stage app — frame findings as growth opportunities rather than failures.`;
 }
 
 function buildClinicalPrompt(data) {
@@ -281,10 +291,14 @@ ${Object.entries(clinicalFeatures).map(([k, v]) => `  ${k}: ${v}`).join('\n') ||
 
 ## Community Safety Signals
 ${(() => {
-    const wallPosts = data.events.filter(e => e.event === 'wall_post').length;
-    const buddyPairs = data.events.filter(e => e.event === 'buddy_pair').length;
+    const pairMatch = data.events.filter(e => e.event === 'buddy_pair_match').length;
+    const pairInvite = data.events.filter(e => e.event === 'buddy_pair_invite').length;
+    const pairFallback = data.events.filter(e => e.event === 'buddy_pair_fallback').length;
+    const messages = data.events.filter(e => e.event === 'buddy_send_message').length;
     const buddyUnpairs = data.events.filter(e => e.event === 'buddy_unpair').length;
-    return `Wall posts: ${wallPosts}, Buddy pairings: ${buddyPairs}, Buddy unpairings: ${buddyUnpairs}`;
+    const wallPosts = data.events.filter(e => e.event === 'wall_post').length;
+    const totalPairings = pairMatch + pairInvite + pairFallback;
+    return `Wall posts: ${wallPosts}, Buddy pairings: ${totalPairings} (${pairMatch} match, ${pairInvite} invite, ${pairFallback} admin fallback), Messages: ${messages}, Unpairings: ${buddyUnpairs}`;
   })()}
 Note: Content moderation (blocked/flagged messages) is handled server-side by buddy.js and wall.js with a three-tier approach (blocked, flagged with crisis resources, allowed). Moderation data is available in the Wall tab of this dashboard, not in telemetry events.
 
@@ -405,10 +419,14 @@ ${data.events.filter(e => e.event === 'health_check').slice(-5).map(e => {
 
 ## Community Activity
 ${(() => {
-    const wallPosts = data.events.filter(e => e.event === 'wall_post').length;
-    const buddyPairs = data.events.filter(e => e.event === 'buddy_pair').length;
+    const findMatch = data.events.filter(e => e.event === 'buddy_find_match').length;
+    const pairMatch = data.events.filter(e => e.event === 'buddy_pair_match').length;
+    const pairInvite = data.events.filter(e => e.event === 'buddy_pair_invite').length;
+    const pairFallback = data.events.filter(e => e.event === 'buddy_pair_fallback').length;
     const buddyUnpairs = data.events.filter(e => e.event === 'buddy_unpair').length;
-    return `Wall posts: ${wallPosts}, Buddy pairings: ${buddyPairs}, Buddy unpairings: ${buddyUnpairs}`;
+    const wallPosts = data.events.filter(e => e.event === 'wall_post').length;
+    const totalPairings = pairMatch + pairInvite + pairFallback;
+    return `Wall posts: ${wallPosts}, Buddy find-match attempts: ${findMatch}, Pairings: ${totalPairings} (${pairMatch} match, ${pairInvite} invite, ${pairFallback} admin fallback), Unpairings: ${buddyUnpairs}`;
   })()}
 Note: Content moderation (blocked/flagged messages) is handled server-side. Check the Wall tab for moderation details.
 

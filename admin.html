@@ -457,6 +457,10 @@
       <h2>Feature Usage (30-Day Total)</h2>
       <div class="loading">Loading...</div>
     </div>
+    <div class="card" id="buddy-breakdown-card" style="margin-top:16px">
+      <h2>Buddy System Breakdown</h2>
+      <div class="loading">Loading...</div>
+    </div>
   </div>
 
   <!-- Agents -->
@@ -841,6 +845,54 @@ function renderFeatures() {
         <span class="feature-name">${formatName(f.name)}</span>
         <div class="feature-bar-bg"><div class="feature-bar" style="width:${(f.count/max30)*100}%"></div></div>
         <span class="feature-count">${f.count}</span>
+      </div>
+    `).join('')}
+  `;
+
+  // Buddy breakdown
+  const buddyEvents = [
+    'buddy_find_match', 'buddy_pair_match', 'buddy_pair_invite', 'buddy_pair_fallback',
+    'buddy_create_invite', 'buddy_accept_invite', 'buddy_cancel_search',
+    'buddy_send_message', 'buddy_send_nudge', 'buddy_send_bloom', 'buddy_unpair',
+  ];
+  const buddyLabels = {
+    buddy_find_match: 'Find match attempts',
+    buddy_pair_match: 'Paired (anonymous match)',
+    buddy_pair_invite: 'Paired (invite code)',
+    buddy_pair_fallback: 'Paired (admin fallback)',
+    buddy_create_invite: 'Invites created',
+    buddy_accept_invite: 'Invites accepted',
+    buddy_cancel_search: 'Search cancelled',
+    buddy_send_message: 'Messages sent',
+    buddy_send_nudge: 'Nudges sent',
+    buddy_send_bloom: 'Blooms sent',
+    buddy_unpair: 'Unpaired',
+  };
+  const buddyTotals = {};
+  allDays.forEach(day => {
+    buddyEvents.forEach(evt => {
+      const key = 'event:' + evt;
+      if (day[key]) buddyTotals[evt] = (buddyTotals[evt] || 0) + day[key];
+    });
+  });
+  const buddyList = buddyEvents
+    .filter(e => buddyTotals[e])
+    .map(e => ({ name: buddyLabels[e] || e, count: buddyTotals[e] }));
+  const totalPairings = (buddyTotals['buddy_pair_match'] || 0) + (buddyTotals['buddy_pair_invite'] || 0) + (buddyTotals['buddy_pair_fallback'] || 0);
+  const maxBuddy = Math.max(...buddyList.map(b => b.count), 1);
+
+  document.getElementById('buddy-breakdown-card').innerHTML = `
+    <h2>Buddy System Breakdown (30-Day)</h2>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+      Total successful pairings: <strong style="color:var(--sage-light)">${totalPairings}</strong>
+      (${buddyTotals['buddy_pair_match'] || 0} match / ${buddyTotals['buddy_pair_invite'] || 0} invite / ${buddyTotals['buddy_pair_fallback'] || 0} fallback)
+    </p>
+    ${buddyList.length === 0 ? '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No buddy events recorded yet.</div>' : ''}
+    ${buddyList.map(b => `
+      <div class="feature-row">
+        <span class="feature-name">${b.name}</span>
+        <div class="feature-bar-bg"><div class="feature-bar" style="width:${(b.count/maxBuddy)*100}%"></div></div>
+        <span class="feature-count">${b.count}</span>
       </div>
     `).join('')}
   `;

@@ -551,10 +551,13 @@ export default async function handler(req, res) {
       const adminLookup = await getLookup(ADMIN_BUDDY_ID);
       const alreadyBuddies = myLookup.pairs.some(p => p.partnerId === ADMIN_BUDDY_ID);
       if (!alreadyBuddies && canAddBuddy(ADMIN_BUDDY_ID, adminLookup)) {
-        const adminProfile = await kvGet(`bloom_buddy:${ADMIN_BUDDY_ID}`);
-        if (adminProfile) {
-          bestMatch = { buddyId: ADMIN_BUDDY_ID, name: adminProfile.name };
+        let adminProfile = await kvGet(`bloom_buddy:${ADMIN_BUDDY_ID}`);
+        // Auto-create admin profile if it doesn't exist yet
+        if (!adminProfile) {
+          adminProfile = { name: 'Bloom', registeredAt: Date.now() };
+          await kvSet(`bloom_buddy:${ADMIN_BUDDY_ID}`, adminProfile);
         }
+        bestMatch = { buddyId: ADMIN_BUDDY_ID, name: adminProfile.name };
       }
     }
 
