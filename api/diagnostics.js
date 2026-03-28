@@ -72,7 +72,11 @@ function validateEvent(body) {
   const { type } = body;
   const allowed = [
     'ai_feedback', 'error', 'session_start', 'feature_use',
-    'buddy_pair', 'buddy_unpair', 'backup_created', 'backup_restored',
+    'buddy_pair', 'buddy_pair_match', 'buddy_pair_invite', 'buddy_pair_fallback',
+    'buddy_unpair', 'buddy_find_match', 'buddy_cancel_search',
+    'buddy_create_invite', 'buddy_accept_invite',
+    'buddy_send_message', 'buddy_send_nudge', 'buddy_send_bloom',
+    'backup_created', 'backup_restored',
     'hard_day_activated', 'crisis_opened', 'journal_saved',
     'wall_post', 'onboarding_complete', 'encrypted_backup',
     'api_timing', 'health_check', 'error_boundary',
