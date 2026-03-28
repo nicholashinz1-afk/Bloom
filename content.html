@@ -282,6 +282,30 @@
     margin-top: 12px;
   }
 
+  .graphic-wrap {
+    position: relative;
+  }
+
+  .dl-btn {
+    display: block;
+    margin-top: 8px;
+    text-align: center;
+    background: var(--bg-elevated);
+    color: var(--sage);
+    border: 1px solid rgba(122, 158, 126, 0.2);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    font-family: 'Instrument Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .dl-btn:hover {
+    background: rgba(122, 158, 126, 0.15);
+  }
+
   .divider {
     height: 1px;
     background: rgba(122, 158, 126, 0.1);
@@ -821,6 +845,7 @@ Research shows social connection improves odds of survival by 50% (Holt-Lunstad 
 
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 function copyCaption(id) {
   var el = document.getElementById(id);
@@ -829,6 +854,70 @@ function copyCaption(id) {
     var btn = el.querySelector('.copy-btn');
     btn.textContent = 'Copied!';
     setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+  });
+}
+
+// Add download buttons to all graphics after page loads
+document.addEventListener('DOMContentLoaded', function() {
+  var graphics = document.querySelectorAll('.ig-graphic');
+  graphics.forEach(function(graphic, i) {
+    graphic.id = 'graphic-' + i;
+    var btn = document.createElement('button');
+    btn.className = 'dl-btn';
+    btn.textContent = 'Download PNG';
+    btn.setAttribute('data-target', 'graphic-' + i);
+    btn.addEventListener('click', function() {
+      downloadGraphic(this);
+    });
+    graphic.parentNode.insertBefore(btn, graphic.nextSibling);
+  });
+});
+
+function downloadGraphic(btn) {
+  var targetId = btn.getAttribute('data-target');
+  var el = document.getElementById(targetId);
+  btn.textContent = 'Rendering...';
+  btn.disabled = true;
+
+  // Temporarily force the graphic to 1080x1080 for high-res export
+  var origWidth = el.style.width;
+  var origHeight = el.style.height;
+  var origAspect = el.style.aspectRatio;
+  var origMinWidth = el.style.minWidth;
+  el.style.width = '1080px';
+  el.style.height = '1080px';
+  el.style.aspectRatio = 'auto';
+  el.style.minWidth = 'auto';
+
+  html2canvas(el, {
+    backgroundColor: null,
+    scale: 1,
+    width: 1080,
+    height: 1080,
+    useCORS: true,
+    logging: false
+  }).then(function(canvas) {
+    el.style.width = origWidth;
+    el.style.height = origHeight;
+    el.style.aspectRatio = origAspect;
+    el.style.minWidth = origMinWidth;
+
+    var link = document.createElement('a');
+    link.download = targetId + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+
+    btn.textContent = 'Download PNG';
+    btn.disabled = false;
+  }).catch(function() {
+    el.style.width = origWidth;
+    el.style.height = origHeight;
+    el.style.aspectRatio = origAspect;
+    el.style.minWidth = origMinWidth;
+
+    btn.textContent = 'Download PNG';
+    btn.disabled = false;
+    alert('Download failed. Try screenshotting instead.');
   });
 }
 </script>
