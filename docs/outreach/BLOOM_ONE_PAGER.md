@@ -10,7 +10,7 @@
 
 Bloom is a free mental health self-care app. A gentle place to track habits without pressure, journal, practice breathing exercises, and show up for yourself at your own pace.
 
-It runs in any browser. No download, no account, no sign-up. Open the link and start.
+It runs in any browser, no download required. No account, no sign-up. Open the link and start.
 
 ---
 
@@ -70,7 +70,7 @@ Built by someone who's been through it, for people going through it.
 Bloom can complement existing mental health services:
 
 - **Zero cost.** No licensing fees, no contracts, no per-seat pricing.
-- **Zero IT overhead.** Runs in any browser. Nothing to install or maintain.
+- **Zero IT overhead.** Runs in any browser, no download required. Nothing to maintain.
 - **No data liability.** All data stays on the student's device. No PHI, no FERPA concerns.
 - **Crisis integration.** 988, Crisis Text Line, and international resources always one tap away.
 - **Open source.** Full source code is public and auditable.

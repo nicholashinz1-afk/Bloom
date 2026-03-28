@@ -393,7 +393,7 @@
     <li>Crisis resources always one tap away (988, Crisis Text Line, international)</li>
     <li>6 color themes including Pride theme</li>
     <li>Accessible (screen readers, keyboard navigation, high contrast mode)</li>
-    <li>Works on any device, no download needed</li>
+    <li>Works on any device, no download required (but installs as an app too)</li>
   </ul>
 
   <!-- Logos -->
@@ -415,6 +415,21 @@
       <img src="/og-image.png" alt="Bloom social sharing card" style="max-width: 100%; border-radius: 8px;">
       <span class="label">Social card (1200x630)</span>
       <a href="/og-image.png" download class="download-link">Download PNG</a>
+    </div>
+    <div class="logo-item">
+      <img src="/email-badge.png" alt="Bloom email signature badge" style="max-width: 100%;">
+      <span class="label">Email signature badge</span>
+      <a href="/email-badge.png" download class="download-link">Download PNG</a>
+    </div>
+    <div class="logo-item">
+      <img src="/email-icon.png" alt="Bloom email icon" style="max-width: 40px;">
+      <span class="label">Email icon (40x40)</span>
+      <a href="/email-icon.png" download class="download-link">Download PNG</a>
+    </div>
+    <div class="logo-item">
+      <img src="/marketing/og-image.svg" alt="Bloom social card editable source" style="max-width: 100%; border-radius: 8px;">
+      <span class="label">Social card (editable SVG)</span>
+      <a href="/marketing/og-image.svg" download class="download-link">Download SVG</a>
     </div>
   </div>
 
@@ -573,9 +588,13 @@ document.getElementById('download-kit').addEventListener('click', async function
     var logoDataURI = await blobToDataURI(logoBlob);
     var qrDataURI = await blobToDataURI(qrBlob);
 
-    // Fetch the OG image for embedding in the press page
+    // Fetch additional images for embedding in the press page
     var ogBlob = await fetch('/og-image.png').then(function(r) { return r.blob(); });
     var ogDataURI = await blobToDataURI(ogBlob);
+    var emailBadgeBlob = await fetch('/email-badge.png').then(function(r) { return r.blob(); });
+    var emailBadgeDataURI = await blobToDataURI(emailBadgeBlob);
+    var emailIconBlob = await fetch('/email-icon.png').then(function(r) { return r.blob(); });
+    var emailIconDataURI = await blobToDataURI(emailIconBlob);
 
     // Static asset files (kept as-is in the zip)
     var assetFiles = [
@@ -584,8 +603,9 @@ document.getElementById('download-kit').addEventListener('click', async function
       { path: '/og-image.png', name: 'social/og-image-1200x630.png' },
       { path: '/qr-code.png', name: 'qr-code/qr-code.png' },
       { path: '/qr-code.svg', name: 'qr-code/qr-code.svg' },
-      { path: '/email-badge.png', name: 'email/email-badge-260x56.png' },
+      { path: '/email-badge.png', name: 'email/email-badge.png' },
       { path: '/email-icon.png', name: 'email/email-icon-40x40.png' },
+      { path: '/marketing/og-image.svg', name: 'social/og-image-editable.svg' },
     ];
 
     var assetResults = await Promise.all(
@@ -627,6 +647,8 @@ document.getElementById('download-kit').addEventListener('click', async function
             html = html.replace(/src=["'](?:\.\/|\/)?bloom-logo-512\.png["']/g, 'src="' + logoDataURI + '"');
             html = html.replace(/src=["'](?:\.\/|\/)?qr-code\.png["']/g, 'src="' + qrDataURI + '"');
             html = html.replace(/src=["'](?:\.\/|\/)?og-image\.png["']/g, 'src="' + ogDataURI + '"');
+            html = html.replace(/src=["'](?:\.\/|\/)?email-badge\.png["']/g, 'src="' + emailBadgeDataURI + '"');
+            html = html.replace(/src=["'](?:\.\/|\/)?email-icon\.png["']/g, 'src="' + emailIconDataURI + '"');
             // Remove absolute hrefs that won't work offline
             html = html.replace(/href=["']\/(?!\/)/g, 'href="https://bloomselfcare.app/');
             return { name: f.name, content: html };
