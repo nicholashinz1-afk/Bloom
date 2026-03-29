@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
+  <!-- Tee / Hat print file -->
+  <!-- Color: soft amber #d4ad6a on transparent (for deep forest garment) -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400&amp;display=swap');
+  </style>
+  <text
+    x="600" y="640"
+    font-family="Fraunces, serif"
+    font-weight="400"
+    font-size="220"
+    fill="#d4ad6a"
+    text-anchor="middle"
+    dominant-baseline="middle"
+  >stay.</text>
+</svg>

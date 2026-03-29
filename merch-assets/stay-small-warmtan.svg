@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
+  <!-- Tee / Hat - Right Chest & Upper Back print file -->
+  <!-- 4" x 4" at 300 DPI = 1200x1200px -->
+  <!-- Color: warm tan #c8b8a8 on transparent (for charcoal garment) -->
+  <!-- Swap fill color below for different garment colorways -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400&amp;display=swap');
+  </style>
+  <text
+    x="600" y="640"
+    font-family="Fraunces, serif"
+    font-weight="400"
+    font-size="220"
+    fill="#c8b8a8"
+    text-anchor="middle"
+    dominant-baseline="middle"
+  >stay.</text>
+</svg>

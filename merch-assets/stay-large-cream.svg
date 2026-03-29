@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3600" height="3600" viewBox="0 0 3600 3600">
+  <!-- Hoodie - Center Chest print file -->
+  <!-- 12" x 12" at 300 DPI = 3600x3600px -->
+  <!-- Color: cream #e8e0d0 on transparent (for deep forest garment) -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400&amp;display=swap');
+  </style>
+  <text
+    x="1800" y="1920"
+    font-family="Fraunces, serif"
+    font-weight="400"
+    font-size="660"
+    fill="#e8e0d0"
+    text-anchor="middle"
+    dominant-baseline="middle"
+  >stay.</text>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1200" viewBox="0 0 2400 1200">
+  <!-- Hat embroidery file - wider aspect for hat front panel -->
+  <!-- 8" x 4" at 300 DPI = 2400x1200px -->
+  <!-- Black fill for digitization - Printful will match thread color -->
+  <!-- Slightly heavier weight (500) for embroidery legibility -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500&amp;display=swap');
+  </style>
+  <text
+    x="1200" y="640"
+    font-family="Fraunces, serif"
+    font-weight="500"
+    font-size="280"
+    fill="#000000"
+    text-anchor="middle"
+    dominant-baseline="middle"
+  >stay.</text>
+</svg>
