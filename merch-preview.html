@@ -6,7 +6,7 @@
 <title>Stay. — Merch Design Preview</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&family=Libre+Baskerville:wght@400;700&family=Space+Grotesk:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -15,20 +15,6 @@
     font-family: 'DM Sans', sans-serif;
     padding: 40px 20px;
     min-height: 100vh;
-  }
-  h1 {
-    text-align: center;
-    font-size: 18px;
-    font-weight: 400;
-    letter-spacing: 0.05em;
-    color: #a8a090;
-    margin-bottom: 8px;
-  }
-  .subtitle {
-    text-align: center;
-    font-size: 13px;
-    color: #706860;
-    margin-bottom: 48px;
   }
   .section-label {
     text-align: center;
@@ -43,7 +29,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 32px;
-    max-width: 1200px;
+    max-width: 1000px;
     margin: 0 auto;
   }
   .mockup {
@@ -52,6 +38,8 @@
     align-items: center;
     gap: 16px;
   }
+
+  /* T-shirt */
   .tee {
     width: 280px;
     height: 340px;
@@ -60,26 +48,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: transform 0.2s ease;
   }
-  .tee:hover {
-    transform: scale(1.02);
-  }
-  .tee.black { background: #111; }
-  .tee.white { background: #f5f0eb; }
-  .tee.sage { background: #4a5e4a; }
-  .tee.charcoal { background: #2a2a2a; }
-  .tee.rust { background: #8b3a2a; }
-  .tee.navy { background: #1a2340; }
-  .tee.mustard { background: #c4962c; }
-  .tee.burgundy { background: #4a1528; }
-  .tee.forest { background: #1a3a2a; }
   .tee.bloom-dark { background: #1c2e20; }
   .tee.bloom-sage { background: #7a9e7e; }
-  .tee.clay { background: #b07050; }
-
-  /* T-shirt neckline */
+  .tee.charcoal { background: #2a2a2a; }
   .tee::before {
     content: '';
     position: absolute;
@@ -94,16 +66,13 @@
   .tee::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     border-radius: 12px;
     border: 1px solid rgba(255,255,255,0.06);
     pointer-events: none;
   }
 
-  /* Hoodie shape */
+  /* Hoodie */
   .hoodie {
     width: 280px;
     height: 340px;
@@ -112,23 +81,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: transform 0.2s ease;
   }
-  .hoodie:hover { transform: scale(1.02); }
-  .hoodie.black { background: #111; }
-  .hoodie.white { background: #f5f0eb; }
-  .hoodie.sage { background: #4a5e4a; }
-  .hoodie.charcoal { background: #2a2a2a; }
-  .hoodie.rust { background: #8b3a2a; }
-  .hoodie.navy { background: #1a2340; }
-  .hoodie.mustard { background: #c4962c; }
-  .hoodie.burgundy { background: #4a1528; }
-  .hoodie.forest { background: #1a3a2a; }
   .hoodie.bloom-dark { background: #1c2e20; }
   .hoodie.bloom-sage { background: #7a9e7e; }
-  .hoodie.clay { background: #b07050; }
-  /* Hood shape */
+  .hoodie.charcoal { background: #2a2a2a; }
   .hoodie::before {
     content: '';
     position: absolute;
@@ -145,15 +101,11 @@
   .hoodie::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     border-radius: 12px;
     border: 1px solid rgba(255,255,255,0.06);
     pointer-events: none;
   }
-  /* Drawstrings */
   .hoodie .drawstrings {
     position: absolute;
     top: 18px;
@@ -170,33 +122,23 @@
     height: 24px;
     background: rgba(255,255,255,0.15);
   }
-  .hoodie.white .drawstrings span {
-    background: rgba(0,0,0,0.12);
-  }
 
   .tee-text {
     position: relative;
     z-index: 1;
   }
 
-  /* Placement variations — works on both .tee and .hoodie */
-  .placement-center .tee-text {
-    /* default centered */
-  }
-  .placement-left .tee-text {
+  /* Placements */
+  .placement-right .tee-text {
     position: absolute;
     top: 80px;
-    left: 50px;
+    right: 50px;
   }
   .placement-back .tee-text {
     position: absolute;
     top: 40px;
     left: 50%;
     transform: translateX(-50%);
-  }
-  .hoodie.selected {
-    outline: 2px solid #a8c0a8;
-    outline-offset: 4px;
   }
 
   .label {
@@ -214,53 +156,17 @@
     color: #605850;
   }
 
-  /* Divider */
   hr {
     border: none;
     border-top: 1px solid #2a2a2a;
     margin: 48px auto;
     max-width: 200px;
   }
-
-  .note {
-    text-align: center;
-    font-size: 12px;
-    color: #585048;
-    max-width: 500px;
-    margin: 48px auto 0;
-    line-height: 1.7;
-  }
-
-  /* Favorites bar */
-  .favorites {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #111;
-    border-top: 1px solid #2a2a2a;
-    padding: 12px 20px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    z-index: 10;
-  }
-  .favorites.show { display: flex; }
-  .favorites span { font-size: 13px; color: #908880; }
-  .fav-list { font-size: 13px; color: #c8c0b8; }
-
-  .tee.selected {
-    outline: 2px solid #a8c0a8;
-    outline-offset: 4px;
-  }
 </style>
 </head>
 <body>
 
-<h1>stay.</h1>
-<p class="subtitle">merch design exploration — tap any to mark as favorite</p>
-
+<!-- ABOUT -->
 <div style="max-width:560px; margin:0 auto 48px; padding:28px 24px; background:#111a13; border-radius:12px; border:1px solid rgba(255,255,255,0.06);">
   <div style="font-family:'Fraunces',serif; font-size:28px; color:#e8e0d0; text-align:center; margin-bottom:20px;">stay.</div>
   <p style="font-size:13px; color:#a3b5a5; line-height:1.8; margin-bottom:16px;">
@@ -280,535 +186,109 @@
   </p>
 </div>
 
-<!-- FINAL CANDIDATES -->
-<div class="section-label" style="color:#a8c0a8;">Final candidates — Bloom palette</div>
-<p style="text-align:center; font-size:12px; color:#585048; margin-bottom:24px;">Fraunces Regular, lowercase. Tee: left chest front + small upper back. Hoodie: center chest.</p>
-
-<div class="section-label" style="font-size:11px;">Option A — Deep forest (#1c2e20) + cream (#e8e0d0)</div>
+<!-- OPTION A — Deep forest + cream -->
+<div class="section-label">Option A — Deep forest + cream</div>
 <div class="grid">
   <div class="mockup">
-    <div class="tee bloom-dark placement-left" onclick="toggleFav(this, 'FINAL-A1')">
+    <div class="tee bloom-dark placement-right">
       <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:18px; color:#e8e0d0;">stay.</div>
     </div>
-    <div class="label"><strong>A — tee front</strong><br><span class="detail">left chest, Bloom's cream on Bloom's dark</span></div>
+    <div class="label"><strong>tee front</strong><br><span class="detail">right chest</span></div>
   </div>
   <div class="mockup">
-    <div class="tee bloom-dark placement-back" onclick="toggleFav(this, 'FINAL-A2')">
+    <div class="tee bloom-dark placement-back">
       <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:16px; color:#e8e0d0;">stay.</div>
     </div>
-    <div class="label"><strong>A — tee back</strong><br><span class="detail">upper back, same scale as front</span></div>
+    <div class="label"><strong>tee back</strong><br><span class="detail">upper back, same scale</span></div>
   </div>
   <div class="mockup">
-    <div class="hoodie bloom-dark placement-center" onclick="toggleFav(this, 'FINAL-A3')">
+    <div class="hoodie bloom-dark placement-center">
       <div class="drawstrings"><span></span><span></span></div>
       <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:36px; color:#e8e0d0;">stay.</div>
     </div>
-    <div class="label"><strong>A — hoodie</strong><br><span class="detail">center chest, statement</span></div>
+    <div class="label"><strong>hoodie</strong><br><span class="detail">center chest</span></div>
   </div>
 </div>
 
-<div class="section-label" style="font-size:11px;">Option B — Deep forest (#1c2e20) + amber (#c9954a)</div>
+<hr>
+
+<!-- OPTION B — Deep forest + soft amber -->
+<div class="section-label">Option B — Deep forest + soft amber</div>
 <div class="grid">
   <div class="mockup">
-    <div class="tee bloom-dark placement-left" onclick="toggleFav(this, 'FINAL-B1')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:18px; color:#c9954a;">stay.</div>
+    <div class="tee bloom-dark placement-right">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:18px; color:#d4ad6a;">stay.</div>
     </div>
-    <div class="label"><strong>B — tee front</strong><br><span class="detail">left chest, Bloom's amber on Bloom's dark</span></div>
+    <div class="label"><strong>tee front</strong><br><span class="detail">right chest</span></div>
   </div>
   <div class="mockup">
-    <div class="tee bloom-dark placement-back" onclick="toggleFav(this, 'FINAL-B2')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:16px; color:#c9954a;">stay.</div>
+    <div class="tee bloom-dark placement-back">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:16px; color:#d4ad6a;">stay.</div>
     </div>
-    <div class="label"><strong>B — tee back</strong><br><span class="detail">upper back, warm gold</span></div>
+    <div class="label"><strong>tee back</strong><br><span class="detail">upper back</span></div>
   </div>
   <div class="mockup">
-    <div class="hoodie bloom-dark placement-center" onclick="toggleFav(this, 'FINAL-B3')">
+    <div class="hoodie bloom-dark placement-center">
       <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:36px; color:#c9954a;">stay.</div>
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:36px; color:#d4ad6a;">stay.</div>
     </div>
-    <div class="label"><strong>B — hoodie</strong><br><span class="detail">center chest, moodier</span></div>
+    <div class="label"><strong>hoodie</strong><br><span class="detail">center chest</span></div>
   </div>
 </div>
 
-<div class="section-label" style="font-size:11px;">Option C — Sage (#7a9e7e) + cream (#e8e0d0)</div>
+<hr>
+
+<!-- OPTION C — Sage + cream -->
+<div class="section-label">Option C — Sage + cream</div>
 <div class="grid">
   <div class="mockup">
-    <div class="tee bloom-sage placement-left" onclick="toggleFav(this, 'FINAL-C1')">
+    <div class="tee bloom-sage placement-right">
       <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:18px; color:#e8e0d0;">stay.</div>
     </div>
-    <div class="label"><strong>C — tee front</strong><br><span class="detail">left chest, Bloom's sage + cream</span></div>
+    <div class="label"><strong>tee front</strong><br><span class="detail">right chest</span></div>
   </div>
   <div class="mockup">
-    <div class="tee bloom-sage placement-back" onclick="toggleFav(this, 'FINAL-C2')">
+    <div class="tee bloom-sage placement-back">
       <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:16px; color:#e8e0d0;">stay.</div>
     </div>
-    <div class="label"><strong>C — tee back</strong><br><span class="detail">upper back, Bloom's signature look</span></div>
+    <div class="label"><strong>tee back</strong><br><span class="detail">upper back</span></div>
   </div>
   <div class="mockup">
-    <div class="hoodie bloom-sage placement-center" onclick="toggleFav(this, 'FINAL-C3')">
+    <div class="hoodie bloom-sage placement-center">
       <div class="drawstrings"><span></span><span></span></div>
       <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:36px; color:#e8e0d0;">stay.</div>
     </div>
-    <div class="label"><strong>C — hoodie</strong><br><span class="detail">center chest, most distinctly Bloom</span></div>
+    <div class="label"><strong>hoodie</strong><br><span class="detail">center chest</span></div>
   </div>
 </div>
 
-<div class="section-label" style="font-size:11px;">Option D — Charcoal + warm tan (original pick)</div>
+<hr>
+
+<!-- OPTION D — Charcoal + warm tan -->
+<div class="section-label">Option D — Charcoal + warm tan</div>
 <div class="grid">
   <div class="mockup">
-    <div class="tee charcoal placement-left" onclick="toggleFav(this, 'FINAL-D1')">
+    <div class="tee charcoal placement-right">
       <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:18px; color:#c8b8a8;">stay.</div>
     </div>
-    <div class="label"><strong>D — tee front</strong><br><span class="detail">left chest, original combo</span></div>
+    <div class="label"><strong>tee front</strong><br><span class="detail">right chest</span></div>
   </div>
   <div class="mockup">
-    <div class="tee charcoal placement-back" onclick="toggleFav(this, 'FINAL-D2')">
+    <div class="tee charcoal placement-back">
       <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:16px; color:#c8b8a8;">stay.</div>
     </div>
-    <div class="label"><strong>D — tee back</strong><br><span class="detail">upper back</span></div>
+    <div class="label"><strong>tee back</strong><br><span class="detail">upper back</span></div>
   </div>
   <div class="mockup">
-    <div class="hoodie charcoal placement-center" onclick="toggleFav(this, 'FINAL-D3')">
+    <div class="hoodie charcoal placement-center">
       <div class="drawstrings"><span></span><span></span></div>
       <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:36px; color:#c8b8a8;">stay.</div>
     </div>
-    <div class="label"><strong>D — hoodie</strong><br><span class="detail">center chest</span></div>
+    <div class="label"><strong>hoodie</strong><br><span class="detail">center chest</span></div>
   </div>
 </div>
 
-<hr>
-
-<!-- FRAUNCES — BLOOM'S TYPEFACE -->
-<div class="section-label">Fraunces (Bloom's typeface)</div>
-<div class="grid">
-
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'F1')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>F1</strong> — Fraunces Light, lowercase<br><span class="detail">black tee, center chest</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee white placement-center" onclick="toggleFav(this, 'F2')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#1a1a1a;">stay.</div>
-    </div>
-    <div class="label"><strong>F2</strong> — Fraunces Light, lowercase<br><span class="detail">off-white tee, center chest</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee sage placement-center" onclick="toggleFav(this, 'F3')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>F3</strong> — Fraunces Light, lowercase<br><span class="detail">sage tee, center chest</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee charcoal placement-center" onclick="toggleFav(this, 'F4')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#c8b8a8;">stay.</div>
-    </div>
-    <div class="label"><strong>F4</strong> — Fraunces Light, lowercase<br><span class="detail">charcoal tee, warm tan text</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'F5')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:36px; color:#f5f0eb;">Stay.</div>
-    </div>
-    <div class="label"><strong>F5</strong> — Fraunces Regular, sentence case<br><span class="detail">black tee, center chest</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee white placement-center" onclick="toggleFav(this, 'F6')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:36px; color:#1a1a1a;">Stay.</div>
-    </div>
-    <div class="label"><strong>F6</strong> — Fraunces Regular, sentence case<br><span class="detail">off-white tee, center chest</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'F7')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-style:italic; font-size:36px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>F7</strong> — Fraunces Light Italic, lowercase<br><span class="detail">black tee, softer feel</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee sage placement-center" onclick="toggleFav(this, 'F8')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-style:italic; font-size:36px; color:#f5f0eb;">Stay.</div>
-    </div>
-    <div class="label"><strong>F8</strong> — Fraunces Italic, sentence case<br><span class="detail">sage tee, personal feel</span></div>
-  </div>
-
-</div>
-
-<hr>
-
-<!-- FRAUNCES PLACEMENT -->
-<div class="section-label">Fraunces — Placement</div>
-<div class="grid">
-
-  <div class="mockup">
-    <div class="tee black placement-left" onclick="toggleFav(this, 'G1')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:18px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>G1</strong> — left chest, small<br><span class="detail">Fraunces Light, quiet</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee white placement-left" onclick="toggleFav(this, 'G2')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:18px; color:#1a1a1a;">stay.</div>
-    </div>
-    <div class="label"><strong>G2</strong> — left chest, small<br><span class="detail">Fraunces Regular, off-white</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee black placement-back" onclick="toggleFav(this, 'G3')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:16px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>G3</strong> — back of neck<br><span class="detail">Fraunces Light, for the person behind you</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'G4')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:52px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>G4</strong> — center chest, large<br><span class="detail">Fraunces Light, bigger presence</span></div>
-  </div>
-
-</div>
-
-<hr>
-
-<!-- HOODIES -->
-<div class="section-label">Hoodies</div>
-<div class="grid">
-
-  <div class="mockup">
-    <div class="hoodie black placement-center" onclick="toggleFav(this, 'H1')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>H1</strong> — Fraunces Light, lowercase<br><span class="detail">black hoodie, center chest</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="hoodie sage placement-center" onclick="toggleFav(this, 'H2')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>H2</strong> — Fraunces Light, lowercase<br><span class="detail">sage hoodie, center chest</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="hoodie charcoal placement-center" onclick="toggleFav(this, 'H3')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#c8b8a8;">stay.</div>
-    </div>
-    <div class="label"><strong>H3</strong> — Fraunces Light, lowercase<br><span class="detail">charcoal hoodie, warm tan text</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="hoodie white placement-center" onclick="toggleFav(this, 'H4')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:36px; color:#1a1a1a;">Stay.</div>
-    </div>
-    <div class="label"><strong>H4</strong> — Fraunces Regular, sentence case<br><span class="detail">off-white hoodie, center chest</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="hoodie black placement-left" onclick="toggleFav(this, 'H5')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:18px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>H5</strong> — Fraunces Light, left chest<br><span class="detail">black hoodie, quiet placement</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="hoodie sage placement-left" onclick="toggleFav(this, 'H6')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:18px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>H6</strong> — Fraunces Light, left chest<br><span class="detail">sage hoodie, quiet placement</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="hoodie black placement-center" onclick="toggleFav(this, 'H7')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:52px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>H7</strong> — Fraunces Light, large<br><span class="detail">black hoodie, statement size</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="hoodie charcoal placement-center" onclick="toggleFav(this, 'H8')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-style:italic; font-size:36px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>H8</strong> — Fraunces Light Italic<br><span class="detail">charcoal hoodie, softer feel</span></div>
-  </div>
-
-</div>
-
-<hr>
-
-<!-- BOLD ITALIC -->
-<div class="section-label">Fraunces Bold Italic</div>
-<div class="grid">
-
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'J1')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:38px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>J1</strong> — Bold Italic, lowercase<br><span class="detail">black tee, center chest</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee white placement-center" onclick="toggleFav(this, 'J2')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:38px; color:#1a1a1a;">stay.</div>
-    </div>
-    <div class="label"><strong>J2</strong> — Bold Italic, lowercase<br><span class="detail">off-white tee</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee charcoal placement-center" onclick="toggleFav(this, 'J3')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:38px; color:#c8b8a8;">stay.</div>
-    </div>
-    <div class="label"><strong>J3</strong> — Bold Italic, warm tan on charcoal<br><span class="detail">your favorite combo, more weight</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee sage placement-center" onclick="toggleFav(this, 'J4')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:38px; color:#e8dcc8;">stay.</div>
-    </div>
-    <div class="label"><strong>J4</strong> — Bold Italic, sand on sage<br><span class="detail">warm sandy tone</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'J5')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:600; font-style:italic; font-size:38px; color:#f5f0eb;">Stay.</div>
-    </div>
-    <div class="label"><strong>J5</strong> — SemiBold Italic, sentence case<br><span class="detail">black tee, slightly less heavy</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee sage placement-center" onclick="toggleFav(this, 'J6')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:600; font-style:italic; font-size:38px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>J6</strong> — SemiBold Italic, lowercase<br><span class="detail">sage tee</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="hoodie charcoal placement-center" onclick="toggleFav(this, 'J7')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:38px; color:#c8b8a8;">stay.</div>
-    </div>
-    <div class="label"><strong>J7</strong> — Bold Italic, warm tan on charcoal<br><span class="detail">hoodie version</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="hoodie sage placement-center" onclick="toggleFav(this, 'J8')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:38px; color:#e8dcc8;">stay.</div>
-    </div>
-    <div class="label"><strong>J8</strong> — Bold Italic, sand on sage<br><span class="detail">hoodie version</span></div>
-  </div>
-
-</div>
-
-<hr>
-
-<!-- LOUD -->
-<div class="section-label">Loud</div>
-<div class="grid">
-
-  <div class="mockup">
-    <div class="tee rust placement-center" onclick="toggleFav(this, 'L1')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:52px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>L1</strong> — Bold Italic, large, rust<br><span class="detail">burnt orange, impossible to miss</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee mustard placement-center" onclick="toggleFav(this, 'L2')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:52px; color:#1a1a1a;">stay.</div>
-    </div>
-    <div class="label"><strong>L2</strong> — Bold Italic, large, mustard<br><span class="detail">dark text on gold, punchy</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee navy placement-center" onclick="toggleFav(this, 'L3')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:52px; color:#e8c050;">stay.</div>
-    </div>
-    <div class="label"><strong>L3</strong> — Bold Italic, large, navy + gold<br><span class="detail">high contrast, bold</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee burgundy placement-center" onclick="toggleFav(this, 'L4')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:52px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>L4</strong> — Bold Italic, large, burgundy<br><span class="detail">deep and rich, cream text</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee forest placement-center" onclick="toggleFav(this, 'L5')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:52px; color:#e8dcc8;">stay.</div>
-    </div>
-    <div class="label"><strong>L5</strong> — Bold Italic, large, forest green<br><span class="detail">deep green, sand text</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee clay placement-center" onclick="toggleFav(this, 'L6')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:52px; color:#fff;">stay.</div>
-    </div>
-    <div class="label"><strong>L6</strong> — Bold Italic, large, clay<br><span class="detail">terracotta, white text, warm loud</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="hoodie rust placement-center" onclick="toggleFav(this, 'L7')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:52px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>L7</strong> — Bold Italic, large, rust hoodie<br><span class="detail">statement piece</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="hoodie burgundy placement-center" onclick="toggleFav(this, 'L8')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:700; font-style:italic; font-size:52px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>L8</strong> — Bold Italic, large, burgundy hoodie<br><span class="detail">deep, rich, loud</span></div>
-  </div>
-
-</div>
-
-<hr>
-
-<!-- FAVORITE COMBOS EXPANDED -->
-<div class="section-label">Your favorites expanded (warm tan + charcoal, sand + sage)</div>
-<div class="grid">
-
-  <div class="mockup">
-    <div class="tee charcoal placement-center" onclick="toggleFav(this, 'K1')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-style:italic; font-size:36px; color:#c8b8a8;">stay.</div>
-    </div>
-    <div class="label"><strong>K1</strong> — Light Italic, warm tan on charcoal<br><span class="detail">tee, subtle</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee charcoal placement-center" onclick="toggleFav(this, 'K2')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-style:italic; font-size:36px; color:#c8b8a8;">stay.</div>
-    </div>
-    <div class="label"><strong>K2</strong> — Regular Italic, warm tan on charcoal<br><span class="detail">tee, mid weight</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee sage placement-center" onclick="toggleFav(this, 'K3')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-style:italic; font-size:36px; color:#e8dcc8;">stay.</div>
-    </div>
-    <div class="label"><strong>K3</strong> — Light Italic, sand on sage<br><span class="detail">tee, gentle</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee sage placement-center" onclick="toggleFav(this, 'K4')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-style:italic; font-size:36px; color:#e8dcc8;">stay.</div>
-    </div>
-    <div class="label"><strong>K4</strong> — Regular Italic, sand on sage<br><span class="detail">tee, mid weight</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="hoodie charcoal placement-center" onclick="toggleFav(this, 'K5')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-style:italic; font-size:36px; color:#c8b8a8;">stay.</div>
-    </div>
-    <div class="label"><strong>K5</strong> — Light Italic, warm tan on charcoal<br><span class="detail">hoodie</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="hoodie sage placement-center" onclick="toggleFav(this, 'K6')">
-      <div class="drawstrings"><span></span><span></span></div>
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-style:italic; font-size:36px; color:#e8dcc8;">stay.</div>
-    </div>
-    <div class="label"><strong>K6</strong> — Light Italic, sand on sage<br><span class="detail">hoodie</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee charcoal placement-left" onclick="toggleFav(this, 'K7')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-style:italic; font-size:18px; color:#c8b8a8;">stay.</div>
-    </div>
-    <div class="label"><strong>K7</strong> — Regular Italic, warm tan on charcoal<br><span class="detail">left chest, quiet</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee sage placement-left" onclick="toggleFav(this, 'K8')">
-      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-style:italic; font-size:18px; color:#e8dcc8;">stay.</div>
-    </div>
-    <div class="label"><strong>K8</strong> — Regular Italic, sand on sage<br><span class="detail">left chest, quiet</span></div>
-  </div>
-
-</div>
-
-<hr>
-
-<!-- OTHER TYPEFACES FOR COMPARISON -->
-<div class="section-label">Other typefaces (for comparison)</div>
-<div class="grid">
-
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'X1')">
-      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:32px; color:#f5f0eb; letter-spacing:0.02em;">stay.</div>
-    </div>
-    <div class="label"><strong>X1</strong> — Inter Light<br><span class="detail">clean sans-serif baseline</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'X2')">
-      <div class="tee-text" style="font-family:'Instrument Sans',sans-serif; font-weight:400; font-size:32px; color:#f5f0eb; letter-spacing:0.02em;">stay.</div>
-    </div>
-    <div class="label"><strong>X2</strong> — Instrument Sans (Bloom's sans)<br><span class="detail">Bloom's body font</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'X3')">
-      <div class="tee-text" style="font-family:'Playfair Display',serif; font-weight:400; font-size:34px; color:#f5f0eb;">stay.</div>
-    </div>
-    <div class="label"><strong>X3</strong> — Playfair Display<br><span class="detail">high-contrast serif</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'X4')">
-      <div class="tee-text" style="font-family:'Space Grotesk',sans-serif; font-weight:400; font-size:28px; color:#f5f0eb; letter-spacing:0.2em;">STAY.</div>
-    </div>
-    <div class="label"><strong>X4</strong> — Space Grotesk, all caps<br><span class="detail">wide tracking, more confrontational</span></div>
-  </div>
-
-</div>
-
-<div class="note">
-  These are rough representations. Actual print will depend on the blank and print method.
-  Tap any mockup to mark it as a favorite. Mix and match: you might like the typeface from one, the placement from another, and the color from a third.
-</div>
-
-<div class="favorites" id="favBar">
-  <span>Favorites:</span>
-  <span class="fav-list" id="favList"></span>
-</div>
-
-<div style="height:60px"></div>
-
-<script>
-  const favs = new Set();
-  function toggleFav(el, id) {
-    el.classList.toggle('selected');
-    if (favs.has(id)) favs.delete(id); else favs.add(id);
-    const bar = document.getElementById('favBar');
-    const list = document.getElementById('favList');
-    if (favs.size > 0) {
-      bar.classList.add('show');
-      list.textContent = [...favs].join(', ');
-    } else {
-      bar.classList.remove('show');
-    }
-  }
-</script>
+<div style="height:40px"></div>
 
 </body>
 </html>
