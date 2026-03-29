@@ -8340,13 +8340,13 @@ function renderTodayTop() {
 
   // Mood pattern insight
   const pattern = getMoodPattern();
-  if (pattern && !state.dismissedPattern) {
+  if (pattern && load('bloom_pattern_dismissed') !== weekStart()) {
     html += `<div class="banner" style="background:rgba(106,154,176,0.08);border:1px solid rgba(106,154,176,0.18)">
       <div class="banner-icon">💡</div>
       <div class="banner-body">
         <div class="banner-text" style="color:var(--sky-light)">${pattern.text}</div>
         <div class="banner-actions">
-          <div class="banner-action" onclick="state.dismissedPattern=true;renderTodayTop()">Got it</div>
+          <div class="banner-action" onclick="save('bloom_pattern_dismissed',weekStart());renderTodayTop()">Got it</div>
         </div>
       </div>
     </div>`;
