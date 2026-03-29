@@ -333,6 +333,7 @@ Open Collective rejected Bloom's fiscal sponsorship application (March 2026) -- 
 | ~~Apply for GitHub Sponsors~~ | ~~Developer-facing donations, 0% fees~~ | Done |
 | Submit Bloom to PsyberGuide (psyberguide.org) | Credibility rating for digital mental health tools | Done (emailed info@psyberguide.org) |
 | Email 5-10 university counseling centers asking for feedback | Feedback relationships turn into pilot programs | In progress (MCTS Rose, Schoolcraft, Wayne State, DePauw counseling services, Interlochen Dr. Kern sent) |
+| Reach out to employer/parent company about wellness program adoption | Corporate adoption = immediate users + credibility for grant applications | Done (pitched internally) |
 | Ask a licensed therapist/counselor to review Bloom and write a 2-3 sentence letter of support | One endorsement from a LCSW/psychologist opens institutional doors | In progress (therapist reviewing) |
 | Add explicit "not a HIPAA covered entity / no PHI" statement to privacy policy | Makes institutional legal teams relax | Done |
 | Add FAQ and feedback section in Settings | Users need a way to ask questions and give feedback | Done |
