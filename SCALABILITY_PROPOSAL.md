@@ -255,6 +255,33 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 
 **Result: Sustainable funding path, infrastructure credits covering costs**
 
+### Phase 3B -- Merch Line (Ongoing)
+
+A standalone apparel and accessories line with meaningful, poignant phrases. Operates as its own entity, separate from Bloom branding. No visible brand on the product. Just the words. 100% of profits fund Bloom's infrastructure and development.
+
+**First phrase: "Stay."**
+
+One word. One syllable. A period. It works because it means something different to everyone who reads it. For someone in crisis, it's the most important word there is. For someone having a hard day, it means stay present, stay here. For someone who keeps trying to be different, it means stay as you are. The person wearing it knows what it means to them, and the person reading it fills in their own meaning. That's what makes it powerful.
+
+**Future phrases pipeline:**
+1. "Gentle is strength."
+2. "Be gentle."
+3. "Still here."
+4. "I am enough."
+5. "Go gently."
+6. "Enough."
+
+**Brand approach:**
+- No visible brand on the apparel. The phrases are the product.
+- Separate entity from Bloom. Bloom's name does not appear on the merch.
+- Link back to Bloom only via packaging insert: "Profits from this support Bloom, a free mental health app. bloomselfcare.app"
+- Print-on-demand to start (no inventory risk). Platforms like Etsy or similar.
+
+- [ ] Choose print-on-demand platform (Etsy, Printful, etc.)
+- [ ] Design first product: "Stay." on heavyweight tee, clean minimal typography
+- [ ] Set up shop and listing
+- [ ] Add packaging insert linking to Bloom
+
 ### Phase 4 -- Reach (Month 3-6)
 - [x] Purchase a custom domain (bloomselfcare.app)
 - [x] Submit Bloom to PsyberGuide for credibility review (emailed March 2026)
