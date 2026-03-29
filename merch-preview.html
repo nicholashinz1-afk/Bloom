@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stay. — Merch Design Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&family=Libre+Baskerville:wght@400;700&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a;
+    color: #e8e0d8;
+    font-family: 'DM Sans', sans-serif;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+  h1 {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    color: #a8a090;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: #706860;
+    margin-bottom: 48px;
+  }
+  .section-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #706860;
+    margin: 48px 0 24px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .mockup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .tee {
+    width: 280px;
+    height: 340px;
+    border-radius: 12px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  .tee:hover {
+    transform: scale(1.02);
+  }
+  .tee.black { background: #111; }
+  .tee.white { background: #f5f0eb; }
+  .tee.sage { background: #4a5e4a; }
+  .tee.charcoal { background: #2a2a2a; }
+
+  /* T-shirt shape overlay */
+  .tee::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 20px;
+    border-radius: 0 0 30px 30px;
+    background: #1a1a1a;
+  }
+  .tee::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+    pointer-events: none;
+  }
+
+  .tee-text {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Placement variations */
+  .placement-center .tee-text {
+    /* default centered */
+  }
+  .placement-left .tee-text {
+    position: absolute;
+    top: 80px;
+    left: 50px;
+  }
+  .placement-back .tee-text {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .label {
+    font-size: 12px;
+    color: #908880;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .label strong {
+    color: #c8c0b8;
+    font-weight: 500;
+  }
+  .label .detail {
+    font-size: 11px;
+    color: #605850;
+  }
+
+  /* Divider */
+  hr {
+    border: none;
+    border-top: 1px solid #2a2a2a;
+    margin: 48px auto;
+    max-width: 200px;
+  }
+
+  .note {
+    text-align: center;
+    font-size: 12px;
+    color: #585048;
+    max-width: 500px;
+    margin: 48px auto 0;
+    line-height: 1.7;
+  }
+
+  /* Favorites bar */
+  .favorites {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #111;
+    border-top: 1px solid #2a2a2a;
+    padding: 12px 20px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+  }
+  .favorites.show { display: flex; }
+  .favorites span { font-size: 13px; color: #908880; }
+  .fav-list { font-size: 13px; color: #c8c0b8; }
+
+  .tee.selected {
+    outline: 2px solid #a8c0a8;
+    outline-offset: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>stay.</h1>
+<p class="subtitle">merch design exploration — tap any to mark as favorite</p>
+
+<!-- CASE EXPLORATION -->
+<div class="section-label">Case + Typeface</div>
+<div class="grid">
+
+  <!-- lowercase sans -->
+  <div class="mockup">
+    <div class="tee black placement-center" onclick="toggleFav(this, 'A1')">
+      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:32px; color:#f5f0eb; letter-spacing:0.02em;">stay.</div>
+    </div>
+    <div class="label"><strong>A1</strong> — lowercase, Inter Light<br><span class="detail">black tee, center chest</span></div>
+  </div>
+
+  <!-- lowercase sans on white -->
+  <div class="mockup">
+    <div class="tee white placement-center" onclick="toggleFav(this, 'A2')">
+      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:32px; color:#1a1a1a; letter-spacing:0.02em;">stay.</div>
+    </div>
+    <div class="label"><strong>A2</strong> — lowercase, Inter Light<br><span class="detail">off-white tee, center chest</span></div>
+  </div>
+
+  <!-- lowercase serif -->
+  <div class="mockup">
+    <div class="tee black placement-center" onclick="toggleFav(this, 'A3')">
+      <div class="tee-text" style="font-family:'Playfair Display',serif; font-weight:400; font-size:34px; color:#f5f0eb; letter-spacing:0.01em;">stay.</div>
+    </div>
+    <div class="label"><strong>A3</strong> — lowercase, Playfair Display<br><span class="detail">black tee, center chest</span></div>
+  </div>
+
+  <!-- lowercase serif on sage -->
+  <div class="mockup">
+    <div class="tee sage placement-center" onclick="toggleFav(this, 'A4')">
+      <div class="tee-text" style="font-family:'Libre Baskerville',serif; font-weight:400; font-size:30px; color:#f5f0eb; letter-spacing:0.01em;">stay.</div>
+    </div>
+    <div class="label"><strong>A4</strong> — lowercase, Libre Baskerville<br><span class="detail">sage tee, center chest</span></div>
+  </div>
+
+  <!-- Sentence case sans -->
+  <div class="mockup">
+    <div class="tee black placement-center" onclick="toggleFav(this, 'B1')">
+      <div class="tee-text" style="font-family:'DM Sans',sans-serif; font-weight:400; font-size:32px; color:#f5f0eb; letter-spacing:0.02em;">Stay.</div>
+    </div>
+    <div class="label"><strong>B1</strong> — sentence case, DM Sans<br><span class="detail">black tee, center chest</span></div>
+  </div>
+
+  <!-- Sentence case serif -->
+  <div class="mockup">
+    <div class="tee white placement-center" onclick="toggleFav(this, 'B2')">
+      <div class="tee-text" style="font-family:'Playfair Display',serif; font-weight:400; font-size:34px; color:#1a1a1a; letter-spacing:0.01em;">Stay.</div>
+    </div>
+    <div class="label"><strong>B2</strong> — sentence case, Playfair Display<br><span class="detail">off-white tee, center chest</span></div>
+  </div>
+
+  <!-- ALL CAPS sans -->
+  <div class="mockup">
+    <div class="tee charcoal placement-center" onclick="toggleFav(this, 'C1')">
+      <div class="tee-text" style="font-family:'Space Grotesk',sans-serif; font-weight:400; font-size:28px; color:#f5f0eb; letter-spacing:0.2em;">STAY.</div>
+    </div>
+    <div class="label"><strong>C1</strong> — all caps, Space Grotesk<br><span class="detail">charcoal tee, center chest, wide tracking</span></div>
+  </div>
+
+  <!-- ALL CAPS serif -->
+  <div class="mockup">
+    <div class="tee black placement-center" onclick="toggleFav(this, 'C2')">
+      <div class="tee-text" style="font-family:'Libre Baskerville',serif; font-weight:400; font-size:26px; color:#f5f0eb; letter-spacing:0.15em;">STAY.</div>
+    </div>
+    <div class="label"><strong>C2</strong> — all caps, Libre Baskerville<br><span class="detail">black tee, center chest, wide tracking</span></div>
+  </div>
+
+</div>
+
+<hr>
+
+<!-- PLACEMENT EXPLORATION -->
+<div class="section-label">Placement</div>
+<div class="grid">
+
+  <!-- Left chest -->
+  <div class="mockup">
+    <div class="tee black placement-left" onclick="toggleFav(this, 'D1')">
+      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:16px; color:#f5f0eb; letter-spacing:0.02em;">stay.</div>
+    </div>
+    <div class="label"><strong>D1</strong> — left chest, small<br><span class="detail">Inter Light, quiet placement</span></div>
+  </div>
+
+  <!-- Left chest serif -->
+  <div class="mockup">
+    <div class="tee white placement-left" onclick="toggleFav(this, 'D2')">
+      <div class="tee-text" style="font-family:'Playfair Display',serif; font-weight:400; font-size:16px; color:#1a1a1a; letter-spacing:0.01em;">stay.</div>
+    </div>
+    <div class="label"><strong>D2</strong> — left chest, small<br><span class="detail">Playfair Display, quiet placement</span></div>
+  </div>
+
+  <!-- Upper back / below collar -->
+  <div class="mockup">
+    <div class="tee black placement-back" onclick="toggleFav(this, 'D3')">
+      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:14px; color:#f5f0eb; letter-spacing:0.05em;">stay.</div>
+    </div>
+    <div class="label"><strong>D3</strong> — back of neck<br><span class="detail">small, for the person behind you</span></div>
+  </div>
+
+  <!-- Center but larger, bolder -->
+  <div class="mockup">
+    <div class="tee black placement-center" onclick="toggleFav(this, 'D4')">
+      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:48px; color:#f5f0eb; letter-spacing:0.02em;">stay.</div>
+    </div>
+    <div class="label"><strong>D4</strong> — center chest, large<br><span class="detail">Inter Light, bigger presence</span></div>
+  </div>
+
+</div>
+
+<hr>
+
+<!-- COLOR EXPLORATION -->
+<div class="section-label">Color Combinations</div>
+<div class="grid">
+
+  <div class="mockup">
+    <div class="tee black placement-center" onclick="toggleFav(this, 'E1')">
+      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:32px; color:#a8c0a8; letter-spacing:0.02em;">stay.</div>
+    </div>
+    <div class="label"><strong>E1</strong> — sage text on black<br><span class="detail">muted, earthy</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="tee sage placement-center" onclick="toggleFav(this, 'E2')">
+      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:32px; color:#f5f0eb; letter-spacing:0.02em;">stay.</div>
+    </div>
+    <div class="label"><strong>E2</strong> — cream text on sage<br><span class="detail">warm, grounded</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="tee white placement-center" onclick="toggleFav(this, 'E3')">
+      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:32px; color:#4a5e4a; letter-spacing:0.02em;">stay.</div>
+    </div>
+    <div class="label"><strong>E3</strong> — sage text on off-white<br><span class="detail">light, approachable</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="tee charcoal placement-center" onclick="toggleFav(this, 'E4')">
+      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:32px; color:#c8b8a8; letter-spacing:0.02em;">stay.</div>
+    </div>
+    <div class="label"><strong>E4</strong> — warm tan text on charcoal<br><span class="detail">understated, tonal</span></div>
+  </div>
+
+</div>
+
+<div class="note">
+  These are rough representations. Actual print will depend on the blank and print method.
+  Tap any mockup to mark it as a favorite. Mix and match: you might like the typeface from one, the placement from another, and the color from a third.
+</div>
+
+<div class="favorites" id="favBar">
+  <span>Favorites:</span>
+  <span class="fav-list" id="favList"></span>
+</div>
+
+<div style="height:60px"></div>
+
+<script>
+  const favs = new Set();
+  function toggleFav(el, id) {
+    el.classList.toggle('selected');
+    if (favs.has(id)) favs.delete(id); else favs.add(id);
+    const bar = document.getElementById('favBar');
+    const list = document.getElementById('favList');
+    if (favs.size > 0) {
+      bar.classList.add('show');
+      list.textContent = [...favs].join(', ');
+    } else {
+      bar.classList.remove('show');
+    }
+  }
+</script>
+
+</body>
+</html>
