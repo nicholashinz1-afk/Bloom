@@ -3142,47 +3142,6 @@ select:focus {
 </div>
 
 <!-- Re-intro sheet for existing users -->
-<div class="bottom-sheet" id="reintro-sheet">
-  <div class="sheet-handle"></div>
-  <div style="padding:0 20px 24px">
-    <div style="text-align:center;margin-bottom:20px">
-      <div style="font-size:40px;margin-bottom:12px">✨</div>
-      <div style="font-family:Fraunces,serif;font-size:22px;font-weight:300;color:var(--cream);margin-bottom:8px">A few new things for you</div>
-      <div style="font-size:14px;color:var(--text-secondary);line-height:1.7">
-        bloom now has color themes and daily self-care tasks — small things you can track that matter when everything feels hard.
-      </div>
-    </div>
-    <div style="background:var(--bg-card);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:20px">🎨</span>
-          <div style="font-size:13px;color:var(--text-secondary)">Choose a color palette that feels like you</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:20px">💚</span>
-          <div style="font-size:13px;color:var(--text-secondary)">Add gentle daily self-care reminders — brush hair, get dressed, anything that counts</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:20px">🔒</span>
-          <div style="font-size:13px;color:var(--text-secondary)">None of your existing data will change</div>
-        </div>
-      </div>
-    </div>
-    <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:16px;font-style:italic">
-      Takes about a minute. You can always find these in Settings.
-    </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-primary" style="flex:1" onclick="startReintro()">Set it up</button>
-      <button class="btn btn-ghost" onclick="dismissReintro()">Maybe later</button>
-    </div>
-  </div>
-</div>
-
-<!-- Re-intro mini onboarding overlay -->
-<div id="reintro-overlay" style="display:none;position:fixed;inset:0;z-index:780;background:var(--bg);flex-direction:column;overflow:hidden">
-  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(var(--safe-top) + 20px) 20px 0" id="reintro-body"></div>
-  <div style="padding:16px 20px calc(var(--safe-bottom) + 16px);display:flex;gap:10px;border-top:1px solid rgba(255,255,255,0.06);background:var(--bg);flex-shrink:0" id="reintro-footer"></div>
-</div>
 
 <!-- Daily affirmation overlay -->
 <div id="affirmation-overlay" style="display:none">
@@ -3441,7 +3400,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '3.3.0';
+const VERSION = '3.4.0';
 const LEGACY_DOMAINS = ['bloom-zeta-rouge.vercel.app'];
 const PRODUCTION_DOMAIN = 'bloomselfcare.app';
 
@@ -3489,10 +3448,10 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: '<strong>Cloud vault</strong> — your data, encrypted and safe in the cloud. No account, no email, no identity. If you ever lose your phone, you can get everything back with just a recovery code and passphrase. Set it up in Settings > Data & privacy.', spotlight: null, tab: 'settings', featured: true },
-  { text: '<strong>Recover your data</strong> — one place to restore from a cloud vault, backup file, or restore link. Available in Settings and during setup.', spotlight: null, tab: 'settings' },
-  { text: '<strong>Better backups</strong> — backups now include everything: your buddy connections, milestones, preferences, and progress. A backup file is also saved to your device automatically whenever you export.', spotlight: null, tab: 'settings' },
-  { text: '<strong>Transfer to a new device</strong> — scan a QR code to move your data to a new phone instantly. Find it in Settings > Data & privacy.', spotlight: null, tab: 'settings' },
+  { text: '<strong>Journal fix</strong> — prompts were sometimes changing or showing old ones after you started writing. That\'s fixed now. Your entries always save correctly.', spotlight: null },
+  { text: '<strong>Custom habits</strong> — build your own daily habits in Settings. Track whatever matters to you, not just the defaults.', spotlight: null, tab: 'settings' },
+  { text: '<strong>Afternoon time slot</strong> — habits can now be tracked for morning, afternoon, and evening separately. Set it up per habit in Settings.', spotlight: null, tab: 'settings' },
+  { text: '<strong>Your data is yours</strong> — Bloom no longer silently trims old history. Every check-in you\'ve ever logged is kept, always.', spotlight: null },
 ];
 
 // ============================================================
@@ -15453,9 +15412,6 @@ function showWhatsNew(force = false) {
   if (!load('bloom_tutorial_done') && !force) return;
   if (!force && load('bloom_version') === VERSION) return;
 
-  const isExistingUser = !!load('bloom_tutorial_done');
-  const hasSeenReintro = load('bloom_reintro_v150', false);
-
   save('bloom_version', VERSION);
 
   const title = document.getElementById('whats-new-title');
@@ -15473,192 +15429,6 @@ function showWhatsNew(force = false) {
   if (tourBtn) tourBtn.style.display = hasTour ? '' : 'none';
 
   openSheet('whats-new-sheet');
-
-  // After What's New closes, show re-intro for existing users who haven't seen it
-  if (isExistingUser && !hasSeenReintro && !force) {
-    const sheet = document.getElementById('whats-new-sheet');
-    if (sheet) {
-      const observer = new MutationObserver(() => {
-        if (!sheet.classList.contains('open')) {
-          observer.disconnect();
-          setTimeout(() => {
-            if (!load('bloom_reintro_v150', false)) {
-              openSheet('reintro-sheet');
-            }
-          }, 400);
-        }
-      });
-      observer.observe(sheet, { attributes: true, attributeFilter: ['class'] });
-    }
-  }
-}
-
-function dismissReintro() {
-  save('bloom_reintro_v150', true);
-  closeAllSheets();
-}
-
-let reintroStep = 0;
-const REINTRO_STEPS = ['appearance', 'selfcare'];
-
-function startReintro() {
-  save('bloom_reintro_v150', true);
-  closeAllSheets();
-  reintroStep = 0;
-  const overlay = document.getElementById('reintro-overlay');
-  overlay.style.display = 'flex';
-  renderReintroStep();
-}
-
-function renderReintroStep() {
-  const body = document.getElementById('reintro-body');
-  const footer = document.getElementById('reintro-footer');
-  const step = REINTRO_STEPS[reintroStep];
-  const stepLabel = `<div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;text-align:right">${reintroStep + 1} of ${REINTRO_STEPS.length}</div>`;
-
-  if (step === 'appearance') {
-    const currentTheme = state.prefs?.theme || 'forest';
-    body.innerHTML = stepLabel + `
-      <div style="font-family:Fraunces,serif;font-size:24px;font-weight:300;color:var(--cream);margin-bottom:6px">Make it yours</div>
-      <div style="font-size:14px;color:var(--text-secondary);margin-bottom:20px;line-height:1.6">Choose a palette that feels right. You can always change it in Settings.</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        ${Object.entries(THEMES).map(([key, t]) => `
-          <div onclick="reintroSetTheme('${key}')" id="reintro-theme-${key}" style="
-            background:${t.bg};border:2px solid ${key === currentTheme ? t.primary : 'rgba(255,255,255,0.1)'};
-            border-radius:var(--r-xl);padding:16px 14px;cursor:pointer;transition:border-color 0.2s,transform 0.15s;
-            ${key === currentTheme ? 'transform:scale(1.03)' : ''}">
-            <div style="display:flex;gap:5px;margin-bottom:10px">
-              <div style="width:14px;height:14px;border-radius:50%;background:#7a9e7e"></div>
-              <div style="width:14px;height:14px;border-radius:50%;background:#b07878"></div>
-              <div style="width:14px;height:14px;border-radius:50%;background:#6a9ab0"></div>
-              <div style="width:14px;height:14px;border-radius:50%;background:#c9954a"></div>
-            </div>
-            <div style="font-size:15px;font-weight:500;color:${t.primaryLight}">${t.emoji} ${t.name}</div>
-            <div style="font-size:12px;color:${t.textSecondary};margin-top:3px">${t.description}</div>
-            ${key === currentTheme ? `<div style="font-size:11px;color:${t.primary};margin-top:6px">Selected ✓</div>` : ''}
-          </div>`).join('')}
-      </div>`;
-
-    footer.innerHTML = `
-      <button class="btn btn-ghost" onclick="closeReintro()" style="color:var(--text-muted);font-size:13px">Skip</button>
-      <button class="btn btn-primary" style="flex:1" onclick="reintroNext()">Next →</button>`;
-
-  } else if (step === 'selfcare') {
-    const selected = state.prefs?.selfCareTasks || [];
-    let html = stepLabel + `
-      <div style="font-family:Fraunces,serif;font-size:24px;font-weight:300;color:var(--cream);margin-bottom:6px">Daily self-care</div>
-      <div style="font-size:14px;color:var(--text-secondary);margin-bottom:6px;line-height:1.6">Small acts that matter — especially on hard days. Pick what feels possible, not what feels perfect.</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;font-style:italic;line-height:1.5">You can add or remove these any time in Settings. There's no right answer.</div>`;
-
-    SELF_CARE_CATEGORIES.forEach(cat => {
-      html += `<div style="margin-bottom:16px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <span style="font-size:15px">${cat.icon}</span>
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--cream)">${cat.label}</div>
-            <div style="font-size:11px;color:var(--text-muted)">${cat.sub}</div>
-          </div>
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px">
-          ${cat.tasks.map(t => {
-            const on = selected.includes(t.id);
-            const ps = `display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:99px;cursor:pointer;font-size:13px;background:${on ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(var(--sage-rgb),0.5)' : 'rgba(255,255,255,0.08)'};color:${on ? 'var(--sage-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
-            return `<div onclick="reintroToggleSC('${t.id}')" id="ri-sc-${t.id}" style="${ps}"><span>${t.icon}</span>${t.label}</div>`;
-          }).join('')}
-        </div>
-      </div>`;
-    });
-
-    const medOn = selected.includes('sc_medication');
-    const medPs = `display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:99px;cursor:pointer;font-size:13px;background:${medOn ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};border:1px solid ${medOn ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};color:${medOn ? 'var(--sky-light)' : 'var(--text-secondary)'};transition:all 0.15s`;
-    html += `<div style="background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.15);border-radius:var(--r-lg);padding:12px 14px;margin-bottom:20px">
-      <div style="font-size:12px;color:var(--sky-light);font-weight:500;margin-bottom:4px">💊 Medication</div>
-      <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">A private, judgment-free nudge. Just "did I remember?" — nothing more.</div>
-      <div onclick="openMedicationSheet()" id="ri-sc-sc_medication" style="${medPs}">${medOn ? "💊 Medication ✓" : "💊 Set up reminder →"}</div>
-    </div>`;
-
-    body.innerHTML = html;
-    footer.innerHTML = `
-      <button class="btn btn-ghost" onclick="reintroBack()">← Back</button>
-      <button class="btn btn-primary" style="flex:1" onclick="closeReintro()">All done 🌿</button>`;
-  }
-}
-
-function reintroSetTheme(key) {
-  setTheme(key);
-  Object.keys(THEMES).forEach(k => {
-    const el = document.getElementById('reintro-theme-' + k);
-    if (!el) return;
-    const t = THEMES[k];
-    el.style.borderColor = k === key ? t.primary : 'rgba(255,255,255,0.1)';
-    el.style.transform = k === key ? 'scale(1.03)' : 'scale(1)';
-  });
-}
-
-function reintroToggleSC(id) {
-  if (!state.prefs.selfCareTasks) state.prefs.selfCareTasks = [];
-  const idx = state.prefs.selfCareTasks.indexOf(id);
-  if (idx > -1) state.prefs.selfCareTasks.splice(idx, 1);
-  else state.prefs.selfCareTasks.push(id);
-  save('bloom_prefs', state.prefs);
-  const el = document.getElementById('ri-sc-' + id);
-  if (el) {
-    const on = state.prefs.selfCareTasks.includes(id);
-    const isMed = id === 'sc_medication';
-    el.style.background = on ? (isMed ? 'rgba(106,154,176,0.2)' : 'rgba(var(--sage-rgb),0.2)') : 'rgba(255,255,255,0.04)';
-    el.style.borderColor = on ? (isMed ? 'rgba(106,154,176,0.4)' : 'rgba(var(--sage-rgb),0.5)') : 'rgba(255,255,255,0.08)';
-    el.style.color = on ? (isMed ? 'var(--sky-light)' : 'var(--sage-light)') : 'var(--text-secondary)';
-  }
-}
-
-function reintroNext() {
-  reintroStep++;
-  if (reintroStep >= REINTRO_STEPS.length) {
-    closeReintro();
-  } else {
-    const body = document.getElementById('reintro-body');
-    if (body) body.scrollTop = 0;
-    renderReintroStep();
-  }
-}
-
-function reintroBack() {
-  reintroStep = Math.max(0, reintroStep - 1);
-  const body = document.getElementById('reintro-body');
-  if (body) body.scrollTop = 0;
-  renderReintroStep();
-}
-
-function closeReintro() {
-  // Remove any tour spotlights that might be lingering
-  document.getElementById('tour-spotlight')?.remove();
-  document.getElementById('streak-welcome-overlay')?.remove();
-
-  const overlay = document.getElementById('reintro-overlay');
-  if (overlay) {
-    overlay.style.display = 'none';
-    // Clear body content to prevent stale state
-    const body = document.getElementById('reintro-body');
-    const footer = document.getElementById('reintro-footer');
-    if (body) body.innerHTML = '';
-    if (footer) footer.innerHTML = '';
-  }
-
-  // Re-render today tab to show any newly selected self-care tasks
-  renderTodayTab();
-
-  // Show a warm completion toast
-  setTimeout(() => {
-    const div = document.createElement('div');
-    div.style.cssText = `position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
-      background:var(--bg-card);border:2px solid var(--sage);border-radius:99px;
-      padding:12px 24px;font-size:14px;color:var(--cream);z-index:600;
-      font-family:Fraunces,serif;font-style:italic;white-space:nowrap;
-      animation:celebrateIn 0.4s ease forwards`;
-    div.textContent = "You're all set 🌿";
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 2500);
-  }, 200);
 }
 
 let whatsNewTourStep = 0;
