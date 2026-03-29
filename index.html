@@ -12620,7 +12620,7 @@ function renderSettingsTab() {
       <p style="margin-bottom:10px"><strong style="color:var(--cream)">What is sent to external services:</strong></p>
       <ul style="padding-left:18px;margin-bottom:10px">
         <li style="margin-bottom:6px"><strong>AI reflections:</strong> When you use AI features (journal reflections, weekly insights, monthly reflections), your prompt text is sent to Anthropic's Claude API to generate a response. This data is not stored or linked to your identity by Bloom or Anthropic. <em>Note: For very low mood entries and hard day mode, Bloom uses pre-written responses instead of AI.</em></li>
-        <li style="margin-bottom:6px"><strong>Bloom Buddy:</strong> If you use the buddy feature, your display name, mood (if sharing is on), streak count, habit completion percentage, and messages are stored on our server (Redis/Vercel KV) to enable the pairing. Your journal entries, specific habits, and other private data are never shared.</li>
+        <li style="margin-bottom:6px"><strong>Bloom Buddy:</strong> If you use the buddy feature, your display name, mood (if sharing is on), days shown up, habit completion percentage, and messages are stored on our server (Redis/Vercel KV) to enable the pairing. Your journal entries, specific habits, and other private data are never shared.</li>
         <li style="margin-bottom:6px"><strong>Encouragement Wall:</strong> Posts you submit to the community wall are stored on our server without any identifying information attached.</li>
         <li style="margin-bottom:6px"><strong>Push Notifications:</strong> If enabled, OneSignal processes a device identifier for delivery. No personal content is included.</li>
       </ul>
@@ -16668,7 +16668,7 @@ function renderOBBuddyIntro(body, footer) {
     <div style="text-align:center;margin-bottom:20px">
       <div style="font-size:64px;line-height:1;margin-bottom:16px">🤝</div>
       <div class="ob-title" style="text-align:center">bloom buddy</div>
-      <div class="ob-sub" style="text-align:center">Partner with someone for mutual encouragement. Your buddy can see your mood, streak, and habit progress — but not your journal or specific habits.</div>
+      <div class="ob-sub" style="text-align:center">Partner with someone for mutual encouragement. Your buddy can see your mood, days shown up, and habit progress, but not your journal or specific habits.</div>
     </div>
 
     <div style="background:var(--bg-card);border-radius:16px;padding:16px;margin-bottom:16px">

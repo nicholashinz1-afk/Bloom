@@ -406,7 +406,7 @@ export default async function handler(req, res) {
           await sendPush(
             partner.oneSignalId,
             'bloom buddy',
-            `${profile.name || 'Your bloom buddy'} is having a rough day \u2014 a kind word could mean a lot`
+            `${profile.name || 'Your bloom buddy'} is having a rough day. A kind word could mean a lot`
           );
         }
       }
@@ -422,7 +422,7 @@ export default async function handler(req, res) {
             await sendPush(
               partner.oneSignalId,
               'bloom buddy',
-              'Your bloom buddy is thinking of you \u2014 it\'s a new day to check in'
+              'Your bloom buddy is thinking of you. It\'s a new day to check in'
             );
           }
         }
@@ -439,7 +439,7 @@ export default async function handler(req, res) {
               await sendPush(
                 partner.oneSignalId,
                 'bloom buddy',
-                `${profile.name || 'Your bloom buddy'} just hit a ${m}-day streak!`
+                `${profile.name || 'Your bloom buddy'} has shown up for ${m} days!`
               );
             }
           }
