@@ -5213,7 +5213,6 @@ function getMoodPattern() {
   if (avgOlder !== null) {
     const diff = avgRecent - avgOlder;
     if (diff >= 0.5) patterns.push({ type: 'improving', text: 'Your mood has been trending upward this week.' });
-    else if (diff <= -0.5) patterns.push({ type: 'declining', text: 'Your mood has been a little lower this week than last.' });
   }
 
   if (avgExercise !== null && avgNonExercise !== null && avgExercise - avgNonExercise >= 0.7) {
@@ -18895,7 +18894,7 @@ function getSeasonalInsights() {
     insights.push({
       emoji: '📅',
       title: 'Seasonal pattern',
-      text: `Your mood tends to be highest in ${monthNames[bestMonth]} and lower in ${monthNames[hardestMonth]}. Knowing this can help you plan ahead with extra self-care.`,
+      text: `You tend to feel your best in ${monthNames[bestMonth]}. Around ${monthNames[hardestMonth]}, a little extra self-care can go a long way.`,
     });
   }
 
@@ -18912,8 +18911,8 @@ function getSeasonalInsights() {
     if (diff <= -0.5) {
       insights.push({
         emoji: '🌧',
-        title: `${monthNames[currentMonth]} tends to be harder`,
-        text: `Your mood this month averages a bit lower than usual. That's okay — it's a pattern, not a personal failing. Be extra gentle with yourself.`,
+        title: `Extra self-care month`,
+        text: `${monthNames[currentMonth]} can be a tougher stretch. Be extra gentle with yourself and lean into what helps.`,
       });
     } else if (diff >= 0.5) {
       insights.push({
