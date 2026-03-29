@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stay. — Hat Embroidery Files</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; color: #e8e0d8; font-family: 'DM Sans', sans-serif; padding: 40px 20px; }
+  h1 { text-align: center; font-family: 'Fraunces', serif; font-weight: 400; font-size: 20px; color: #a8a090; margin-bottom: 8px; }
+  .sub { text-align: center; font-size: 13px; color: #585048; margin-bottom: 30px; line-height: 1.6; }
+  .panels { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1000px; margin: 0 auto; }
+  .card { display: flex; flex-direction: column; align-items: center; gap: 8px; background: #1a1a1a; border-radius: 10px; padding: 16px; border: 1px solid #222; }
+  .card canvas { border-radius: 6px; border: 1px solid #333; }
+  .info { font-size: 12px; color: #908880; text-align: center; line-height: 1.5; }
+  .info strong { color: #c8c0b8; font-weight: 400; }
+  .btn { padding: 10px 20px; background: #1c2e20; color: #a8c5ab; border: 1px solid #2a4a30; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; width: 100%; }
+  .btn:hover { background: #243a28; }
+  .section { text-align: center; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #585048; margin: 30px 0 16px; }
+</style>
+</head>
+<body>
+
+<h1>Hats — Embroidery Files</h1>
+<p class="sub">Flexfit 6277 (fitted) & Richardson 112 (trucker). Fraunces Medium weight, "stay."<br>Black fill for digitization. Printful converts to thread color you select.<br>Front: 885 x 300 px (5.9" x 2" at 150 DPI). Slightly heavier weight for embroidery legibility.</p>
+
+<div class="section">Front embroidery (5.9" x 2")</div>
+<div class="panels" id="front"></div>
+
+<script>
+async function init() {
+  await document.fonts.ready;
+  await new Promise(r => setTimeout(r, 300));
+
+  const container = document.getElementById('front');
+
+  // Front: 5.9" x 2" at 150 DPI = 885 x 300
+  const W = 885, H = 300;
+
+  const pw = 200, ph = Math.round(200 * (H / W));
+  const preview = document.createElement('canvas');
+  preview.width = pw * 2; preview.height = ph * 2;
+  preview.style.width = pw + 'px'; preview.style.height = ph + 'px';
+  preview.style.background = '#222';
+  const pctx = preview.getContext('2d');
+  pctx.clearRect(0, 0, pw * 2, ph * 2);
+  const scale = (pw * 2) / W;
+  pctx.save();
+  pctx.translate(pw * 2 * 0.5, ph * 2 * 0.5);
+  pctx.font = `500 ${220 * scale}px Fraunces`;
+  pctx.textAlign = 'center';
+  pctx.textBaseline = 'middle';
+  pctx.fillStyle = '#000';
+  pctx.fillText('stay.', 0, 0);
+  pctx.restore();
+
+  const btn = document.createElement('button');
+  btn.className = 'btn';
+  btn.textContent = 'Download PNG';
+  btn.onclick = () => {
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    ctx.translate(W * 0.5, H * 0.5);
+    ctx.font = `500 ${220}px Fraunces`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#000000';
+    ctx.fillText('stay.', 0, 0);
+    ctx.restore();
+    const link = document.createElement('a');
+    link.download = 'stay-hat-v1-front.png';
+    link.href = c.toDataURL('image/png');
+    link.click();
+  };
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.appendChild(preview);
+  const info = document.createElement('div');
+  info.className = 'info';
+  info.innerHTML = `<strong>Front center</strong><br>${W} x ${H}px · PNG · Black fill<br><span style="color:#6a8a6a">Fraunces Medium (wt 500) for thread legibility</span>`;
+  card.appendChild(info);
+  card.appendChild(btn);
+  container.appendChild(card);
+}
+
+init();
+</script>
+
+</body>
+</html>
