@@ -50,7 +50,7 @@ const COLORS = [
 // Center chest, bigger text for hoodie
 const textX = 0.5;
 const textY = 0.38;
-const textSize = 260;
+const textSize = 400;
 
 function renderAndDownload(colorHex, filename) {
   const c = document.createElement('canvas');
@@ -98,7 +98,7 @@ async function init() {
     const btn = document.createElement('button');
     btn.className = 'btn';
     btn.textContent = 'Download PNG';
-    const filename = `stay-hoodie-v2-center-${col.id}.png`;
+    const filename = `stay-hoodie-v3-center-${col.id}.png`;
     btn.onclick = () => renderAndDownload(col.color, filename);
 
     const card = document.createElement('div');
