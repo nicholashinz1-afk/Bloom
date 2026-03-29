@@ -3656,6 +3656,27 @@ function getJournalPrompt() {
   return prompts[pick];
 }
 
+// ── Stable prompt for today (caches so Daily + Wellness tabs always match) ──
+function getTodayJournalPrompt() {
+  const t = today();
+  // If there are saved entries today, use the first entry's prompt
+  const entries = getJournalEntries(t);
+  if (entries.length > 0 && entries[0].prompt) {
+    return entries[0].prompt;
+  }
+  // Return cached prompt if still valid for today at current offset
+  const offset = state.journalPromptOffset || 0;
+  if (state.cachedJournalPrompt && state.cachedJournalPromptDay === t && state.cachedJournalPromptOffset === offset) {
+    return state.cachedJournalPrompt;
+  }
+  // Compute and cache
+  const prompt = getJournalPrompt();
+  state.cachedJournalPrompt = prompt;
+  state.cachedJournalPromptDay = t;
+  state.cachedJournalPromptOffset = offset;
+  return prompt;
+}
+
 // ── Journal entry helpers (array-based storage) ─────────────
 function getJournalEntries(date) {
   const raw = state.wellnessData?.journal?.[date];
@@ -9059,7 +9080,7 @@ function renderTodayTab() {
       <div style="font-size:15px;font-weight:500">Wellness</div>
       <div style="font-size:11px;font-weight:600;color:${badgeColor};background:${badgeBg};padding:3px 12px;border-radius:99px">${wellnessAllDone ? '✓ Done' : wellnessDone + ' of 3'}</div>
     </div>
-    <div style="font-size:13px;color:var(--cream);font-style:italic;line-height:1.5;margin-bottom:10px">${journalToday ? (getJournalEntries(t)[0].prompt || getJournalPrompt()) : getJournalPrompt()}</div>
+    <div style="font-size:13px;color:var(--cream);font-style:italic;line-height:1.5;margin-bottom:10px">${getTodayJournalPrompt()}</div>
     <div style="font-size:12px;display:flex;gap:14px;flex-wrap:wrap">
       <span style="color:${journalToday ? 'var(--sage-light)' : 'var(--text-muted)'}">${journalToday ? '✓' : '○'} Journal</span>
       <span style="color:${winsToday ? 'var(--sage-light)' : 'var(--text-muted)'}">${winsToday ? '✓' : '○'} Small wins</span>
@@ -9533,7 +9554,7 @@ function renderWellnessTab() {
 
   // --- JOURNAL ---
   const journalEntries = getJournalEntries(t);
-  const journalPrompt = getJournalPrompt();
+  const journalPrompt = getTodayJournalPrompt();
   const totalJournalDays = Object.keys(state.wellnessData?.journal || {}).filter(d => getJournalEntries(d).length > 0).length;
 
   html += `<div class="card" id="journal-card">
@@ -9868,7 +9889,7 @@ async function saveJournal() {
     entryIndex = state.editingJournalIndex;
   } else {
     // New entry
-    const prompt = state.journalMode === 'free' ? null : (state.journalSamePrompt || getJournalPrompt());
+    const prompt = state.journalMode === 'free' ? null : (state.journalSamePrompt || getTodayJournalPrompt());
     state.wellnessData.journal[t].push({ text, ai: null, savedAt: new Date().toISOString(), prompt, source: state.journalMode === 'free' ? 'open' : 'journal' });
     entryIndex = state.wellnessData.journal[t].length - 1;
   }
@@ -9965,6 +9986,7 @@ function newJournalEntry(mode) {
 function cancelEditJournal() {
   state.editingJournal = false;
   state.editingJournalIndex = null;
+  state.journalSamePrompt = null;
   state.journalMode = 'prompt';
   renderWellnessTab();
 }
