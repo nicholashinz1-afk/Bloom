@@ -103,6 +103,8 @@ Bloom can complement existing mental health services:
 
 ## About
 
-Bloom exists because mental health tools should be free, private, and gentle. No company, no investors, no monetization. Open source, always.
+Bloom was built by Nick Hinz, a Detroit native, Interlochen Arts Academy alum ('09), and DePauw University grad ('14). Nick built Bloom after going through a partial hospitalization program in Troy, MI in 2025. The idea came from co-regulation cards and conversations about how hard it is to maintain basic habits when you're struggling. Every feature in Bloom comes from something Nick or someone in that room needed.
+
+No company, no investors, no monetization. Open source, always. See `docs/outreach/FOUNDER_BIO.md` for the full story.
 
 If you'd like to learn more, give feedback, or talk about a pilot: **bloomhabits@proton.me**
