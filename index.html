@@ -14865,10 +14865,10 @@ function checkDomainMigration() {
 
   const prefs = load('bloom_prefs');
 
-  // No data on old domain: let the app load normally.
-  // User can onboard fresh here, do a manual backup, or use recovery tools.
+  // No data on old domain: redirect to production
   if (!prefs || !prefs.onboarded) {
-    return false;
+    location.replace('https://' + PRODUCTION_DOMAIN);
+    return true;
   }
 
   // Has data: show migration banner so they can move it.
