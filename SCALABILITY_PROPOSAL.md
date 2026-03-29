@@ -243,20 +243,24 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 - [x] Set up Ko-fi (ko-fi.com/bloomselfcare)
 - [x] Set up GitHub Sponsors (via Stripe)
 - [x] Add "Support Bloom" links in Settings and Today tabs
+- [x] Apply for Awesome Foundation micro-grant ($1,000)
+- [x] Add funding.json manifest to repo (FLOSS/fund discoverability)
+- [x] Email Anthropic about social impact API credits
 - [ ] Apply for Cloudflare Project Galileo
 - [ ] Reapply to Open Collective once community grows (contributors, issues, discussions)
 - [ ] Explore alternative fiscal sponsors (Software Freedom Conservancy, Hack Club, NumFOCUS)
-- [ ] Write and submit first grant application (Mozilla Foundation, doesn't require nonprofit status)
+- [ ] Apply for NLnet Foundation grant (needs technical co-applicant)
+- [ ] Monitor NSF SBIR Digital Health for reopening (sole proprietors eligible, currently paused)
+- [ ] Monitor Detroit Startup Fund for Round 3
 
 **Result: Sustainable funding path, infrastructure credits covering costs**
 
 ### Phase 4 -- Reach (Month 3-6)
 - [x] Purchase a custom domain (bloomselfcare.app)
 - [x] Submit Bloom to PsyberGuide for credibility review (emailed March 2026)
-- [x] Reach out to university counseling centers for feedback (MCTS Rose, Schoolcraft, Wayne State)
+- [x] Reach out to university counseling centers for feedback (MCTS Rose, Schoolcraft, Wayne State, DePauw, Interlochen)
 - [ ] Internationalization framework + first community translations
 - [ ] Reach out to crisis organizations for cross-promotion
-- [ ] Reach out to Anthropic about social impact API credits
 - [ ] Apply for larger grants (McGovern Foundation, Google.org)
 - [ ] Post on Product Hunt
 - [ ] Post on Hacker News (Show HN)
@@ -328,7 +332,7 @@ Open Collective rejected Bloom's fiscal sponsorship application (March 2026) -- 
 |--------|---------------|--------|
 | ~~Apply for GitHub Sponsors~~ | ~~Developer-facing donations, 0% fees~~ | Done |
 | Submit Bloom to PsyberGuide (psyberguide.org) | Credibility rating for digital mental health tools | Done (emailed info@psyberguide.org) |
-| Email 5-10 university counseling centers asking for feedback | Feedback relationships turn into pilot programs | In progress (MCTS Rose, Schoolcraft, Wayne State CAPS sent) |
+| Email 5-10 university counseling centers asking for feedback | Feedback relationships turn into pilot programs | In progress (MCTS Rose, Schoolcraft, Wayne State, DePauw counseling services, Interlochen Dr. Kern sent) |
 | Ask a licensed therapist/counselor to review Bloom and write a 2-3 sentence letter of support | One endorsement from a LCSW/psychologist opens institutional doors | In progress (therapist reviewing) |
 | Add explicit "not a HIPAA covered entity / no PHI" statement to privacy policy | Makes institutional legal teams relax | Done |
 | Add FAQ and feedback section in Settings | Users need a way to ask questions and give feedback | Done |
