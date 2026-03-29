@@ -296,7 +296,7 @@ async function init() {
         await new Promise(r => setTimeout(r, 50));
 
         const link = document.createElement('a');
-        link.download = `stay-sun-hoodie-${panel.id}.jpg`;
+        link.download = `stay-hoodie-v2-${panel.id}.jpg`;
         link.href = fullCanvas.toDataURL('image/jpeg', 0.95);
         link.click();
 
