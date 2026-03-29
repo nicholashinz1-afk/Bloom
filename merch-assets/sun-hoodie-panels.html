@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sun Hoodie — Panel Downloads</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; color: #e8e0d8; font-family: 'DM Sans', sans-serif; padding: 40px 20px; }
+  h1 { text-align: center; font-family: 'Fraunces', serif; font-weight: 400; font-size: 20px; color: #a8a090; margin-bottom: 8px; }
+  .sub { text-align: center; font-size: 13px; color: #585048; margin-bottom: 40px; }
+  .panels { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; max-width: 1200px; margin: 0 auto; }
+  .card { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .card canvas { border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); }
+  .card .info { font-size: 12px; color: #908880; text-align: center; }
+  .card .info strong { color: #c8c0b8; font-weight: 400; }
+  .btn { display: inline-block; margin-top: 6px; padding: 8px 18px; background: #1c2e20; color: #a8c5ab; border: 1px solid #2a4a30; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .btn:hover { background: #243a28; }
+  .loading { text-align: center; font-size: 13px; color: #585048; margin: 40px 0; }
+</style>
+</head>
+<body>
+
+<h1>UPF 50+ Sun Hoodie — Panel Files</h1>
+<p class="sub">Click "Download JPEG" on each panel. Pattern: light through tree leaves on deep forest green.</p>
+<p class="sub" style="margin-top:-30px;color:#484040;">Verify dimensions against Printful's template. Panels rendered at 150 DPI (Printful AOP minimum).</p>
+
+<div id="loading" class="loading">Rendering panels...</div>
+<div class="panels" id="panels" style="display:none;"></div>
+
+<script>
+// Panel definitions (approximate Printful AOP hoodie dimensions at 150 DPI)
+const PANELS = [
+  { id: 'front',       label: 'Front',        w: 2250, h: 2700, preview: 280, hasText: true,  textX: 0.5, textY: 0.42, textSize: 80, textVertical: false },
+  { id: 'back',        label: 'Back',         w: 2250, h: 2700, preview: 280, hasText: false },
+  { id: 'left-sleeve', label: 'Left Sleeve',  w: 1050, h: 3000, preview: 140, hasText: true,  textX: 0.5, textY: 0.5,  textSize: 100, textVertical: true },
+  { id: 'right-sleeve',label: 'Right Sleeve', w: 1050, h: 3000, preview: 140, hasText: false },
+  { id: 'left-hood',   label: 'Left Hood',    w: 1200, h: 1200, preview: 200, hasText: false },
+  { id: 'right-hood',  label: 'Right Hood',   w: 1200, h: 1200, preview: 200, hasText: false },
+];
+
+// Seedable random for reproducibility
+let seed = 42;
+function rand() { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; }
+
+function drawForestPattern(ctx, w, h, panel) {
+  seed = 42 + PANELS.indexOf(panel) * 1000;
+
+  // Base
+  ctx.fillStyle = '#152d1a';
+  ctx.fillRect(0, 0, w, h);
+
+  // Depth variation - large dark patches
+  for (let i = 0; i < 12; i++) {
+    let x = rand() * w, y = rand() * h;
+    let rx = 80 + rand() * 250, ry = 80 + rand() * 200;
+    let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
+    g.addColorStop(0, `rgba(10,22,12,${0.2 + rand() * 0.25})`);
+    g.addColorStop(1, 'rgba(10,22,12,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // Mid-tone variation
+  for (let i = 0; i < 15; i++) {
+    let x = rand() * w, y = rand() * h;
+    let rx = 60 + rand() * 180, ry = 60 + rand() * 150;
+    let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
+    g.addColorStop(0, `rgba(28,50,30,${0.15 + rand() * 0.2})`);
+    g.addColorStop(1, 'rgba(28,50,30,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // Large leaf-shaped green light patches (many, overlapping)
+  for (let i = 0; i < 60; i++) {
+    let x = rand() * w, y = rand() * h;
+    let size = 20 + rand() * 80;
+    let angle = rand() * Math.PI * 2;
+    let green = 46 + Math.floor(rand() * 40);
+    let alpha = 0.08 + rand() * 0.18;
+    drawLeaf(ctx, x, y, size, size * (0.5 + rand() * 0.4), angle, `rgba(${40 + Math.floor(rand()*30)},${green + 30},${green - 10},${alpha})`);
+  }
+
+  // Medium leaf patches - denser layer
+  for (let i = 0; i < 80; i++) {
+    let x = rand() * w, y = rand() * h;
+    let size = 10 + rand() * 45;
+    let angle = rand() * Math.PI * 2;
+    let green = 58 + Math.floor(rand() * 50);
+    let alpha = 0.06 + rand() * 0.15;
+    drawLeaf(ctx, x, y, size, size * (0.4 + rand() * 0.5), angle, `rgba(${50 + Math.floor(rand()*30)},${green + 20},${green - 15},${alpha})`);
+  }
+
+  // Bright green leaf accents
+  for (let i = 0; i < 40; i++) {
+    let x = rand() * w, y = rand() * h;
+    let size = 8 + rand() * 30;
+    let angle = rand() * Math.PI * 2;
+    let alpha = 0.05 + rand() * 0.1;
+    drawLeaf(ctx, x, y, size, size * (0.5 + rand() * 0.3), angle, `rgba(90,${130 + Math.floor(rand()*30)},70,${alpha})`);
+  }
+
+  // Warm golden sun-through-leaves spots
+  for (let i = 0; i < 50; i++) {
+    let x = rand() * w, y = rand() * h;
+    let size = 5 + rand() * 22;
+    let angle = rand() * Math.PI * 2;
+    let alpha = 0.04 + rand() * 0.1;
+    drawLeaf(ctx, x, y, size, size * (0.6 + rand() * 0.3), angle, `rgba(${200 + Math.floor(rand()*30)},${180 + Math.floor(rand()*25)},${130 + Math.floor(rand()*30)},${alpha})`);
+  }
+
+  // Tiny bright warm pinpoints
+  for (let i = 0; i < 35; i++) {
+    let x = rand() * w, y = rand() * h;
+    let r = 3 + rand() * 8;
+    let g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(232,220,192,${0.08 + rand() * 0.12})`);
+    g.addColorStop(1, 'rgba(232,220,192,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+
+  // Branch/twig network - organic diagonal lines
+  ctx.strokeStyle = 'rgba(10,26,14,0.1)';
+  for (let i = 0; i < 14; i++) {
+    ctx.lineWidth = 1 + rand() * 2.5;
+    let startX = rand() * w, startY = rand() * h;
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    let segments = 3 + Math.floor(rand() * 4);
+    for (let j = 0; j < segments; j++) {
+      startX += (rand() - 0.3) * 120;
+      startY += 30 + rand() * 80;
+      ctx.lineTo(startX, startY);
+    }
+    ctx.stroke();
+
+    // Sub-branches
+    if (rand() > 0.4) {
+      ctx.lineWidth = 0.8 + rand() * 1.2;
+      let bx = startX - (rand() - 0.5) * 60;
+      let by = startY - rand() * 60;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.lineTo(bx + (rand() - 0.5) * 80, by + 20 + rand() * 50);
+      ctx.stroke();
+    }
+  }
+
+  // Text clearing glow (if this panel has text)
+  if (panel.hasText) {
+    let cx = w * panel.textX, cy = h * panel.textY;
+    let gr = Math.max(w, h) * 0.18;
+    let glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, gr);
+    glow.addColorStop(0, 'rgba(232,220,192,0.25)');
+    glow.addColorStop(0.3, 'rgba(200,191,154,0.12)');
+    glow.addColorStop(0.6, 'rgba(138,171,122,0.06)');
+    glow.addColorStop(1, 'rgba(22,46,26,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, h);
+
+    // Extra subtle warm center
+    let glow2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, gr * 0.5);
+    glow2.addColorStop(0, 'rgba(232,220,192,0.15)');
+    glow2.addColorStop(1, 'rgba(232,220,192,0)');
+    ctx.fillStyle = glow2;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // Overall subtle warm wash from upper area (sun direction)
+  let sunWash = ctx.createLinearGradient(w * 0.4, 0, w * 0.6, h);
+  sunWash.addColorStop(0, 'rgba(200,190,150,0.04)');
+  sunWash.addColorStop(0.3, 'rgba(180,170,130,0.02)');
+  sunWash.addColorStop(1, 'rgba(22,46,26,0)');
+  ctx.fillStyle = sunWash;
+  ctx.fillRect(0, 0, w, h);
+}
+
+function drawLeaf(ctx, x, y, w, h, angle, color) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.beginPath();
+  ctx.moveTo(0, -h / 2);
+  ctx.bezierCurveTo(w * 0.6, -h * 0.3, w * 0.5, h * 0.3, 0, h / 2);
+  ctx.bezierCurveTo(-w * 0.5, h * 0.3, -w * 0.6, -h * 0.3, 0, -h / 2);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawText(ctx, panel) {
+  if (!panel.hasText) return;
+
+  let x = panel.w * panel.textX;
+  let y = panel.w * panel.textY;
+  if (panel.id === 'left-sleeve') y = panel.h * panel.textY;
+
+  ctx.save();
+  ctx.translate(x, panel.h * panel.textY);
+
+  if (panel.textVertical) {
+    ctx.rotate(Math.PI / 2);
+  }
+
+  let fs = panel.textSize;
+  ctx.font = `400 ${fs}px Fraunces`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Soft glow behind text
+  ctx.shadowColor = 'rgba(232,220,192,0.3)';
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = 'rgba(232,220,192,0.4)';
+  ctx.fillText('stay.', 0, 0);
+
+  // Main text
+  ctx.shadowColor = 'rgba(232,220,192,0.15)';
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = 'rgba(232,220,192,0.88)';
+  ctx.fillText('stay.', 0, 0);
+
+  ctx.restore();
+}
+
+async function renderAll() {
+  // Wait for font to load
+  await document.fonts.ready;
+  // Extra delay for font rendering
+  await new Promise(r => setTimeout(r, 500));
+
+  const container = document.getElementById('panels');
+
+  for (const panel of PANELS) {
+    // Full-res canvas (hidden, for download)
+    const full = document.createElement('canvas');
+    full.width = panel.w;
+    full.height = panel.h;
+    const fctx = full.getContext('2d');
+    drawForestPattern(fctx, panel.w, panel.h, panel);
+    drawText(fctx, panel);
+
+    // Preview canvas (visible, scaled down)
+    const aspect = panel.h / panel.w;
+    const pw = panel.preview;
+    const ph = Math.round(pw * aspect);
+    const preview = document.createElement('canvas');
+    preview.width = pw;
+    preview.height = ph;
+    preview.style.width = pw + 'px';
+    preview.style.height = ph + 'px';
+    const pctx = preview.getContext('2d');
+    pctx.drawImage(full, 0, 0, pw, ph);
+
+    // Download button
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.textContent = 'Download JPEG';
+    btn.onclick = () => {
+      const link = document.createElement('a');
+      link.download = `stay-sun-hoodie-${panel.id}.jpg`;
+      link.href = full.toDataURL('image/jpeg', 0.95);
+      link.click();
+    };
+
+    // Card
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.appendChild(preview);
+    const info = document.createElement('div');
+    info.className = 'info';
+    info.innerHTML = `<strong>${panel.label}</strong><br>${panel.w} x ${panel.h}px`;
+    if (panel.hasText) {
+      info.innerHTML += `<br><span style="color:#6a8a6a">"stay." ${panel.textVertical ? 'vertical' : 'center chest'}</span>`;
+    }
+    card.appendChild(info);
+    card.appendChild(btn);
+    container.appendChild(card);
+  }
+
+  document.getElementById('loading').style.display = 'none';
+  container.style.display = 'flex';
+}
+
+renderAll();
+</script>
+
+</body>
+</html>
