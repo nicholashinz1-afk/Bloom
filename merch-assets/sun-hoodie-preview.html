@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sun Hoodie — Forest Light Design Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #111;
+    color: #e8e0d8;
+    font-family: 'DM Sans', sans-serif;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 20px;
+    color: #a8a090;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #585048;
+    margin-bottom: 40px;
+    text-align: center;
+    max-width: 400px;
+    line-height: 1.6;
+  }
+  .preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    justify-content: center;
+    max-width: 1000px;
+  }
+  .preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .hoodie-mockup {
+    width: 320px;
+    height: 400px;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hoodie-mockup img,
+  .hoodie-mockup object {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* Hood shape */
+  .hoodie-mockup::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 34px;
+    border-radius: 60px 60px 0 0;
+    background: #1c3a24;
+    z-index: 2;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-bottom: none;
+  }
+  .hoodie-mockup::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+    pointer-events: none;
+    z-index: 3;
+  }
+  .label {
+    font-size: 13px;
+    color: #908880;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .label strong {
+    color: #c8c0b8;
+    font-weight: 400;
+  }
+  .note {
+    margin-top: 40px;
+    font-size: 12px;
+    color: #484040;
+    max-width: 500px;
+    text-align: center;
+    line-height: 1.7;
+  }
+
+  /* Flat design version for comparison */
+  .flat-preview {
+    width: 320px;
+    height: 400px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+  .flat-preview object {
+    width: 100%;
+    height: 100%;
+  }
+</style>
+</head>
+<body>
+
+<h1>UPF 50+ Sun Hoodie</h1>
+<p class="subtitle">
+  "Light through the trees." Deep forest canopy with dappled sunlight breaking through. "stay." sits in a clearing of warm light, center chest.
+</p>
+
+<div class="preview-container">
+
+  <div class="preview">
+    <div class="hoodie-mockup">
+      <object type="image/svg+xml" data="sun-hoodie-front-forest-light.svg"></object>
+    </div>
+    <div class="label">
+      <strong>Front panel</strong><br>
+      Forest canopy, dappled light, tree silhouettes<br>
+      "stay." in warm cream, sitting in the light
+    </div>
+  </div>
+
+  <div class="preview">
+    <div class="flat-preview">
+      <object type="image/svg+xml" data="sun-hoodie-front-forest-light.svg"></object>
+    </div>
+    <div class="label">
+      <strong>Full design (flat)</strong><br>
+      Same design without hoodie frame
+    </div>
+  </div>
+
+</div>
+
+<p class="note">
+  This is a concept rendering. The all-over print wraps the entire garment (front, back, sleeves, hood).
+  Printful provides panel templates for each section. The pattern would flow across all panels with
+  "stay." on the front chest area. Final output is sublimation printed on 4.13oz moisture-wicking polyester, UPF 50+.
+</p>
+
+</body>
+</html>

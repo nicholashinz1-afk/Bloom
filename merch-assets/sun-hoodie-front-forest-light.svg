@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="4500" height="5400" viewBox="0 0 4500 5400">
+  <!-- All-Over Print Sun Hoodie - Front Panel -->
+  <!-- Light Through the Trees - Forest canopy with dappled light -->
+  <!-- 15" x 18" at 300 DPI = 4500x5400px -->
+  <defs>
+    <!-- Soft light glow -->
+    <radialGradient id="glow1" cx="50%" cy="35%" r="45%">
+      <stop offset="0%" stop-color="#d4c9a8" stop-opacity="0.4"/>
+      <stop offset="60%" stop-color="#8aab7a" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#1c3a24" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="30%" cy="20%" r="25%">
+      <stop offset="0%" stop-color="#e8dcc0" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#1c3a24" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow3" cx="75%" cy="25%" r="20%">
+      <stop offset="0%" stop-color="#c8bf9a" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#1c3a24" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow4" cx="60%" cy="55%" r="18%">
+      <stop offset="0%" stop-color="#d4c9a8" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#1c3a24" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow5" cx="15%" cy="60%" r="22%">
+      <stop offset="0%" stop-color="#b8ad8a" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#1c3a24" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Main light shaft where "stay." sits -->
+    <radialGradient id="mainLight" cx="50%" cy="42%" r="20%">
+      <stop offset="0%" stop-color="#e8dcc0" stop-opacity="0.55"/>
+      <stop offset="40%" stop-color="#c8bf9a" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#1c3a24" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Leaf shadow filter -->
+    <filter id="softBlur">
+      <feGaussianBlur stdDeviation="40"/>
+    </filter>
+    <filter id="tinyBlur">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <filter id="medBlur">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+  </defs>
+
+  <!-- Base: deep forest green -->
+  <rect width="4500" height="5400" fill="#162e1c"/>
+
+  <!-- Subtle darker variation layer -->
+  <ellipse cx="1200" cy="1000" rx="1800" ry="1200" fill="#0f2415" opacity="0.4" filter="url(#softBlur)"/>
+  <ellipse cx="3800" cy="3500" rx="1400" ry="1600" fill="#0f2415" opacity="0.3" filter="url(#softBlur)"/>
+  <ellipse cx="800" cy="4200" rx="1200" ry="1000" fill="#122a18" opacity="0.35" filter="url(#softBlur)"/>
+
+  <!-- Mid-tone canopy layer -->
+  <ellipse cx="2200" cy="800" rx="900" ry="600" fill="#1e3f26" opacity="0.6" filter="url(#softBlur)"/>
+  <ellipse cx="3600" cy="1400" rx="700" ry="500" fill="#1e3f26" opacity="0.5" filter="url(#softBlur)"/>
+  <ellipse cx="1000" cy="2800" rx="800" ry="900" fill="#1e3f26" opacity="0.45" filter="url(#softBlur)"/>
+  <ellipse cx="3200" cy="4800" rx="1000" ry="700" fill="#1e3f26" opacity="0.4" filter="url(#softBlur)"/>
+
+  <!-- Dappled light spots - scattered throughout like sunlight through leaves -->
+  <!-- Upper region -->
+  <ellipse cx="1800" cy="600" rx="180" ry="120" fill="#4a6b3a" opacity="0.35" filter="url(#medBlur)"/>
+  <ellipse cx="2800" cy="450" rx="140" ry="200" fill="#3d5e30" opacity="0.3" filter="url(#medBlur)"/>
+  <ellipse cx="700" cy="900" rx="200" ry="150" fill="#4a6b3a" opacity="0.25" filter="url(#medBlur)"/>
+  <ellipse cx="3900" cy="700" rx="160" ry="220" fill="#3d5e30" opacity="0.3" filter="url(#medBlur)"/>
+
+  <!-- Mid region - more light breaks through here -->
+  <ellipse cx="1400" cy="1600" rx="250" ry="180" fill="#5a7b48" opacity="0.3" filter="url(#medBlur)"/>
+  <ellipse cx="3100" cy="1800" rx="200" ry="280" fill="#4a6b3a" opacity="0.28" filter="url(#medBlur)"/>
+  <ellipse cx="600" cy="2200" rx="300" ry="200" fill="#4a6b3a" opacity="0.22" filter="url(#medBlur)"/>
+  <ellipse cx="3700" cy="2400" rx="180" ry="250" fill="#5a7b48" opacity="0.25" filter="url(#medBlur)"/>
+
+  <!-- Central clearing - where the light is strongest -->
+  <ellipse cx="2250" cy="2100" rx="600" ry="500" fill="#3a5a2e" opacity="0.3" filter="url(#softBlur)"/>
+  <ellipse cx="2250" cy="2200" rx="400" ry="350" fill="#4a6b3a" opacity="0.25" filter="url(#softBlur)"/>
+
+  <!-- Lower region -->
+  <ellipse cx="1100" cy="3600" rx="220" ry="160" fill="#3d5e30" opacity="0.25" filter="url(#medBlur)"/>
+  <ellipse cx="2600" cy="3800" rx="180" ry="240" fill="#4a6b3a" opacity="0.2" filter="url(#medBlur)"/>
+  <ellipse cx="3800" cy="3200" rx="250" ry="180" fill="#3d5e30" opacity="0.22" filter="url(#medBlur)"/>
+  <ellipse cx="900" cy="4500" rx="200" ry="300" fill="#4a6b3a" opacity="0.2" filter="url(#medBlur)"/>
+  <ellipse cx="3400" cy="4400" rx="280" ry="200" fill="#3d5e30" opacity="0.18" filter="url(#medBlur)"/>
+  <ellipse cx="2000" cy="5000" rx="350" ry="250" fill="#4a6b3a" opacity="0.2" filter="url(#medBlur)"/>
+
+  <!-- Light shafts - diagonal beams coming through canopy -->
+  <g opacity="0.12" filter="url(#softBlur)">
+    <polygon points="1800,0 2200,0 2800,5400 2400,5400" fill="#8aab7a"/>
+    <polygon points="3200,0 3500,0 2900,5400 2600,5400" fill="#7a9b6a"/>
+    <polygon points="600,0 900,0 1600,5400 1300,5400" fill="#7a9b6a"/>
+  </g>
+
+  <!-- Warm light glows -->
+  <rect width="4500" height="5400" fill="url(#glow1)"/>
+  <rect width="4500" height="5400" fill="url(#glow2)"/>
+  <rect width="4500" height="5400" fill="url(#glow3)"/>
+  <rect width="4500" height="5400" fill="url(#glow4)"/>
+  <rect width="4500" height="5400" fill="url(#glow5)"/>
+
+  <!-- Main light clearing where stay. lives -->
+  <rect width="4500" height="5400" fill="url(#mainLight)"/>
+
+  <!-- Tiny bright dappled spots - like individual light patches on the ground -->
+  <ellipse cx="1600" cy="1200" rx="40" ry="55" fill="#c8bf9a" opacity="0.15" filter="url(#tinyBlur)"/>
+  <ellipse cx="2900" cy="900" rx="50" ry="35" fill="#d4c9a8" opacity="0.12" filter="url(#tinyBlur)"/>
+  <ellipse cx="800" cy="1800" rx="45" ry="60" fill="#c8bf9a" opacity="0.1" filter="url(#tinyBlur)"/>
+  <ellipse cx="3500" cy="1600" rx="55" ry="40" fill="#d4c9a8" opacity="0.12" filter="url(#tinyBlur)"/>
+  <ellipse cx="2000" cy="2800" rx="35" ry="50" fill="#c8bf9a" opacity="0.1" filter="url(#tinyBlur)"/>
+  <ellipse cx="3200" cy="3000" rx="45" ry="35" fill="#d4c9a8" opacity="0.08" filter="url(#tinyBlur)"/>
+  <ellipse cx="1300" cy="3200" rx="40" ry="55" fill="#c8bf9a" opacity="0.1" filter="url(#tinyBlur)"/>
+  <ellipse cx="3800" cy="2000" rx="50" ry="40" fill="#d4c9a8" opacity="0.1" filter="url(#tinyBlur)"/>
+  <ellipse cx="500" cy="3800" rx="55" ry="45" fill="#c8bf9a" opacity="0.08" filter="url(#tinyBlur)"/>
+  <ellipse cx="2400" cy="4200" rx="40" ry="60" fill="#d4c9a8" opacity="0.08" filter="url(#tinyBlur)"/>
+  <ellipse cx="4000" cy="4600" rx="45" ry="35" fill="#c8bf9a" opacity="0.07" filter="url(#tinyBlur)"/>
+  <ellipse cx="1700" cy="4800" rx="50" ry="50" fill="#d4c9a8" opacity="0.07" filter="url(#tinyBlur)"/>
+
+  <!-- Subtle branch/trunk silhouettes -->
+  <g opacity="0.15">
+    <!-- Left trunk -->
+    <path d="M400,5400 Q380,4000 350,2800 Q330,1800 280,800 Q260,400 250,0" stroke="#0a1a0e" stroke-width="60" fill="none" filter="url(#tinyBlur)"/>
+    <path d="M350,2000 Q600,1600 900,1500" stroke="#0a1a0e" stroke-width="25" fill="none" filter="url(#tinyBlur)"/>
+    <path d="M370,2800 Q550,2500 800,2400" stroke="#0a1a0e" stroke-width="20" fill="none" filter="url(#tinyBlur)"/>
+
+    <!-- Right trunk -->
+    <path d="M4100,5400 Q4120,4200 4150,3000 Q4170,2000 4200,800 Q4210,400 4220,0" stroke="#0a1a0e" stroke-width="55" fill="none" filter="url(#tinyBlur)"/>
+    <path d="M4150,2400 Q3900,2100 3600,2000" stroke="#0a1a0e" stroke-width="22" fill="none" filter="url(#tinyBlur)"/>
+    <path d="M4130,3200 Q3850,2900 3500,2850" stroke="#0a1a0e" stroke-width="18" fill="none" filter="url(#tinyBlur)"/>
+
+    <!-- Center-left thin tree -->
+    <path d="M1500,5400 Q1480,4500 1460,3600 Q1440,2400 1420,1200 Q1410,600 1400,0" stroke="#0a1a0e" stroke-width="30" fill="none" filter="url(#tinyBlur)"/>
+    <path d="M1450,1800 Q1650,1500 1900,1450" stroke="#0a1a0e" stroke-width="14" fill="none" filter="url(#tinyBlur)"/>
+
+    <!-- Center-right thin tree -->
+    <path d="M3100,5400 Q3080,4200 3060,3200 Q3050,2200 3040,1000 Q3030,500 3020,0" stroke="#0a1a0e" stroke-width="28" fill="none" filter="url(#tinyBlur)"/>
+    <path d="M3060,2600 Q2850,2300 2600,2250" stroke="#0a1a0e" stroke-width="12" fill="none" filter="url(#tinyBlur)"/>
+  </g>
+
+  <!-- "stay." in the light clearing - center chest area -->
+  <!-- Sitting in the warm glow, like it was always there -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400&amp;display=swap');
+  </style>
+  <text
+    x="2250" y="2300"
+    font-family="Fraunces, serif"
+    font-weight="400"
+    font-size="260"
+    fill="#e8dcc0"
+    fill-opacity="0.85"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    filter="url(#tinyBlur)"
+  >stay.</text>
+  <!-- Sharper text on top for legibility -->
+  <text
+    x="2250" y="2300"
+    font-family="Fraunces, serif"
+    font-weight="400"
+    font-size="260"
+    fill="#e8dcc0"
+    fill-opacity="0.9"
+    text-anchor="middle"
+    dominant-baseline="middle"
+  >stay.</text>
+
+</svg>
