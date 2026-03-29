@@ -3874,10 +3874,11 @@ function showSaveError() {
   div.innerHTML = `
     <div style="font-size:14px;font-weight:500;color:#e88;margin-bottom:6px">Your data might not be saving</div>
     <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">Storage is full. Your entries are backed up, but please create a backup in Settings and then trim old data so nothing gets lost.</div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-sm" onclick="trimHistory();this.parentElement.parentElement.remove()" style="background:rgba(180,60,60,0.2);border:1px solid rgba(180,60,60,0.4);color:#e88">Auto-trim old data</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-sm" onclick="trimHistory();this.parentElement.parentElement.remove()" style="background:rgba(180,60,60,0.2);border:1px solid rgba(180,60,60,0.4);color:#e88">Free up space</button>
       <button class="btn btn-ghost btn-sm" onclick="this.parentElement.parentElement.remove()">Dismiss</button>
-    </div>`;
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.5">"Free up space" removes check-in history older than 90 days. Your journal entries, reflections, and progress are never touched.</div>`;
   document.body.appendChild(div);
 }
 
@@ -3891,9 +3892,10 @@ function showStorageWarning() {
     <div style="font-size:14px;font-weight:500;color:var(--amber-light);margin-bottom:6px">Storage almost full</div>
     <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">Your data is getting close to the storage limit. Consider creating a backup in Settings.</div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-sm" onclick="trimHistory();this.parentElement.parentElement.remove()" style="background:rgba(201,149,74,0.2);border:1px solid rgba(201,149,74,0.4);color:var(--amber-light)">Auto-trim old data</button>
+      <button class="btn btn-sm" onclick="trimHistory();this.parentElement.parentElement.remove()" style="background:rgba(201,149,74,0.2);border:1px solid rgba(201,149,74,0.4);color:var(--amber-light)">Free up space</button>
       <button class="btn btn-ghost btn-sm" onclick="this.parentElement.parentElement.remove()">Dismiss</button>
-    </div>`;
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.5">"Free up space" removes check-in history older than 90 days. Your journal entries, reflections, and progress are never touched.</div>`;
   document.body.appendChild(div);
 }
 
