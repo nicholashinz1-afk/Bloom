@@ -19327,13 +19327,14 @@ async function main() {
   await initDB();
   await restoreFromDB();
 
-  // Domain migration: show banner but don't block app boot
-  checkDomainMigration();
-
-  // Try restore from URL
+  // Try restore from URL first — if a ?restore= link is present,
+  // skip migration banner and just restore the data
   const restored = await tryRestoreFromURL();
   if (restored) {
     loadState();
+  } else {
+    // Domain migration: show banner but don't block app boot
+    checkDomainMigration();
   }
 
   // File-based migration landing (from old domain fallback)
