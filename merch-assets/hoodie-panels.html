@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stay. — Hoodie Print Files</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; color: #e8e0d8; font-family: 'DM Sans', sans-serif; padding: 40px 20px; }
+  h1 { text-align: center; font-family: 'Fraunces', serif; font-weight: 400; font-size: 20px; color: #a8a090; margin-bottom: 8px; }
+  .sub { text-align: center; font-size: 13px; color: #585048; margin-bottom: 30px; line-height: 1.6; }
+  .panels { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1000px; margin: 0 auto; }
+  .card { display: flex; flex-direction: column; align-items: center; gap: 8px; background: #1a1a1a; border-radius: 10px; padding: 16px; border: 1px solid #222; }
+  .card canvas { border-radius: 6px; border: 1px solid #333; }
+  .info { font-size: 12px; color: #908880; text-align: center; line-height: 1.5; }
+  .info strong { color: #c8c0b8; font-weight: 400; }
+  .btn { padding: 10px 20px; background: #1c2e20; color: #a8c5ab; border: 1px solid #2a4a30; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; width: 100%; }
+  .btn:hover { background: #243a28; }
+  .section { text-align: center; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #585048; margin: 30px 0 16px; }
+</style>
+</head>
+<body>
+
+<h1>Heavyweight Hoodie — Print Files</h1>
+<p class="sub">Bella+Canvas 4719 Oversized Heavyweight. Fraunces Regular, "stay." — center chest.<br>All files: 1800 x 2400 px (12" x 16" at 150 DPI). PNG with transparent background.<br>Upload and fill the print area rectangle. Text is pre-positioned center chest.</p>
+
+<div class="section">Soft Amber (#d4ad6a) — for Forest / Spruce hoodie</div>
+<div class="panels" id="amber"></div>
+
+<div class="section">Cream (#e8e0d0) — for Forest / Dark hoodie</div>
+<div class="panels" id="cream"></div>
+
+<div class="section">Warm Tan (#c8b8a8) — for Charcoal / Asphalt hoodie</div>
+<div class="panels" id="warmtan"></div>
+
+<div class="section">Sand (#e8dcc8) — for Sage / Dust hoodie</div>
+<div class="panels" id="sand"></div>
+
+<script>
+const W = 1800, H = 2400;
+
+const COLORS = [
+  { id: 'amber',   color: '#d4ad6a', container: 'amber' },
+  { id: 'cream',   color: '#e8e0d0', container: 'cream' },
+  { id: 'warmtan', color: '#c8b8a8', container: 'warmtan' },
+  { id: 'sand',    color: '#e8dcc8', container: 'sand' },
+];
+
+// Center chest, bigger text for hoodie
+const textX = 0.5;
+const textY = 0.28;
+const textSize = 280;
+
+function renderAndDownload(colorHex, filename) {
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.translate(W * textX, H * textY);
+  ctx.font = `400 ${textSize}px Fraunces`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = colorHex;
+  ctx.fillText('stay.', 0, 0);
+  ctx.restore();
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = c.toDataURL('image/png');
+  link.click();
+}
+
+async function init() {
+  await document.fonts.ready;
+  await new Promise(r => setTimeout(r, 300));
+
+  for (const col of COLORS) {
+    const container = document.getElementById(col.container);
+
+    const pw = 120, ph = 160;
+    const preview = document.createElement('canvas');
+    preview.width = pw * 2; preview.height = ph * 2;
+    preview.style.width = pw + 'px'; preview.style.height = ph + 'px';
+    preview.style.background = '#222';
+    const pctx = preview.getContext('2d');
+    pctx.clearRect(0, 0, pw * 2, ph * 2);
+    const scale = (pw * 2) / W;
+    pctx.save();
+    pctx.translate(pw * 2 * textX, ph * 2 * textY);
+    pctx.font = `400 ${textSize * scale}px Fraunces`;
+    pctx.textAlign = 'center';
+    pctx.textBaseline = 'middle';
+    pctx.fillStyle = col.color;
+    pctx.fillText('stay.', 0, 0);
+    pctx.restore();
+
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.textContent = 'Download PNG';
+    const filename = `stay-hoodie-v1-center-${col.id}.png`;
+    btn.onclick = () => renderAndDownload(col.color, filename);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.appendChild(preview);
+    const info = document.createElement('div');
+    info.className = 'info';
+    info.innerHTML = `<strong>Center chest</strong><br>${W} x ${H}px · PNG`;
+    card.appendChild(info);
+    card.appendChild(btn);
+    container.appendChild(card);
+  }
+}
+
+init();
+</script>
+
+</body>
+</html>
