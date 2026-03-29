@@ -3624,18 +3624,23 @@ function getJournalPrompt() {
   const isLow = mood !== undefined && mood >= 0 && mood <= 1;
   const prompts = isLow ? JOURNAL_PROMPTS_LOW : JOURNAL_PROMPTS;
   const key = isLow ? 'shownPromptsLow' : 'shownPrompts';
+  const offset = state.journalPromptOffset || 0;
+
+  // Return cached prompt if we already picked one for this day+offset combo
+  const cacheKey = `${isLow ? 'low' : 'reg'}_${getDayIndex()}_${offset}`;
+  if (state._promptCache && state._promptCache.key === cacheKey) {
+    return state._promptCache.value;
+  }
 
   // Track recently shown prompt indices to avoid repeats
   if (!state[key]) state[key] = [];
-  const shown = state[key];
 
   // Reset when we've shown most of the pool (keep last few to avoid immediate repeats after reset)
-  if (shown.length >= prompts.length - 2) {
-    state[key] = shown.slice(-3);
+  if (state[key].length >= prompts.length - 2) {
+    state[key] = state[key].slice(-3);
   }
 
   // Pick a prompt not recently shown, seeded by day + offset for consistency within a day
-  const offset = state.journalPromptOffset || 0;
   const dayVal = getDayIndex() + offset;
 
   // Build list of available indices
@@ -3653,6 +3658,8 @@ function getJournalPrompt() {
     saveState();
   }
 
+  // Cache so repeated calls within the same render cycle return the same prompt
+  state._promptCache = { key: cacheKey, value: prompts[pick] };
   return prompts[pick];
 }
 
@@ -3839,16 +3846,39 @@ async function dbGetAll() {
 
 function save(key, value) {
   const str = JSON.stringify(value);
+  let lsFailed = false;
   try { localStorage.setItem(key, str); } catch(e) {
-    // Quota exceeded — show warning
+    lsFailed = true;
+    // Quota exceeded — show warning and mark key as stale so IndexedDB wins on reload
     if (e.name === 'QuotaExceededError' || e.code === 22) {
+      try {
+        // Track which keys failed so restoreFromDB can overwrite them
+        const stale = JSON.parse(localStorage.getItem('bloom_stale_keys') || '[]');
+        if (!stale.includes(key)) { stale.push(key); localStorage.setItem('bloom_stale_keys', JSON.stringify(stale)); }
+      } catch(e2) { /* storage completely full, restoreFromDB will handle via timestamp */ }
       if (!state._storageWarningShown) {
         state._storageWarningShown = true;
-        setTimeout(() => showStorageWarning(), 500);
+        setTimeout(() => showSaveError(), 500);
       }
     }
   }
   dbSet(key, str);
+}
+
+function showSaveError() {
+  const existing = document.getElementById('save-error-banner');
+  if (existing) return;
+  const div = document.createElement('div');
+  div.id = 'save-error-banner';
+  div.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;max-width:360px;padding:16px 20px;background:rgba(180,60,60,0.2);border:1px solid rgba(180,60,60,0.5);border-radius:var(--r-lg);backdrop-filter:blur(10px)';
+  div.innerHTML = `
+    <div style="font-size:14px;font-weight:500;color:#e88;margin-bottom:6px">Your data might not be saving</div>
+    <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">Storage is full. Your entries are backed up, but please create a backup in Settings and then trim old data so nothing gets lost.</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" onclick="trimHistory();this.parentElement.parentElement.remove()" style="background:rgba(180,60,60,0.2);border:1px solid rgba(180,60,60,0.4);color:#e88">Auto-trim old data</button>
+      <button class="btn btn-ghost btn-sm" onclick="this.parentElement.parentElement.remove()">Dismiss</button>
+    </div>`;
+  document.body.appendChild(div);
 }
 
 function showStorageWarning() {
@@ -3916,12 +3946,19 @@ function load(key, def = null) {
 
 async function restoreFromDB() {
   const all = await dbGetAll();
+  // Check for keys that failed to save to localStorage last session
+  let staleKeys = [];
+  try { staleKeys = JSON.parse(localStorage.getItem('bloom_stale_keys') || '[]'); } catch(e) {}
   for (const [k, v] of Object.entries(all)) {
     try {
-      if (localStorage.getItem(k) === null) {
+      if (localStorage.getItem(k) === null || staleKeys.includes(k)) {
         localStorage.setItem(k, v);
       }
     } catch(e) {}
+  }
+  // Clear stale keys list after restore
+  if (staleKeys.length > 0) {
+    try { localStorage.removeItem('bloom_stale_keys'); } catch(e) {}
   }
 }
 
