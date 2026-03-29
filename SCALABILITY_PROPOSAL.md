@@ -281,6 +281,10 @@ One word. One syllable. A period. It works because it means something different 
 1. Heavyweight tee (Comfort Colors 1717 or Cotton Heritage MC1086). Fraunces Regular, lowercase. Right chest front + small upper back. Earth tone colorways.
 2. Heavyweight hoodie (Bella+Canvas 4719 or Cotton Heritage M2580). Fraunces Regular, center chest. Same earth tone palette.
 3. UPF 50+ sun hoodie (Printful All-Over Print Sports Warmup Hoodie). Louder design with patterned elements. Same word, different energy.
+4. Fitted hat (Flexfit 6277). Flat embroidery, "stay." on front. Clean, minimal.
+5. Trucker hat (Richardson 112). Flat embroidery, "stay." on front. Structured, mesh back.
+
+Note: Embroidery on hats may need a simplified or slightly heavier version of Fraunces letterforms, as thin serif strokes can get lost in thread.
 
 - [ ] Create Printful account and confirm product pricing/color availability
 - [ ] Design heavyweight tee and hoodie print files (Fraunces Regular, "stay.")
