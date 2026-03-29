@@ -14857,25 +14857,15 @@ function checkDomainMigration() {
   const prefs = load('bloom_prefs');
 
   // No data on old domain: show interstitial with recovery option
-  // (Don't silently redirect — iOS Safari may have wiped localStorage,
+  // (Don't silently redirect — iOS may have wiped localStorage,
   //  and the user might need to recover data via backup file)
   if (!prefs || !prefs.onboarded) {
     showLegacyRedirectScreen();
     return true;
   }
 
-  // Already migrated: show full-screen "delete this app" takeover
-  if (load('bloom_migration_complete')) {
-    showMigrationComplete();
-    return true;
-  }
-
-  // Dismissed within 24 hours: skip banner
-  const dismissed = load('bloom_migration_dismissed');
-  if (dismissed && (Date.now() - dismissed) < 24 * 60 * 60 * 1000) {
-    return false;
-  }
-
+  // Always show migration banner — never block re-migration.
+  // Previous attempts may have failed (iOS file download blocked, URL too long, etc.)
   showMigrationBanner();
   return true;
 }
@@ -14986,8 +14976,6 @@ async function startMigration(banner) {
     const encoded = await compressString(jsonStr);
     const url = 'https://' + PRODUCTION_DOMAIN + '/?restore=' + encoded;
 
-    save('bloom_migration_complete', true);
-
     if (url.length <= 16000) {
       trackEvent('migration_url');
       showMigrationSuccess(url);
@@ -15067,65 +15055,6 @@ function showMigrationSuccessFileOnly() {
   overlay.querySelector('#migration-file-open').addEventListener('click', function(e) {
     const w = window.open(targetUrl, '_blank');
     if (w) e.preventDefault();
-  });
-}
-
-function showMigrationComplete() {
-  trackEvent('migration_complete_shown');
-  // Full-screen takeover so user knows this is the OLD app
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:10002;background:var(--bg-main);display:flex;align-items:center;justify-content:center;padding:24px';
-  overlay.innerHTML = `
-    <div style="max-width:360px;text-align:center">
-      <div style="font-size:48px;margin-bottom:16px">👋</div>
-      <h2 style="color:var(--sage);margin-bottom:8px;font-family:Fraunces,serif;font-size:22px">You've already moved!</h2>
-      <p style="color:var(--text-secondary);font-size:14px;line-height:1.7;margin-bottom:24px">
-        Your data is on <strong>bloomselfcare.app</strong> now. This is the old app, and you can safely delete it from your home screen.
-      </p>
-      <a href="https://${PRODUCTION_DOMAIN}" target="_blank" rel="noopener" id="migration-done-open"
-         style="display:block;padding:14px 24px;background:var(--sage);color:var(--text-on-sage);border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;margin-bottom:12px">
-        Open Bloom
-      </a>
-      <p style="color:var(--text-muted);font-size:12px;margin-top:8px;margin-bottom:20px">Long-press this app's icon on your home screen to remove it.</p>
-      <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:16px">
-        <p style="color:var(--text-muted);font-size:12px;margin-bottom:10px">Data didn't transfer? You can try again or export manually.</p>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <button id="migration-retry" style="padding:10px 16px;background:rgba(var(--sage-rgb),0.15);border:1px solid rgba(var(--sage-rgb),0.25);color:var(--sage-light);border-radius:10px;font-size:13px;cursor:pointer;font-weight:500">Try migration again</button>
-          <button id="migration-export" style="padding:10px 16px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--text-secondary);border-radius:10px;font-size:13px;cursor:pointer">Download backup file</button>
-        </div>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-
-  overlay.querySelector('#migration-done-open').addEventListener('click', function(e) {
-    const w = window.open('https://' + PRODUCTION_DOMAIN, '_blank');
-    if (w) e.preventDefault();
-  });
-
-  overlay.querySelector('#migration-retry').addEventListener('click', function() {
-    localStorage.removeItem('bloom_migration_complete');
-    dbSet('bloom_migration_complete', null);
-    const prefs = load('bloom_prefs');
-    if (prefs && prefs.onboarded) {
-      // Data still exists, reload to show migration banner
-      location.reload();
-    } else {
-      // Data was wiped (iOS Safari 7-day rule) — show redirect screen with recovery
-      overlay.remove();
-      showLegacyRedirectScreen();
-    }
-  });
-
-  overlay.querySelector('#migration-export').addEventListener('click', function() {
-    const data = gatherFullBackupData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'bloom-backup-' + today() + '.json';
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Backup file saved! Import it on bloomselfcare.app via Settings > Import backup file.');
   });
 }
 
@@ -15243,8 +15172,10 @@ function openSheet(id) {
 
 function closeAllSheets() {
   const wasOpen = document.querySelector('.bottom-sheet.open');
-  document.querySelectorAll('.bottom-sheet.open').forEach(s => releaseFocusTrap(s));
-  document.getElementById('sheet-backdrop').classList.remove('open');
+  document.querySelectorAll('.bottom-sheet.open').forEach(s => { releaseFocusTrap(s); s.style.zIndex = ''; });
+  const backdrop = document.getElementById('sheet-backdrop');
+  backdrop.classList.remove('open');
+  backdrop.style.zIndex = '';
   document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('open'));
   state._cameFromJournalHistory = false;
   // Restore focus to the element that opened the sheet
@@ -16016,7 +15947,7 @@ function renderOBWelcomeAndName(body, footer) {
         <input type="text" id="ob-name-input" aria-label="Your name" placeholder="Your name..." value="${obData.name}" style="font-size:18px;padding:16px;width:100%">
         <div style="font-size:12px;color:var(--text-muted);margin-top:6px">Your name stays only on your device.</div>
         <div style="text-align:center;margin-top:16px">
-          <button onclick="openSheet('recover-sheet');showRecoverOptions()" style="background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline;padding:4px">Returning? Recover your data</button>
+          <button onclick="openSheet('recover-sheet');showRecoverOptions();document.getElementById('recover-sheet').style.zIndex='201';document.getElementById('sheet-backdrop').style.zIndex='200'" style="background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline;padding:4px">Returning? Recover your data</button>
         </div>
       </div>
     </div>`;
