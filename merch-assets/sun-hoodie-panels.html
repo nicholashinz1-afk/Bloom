@@ -234,14 +234,37 @@ async function renderAll() {
 
   const container = document.getElementById('panels');
 
+  // Render hood as one continuous piece, then split
+  const hoodFullW = 2400, hoodFullH = 1200;
+  const hoodFull = document.createElement('canvas');
+  hoodFull.width = hoodFullW;
+  hoodFull.height = hoodFullH;
+  const hoodCtx = hoodFull.getContext('2d');
+  // Use a consistent seed for the full hood
+  const hoodPanel = { hasText: false };
+  seed = 42 + 99000;
+  drawForestPattern(hoodCtx, hoodFullW, hoodFullH, hoodPanel);
+
   for (const panel of PANELS) {
-    // Full-res canvas (hidden, for download)
-    const full = document.createElement('canvas');
-    full.width = panel.w;
-    full.height = panel.h;
-    const fctx = full.getContext('2d');
-    drawForestPattern(fctx, panel.w, panel.h, panel);
-    drawText(fctx, panel);
+    let full;
+
+    if (panel.id === 'left-hood' || panel.id === 'right-hood') {
+      // Split the continuous hood canvas
+      full = document.createElement('canvas');
+      full.width = panel.w;
+      full.height = panel.h;
+      const fctx = full.getContext('2d');
+      const srcX = panel.id === 'left-hood' ? 0 : hoodFullW / 2;
+      fctx.drawImage(hoodFull, srcX, 0, hoodFullW / 2, hoodFullH, 0, 0, panel.w, panel.h);
+    } else {
+      // Normal panel rendering
+      full = document.createElement('canvas');
+      full.width = panel.w;
+      full.height = panel.h;
+      const fctx = full.getContext('2d');
+      drawForestPattern(fctx, panel.w, panel.h, panel);
+      drawText(fctx, panel);
+    }
 
     // Preview canvas (visible, scaled down)
     const aspect = panel.h / panel.w;
