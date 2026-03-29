@@ -27,19 +27,19 @@
 <body>
 
 <h1>UPF 50+ Sun Hoodie — Panel Files</h1>
-<p class="sub">Tap "Download" to render and save each panel at full 300 DPI.</p>
-<p class="sub" style="margin-top:-10px;color:#484040;">Renders one at a time to avoid freezing. Each takes a few seconds.</p>
+<p class="sub">Tap "Download" to render and save each panel. All panels: 1500 x 3000 px, 150 DPI (Printful spec).</p>
+<p class="sub" style="margin-top:-10px;color:#484040;">Renders one at a time. Should be fast at this size.</p>
 
 <div class="panels" id="panels"></div>
 
 <script>
 const PANELS = [
-  { id: 'front',       label: 'Front',        w: 4500, h: 5400, pw: 150, hasText: true,  textX: 0.5, textY: 0.42, textSize: 440, textVertical: false },
-  { id: 'back',        label: 'Back',         w: 4500, h: 5400, pw: 150, hasText: false },
-  { id: 'right-sleeve',label: 'Right Sleeve', w: 2100, h: 6000, pw: 80,  hasText: true,  textX: 0.5, textY: 0.5,  textSize: 520, textVertical: true },
-  { id: 'left-sleeve', label: 'Left Sleeve',  w: 2100, h: 6000, pw: 80,  hasText: false },
-  { id: 'left-hood',   label: 'Left Hood',    w: 2400, h: 2400, pw: 120, hasText: false, hoodSide: 'left' },
-  { id: 'right-hood',  label: 'Right Hood',   w: 2400, h: 2400, pw: 120, hasText: false, hoodSide: 'right' },
+  { id: 'front',       label: 'Front',        w: 1500, h: 3000, pw: 100, hasText: true,  textX: 0.5, textY: 0.42, textSize: 220, textVertical: false },
+  { id: 'back',        label: 'Back',         w: 1500, h: 3000, pw: 100, hasText: false },
+  { id: 'right-sleeve',label: 'Right Sleeve', w: 1500, h: 3000, pw: 100, hasText: true,  textX: 0.5, textY: 0.5,  textSize: 180, textVertical: true },
+  { id: 'left-sleeve', label: 'Left Sleeve',  w: 1500, h: 3000, pw: 100, hasText: false },
+  { id: 'left-hood',   label: 'Left Hood',    w: 1500, h: 3000, pw: 100, hasText: false, hoodSide: 'left' },
+  { id: 'right-hood',  label: 'Right Hood',   w: 1500, h: 3000, pw: 100, hasText: false, hoodSide: 'right' },
 ];
 
 let seed = 42;
@@ -68,7 +68,7 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
   // Depth
   for (let i = 0; i < 18; i++) {
     let x = rand() * w, y = rand() * h;
-    let rx = 160 + rand() * 400, ry = 160 + rand() * 350;
+    let rx = 60 + rand() * 200, ry = 60 + rand() * 180;
     let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
     g.addColorStop(0, `rgba(10,22,12,${0.2 + rand() * 0.25})`);
     g.addColorStop(1, 'rgba(10,22,12,0)');
@@ -79,7 +79,7 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
   // Mid-tone
   for (let i = 0; i < 20; i++) {
     let x = rand() * w, y = rand() * h;
-    let rx = 120 + rand() * 300, ry = 120 + rand() * 250;
+    let rx = 50 + rand() * 150, ry = 50 + rand() * 130;
     let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
     g.addColorStop(0, `rgba(28,50,30,${0.15 + rand() * 0.2})`);
     g.addColorStop(1, 'rgba(28,50,30,0)');
@@ -90,7 +90,7 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
   // Large leaves
   for (let i = 0; i < 80; i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 40 + rand() * 160;
+    let size = 15 + rand() * 70;
     let angle = rand() * Math.PI * 2;
     let green = 46 + Math.floor(rand() * 40);
     let alpha = 0.08 + rand() * 0.18;
@@ -100,7 +100,7 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
   // Medium leaves
   for (let i = 0; i < 100; i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 20 + rand() * 90;
+    let size = 10 + rand() * 40;
     let angle = rand() * Math.PI * 2;
     let green = 58 + Math.floor(rand() * 50);
     let alpha = 0.06 + rand() * 0.15;
@@ -145,16 +145,16 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
     ctx.moveTo(sx, sy);
     let segs = 3 + Math.floor(rand() * 4);
     for (let j = 0; j < segs; j++) {
-      sx += (rand() - 0.3) * 240;
-      sy += 60 + rand() * 160;
+      sx += (rand() - 0.3) * 100;
+      sy += 30 + rand() * 80;
       ctx.lineTo(sx, sy);
     }
     ctx.stroke();
     if (rand() > 0.4) {
       ctx.lineWidth = 1.5 + rand() * 2;
-      let bx = sx - (rand() - 0.5) * 120, by = sy - rand() * 120;
+      let bx = sx - (rand() - 0.5) * 60, by = sy - rand() * 60;
       ctx.beginPath(); ctx.moveTo(bx, by);
-      ctx.lineTo(bx + (rand() - 0.5) * 160, by + 40 + rand() * 100);
+      ctx.lineTo(bx + (rand() - 0.5) * 80, by + 20 + rand() * 50);
       ctx.stroke();
     }
   }
@@ -273,7 +273,7 @@ async function init() {
 
         if (panel.hoodSide) {
           // Render continuous hood then split
-          const hoodW = 4800, hoodH = 2400;
+          const hoodW = 3000, hoodH = 3000;
           const hc = document.createElement('canvas');
           hc.width = hoodW; hc.height = hoodH;
           const hctx = hc.getContext('2d');
