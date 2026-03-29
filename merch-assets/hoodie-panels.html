@@ -23,7 +23,7 @@
 <body>
 
 <h1>Heavyweight Hoodie — Print Files</h1>
-<p class="sub">Bella+Canvas 4719 Oversized Heavyweight. Fraunces Regular, "stay." — center chest.<br>All files: 1800 x 2400 px (12" x 16" at 150 DPI). PNG with transparent background.<br>Upload and fill the print area rectangle. Text is pre-positioned center chest.</p>
+<p class="sub">Bella+Canvas 4719 Oversized Heavyweight. Fraunces Regular, "stay." — center chest.<br>All files: 1950 x 1950 px (13" x 13" at 150 DPI). PNG with transparent background.<br>Upload and fill the print area rectangle. Text is pre-positioned center chest.</p>
 
 <div class="section">Soft Amber (#d4ad6a) — for Forest / Spruce hoodie</div>
 <div class="panels" id="amber"></div>
@@ -38,7 +38,7 @@
 <div class="panels" id="sand"></div>
 
 <script>
-const W = 1800, H = 2400;
+const W = 1950, H = 1950; // 13" x 13" at 150 DPI
 
 const COLORS = [
   { id: 'amber',   color: '#d4ad6a', container: 'amber' },
@@ -49,8 +49,8 @@ const COLORS = [
 
 // Center chest, bigger text for hoodie
 const textX = 0.5;
-const textY = 0.28;
-const textSize = 280;
+const textY = 0.38;
+const textSize = 260;
 
 function renderAndDownload(colorHex, filename) {
   const c = document.createElement('canvas');
@@ -78,7 +78,7 @@ async function init() {
   for (const col of COLORS) {
     const container = document.getElementById(col.container);
 
-    const pw = 120, ph = 160;
+    const pw = 140, ph = 140;
     const preview = document.createElement('canvas');
     preview.width = pw * 2; preview.height = ph * 2;
     preview.style.width = pw + 'px'; preview.style.height = ph + 'px';
@@ -98,7 +98,7 @@ async function init() {
     const btn = document.createElement('button');
     btn.className = 'btn';
     btn.textContent = 'Download PNG';
-    const filename = `stay-hoodie-v1-center-${col.id}.png`;
+    const filename = `stay-hoodie-v2-center-${col.id}.png`;
     btn.onclick = () => renderAndDownload(col.color, filename);
 
     const card = document.createElement('div');
