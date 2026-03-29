@@ -24,7 +24,7 @@
 
 <h1>UPF 50+ Sun Hoodie — Panel Files</h1>
 <p class="sub">Click "Download JPEG" on each panel. Pattern: light through tree leaves on deep forest green.</p>
-<p class="sub" style="margin-top:-30px;color:#484040;">Verify dimensions against Printful's template. Panels rendered at 150 DPI (Printful AOP minimum).</p>
+<p class="sub" style="margin-top:-30px;color:#484040;">Verify dimensions against Printful's template. Panels rendered at 300 DPI. May take a moment to render on mobile.</p>
 
 <div id="loading" class="loading">Rendering panels...</div>
 <div class="panels" id="panels" style="display:none;"></div>
@@ -32,12 +32,12 @@
 <script>
 // Panel definitions (approximate Printful AOP hoodie dimensions at 150 DPI)
 const PANELS = [
-  { id: 'front',       label: 'Front',        w: 2250, h: 2700, preview: 280, hasText: true,  textX: 0.5, textY: 0.42, textSize: 220, textVertical: false },
-  { id: 'back',        label: 'Back',         w: 2250, h: 2700, preview: 280, hasText: false },
-  { id: 'left-sleeve', label: 'Left Sleeve',  w: 1050, h: 3000, preview: 140, hasText: true,  textX: 0.5, textY: 0.5,  textSize: 260, textVertical: true },
-  { id: 'right-sleeve',label: 'Right Sleeve', w: 1050, h: 3000, preview: 140, hasText: false },
-  { id: 'left-hood',   label: 'Left Hood',    w: 1200, h: 1200, preview: 200, hasText: false },
-  { id: 'right-hood',  label: 'Right Hood',   w: 1200, h: 1200, preview: 200, hasText: false },
+  { id: 'front',       label: 'Front',        w: 4500, h: 5400, preview: 220, hasText: true,  textX: 0.5, textY: 0.42, textSize: 440, textVertical: false },
+  { id: 'back',        label: 'Back',         w: 4500, h: 5400, preview: 220, hasText: false },
+  { id: 'left-sleeve', label: 'Left Sleeve',  w: 2100, h: 6000, preview: 110, hasText: false },
+  { id: 'right-sleeve',label: 'Right Sleeve', w: 2100, h: 6000, preview: 110, hasText: true,  textX: 0.5, textY: 0.5,  textSize: 520, textVertical: true },
+  { id: 'left-hood',   label: 'Left Hood',    w: 2400, h: 2400, preview: 160, hasText: false },
+  { id: 'right-hood',  label: 'Right Hood',   w: 2400, h: 2400, preview: 160, hasText: false },
 ];
 
 // Seedable random for reproducibility
@@ -52,9 +52,9 @@ function drawForestPattern(ctx, w, h, panel) {
   ctx.fillRect(0, 0, w, h);
 
   // Depth variation - large dark patches
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 24; i++) {
     let x = rand() * w, y = rand() * h;
-    let rx = 80 + rand() * 250, ry = 80 + rand() * 200;
+    let rx = 160 + rand() * 500, ry = 160 + rand() * 400;
     let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
     g.addColorStop(0, `rgba(10,22,12,${0.2 + rand() * 0.25})`);
     g.addColorStop(1, 'rgba(10,22,12,0)');
@@ -63,9 +63,9 @@ function drawForestPattern(ctx, w, h, panel) {
   }
 
   // Mid-tone variation
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 30; i++) {
     let x = rand() * w, y = rand() * h;
-    let rx = 60 + rand() * 180, ry = 60 + rand() * 150;
+    let rx = 120 + rand() * 360, ry = 120 + rand() * 300;
     let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
     g.addColorStop(0, `rgba(28,50,30,${0.15 + rand() * 0.2})`);
     g.addColorStop(1, 'rgba(28,50,30,0)');
@@ -74,9 +74,9 @@ function drawForestPattern(ctx, w, h, panel) {
   }
 
   // Large leaf-shaped green light patches (many, overlapping)
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 120; i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 20 + rand() * 80;
+    let size = 40 + rand() * 160;
     let angle = rand() * Math.PI * 2;
     let green = 46 + Math.floor(rand() * 40);
     let alpha = 0.08 + rand() * 0.18;
@@ -84,9 +84,9 @@ function drawForestPattern(ctx, w, h, panel) {
   }
 
   // Medium leaf patches - denser layer
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 160; i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 10 + rand() * 45;
+    let size = 20 + rand() * 90;
     let angle = rand() * Math.PI * 2;
     let green = 58 + Math.floor(rand() * 50);
     let alpha = 0.06 + rand() * 0.15;
@@ -94,27 +94,27 @@ function drawForestPattern(ctx, w, h, panel) {
   }
 
   // Bright green leaf accents
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 80; i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 8 + rand() * 30;
+    let size = 16 + rand() * 60;
     let angle = rand() * Math.PI * 2;
     let alpha = 0.05 + rand() * 0.1;
     drawLeaf(ctx, x, y, size, size * (0.5 + rand() * 0.3), angle, `rgba(90,${130 + Math.floor(rand()*30)},70,${alpha})`);
   }
 
   // Warm golden sun-through-leaves spots
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 100; i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 5 + rand() * 22;
+    let size = 10 + rand() * 44;
     let angle = rand() * Math.PI * 2;
     let alpha = 0.04 + rand() * 0.1;
     drawLeaf(ctx, x, y, size, size * (0.6 + rand() * 0.3), angle, `rgba(${200 + Math.floor(rand()*30)},${180 + Math.floor(rand()*25)},${130 + Math.floor(rand()*30)},${alpha})`);
   }
 
   // Tiny bright warm pinpoints
-  for (let i = 0; i < 35; i++) {
+  for (let i = 0; i < 70; i++) {
     let x = rand() * w, y = rand() * h;
-    let r = 3 + rand() * 8;
+    let r = 6 + rand() * 16;
     let g = ctx.createRadialGradient(x, y, 0, x, y, r);
     g.addColorStop(0, `rgba(232,220,192,${0.08 + rand() * 0.12})`);
     g.addColorStop(1, 'rgba(232,220,192,0)');
@@ -124,27 +124,27 @@ function drawForestPattern(ctx, w, h, panel) {
 
   // Branch/twig network - organic diagonal lines
   ctx.strokeStyle = 'rgba(10,26,14,0.1)';
-  for (let i = 0; i < 14; i++) {
-    ctx.lineWidth = 1 + rand() * 2.5;
+  for (let i = 0; i < 20; i++) {
+    ctx.lineWidth = 2 + rand() * 4;
     let startX = rand() * w, startY = rand() * h;
     ctx.beginPath();
     ctx.moveTo(startX, startY);
     let segments = 3 + Math.floor(rand() * 4);
     for (let j = 0; j < segments; j++) {
-      startX += (rand() - 0.3) * 120;
-      startY += 30 + rand() * 80;
+      startX += (rand() - 0.3) * 240;
+      startY += 60 + rand() * 160;
       ctx.lineTo(startX, startY);
     }
     ctx.stroke();
 
     // Sub-branches
     if (rand() > 0.4) {
-      ctx.lineWidth = 0.8 + rand() * 1.2;
-      let bx = startX - (rand() - 0.5) * 60;
-      let by = startY - rand() * 60;
+      ctx.lineWidth = 1.5 + rand() * 2;
+      let bx = startX - (rand() - 0.5) * 120;
+      let by = startY - rand() * 120;
       ctx.beginPath();
       ctx.moveTo(bx, by);
-      ctx.lineTo(bx + (rand() - 0.5) * 80, by + 20 + rand() * 50);
+      ctx.lineTo(bx + (rand() - 0.5) * 160, by + 40 + rand() * 100);
       ctx.stroke();
     }
   }
@@ -197,7 +197,7 @@ function drawText(ctx, panel) {
 
   let x = panel.w * panel.textX;
   let y = panel.w * panel.textY;
-  if (panel.id === 'left-sleeve') y = panel.h * panel.textY;
+  if (panel.id === 'right-sleeve') y = panel.h * panel.textY;
 
   ctx.save();
   ctx.translate(x, panel.h * panel.textY);
@@ -235,7 +235,7 @@ async function renderAll() {
   const container = document.getElementById('panels');
 
   // Render hood as one continuous piece, then split
-  const hoodFullW = 2400, hoodFullH = 1200;
+  const hoodFullW = 4800, hoodFullH = 2400;
   const hoodFull = document.createElement('canvas');
   hoodFull.width = hoodFullW;
   hoodFull.height = hoodFullH;
