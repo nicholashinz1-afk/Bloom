@@ -98,7 +98,7 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 - **GitHub Sponsors:** Live (via Stripe)
 - **Vercel OSS:** Emailed partnerships@vercel.com for sponsorship
 - **Upstash OSS:** Applied via oss@upstash.com
-- **Merch line:** Standalone apparel with meaningful phrases (separate entity from Bloom, no visible brand on product). First phrase: "Stay." 100% of profits fund Bloom. Print-on-demand, planning phase.
+- **Merch line:** Standalone apparel with meaningful phrases (separate entity from Bloom, no visible brand on product). First phrase: "Stay." 100% of profits fund Bloom. Print-on-demand via Printful + Etsy. Launch products: heavyweight tee, heavyweight hoodie, UPF 50+ sun hoodie (louder/patterned design).
 - **Contact:** bloomhabits@proton.me
 
 ## Scaling Roadmap

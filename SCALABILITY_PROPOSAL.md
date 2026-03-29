@@ -275,11 +275,20 @@ One word. One syllable. A period. It works because it means something different 
 - No visible brand on the apparel. The phrases are the product.
 - Separate entity from Bloom. Bloom's name does not appear on the merch.
 - Link back to Bloom only via packaging insert: "Profits from this support Bloom, a free mental health app. bloomselfcare.app"
-- Print-on-demand to start (no inventory risk). Platforms like Etsy or similar.
+- Print-on-demand via Printful + Etsy. Zero inventory risk.
 
-- [ ] Choose print-on-demand platform (Etsy, Printful, etc.)
-- [ ] Design first product: "Stay." on heavyweight tee, clean minimal typography
-- [ ] Set up shop and listing
+**Launch products (Phase 1):**
+1. Heavyweight tee (Comfort Colors 1717 or Cotton Heritage MC1086). Fraunces Regular, lowercase. Right chest front + small upper back. Earth tone colorways.
+2. Heavyweight hoodie (Bella+Canvas 4719 or Cotton Heritage M2580). Fraunces Regular, center chest. Same earth tone palette.
+3. UPF 50+ sun hoodie (Printful All-Over Print Sports Warmup Hoodie). Louder design with patterned elements. Same word, different energy.
+
+- [ ] Create Printful account and confirm product pricing/color availability
+- [ ] Design heavyweight tee and hoodie print files (Fraunces Regular, "stay.")
+- [ ] Design all-over print sun hoodie (download template, create patterned design)
+- [ ] Set up Etsy shop
+- [ ] Order samples from Printful (20% discount on samples)
+- [ ] Connect Printful to Etsy
+- [ ] Create listings with product photos
 - [ ] Add packaging insert linking to Bloom
 
 ### Phase 4 -- Reach (Month 3-6)
