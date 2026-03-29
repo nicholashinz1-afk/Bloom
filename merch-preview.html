@@ -6,7 +6,7 @@
 <title>Stay. — Merch Design Preview</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&family=Libre+Baskerville:wght@400;700&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&family=Libre+Baskerville:wght@400;700&family=Space+Grotesk:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -71,7 +71,7 @@
   .tee.sage { background: #4a5e4a; }
   .tee.charcoal { background: #2a2a2a; }
 
-  /* T-shirt shape overlay */
+  /* T-shirt neckline */
   .tee::before {
     content: '';
     position: absolute;
@@ -95,12 +95,75 @@
     pointer-events: none;
   }
 
+  /* Hoodie shape */
+  .hoodie {
+    width: 280px;
+    height: 340px;
+    border-radius: 12px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  .hoodie:hover { transform: scale(1.02); }
+  .hoodie.black { background: #111; }
+  .hoodie.white { background: #f5f0eb; }
+  .hoodie.sage { background: #4a5e4a; }
+  .hoodie.charcoal { background: #2a2a2a; }
+  /* Hood shape */
+  .hoodie::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 28px;
+    border-radius: 50px 50px 0 0;
+    background: inherit;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-bottom: none;
+  }
+  .hoodie::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+    pointer-events: none;
+  }
+  /* Drawstrings */
+  .hoodie .drawstrings {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 2;
+  }
+  .hoodie .drawstrings span {
+    display: block;
+    width: 1px;
+    height: 24px;
+    background: rgba(255,255,255,0.15);
+  }
+  .hoodie.white .drawstrings span {
+    background: rgba(0,0,0,0.12);
+  }
+
   .tee-text {
     position: relative;
     z-index: 1;
   }
 
-  /* Placement variations */
+  /* Placement variations — works on both .tee and .hoodie */
   .placement-center .tee-text {
     /* default centered */
   }
@@ -114,6 +177,10 @@
     top: 40px;
     left: 50%;
     transform: translateX(-50%);
+  }
+  .hoodie.selected {
+    outline: 2px solid #a8c0a8;
+    outline-offset: 4px;
   }
 
   .label {
@@ -178,148 +245,208 @@
 <h1>stay.</h1>
 <p class="subtitle">merch design exploration — tap any to mark as favorite</p>
 
-<!-- CASE EXPLORATION -->
-<div class="section-label">Case + Typeface</div>
+<!-- FRAUNCES — BLOOM'S TYPEFACE -->
+<div class="section-label">Fraunces (Bloom's typeface)</div>
 <div class="grid">
 
-  <!-- lowercase sans -->
   <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'A1')">
+    <div class="tee black placement-center" onclick="toggleFav(this, 'F1')">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#f5f0eb;">stay.</div>
+    </div>
+    <div class="label"><strong>F1</strong> — Fraunces Light, lowercase<br><span class="detail">black tee, center chest</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="tee white placement-center" onclick="toggleFav(this, 'F2')">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#1a1a1a;">stay.</div>
+    </div>
+    <div class="label"><strong>F2</strong> — Fraunces Light, lowercase<br><span class="detail">off-white tee, center chest</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="tee sage placement-center" onclick="toggleFav(this, 'F3')">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#f5f0eb;">stay.</div>
+    </div>
+    <div class="label"><strong>F3</strong> — Fraunces Light, lowercase<br><span class="detail">sage tee, center chest</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="tee charcoal placement-center" onclick="toggleFav(this, 'F4')">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#c8b8a8;">stay.</div>
+    </div>
+    <div class="label"><strong>F4</strong> — Fraunces Light, lowercase<br><span class="detail">charcoal tee, warm tan text</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="tee black placement-center" onclick="toggleFav(this, 'F5')">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:36px; color:#f5f0eb;">Stay.</div>
+    </div>
+    <div class="label"><strong>F5</strong> — Fraunces Regular, sentence case<br><span class="detail">black tee, center chest</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="tee white placement-center" onclick="toggleFav(this, 'F6')">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:36px; color:#1a1a1a;">Stay.</div>
+    </div>
+    <div class="label"><strong>F6</strong> — Fraunces Regular, sentence case<br><span class="detail">off-white tee, center chest</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="tee black placement-center" onclick="toggleFav(this, 'F7')">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-style:italic; font-size:36px; color:#f5f0eb;">stay.</div>
+    </div>
+    <div class="label"><strong>F7</strong> — Fraunces Light Italic, lowercase<br><span class="detail">black tee, softer feel</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="tee sage placement-center" onclick="toggleFav(this, 'F8')">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-style:italic; font-size:36px; color:#f5f0eb;">Stay.</div>
+    </div>
+    <div class="label"><strong>F8</strong> — Fraunces Italic, sentence case<br><span class="detail">sage tee, personal feel</span></div>
+  </div>
+
+</div>
+
+<hr>
+
+<!-- FRAUNCES PLACEMENT -->
+<div class="section-label">Fraunces — Placement</div>
+<div class="grid">
+
+  <div class="mockup">
+    <div class="tee black placement-left" onclick="toggleFav(this, 'G1')">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:18px; color:#f5f0eb;">stay.</div>
+    </div>
+    <div class="label"><strong>G1</strong> — left chest, small<br><span class="detail">Fraunces Light, quiet</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="tee white placement-left" onclick="toggleFav(this, 'G2')">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:18px; color:#1a1a1a;">stay.</div>
+    </div>
+    <div class="label"><strong>G2</strong> — left chest, small<br><span class="detail">Fraunces Regular, off-white</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="tee black placement-back" onclick="toggleFav(this, 'G3')">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:16px; color:#f5f0eb;">stay.</div>
+    </div>
+    <div class="label"><strong>G3</strong> — back of neck<br><span class="detail">Fraunces Light, for the person behind you</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="tee black placement-center" onclick="toggleFav(this, 'G4')">
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:52px; color:#f5f0eb;">stay.</div>
+    </div>
+    <div class="label"><strong>G4</strong> — center chest, large<br><span class="detail">Fraunces Light, bigger presence</span></div>
+  </div>
+
+</div>
+
+<hr>
+
+<!-- HOODIES -->
+<div class="section-label">Hoodies</div>
+<div class="grid">
+
+  <div class="mockup">
+    <div class="hoodie black placement-center" onclick="toggleFav(this, 'H1')">
+      <div class="drawstrings"><span></span><span></span></div>
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#f5f0eb;">stay.</div>
+    </div>
+    <div class="label"><strong>H1</strong> — Fraunces Light, lowercase<br><span class="detail">black hoodie, center chest</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="hoodie sage placement-center" onclick="toggleFav(this, 'H2')">
+      <div class="drawstrings"><span></span><span></span></div>
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#f5f0eb;">stay.</div>
+    </div>
+    <div class="label"><strong>H2</strong> — Fraunces Light, lowercase<br><span class="detail">sage hoodie, center chest</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="hoodie charcoal placement-center" onclick="toggleFav(this, 'H3')">
+      <div class="drawstrings"><span></span><span></span></div>
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:36px; color:#c8b8a8;">stay.</div>
+    </div>
+    <div class="label"><strong>H3</strong> — Fraunces Light, lowercase<br><span class="detail">charcoal hoodie, warm tan text</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="hoodie white placement-center" onclick="toggleFav(this, 'H4')">
+      <div class="drawstrings"><span></span><span></span></div>
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:400; font-size:36px; color:#1a1a1a;">Stay.</div>
+    </div>
+    <div class="label"><strong>H4</strong> — Fraunces Regular, sentence case<br><span class="detail">off-white hoodie, center chest</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="hoodie black placement-left" onclick="toggleFav(this, 'H5')">
+      <div class="drawstrings"><span></span><span></span></div>
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:18px; color:#f5f0eb;">stay.</div>
+    </div>
+    <div class="label"><strong>H5</strong> — Fraunces Light, left chest<br><span class="detail">black hoodie, quiet placement</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="hoodie sage placement-left" onclick="toggleFav(this, 'H6')">
+      <div class="drawstrings"><span></span><span></span></div>
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:18px; color:#f5f0eb;">stay.</div>
+    </div>
+    <div class="label"><strong>H6</strong> — Fraunces Light, left chest<br><span class="detail">sage hoodie, quiet placement</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="hoodie black placement-center" onclick="toggleFav(this, 'H7')">
+      <div class="drawstrings"><span></span><span></span></div>
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-size:52px; color:#f5f0eb;">stay.</div>
+    </div>
+    <div class="label"><strong>H7</strong> — Fraunces Light, large<br><span class="detail">black hoodie, statement size</span></div>
+  </div>
+
+  <div class="mockup">
+    <div class="hoodie charcoal placement-center" onclick="toggleFav(this, 'H8')">
+      <div class="drawstrings"><span></span><span></span></div>
+      <div class="tee-text" style="font-family:'Fraunces',serif; font-weight:300; font-style:italic; font-size:36px; color:#f5f0eb;">stay.</div>
+    </div>
+    <div class="label"><strong>H8</strong> — Fraunces Light Italic<br><span class="detail">charcoal hoodie, softer feel</span></div>
+  </div>
+
+</div>
+
+<hr>
+
+<!-- OTHER TYPEFACES FOR COMPARISON -->
+<div class="section-label">Other typefaces (for comparison)</div>
+<div class="grid">
+
+  <div class="mockup">
+    <div class="tee black placement-center" onclick="toggleFav(this, 'X1')">
       <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:32px; color:#f5f0eb; letter-spacing:0.02em;">stay.</div>
     </div>
-    <div class="label"><strong>A1</strong> — lowercase, Inter Light<br><span class="detail">black tee, center chest</span></div>
+    <div class="label"><strong>X1</strong> — Inter Light<br><span class="detail">clean sans-serif baseline</span></div>
   </div>
 
-  <!-- lowercase sans on white -->
   <div class="mockup">
-    <div class="tee white placement-center" onclick="toggleFav(this, 'A2')">
-      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:32px; color:#1a1a1a; letter-spacing:0.02em;">stay.</div>
+    <div class="tee black placement-center" onclick="toggleFav(this, 'X2')">
+      <div class="tee-text" style="font-family:'Instrument Sans',sans-serif; font-weight:400; font-size:32px; color:#f5f0eb; letter-spacing:0.02em;">stay.</div>
     </div>
-    <div class="label"><strong>A2</strong> — lowercase, Inter Light<br><span class="detail">off-white tee, center chest</span></div>
+    <div class="label"><strong>X2</strong> — Instrument Sans (Bloom's sans)<br><span class="detail">Bloom's body font</span></div>
   </div>
 
-  <!-- lowercase serif -->
   <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'A3')">
-      <div class="tee-text" style="font-family:'Playfair Display',serif; font-weight:400; font-size:34px; color:#f5f0eb; letter-spacing:0.01em;">stay.</div>
+    <div class="tee black placement-center" onclick="toggleFav(this, 'X3')">
+      <div class="tee-text" style="font-family:'Playfair Display',serif; font-weight:400; font-size:34px; color:#f5f0eb;">stay.</div>
     </div>
-    <div class="label"><strong>A3</strong> — lowercase, Playfair Display<br><span class="detail">black tee, center chest</span></div>
+    <div class="label"><strong>X3</strong> — Playfair Display<br><span class="detail">high-contrast serif</span></div>
   </div>
 
-  <!-- lowercase serif on sage -->
   <div class="mockup">
-    <div class="tee sage placement-center" onclick="toggleFav(this, 'A4')">
-      <div class="tee-text" style="font-family:'Libre Baskerville',serif; font-weight:400; font-size:30px; color:#f5f0eb; letter-spacing:0.01em;">stay.</div>
-    </div>
-    <div class="label"><strong>A4</strong> — lowercase, Libre Baskerville<br><span class="detail">sage tee, center chest</span></div>
-  </div>
-
-  <!-- Sentence case sans -->
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'B1')">
-      <div class="tee-text" style="font-family:'DM Sans',sans-serif; font-weight:400; font-size:32px; color:#f5f0eb; letter-spacing:0.02em;">Stay.</div>
-    </div>
-    <div class="label"><strong>B1</strong> — sentence case, DM Sans<br><span class="detail">black tee, center chest</span></div>
-  </div>
-
-  <!-- Sentence case serif -->
-  <div class="mockup">
-    <div class="tee white placement-center" onclick="toggleFav(this, 'B2')">
-      <div class="tee-text" style="font-family:'Playfair Display',serif; font-weight:400; font-size:34px; color:#1a1a1a; letter-spacing:0.01em;">Stay.</div>
-    </div>
-    <div class="label"><strong>B2</strong> — sentence case, Playfair Display<br><span class="detail">off-white tee, center chest</span></div>
-  </div>
-
-  <!-- ALL CAPS sans -->
-  <div class="mockup">
-    <div class="tee charcoal placement-center" onclick="toggleFav(this, 'C1')">
+    <div class="tee black placement-center" onclick="toggleFav(this, 'X4')">
       <div class="tee-text" style="font-family:'Space Grotesk',sans-serif; font-weight:400; font-size:28px; color:#f5f0eb; letter-spacing:0.2em;">STAY.</div>
     </div>
-    <div class="label"><strong>C1</strong> — all caps, Space Grotesk<br><span class="detail">charcoal tee, center chest, wide tracking</span></div>
-  </div>
-
-  <!-- ALL CAPS serif -->
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'C2')">
-      <div class="tee-text" style="font-family:'Libre Baskerville',serif; font-weight:400; font-size:26px; color:#f5f0eb; letter-spacing:0.15em;">STAY.</div>
-    </div>
-    <div class="label"><strong>C2</strong> — all caps, Libre Baskerville<br><span class="detail">black tee, center chest, wide tracking</span></div>
-  </div>
-
-</div>
-
-<hr>
-
-<!-- PLACEMENT EXPLORATION -->
-<div class="section-label">Placement</div>
-<div class="grid">
-
-  <!-- Left chest -->
-  <div class="mockup">
-    <div class="tee black placement-left" onclick="toggleFav(this, 'D1')">
-      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:16px; color:#f5f0eb; letter-spacing:0.02em;">stay.</div>
-    </div>
-    <div class="label"><strong>D1</strong> — left chest, small<br><span class="detail">Inter Light, quiet placement</span></div>
-  </div>
-
-  <!-- Left chest serif -->
-  <div class="mockup">
-    <div class="tee white placement-left" onclick="toggleFav(this, 'D2')">
-      <div class="tee-text" style="font-family:'Playfair Display',serif; font-weight:400; font-size:16px; color:#1a1a1a; letter-spacing:0.01em;">stay.</div>
-    </div>
-    <div class="label"><strong>D2</strong> — left chest, small<br><span class="detail">Playfair Display, quiet placement</span></div>
-  </div>
-
-  <!-- Upper back / below collar -->
-  <div class="mockup">
-    <div class="tee black placement-back" onclick="toggleFav(this, 'D3')">
-      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:14px; color:#f5f0eb; letter-spacing:0.05em;">stay.</div>
-    </div>
-    <div class="label"><strong>D3</strong> — back of neck<br><span class="detail">small, for the person behind you</span></div>
-  </div>
-
-  <!-- Center but larger, bolder -->
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'D4')">
-      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:48px; color:#f5f0eb; letter-spacing:0.02em;">stay.</div>
-    </div>
-    <div class="label"><strong>D4</strong> — center chest, large<br><span class="detail">Inter Light, bigger presence</span></div>
-  </div>
-
-</div>
-
-<hr>
-
-<!-- COLOR EXPLORATION -->
-<div class="section-label">Color Combinations</div>
-<div class="grid">
-
-  <div class="mockup">
-    <div class="tee black placement-center" onclick="toggleFav(this, 'E1')">
-      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:32px; color:#a8c0a8; letter-spacing:0.02em;">stay.</div>
-    </div>
-    <div class="label"><strong>E1</strong> — sage text on black<br><span class="detail">muted, earthy</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee sage placement-center" onclick="toggleFav(this, 'E2')">
-      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:32px; color:#f5f0eb; letter-spacing:0.02em;">stay.</div>
-    </div>
-    <div class="label"><strong>E2</strong> — cream text on sage<br><span class="detail">warm, grounded</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee white placement-center" onclick="toggleFav(this, 'E3')">
-      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:32px; color:#4a5e4a; letter-spacing:0.02em;">stay.</div>
-    </div>
-    <div class="label"><strong>E3</strong> — sage text on off-white<br><span class="detail">light, approachable</span></div>
-  </div>
-
-  <div class="mockup">
-    <div class="tee charcoal placement-center" onclick="toggleFav(this, 'E4')">
-      <div class="tee-text" style="font-family:'Inter',sans-serif; font-weight:300; font-size:32px; color:#c8b8a8; letter-spacing:0.02em;">stay.</div>
-    </div>
-    <div class="label"><strong>E4</strong> — warm tan text on charcoal<br><span class="detail">understated, tonal</span></div>
+    <div class="label"><strong>X4</strong> — Space Grotesk, all caps<br><span class="detail">wide tracking, more confrontational</span></div>
   </div>
 
 </div>
