@@ -3856,86 +3856,16 @@ function save(key, value) {
         const stale = JSON.parse(localStorage.getItem('bloom_stale_keys') || '[]');
         if (!stale.includes(key)) { stale.push(key); localStorage.setItem('bloom_stale_keys', JSON.stringify(stale)); }
       } catch(e2) { /* storage completely full, restoreFromDB will handle via timestamp */ }
-      if (!state._storageWarningShown) {
-        state._storageWarningShown = true;
-        setTimeout(() => showSaveError(), 500);
-      }
+      // IndexedDB backup will still get the write below
     }
   }
   dbSet(key, str);
 }
 
-function showSaveError() {
-  const existing = document.getElementById('save-error-banner');
-  if (existing) return;
-  const div = document.createElement('div');
-  div.id = 'save-error-banner';
-  div.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;max-width:360px;padding:16px 20px;background:rgba(180,60,60,0.2);border:1px solid rgba(180,60,60,0.5);border-radius:var(--r-lg);backdrop-filter:blur(10px)';
-  div.innerHTML = `
-    <div style="font-size:14px;font-weight:500;color:#e88;margin-bottom:6px">Your data might not be saving</div>
-    <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">Storage is full. Your entries are backed up, but please create a backup in Settings and then trim old data so nothing gets lost.</div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn btn-sm" onclick="trimHistory();this.parentElement.parentElement.remove()" style="background:rgba(180,60,60,0.2);border:1px solid rgba(180,60,60,0.4);color:#e88">Free up space</button>
-      <button class="btn btn-ghost btn-sm" onclick="this.parentElement.parentElement.remove()">Dismiss</button>
-    </div>
-    <div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.5">"Free up space" removes check-in history older than 90 days. Your journal entries, reflections, and progress are never touched.</div>`;
-  document.body.appendChild(div);
-}
-
-function showStorageWarning() {
-  const existing = document.getElementById('storage-warning');
-  if (existing) return;
-  const div = document.createElement('div');
-  div.id = 'storage-warning';
-  div.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;max-width:360px;padding:16px 20px;background:rgba(201,149,74,0.15);border:1px solid rgba(201,149,74,0.4);border-radius:var(--r-lg);backdrop-filter:blur(10px)';
-  div.innerHTML = `
-    <div style="font-size:14px;font-weight:500;color:var(--amber-light);margin-bottom:6px">Storage almost full</div>
-    <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">Your data is getting close to the storage limit. Consider creating a backup in Settings.</div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-sm" onclick="trimHistory();this.parentElement.parentElement.remove()" style="background:rgba(201,149,74,0.2);border:1px solid rgba(201,149,74,0.4);color:var(--amber-light)">Free up space</button>
-      <button class="btn btn-ghost btn-sm" onclick="this.parentElement.parentElement.remove()">Dismiss</button>
-    </div>
-    <div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.5">"Free up space" removes check-in history older than 90 days. Your journal entries, reflections, and progress are never touched.</div>`;
-  document.body.appendChild(div);
-}
-
-function trimHistory() {
-  const history = state.historyData;
-  const dates = Object.keys(history).sort();
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 90);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
-  let trimmed = 0;
-  dates.forEach(d => {
-    if (d < cutoffStr) { delete history[d]; trimmed++; }
-  });
-  if (trimmed > 0) {
-    save('bloom_history', history);
-    haptic('medium');
-  }
-}
-
 function checkStorageQuota() {
-  if (navigator.storage && navigator.storage.estimate) {
-    navigator.storage.estimate().then(({ usage, quota }) => {
-      if (quota && usage / quota > 0.8) {
-        showStorageWarning();
-      }
-    });
-  }
-  // Also auto-trim history beyond 90 days on every boot
-  const history = state.historyData;
-  if (history) {
-    const dates = Object.keys(history).sort();
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 90);
-    const cutoffStr = cutoff.toISOString().slice(0, 10);
-    let trimmed = 0;
-    dates.forEach(d => {
-      if (d < cutoffStr) { delete history[d]; trimmed++; }
-    });
-    if (trimmed > 0) save('bloom_history', history);
-  }
+  // No-op: app data is small enough that storage limits are not a real concern.
+  // If localStorage ever does fill up, IndexedDB backup + stale-key tracking
+  // ensures data is restored on next load.
 }
 
 function load(key, def = null) {
