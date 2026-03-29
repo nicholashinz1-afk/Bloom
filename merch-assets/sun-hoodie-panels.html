@@ -9,174 +9,41 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #111; color: #e8e0d8; font-family: 'DM Sans', sans-serif; padding: 40px 20px; }
   h1 { text-align: center; font-family: 'Fraunces', serif; font-weight: 400; font-size: 20px; color: #a8a090; margin-bottom: 8px; }
-  .sub { text-align: center; font-size: 13px; color: #585048; margin-bottom: 40px; }
-  .panels { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; max-width: 1200px; margin: 0 auto; }
-  .card { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-  .card canvas { border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); }
-  .card .info { font-size: 12px; color: #908880; text-align: center; }
-  .card .info strong { color: #c8c0b8; font-weight: 400; }
-  .btn { display: inline-block; margin-top: 6px; padding: 8px 18px; background: #1c2e20; color: #a8c5ab; border: 1px solid #2a4a30; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .sub { text-align: center; font-size: 13px; color: #585048; margin-bottom: 20px; }
+  .panels { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1000px; margin: 0 auto; }
+  .card { display: flex; flex-direction: column; align-items: center; gap: 8px; background: #1a1a1a; border-radius: 10px; padding: 16px; border: 1px solid #222; }
+  .card canvas { border-radius: 6px; }
+  .info { font-size: 12px; color: #908880; text-align: center; }
+  .info strong { color: #c8c0b8; font-weight: 400; }
+  .btn { padding: 10px 20px; background: #1c2e20; color: #a8c5ab; border: 1px solid #2a4a30; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; width: 100%; }
   .btn:hover { background: #243a28; }
-  .loading { text-align: center; font-size: 13px; color: #585048; margin: 40px 0; }
+  .btn:disabled { opacity: 0.4; cursor: wait; }
+  .btn .spinner { display: none; }
+  .btn.loading .spinner { display: inline; }
+  .btn.loading .label { display: none; }
+  .status { font-size: 11px; color: #585048; height: 16px; text-align: center; }
 </style>
 </head>
 <body>
 
 <h1>UPF 50+ Sun Hoodie — Panel Files</h1>
-<p class="sub">Click "Download JPEG" on each panel. Pattern: light through tree leaves on deep forest green.</p>
-<p class="sub" style="margin-top:-30px;color:#484040;">Verify dimensions against Printful's template. Panels rendered at 300 DPI. May take a moment to render on mobile.</p>
+<p class="sub">Tap "Download" to render and save each panel at full 300 DPI.</p>
+<p class="sub" style="margin-top:-10px;color:#484040;">Renders one at a time to avoid freezing. Each takes a few seconds.</p>
 
-<div id="loading" class="loading">Rendering panels...</div>
-<div class="panels" id="panels" style="display:none;"></div>
+<div class="panels" id="panels"></div>
 
 <script>
-// Panel definitions (approximate Printful AOP hoodie dimensions at 150 DPI)
 const PANELS = [
-  { id: 'front',       label: 'Front',        w: 4500, h: 5400, preview: 220, hasText: true,  textX: 0.5, textY: 0.42, textSize: 440, textVertical: false },
-  { id: 'back',        label: 'Back',         w: 4500, h: 5400, preview: 220, hasText: false },
-  { id: 'left-sleeve', label: 'Left Sleeve',  w: 2100, h: 6000, preview: 110, hasText: false },
-  { id: 'right-sleeve',label: 'Right Sleeve', w: 2100, h: 6000, preview: 110, hasText: true,  textX: 0.5, textY: 0.5,  textSize: 520, textVertical: true },
-  { id: 'left-hood',   label: 'Left Hood',    w: 2400, h: 2400, preview: 160, hasText: false },
-  { id: 'right-hood',  label: 'Right Hood',   w: 2400, h: 2400, preview: 160, hasText: false },
+  { id: 'front',       label: 'Front',        w: 4500, h: 5400, pw: 150, hasText: true,  textX: 0.5, textY: 0.42, textSize: 440, textVertical: false },
+  { id: 'back',        label: 'Back',         w: 4500, h: 5400, pw: 150, hasText: false },
+  { id: 'right-sleeve',label: 'Right Sleeve', w: 2100, h: 6000, pw: 80,  hasText: true,  textX: 0.5, textY: 0.5,  textSize: 520, textVertical: true },
+  { id: 'left-sleeve', label: 'Left Sleeve',  w: 2100, h: 6000, pw: 80,  hasText: false },
+  { id: 'left-hood',   label: 'Left Hood',    w: 2400, h: 2400, pw: 120, hasText: false, hoodSide: 'left' },
+  { id: 'right-hood',  label: 'Right Hood',   w: 2400, h: 2400, pw: 120, hasText: false, hoodSide: 'right' },
 ];
 
-// Seedable random for reproducibility
 let seed = 42;
 function rand() { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; }
-
-function drawForestPattern(ctx, w, h, panel) {
-  seed = 42 + PANELS.indexOf(panel) * 1000;
-
-  // Base
-  ctx.fillStyle = '#152d1a';
-  ctx.fillRect(0, 0, w, h);
-
-  // Depth variation - large dark patches
-  for (let i = 0; i < 24; i++) {
-    let x = rand() * w, y = rand() * h;
-    let rx = 160 + rand() * 500, ry = 160 + rand() * 400;
-    let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
-    g.addColorStop(0, `rgba(10,22,12,${0.2 + rand() * 0.25})`);
-    g.addColorStop(1, 'rgba(10,22,12,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
-  }
-
-  // Mid-tone variation
-  for (let i = 0; i < 30; i++) {
-    let x = rand() * w, y = rand() * h;
-    let rx = 120 + rand() * 360, ry = 120 + rand() * 300;
-    let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
-    g.addColorStop(0, `rgba(28,50,30,${0.15 + rand() * 0.2})`);
-    g.addColorStop(1, 'rgba(28,50,30,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
-  }
-
-  // Large leaf-shaped green light patches (many, overlapping)
-  for (let i = 0; i < 120; i++) {
-    let x = rand() * w, y = rand() * h;
-    let size = 40 + rand() * 160;
-    let angle = rand() * Math.PI * 2;
-    let green = 46 + Math.floor(rand() * 40);
-    let alpha = 0.08 + rand() * 0.18;
-    drawLeaf(ctx, x, y, size, size * (0.5 + rand() * 0.4), angle, `rgba(${40 + Math.floor(rand()*30)},${green + 30},${green - 10},${alpha})`);
-  }
-
-  // Medium leaf patches - denser layer
-  for (let i = 0; i < 160; i++) {
-    let x = rand() * w, y = rand() * h;
-    let size = 20 + rand() * 90;
-    let angle = rand() * Math.PI * 2;
-    let green = 58 + Math.floor(rand() * 50);
-    let alpha = 0.06 + rand() * 0.15;
-    drawLeaf(ctx, x, y, size, size * (0.4 + rand() * 0.5), angle, `rgba(${50 + Math.floor(rand()*30)},${green + 20},${green - 15},${alpha})`);
-  }
-
-  // Bright green leaf accents
-  for (let i = 0; i < 80; i++) {
-    let x = rand() * w, y = rand() * h;
-    let size = 16 + rand() * 60;
-    let angle = rand() * Math.PI * 2;
-    let alpha = 0.05 + rand() * 0.1;
-    drawLeaf(ctx, x, y, size, size * (0.5 + rand() * 0.3), angle, `rgba(90,${130 + Math.floor(rand()*30)},70,${alpha})`);
-  }
-
-  // Warm golden sun-through-leaves spots
-  for (let i = 0; i < 100; i++) {
-    let x = rand() * w, y = rand() * h;
-    let size = 10 + rand() * 44;
-    let angle = rand() * Math.PI * 2;
-    let alpha = 0.04 + rand() * 0.1;
-    drawLeaf(ctx, x, y, size, size * (0.6 + rand() * 0.3), angle, `rgba(${200 + Math.floor(rand()*30)},${180 + Math.floor(rand()*25)},${130 + Math.floor(rand()*30)},${alpha})`);
-  }
-
-  // Tiny bright warm pinpoints
-  for (let i = 0; i < 70; i++) {
-    let x = rand() * w, y = rand() * h;
-    let r = 6 + rand() * 16;
-    let g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, `rgba(232,220,192,${0.08 + rand() * 0.12})`);
-    g.addColorStop(1, 'rgba(232,220,192,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(x - r, y - r, r * 2, r * 2);
-  }
-
-  // Branch/twig network - organic diagonal lines
-  ctx.strokeStyle = 'rgba(10,26,14,0.1)';
-  for (let i = 0; i < 20; i++) {
-    ctx.lineWidth = 2 + rand() * 4;
-    let startX = rand() * w, startY = rand() * h;
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    let segments = 3 + Math.floor(rand() * 4);
-    for (let j = 0; j < segments; j++) {
-      startX += (rand() - 0.3) * 240;
-      startY += 60 + rand() * 160;
-      ctx.lineTo(startX, startY);
-    }
-    ctx.stroke();
-
-    // Sub-branches
-    if (rand() > 0.4) {
-      ctx.lineWidth = 1.5 + rand() * 2;
-      let bx = startX - (rand() - 0.5) * 120;
-      let by = startY - rand() * 120;
-      ctx.beginPath();
-      ctx.moveTo(bx, by);
-      ctx.lineTo(bx + (rand() - 0.5) * 160, by + 40 + rand() * 100);
-      ctx.stroke();
-    }
-  }
-
-  // Text clearing glow (if this panel has text)
-  if (panel.hasText) {
-    let cx = w * panel.textX, cy = h * panel.textY;
-    let gr = Math.max(w, h) * 0.18;
-    let glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, gr);
-    glow.addColorStop(0, 'rgba(232,220,192,0.25)');
-    glow.addColorStop(0.3, 'rgba(200,191,154,0.12)');
-    glow.addColorStop(0.6, 'rgba(138,171,122,0.06)');
-    glow.addColorStop(1, 'rgba(22,46,26,0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, w, h);
-
-    // Extra subtle warm center
-    let glow2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, gr * 0.5);
-    glow2.addColorStop(0, 'rgba(232,220,192,0.15)');
-    glow2.addColorStop(1, 'rgba(232,220,192,0)');
-    ctx.fillStyle = glow2;
-    ctx.fillRect(0, 0, w, h);
-  }
-
-  // Overall subtle warm wash from upper area (sun direction)
-  let sunWash = ctx.createLinearGradient(w * 0.4, 0, w * 0.6, h);
-  sunWash.addColorStop(0, 'rgba(200,190,150,0.04)');
-  sunWash.addColorStop(0.3, 'rgba(180,170,130,0.02)');
-  sunWash.addColorStop(1, 'rgba(22,46,26,0)');
-  ctx.fillStyle = sunWash;
-  ctx.fillRect(0, 0, w, h);
-}
 
 function drawLeaf(ctx, x, y, w, h, angle, color) {
   ctx.save();
@@ -192,123 +59,270 @@ function drawLeaf(ctx, x, y, w, h, angle, color) {
   ctx.restore();
 }
 
-function drawText(ctx, panel) {
-  if (!panel.hasText) return;
+function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
+  seed = panelSeed;
 
-  let x = panel.w * panel.textX;
-  let y = panel.w * panel.textY;
-  if (panel.id === 'right-sleeve') y = panel.h * panel.textY;
+  ctx.fillStyle = '#152d1a';
+  ctx.fillRect(0, 0, w, h);
 
-  ctx.save();
-  ctx.translate(x, panel.h * panel.textY);
-
-  if (panel.textVertical) {
-    ctx.rotate(Math.PI / 2);
+  // Depth
+  for (let i = 0; i < 18; i++) {
+    let x = rand() * w, y = rand() * h;
+    let rx = 160 + rand() * 400, ry = 160 + rand() * 350;
+    let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
+    g.addColorStop(0, `rgba(10,22,12,${0.2 + rand() * 0.25})`);
+    g.addColorStop(1, 'rgba(10,22,12,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
   }
 
+  // Mid-tone
+  for (let i = 0; i < 20; i++) {
+    let x = rand() * w, y = rand() * h;
+    let rx = 120 + rand() * 300, ry = 120 + rand() * 250;
+    let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
+    g.addColorStop(0, `rgba(28,50,30,${0.15 + rand() * 0.2})`);
+    g.addColorStop(1, 'rgba(28,50,30,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // Large leaves
+  for (let i = 0; i < 80; i++) {
+    let x = rand() * w, y = rand() * h;
+    let size = 40 + rand() * 160;
+    let angle = rand() * Math.PI * 2;
+    let green = 46 + Math.floor(rand() * 40);
+    let alpha = 0.08 + rand() * 0.18;
+    drawLeaf(ctx, x, y, size, size * (0.5 + rand() * 0.4), angle, `rgba(${40 + Math.floor(rand()*30)},${green + 30},${green - 10},${alpha})`);
+  }
+
+  // Medium leaves
+  for (let i = 0; i < 100; i++) {
+    let x = rand() * w, y = rand() * h;
+    let size = 20 + rand() * 90;
+    let angle = rand() * Math.PI * 2;
+    let green = 58 + Math.floor(rand() * 50);
+    let alpha = 0.06 + rand() * 0.15;
+    drawLeaf(ctx, x, y, size, size * (0.4 + rand() * 0.5), angle, `rgba(${50 + Math.floor(rand()*30)},${green + 20},${green - 15},${alpha})`);
+  }
+
+  // Bright accents
+  for (let i = 0; i < 50; i++) {
+    let x = rand() * w, y = rand() * h;
+    let size = 16 + rand() * 60;
+    let angle = rand() * Math.PI * 2;
+    let alpha = 0.05 + rand() * 0.1;
+    drawLeaf(ctx, x, y, size, size * (0.5 + rand() * 0.3), angle, `rgba(90,${130 + Math.floor(rand()*30)},70,${alpha})`);
+  }
+
+  // Warm sun spots
+  for (let i = 0; i < 60; i++) {
+    let x = rand() * w, y = rand() * h;
+    let size = 10 + rand() * 44;
+    let angle = rand() * Math.PI * 2;
+    let alpha = 0.04 + rand() * 0.1;
+    drawLeaf(ctx, x, y, size, size * (0.6 + rand() * 0.3), angle, `rgba(${200 + Math.floor(rand()*30)},${180 + Math.floor(rand()*25)},${130 + Math.floor(rand()*30)},${alpha})`);
+  }
+
+  // Pinpoints
+  for (let i = 0; i < 40; i++) {
+    let x = rand() * w, y = rand() * h;
+    let r = 6 + rand() * 16;
+    let g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(232,220,192,${0.08 + rand() * 0.12})`);
+    g.addColorStop(1, 'rgba(232,220,192,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+
+  // Branches
+  ctx.strokeStyle = 'rgba(10,26,14,0.1)';
+  for (let i = 0; i < 14; i++) {
+    ctx.lineWidth = 2 + rand() * 4;
+    let sx = rand() * w, sy = rand() * h;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    let segs = 3 + Math.floor(rand() * 4);
+    for (let j = 0; j < segs; j++) {
+      sx += (rand() - 0.3) * 240;
+      sy += 60 + rand() * 160;
+      ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+    if (rand() > 0.4) {
+      ctx.lineWidth = 1.5 + rand() * 2;
+      let bx = sx - (rand() - 0.5) * 120, by = sy - rand() * 120;
+      ctx.beginPath(); ctx.moveTo(bx, by);
+      ctx.lineTo(bx + (rand() - 0.5) * 160, by + 40 + rand() * 100);
+      ctx.stroke();
+    }
+  }
+
+  // Text clearing glow
+  if (hasText) {
+    let cx = w * textX, cy = h * textY;
+    let gr = Math.max(w, h) * 0.18;
+    let glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, gr);
+    glow.addColorStop(0, 'rgba(232,220,192,0.25)');
+    glow.addColorStop(0.3, 'rgba(200,191,154,0.12)');
+    glow.addColorStop(0.6, 'rgba(138,171,122,0.06)');
+    glow.addColorStop(1, 'rgba(22,46,26,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, h);
+    let glow2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, gr * 0.5);
+    glow2.addColorStop(0, 'rgba(232,220,192,0.15)');
+    glow2.addColorStop(1, 'rgba(232,220,192,0)');
+    ctx.fillStyle = glow2;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // Sun wash
+  let sunWash = ctx.createLinearGradient(w * 0.4, 0, w * 0.6, h);
+  sunWash.addColorStop(0, 'rgba(200,190,150,0.04)');
+  sunWash.addColorStop(0.3, 'rgba(180,170,130,0.02)');
+  sunWash.addColorStop(1, 'rgba(22,46,26,0)');
+  ctx.fillStyle = sunWash;
+  ctx.fillRect(0, 0, w, h);
+}
+
+function drawText(ctx, panel) {
+  if (!panel.hasText) return;
+  ctx.save();
+  ctx.translate(panel.w * panel.textX, panel.h * panel.textY);
+  if (panel.textVertical) ctx.rotate(Math.PI / 2);
   let fs = panel.textSize;
   ctx.font = `400 ${fs}px Fraunces`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-
-  // Soft glow behind text
   ctx.shadowColor = 'rgba(232,220,192,0.3)';
   ctx.shadowBlur = 20;
   ctx.fillStyle = 'rgba(232,220,192,0.4)';
   ctx.fillText('stay.', 0, 0);
-
-  // Main text
   ctx.shadowColor = 'rgba(232,220,192,0.15)';
   ctx.shadowBlur = 8;
   ctx.fillStyle = 'rgba(232,220,192,0.88)';
   ctx.fillText('stay.', 0, 0);
-
   ctx.restore();
 }
 
-async function renderAll() {
-  // Wait for font to load
+// Build preview cards with small static previews and on-demand download
+async function init() {
   await document.fonts.ready;
-  // Extra delay for font rendering
-  await new Promise(r => setTimeout(r, 500));
+  await new Promise(r => setTimeout(r, 300));
 
   const container = document.getElementById('panels');
 
-  // Render hood as one continuous piece, then split
-  const hoodFullW = 4800, hoodFullH = 2400;
-  const hoodFull = document.createElement('canvas');
-  hoodFull.width = hoodFullW;
-  hoodFull.height = hoodFullH;
-  const hoodCtx = hoodFull.getContext('2d');
-  // Use a consistent seed for the full hood
-  const hoodPanel = { hasText: false };
-  seed = 42 + 99000;
-  drawForestPattern(hoodCtx, hoodFullW, hoodFullH, hoodPanel);
-
   for (const panel of PANELS) {
-    let full;
-
-    if (panel.id === 'left-hood' || panel.id === 'right-hood') {
-      // Split the continuous hood canvas
-      full = document.createElement('canvas');
-      full.width = panel.w;
-      full.height = panel.h;
-      const fctx = full.getContext('2d');
-      const srcX = panel.id === 'left-hood' ? 0 : hoodFullW / 2;
-      fctx.drawImage(hoodFull, srcX, 0, hoodFullW / 2, hoodFullH, 0, 0, panel.w, panel.h);
-    } else {
-      // Normal panel rendering
-      full = document.createElement('canvas');
-      full.width = panel.w;
-      full.height = panel.h;
-      const fctx = full.getContext('2d');
-      drawForestPattern(fctx, panel.w, panel.h, panel);
-      drawText(fctx, panel);
-    }
-
-    // Preview canvas (visible, scaled down)
+    // Small preview (rendered at low res)
     const aspect = panel.h / panel.w;
-    const pw = panel.preview;
+    const pw = panel.pw;
     const ph = Math.round(pw * aspect);
     const preview = document.createElement('canvas');
-    preview.width = pw;
-    preview.height = ph;
+    preview.width = pw * 2; // 2x for retina-ish
+    preview.height = ph * 2;
     preview.style.width = pw + 'px';
     preview.style.height = ph + 'px';
     const pctx = preview.getContext('2d');
-    pctx.drawImage(full, 0, 0, pw, ph);
 
-    // Download button
+    // Render tiny preview version
+    const pSeed = panel.hoodSide ? 99042 : (42 + PANELS.indexOf(panel) * 1000);
+    if (panel.hoodSide) {
+      // Render full hood at small size then split
+      const hc = document.createElement('canvas');
+      hc.width = pw * 4; hc.height = ph * 2;
+      const hctx = hc.getContext('2d');
+      drawForestPattern(hctx, hc.width, hc.height, pSeed, false);
+      const srcX = panel.hoodSide === 'left' ? 0 : hc.width / 2;
+      pctx.drawImage(hc, srcX, 0, hc.width / 2, hc.height, 0, 0, pw * 2, ph * 2);
+    } else {
+      drawForestPattern(pctx, pw * 2, ph * 2, pSeed, panel.hasText, panel.textX, panel.textY);
+      if (panel.hasText) {
+        // Draw text at preview scale
+        pctx.save();
+        pctx.translate(pw * 2 * panel.textX, ph * 2 * panel.textY);
+        if (panel.textVertical) pctx.rotate(Math.PI / 2);
+        let fs = panel.textSize * (pw * 2 / panel.w);
+        pctx.font = `400 ${fs}px Fraunces`;
+        pctx.textAlign = 'center';
+        pctx.textBaseline = 'middle';
+        pctx.shadowColor = 'rgba(232,220,192,0.3)';
+        pctx.shadowBlur = 4;
+        pctx.fillStyle = 'rgba(232,220,192,0.88)';
+        pctx.fillText('stay.', 0, 0);
+        pctx.restore();
+      }
+    }
+
+    const status = document.createElement('div');
+    status.className = 'status';
+
     const btn = document.createElement('button');
     btn.className = 'btn';
-    btn.textContent = 'Download JPEG';
-    btn.onclick = () => {
-      const link = document.createElement('a');
-      link.download = `stay-sun-hoodie-${panel.id}.jpg`;
-      link.href = full.toDataURL('image/jpeg', 0.95);
-      link.click();
+    btn.innerHTML = '<span class="label">Download JPEG</span><span class="spinner">Rendering...</span>';
+    btn.onclick = async () => {
+      btn.disabled = true;
+      btn.classList.add('loading');
+      status.textContent = 'Rendering full resolution...';
+
+      // Yield to browser to show loading state
+      await new Promise(r => setTimeout(r, 50));
+
+      try {
+        let fullCanvas;
+
+        if (panel.hoodSide) {
+          // Render continuous hood then split
+          const hoodW = 4800, hoodH = 2400;
+          const hc = document.createElement('canvas');
+          hc.width = hoodW; hc.height = hoodH;
+          const hctx = hc.getContext('2d');
+          drawForestPattern(hctx, hoodW, hoodH, 99042, false);
+
+          fullCanvas = document.createElement('canvas');
+          fullCanvas.width = panel.w; fullCanvas.height = panel.h;
+          const fctx = fullCanvas.getContext('2d');
+          const srcX = panel.hoodSide === 'left' ? 0 : hoodW / 2;
+          fctx.drawImage(hc, srcX, 0, hoodW / 2, hoodH, 0, 0, panel.w, panel.h);
+        } else {
+          fullCanvas = document.createElement('canvas');
+          fullCanvas.width = panel.w; fullCanvas.height = panel.h;
+          const fctx = fullCanvas.getContext('2d');
+          const pSeed2 = 42 + PANELS.indexOf(panel) * 1000;
+          drawForestPattern(fctx, panel.w, panel.h, pSeed2, panel.hasText, panel.textX, panel.textY);
+          drawText(fctx, panel);
+        }
+
+        await new Promise(r => setTimeout(r, 50));
+
+        const link = document.createElement('a');
+        link.download = `stay-sun-hoodie-${panel.id}.jpg`;
+        link.href = fullCanvas.toDataURL('image/jpeg', 0.95);
+        link.click();
+
+        status.textContent = 'Downloaded!';
+      } catch (e) {
+        status.textContent = 'Error: try on desktop browser';
+      }
+      btn.disabled = false;
+      btn.classList.remove('loading');
     };
 
-    // Card
     const card = document.createElement('div');
     card.className = 'card';
     card.appendChild(preview);
     const info = document.createElement('div');
     info.className = 'info';
     info.innerHTML = `<strong>${panel.label}</strong><br>${panel.w} x ${panel.h}px`;
-    if (panel.hasText) {
-      info.innerHTML += `<br><span style="color:#6a8a6a">"stay." ${panel.textVertical ? 'vertical' : 'center chest'}</span>`;
-    }
+    if (panel.hasText) info.innerHTML += `<br><span style="color:#6a8a6a">"stay." ${panel.textVertical ? 'vertical' : 'center chest'}</span>`;
     card.appendChild(info);
     card.appendChild(btn);
+    card.appendChild(status);
     container.appendChild(card);
   }
-
-  document.getElementById('loading').style.display = 'none';
-  container.style.display = 'flex';
 }
 
-renderAll();
+init();
 </script>
 
 </body>
