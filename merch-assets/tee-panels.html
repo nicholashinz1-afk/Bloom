@@ -48,8 +48,8 @@ const COLORS = [
 ];
 
 const PLACEMENTS = [
-  { id: 'front', label: 'Front — right chest', textX: 0.65, textY: 0.18, textSize: 120 },
-  { id: 'back',  label: 'Back — upper back',   textX: 0.5,  textY: 0.1,  textSize: 110 },
+  { id: 'front', label: 'Front — right chest', textX: 0.7, textY: 0.15, textSize: 200 },
+  { id: 'back',  label: 'Back — upper back',   textX: 0.5, textY: 0.08, textSize: 180 },
 ];
 
 function renderAndDownload(colorHex, placementId, textX, textY, textSize, filename) {
@@ -105,7 +105,7 @@ async function init() {
       const btn = document.createElement('button');
       btn.className = 'btn';
       btn.textContent = 'Download PNG';
-      const filename = `stay-tee-${pl.id}-${col.id}.png`;
+      const filename = `stay-tee-v2-${pl.id}-${col.id}.png`;
       btn.onclick = () => renderAndDownload(col.color, pl.id, pl.textX, pl.textY, pl.textSize, filename);
 
       const card = document.createElement('div');
