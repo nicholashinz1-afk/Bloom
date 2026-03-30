@@ -98,7 +98,7 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 - **GitHub Sponsors:** Live (via Stripe)
 - **Vercel OSS:** Emailed partnerships@vercel.com for sponsorship
 - **Upstash OSS:** Applied via oss@upstash.com
-- **Merch line:** Standalone apparel with meaningful phrases (separate entity from Bloom, no visible brand on product). First phrase: "Stay." 100% of profits fund Bloom. Print-on-demand via Printful + Etsy. Launch products: heavyweight tee, heavyweight hoodie, UPF 50+ sun hoodie (louder/patterned design), fitted hat (Flexfit 6277), trucker hat (Richardson 112).
+- **Merch line:** Shop name: SaidGently. Standalone apparel with meaningful phrases (separate entity from Bloom, no visible brand on product). First phrase: "Stay." 100% of profits fund Bloom. Print-on-demand via Printful + Etsy. Launch products: heavyweight tee (CC 1717, spruce), heavyweight hoodie (CH M2580, forest green), UPF 50+ sun hoodie (AOP, forest canopy pattern), fitted hat (Flexfit 6277, olive), trucker hat (Richardson 112, loden), waffle beanie (Richardson 146R, rust). All hats old gold flat embroidery. Design assets in `/merch-assets/`.
 - **Contact:** bloomhabits@proton.me
 
 ## Scaling Roadmap

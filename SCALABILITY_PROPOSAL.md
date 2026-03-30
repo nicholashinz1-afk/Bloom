@@ -272,27 +272,36 @@ One word. One syllable. A period. It works because it means something different 
 6. "Enough."
 
 **Brand approach:**
+- Shop name: **SaidGently** (Etsy)
 - No visible brand on the apparel. The phrases are the product.
 - Separate entity from Bloom. Bloom's name does not appear on the merch.
 - Link back to Bloom only via packaging insert: "Profits from this support Bloom, a free mental health app. bloomselfcare.app"
 - Print-on-demand via Printful + Etsy. Zero inventory risk.
+- Sole proprietor to start. Nonprofit structure deferred until revenue and community justify the overhead.
 
 **Launch products (Phase 1):**
-1. Heavyweight tee (Comfort Colors 1717 or Cotton Heritage MC1086). Fraunces Regular, lowercase. Right chest front + small upper back. Earth tone colorways.
-2. Heavyweight hoodie (Bella+Canvas 4719 or Cotton Heritage M2580). Fraunces Regular, center chest. Same earth tone palette.
-3. UPF 50+ sun hoodie (Printful All-Over Print Sports Warmup Hoodie). Louder design with patterned elements. Same word, different energy.
-4. Fitted hat (Flexfit 6277). Flat embroidery, "stay." on front. Clean, minimal.
-5. Trucker hat (Richardson 112). Flat embroidery, "stay." on front. Structured, mesh back.
+1. Heavyweight tee — Comfort Colors 1717, Spruce, soft amber DTG print, right chest. Fraunces Regular. ~$15 base, retail ~$34.99.
+2. Heavyweight hoodie — Cotton Heritage M2580, Forest Green, soft amber DTG print, center chest. Fraunces Regular. ~$27 base, retail ~$49.99.
+3. UPF 50+ sun hoodie — All-Over Print Sports Warmup Hoodie, forest canopy pattern with dappled light, "stay." on chest + right sleeve. ~$42 base, retail ~$69.99.
+4. Fitted hat — Flexfit 6277, Olive, old gold flat embroidery. ~$16 base, retail ~$34.99.
+5. Trucker hat — Richardson 112, Loden, old gold flat embroidery. ~$16 base, retail ~$32.99.
+6. Waffle beanie — Richardson 146R, Rust, old gold flat embroidery. ~$15 base, retail ~$29.99.
 
-Note: Embroidery on hats may need a simplified or slightly heavier version of Fraunces letterforms, as thin serif strokes can get lost in thread.
+Note: Fraunces Medium weight (500) used for hat embroidery since thin serif strokes need extra weight to hold up in thread.
 
-- [ ] Create Printful account and confirm product pricing/color availability
-- [ ] Design heavyweight tee and hoodie print files (Fraunces Regular, "stay.")
-- [ ] Design all-over print sun hoodie (download template, create patterned design)
-- [ ] Set up Etsy shop
+**Design assets:** All print files and download pages in `/merch-assets/`. Etsy listing copy in `/merch-assets/etsy-listings.md`.
+
+- [x] Create Printful account
+- [x] Design heavyweight tee and hoodie print files (Fraunces Regular, "stay.")
+- [x] Design all-over print sun hoodie (forest canopy pattern)
+- [x] Design hat embroidery files (Fraunces Medium, black fill for digitization)
+- [x] Set up all six products in Printful
+- [x] Draft Etsy listing descriptions
+- [ ] Pay Etsy $29 startup fee and claim SaidGently shop name
 - [ ] Order samples from Printful (20% discount on samples)
+- [ ] Photograph samples for listings
 - [ ] Connect Printful to Etsy
-- [ ] Create listings with product photos
+- [ ] Publish listings with real product photos
 - [ ] Add packaging insert linking to Bloom
 
 ### Phase 4 -- Reach (Month 3-6)
