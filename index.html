@@ -5453,7 +5453,7 @@ async function saveOpenJournal() {
   } else {
     ai = await callClaude(
       `Someone is having a hard day and wrote: "${text}". Respond with just 1-2 sentences of warm, human presence. No advice. No silver linings. Just witness what they said and remind them they're not alone.`,
-      'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity, no advice. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis, you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care.'
+      'hard_day'
     );
   }
 
@@ -5607,7 +5607,7 @@ async function showMonthlyReflectionPrompt() {
   trackFeature('monthly_reflection');
   const ai = await callClaude(
     `Write a warm monthly reflection for a wellness app user. Month: ${monthName}. Average mood: ${avgMood}/4. Journal entries: ${journalCount}. Write 3-4 sentences that feel like a caring friend reflecting on their month — personal, encouraging, honest. Never shame.`,
-    'You are Bloom. 3-4 sentences. Warm, personal, never clinical. If mood data suggests a very difficult month, gently acknowledge that and remind them the 🤍 crisis heart is always there if they need support beyond what bloom can offer.',
+    'monthly',
     { model: 'claude-sonnet-4-20250514' }
   );
 
@@ -7958,18 +7958,18 @@ function getScriptedResponse() {
 
 const AI_FALLBACK_RESPONSE = "You showed up today, and that matters. Whatever you're carrying, you don't have to carry it alone.";
 
-async function callClaude(prompt, systemPrompt, options) {
+async function callClaude(prompt, context, options) {
   // Track AI reflection usage for journey analysis
   const aiSource = prompt.includes('journal') ? 'journal' : prompt.includes('reflection') ? 'reflection' : prompt.includes('hard day') ? 'hard_day' : prompt.includes('weekly') || prompt.includes('week') ? 'weekly_insight' : prompt.includes('monthly') || prompt.includes('month') ? 'monthly_reflection' : 'other';
   trackAIJourney(aiSource, aiSource);
   trackFeature('ai_reflection');
   try {
     const name = state.prefs?.name;
-    const nameContext = name ? ` The user's name is ${name} — use it occasionally but naturally, not in every sentence.` : '';
     const body = {
-      system: (systemPrompt || 'You are Bloom, a warm and compassionate mental wellness companion. Keep responses brief, warm, and human. Never clinical. 1-4 sentences maximum.') + ' Never use first-person language like "I am here for you" or "I care about you" — you are a tool, not a person. Frame support as observations and affirmations, not as a relationship.' + nameContext,
+      context: context || 'default',
       message: prompt,
     };
+    if (name) body.name = name;
     if (options?.model) body.model = options.model;
     const res = await timedFetch('/api/claude', {
       method: 'POST',
@@ -9893,7 +9893,7 @@ async function saveJournal() {
 
   const ai = await callClaude(
     `The user wrote in their journal: "${text}". Write a warm, brief (2-3 sentence) response that acknowledges what they shared without offering unsolicited advice. Be human and compassionate.`,
-    'You are Bloom, a gentle wellness companion. Never clinical. Warm, brief, human. 2-3 sentences max. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis, you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care.'
+    'journal'
   );
 
   state.loadingJournalAI = false;
@@ -9983,7 +9983,7 @@ async function saveReflection(qi) {
   const q = REFLECTION_QUESTIONS[qi];
   const ai = await callClaude(
     `The reflection question was: "${q}". The user answered: "${text}". Write a thoughtful 1-2 sentence response that acknowledges their reflection with warmth.`,
-    'You are Bloom. 1-2 sentences. Warm, not clinical. If the user expresses distress, self-harm, or crisis, gently point them to the 🤍 crisis heart for immediate support.'
+    'reflection'
   );
 
   state.loadingReflectionAI[qi] = false;
@@ -10037,7 +10037,7 @@ async function generateWeeklyInsight(e) {
     `Write a weekly insight for a mental wellness app user. This week: ${avgMood ? `average mood ${avgMood}/4` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}. Small wins they logged: ${weekWins.length > 0 ? weekWins.slice(0,5).join(', ') : 'none this week'}.
 
 Write 3-4 sentences from an emotional lens — how they showed up for themselves this week. If they logged small wins, reflect specific ones back to them as evidence of progress. If it was a hard week emotionally but they still did self-care, reflect that back as evidence of resilience. Celebrate specific acts of self-care as emotional wins. Never shame, never clinical. End with something genuinely encouraging about the week ahead.`,
-    'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only. If the week data suggests persistent struggle, gently remind them the 🤍 crisis heart is always there and that reaching out to a professional is a sign of strength.',
+    'weekly',
     { model: 'claude-sonnet-4-20250514' }
   );
 
@@ -11135,7 +11135,7 @@ async function generateRollingInsight() {
 
   const ai = await callClaude(
     `Write ONE short sentence (max 20 words) for a wellness app's live week view. It's day ${daysIn} of the week. ${avgMood ? `Average mood so far: ${avgMood}/4.` : ''} ${selfCare.length > 0 ? `Self-care done: ${selfCare.join(', ')}.` : ''} Be warm and specific to what's happened. No filler phrases.`,
-    'You are Bloom. One sentence only, max 20 words, warm and specific.'
+    'live_week'
   );
   if (ai) {
     save(key, ai);
@@ -18444,6 +18444,13 @@ function renderBuddyMessagesForPair(pairId) {
     const cls = isMine ? 'buddy-msg sent' : 'buddy-msg received';
     const nudgeCls = isNudge ? ' nudge' : '';
     html += `<div class="${cls}${nudgeCls}">${escapeHtml(msg.text)}</div>`;
+    // Show gentle crisis guidance to the receiving partner when a buddy sends a self-harm message
+    if (!isMine && msg.flag === 'self-harm') {
+      html += `<div style="background:rgba(201,149,74,0.1);border:1px solid rgba(201,149,74,0.2);border-radius:var(--r-md);padding:8px 12px;margin:4px 0 8px;font-size:11px;color:var(--text-secondary);line-height:1.5">
+        Your buddy may be going through a hard time. You don't need to be their therapist. Just being kind matters.
+        <span onclick="openCrisisSheet()" style="color:var(--amber-light);cursor:pointer;text-decoration:underline;margin-left:4px">Crisis resources</span>
+      </div>`;
+    }
   });
   container.innerHTML = html;
   container.scrollTop = container.scrollHeight;

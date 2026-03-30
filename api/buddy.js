@@ -832,6 +832,8 @@ export default async function handler(req, res) {
       ts: Date.now(),
       type: 'msg',
     };
+    // Store self-harm flag on the message so the receiving partner also sees crisis guidance
+    if (check.flag === 'self-harm') msg.flag = 'self-harm';
     messages.push(msg);
     const trimmed = messages.slice(-50);
     await kvSet(`bloom_buddy_msgs:${targetPair.pairId}`, trimmed);
