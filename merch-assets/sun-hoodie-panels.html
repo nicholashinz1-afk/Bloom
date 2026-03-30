@@ -105,70 +105,93 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
   ctx.fillStyle = '#152d1a';
   ctx.fillRect(0, 0, w, h);
 
+  // Scale factor — more elements for bigger canvases
+  const area = w * h;
+  const sf = area / (1500 * 3000); // relative to original small canvas
+
   // Depth
-  for (let i = 0; i < 18; i++) {
+  for (let i = 0; i < Math.round(30 * sf); i++) {
     let x = rand() * w, y = rand() * h;
-    let rx = 150 + rand() * 500, ry = 150 + rand() * 450;
+    let rx = 100 + rand() * 350, ry = 100 + rand() * 300;
     let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
-    g.addColorStop(0, `rgba(10,22,12,${0.2 + rand() * 0.25})`);
+    g.addColorStop(0, `rgba(10,22,12,${0.15 + rand() * 0.25})`);
     g.addColorStop(1, 'rgba(10,22,12,0)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
   }
 
   // Mid-tone
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < Math.round(35 * sf); i++) {
     let x = rand() * w, y = rand() * h;
-    let rx = 120 + rand() * 400, ry = 120 + rand() * 350;
+    let rx = 80 + rand() * 250, ry = 80 + rand() * 220;
     let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
-    g.addColorStop(0, `rgba(28,50,30,${0.15 + rand() * 0.2})`);
+    g.addColorStop(0, `rgba(28,50,30,${0.12 + rand() * 0.2})`);
     g.addColorStop(1, 'rgba(28,50,30,0)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
   }
 
   // Large leaves
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < Math.round(120 * sf); i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 40 + rand() * 180;
+    let size = 30 + rand() * 120;
     let angle = rand() * Math.PI * 2;
     let green = 46 + Math.floor(rand() * 40);
-    let alpha = 0.08 + rand() * 0.18;
+    let alpha = 0.06 + rand() * 0.18;
     drawLeaf(ctx, x, y, size, size * (0.5 + rand() * 0.4), angle, `rgba(${40 + Math.floor(rand()*30)},${green + 30},${green - 10},${alpha})`);
   }
 
   // Medium leaves
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < Math.round(180 * sf); i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 25 + rand() * 100;
+    let size = 15 + rand() * 70;
     let angle = rand() * Math.PI * 2;
     let green = 58 + Math.floor(rand() * 50);
-    let alpha = 0.06 + rand() * 0.15;
+    let alpha = 0.05 + rand() * 0.14;
     drawLeaf(ctx, x, y, size, size * (0.4 + rand() * 0.5), angle, `rgba(${50 + Math.floor(rand()*30)},${green + 20},${green - 15},${alpha})`);
   }
 
-  // Bright accents
-  for (let i = 0; i < 50; i++) {
+  // Small detail leaves
+  for (let i = 0; i < Math.round(200 * sf); i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 40 + rand() * 150;
+    let size = 8 + rand() * 35;
     let angle = rand() * Math.PI * 2;
-    let alpha = 0.05 + rand() * 0.1;
+    let green = 50 + Math.floor(rand() * 60);
+    let alpha = 0.04 + rand() * 0.12;
+    drawLeaf(ctx, x, y, size, size * (0.4 + rand() * 0.5), angle, `rgba(${45 + Math.floor(rand()*35)},${green + 25},${green - 10},${alpha})`);
+  }
+
+  // Bright accents
+  for (let i = 0; i < Math.round(80 * sf); i++) {
+    let x = rand() * w, y = rand() * h;
+    let size = 20 + rand() * 80;
+    let angle = rand() * Math.PI * 2;
+    let alpha = 0.04 + rand() * 0.1;
     drawLeaf(ctx, x, y, size, size * (0.5 + rand() * 0.3), angle, `rgba(90,${130 + Math.floor(rand()*30)},70,${alpha})`);
   }
 
-  // Warm sun spots
-  for (let i = 0; i < 60; i++) {
+  // Warm sun spots — large
+  for (let i = 0; i < Math.round(80 * sf); i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 25 + rand() * 110;
+    let size = 15 + rand() * 60;
     let angle = rand() * Math.PI * 2;
     let alpha = 0.04 + rand() * 0.1;
     drawLeaf(ctx, x, y, size, size * (0.6 + rand() * 0.3), angle, `rgba(${200 + Math.floor(rand()*30)},${180 + Math.floor(rand()*25)},${130 + Math.floor(rand()*30)},${alpha})`);
   }
 
-  // Pinpoints
-  for (let i = 0; i < 40; i++) {
+  // Small warm detail spots
+  for (let i = 0; i < Math.round(120 * sf); i++) {
     let x = rand() * w, y = rand() * h;
-    let r = 15 + rand() * 40;
+    let size = 5 + rand() * 25;
+    let angle = rand() * Math.PI * 2;
+    let alpha = 0.03 + rand() * 0.08;
+    drawLeaf(ctx, x, y, size, size * (0.5 + rand() * 0.4), angle, `rgba(${210 + Math.floor(rand()*20)},${190 + Math.floor(rand()*20)},${140 + Math.floor(rand()*30)},${alpha})`);
+  }
+
+  // Pinpoints
+  for (let i = 0; i < Math.round(60 * sf); i++) {
+    let x = rand() * w, y = rand() * h;
+    let r = 8 + rand() * 25;
     let g = ctx.createRadialGradient(x, y, 0, x, y, r);
     g.addColorStop(0, `rgba(232,220,192,${0.08 + rand() * 0.12})`);
     g.addColorStop(1, 'rgba(232,220,192,0)');
@@ -178,8 +201,8 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
 
   // Branches
   ctx.strokeStyle = 'rgba(10,26,14,0.1)';
-  for (let i = 0; i < 14; i++) {
-    ctx.lineWidth = 2 + rand() * 4;
+  for (let i = 0; i < Math.round(20 * sf); i++) {
+    ctx.lineWidth = 1.5 + rand() * 3;
     let sx = rand() * w, sy = rand() * h;
     ctx.beginPath();
     ctx.moveTo(sx, sy);
