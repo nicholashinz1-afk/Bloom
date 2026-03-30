@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaidGently — Shop Icon</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 20px; font-family: sans-serif; color: #888; }
+  .label { font-size: 13px; }
+  canvas { border-radius: 50%; }
+  .btn { padding: 10px 20px; background: #1c2e20; color: #a8c5ab; border: 1px solid #2a4a30; border-radius: 6px; font-size: 13px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="label">Etsy shop icon — 500x500px (tap to download)</div>
+<canvas id="icon" width="500" height="500" style="width:250px;height:250px;"></canvas>
+<button class="btn" id="dl">Download PNG</button>
+
+<script>
+async function render() {
+  await document.fonts.ready;
+  await new Promise(r => setTimeout(r, 300));
+
+  const c = document.getElementById('icon');
+  const ctx = c.getContext('2d');
+
+  // Background — deep forest green
+  ctx.fillStyle = '#1c2e20';
+  ctx.fillRect(0, 0, 500, 500);
+
+  // Shop name "SaidGently" in Fraunces Light, cream
+  ctx.save();
+  ctx.translate(250, 220);
+  ctx.font = '300 52px Fraunces';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#e8e0d0';
+  ctx.fillText('Said', 0, -20);
+  ctx.fillText('Gently', 0, 35);
+  ctx.restore();
+
+  // Small "stay." underneath as a subtle hint
+  ctx.save();
+  ctx.translate(250, 310);
+  ctx.font = '400 22px Fraunces';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#d4ad6a';
+  ctx.globalAlpha = 0.6;
+  ctx.fillText('stay.', 0, 0);
+  ctx.restore();
+
+  document.getElementById('dl').onclick = () => {
+    const link = document.createElement('a');
+    link.download = 'saidgently-icon.png';
+    link.href = c.toDataURL('image/png');
+    link.click();
+  };
+}
+render();
+</script>
+
+</body>
+</html>
