@@ -5555,7 +5555,7 @@ async function showMonthlyReflectionPrompt() {
 
   trackFeature('monthly_reflection');
   const ai = await callClaude(
-    `Write a warm monthly reflection for a wellness app user. Month: ${monthName}. Average mood: ${avgMood}/4. Journal entries: ${journalCount}. Write 3-4 sentences that feel like a caring friend reflecting on their month — personal, encouraging, honest. Never shame.`,
+    `Write a warm monthly reflection for a wellness app user. Month: ${monthName}. Mood this month: ${avgMood !== null ? ['rough','low','okay','good','great'][Math.round(avgMood)] : 'not tracked'}. Journal entries: ${journalCount}. Write 3-4 sentences that feel like a caring friend reflecting on their month — personal, encouraging, honest. Never reference numbers or scores. Never shame.`,
     'You are Bloom. 3-4 sentences. Warm, personal, never clinical. If mood data suggests a very difficult month, gently acknowledge that and remind them the 🤍 crisis heart is always there if they need support beyond what bloom can offer.',
     { model: 'claude-sonnet-4-20250514' }
   );
@@ -10029,9 +10029,9 @@ async function generateWeeklyInsight(e) {
   trackFeature('weekly_insight');
   try {
     const ai = await callClaude(
-      `Write a weekly insight for a mental wellness app user. This week: ${avgMood ? `average mood ${avgMood}/4` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}. Small wins they logged: ${weekWins.length > 0 ? weekWins.slice(0,5).join(', ') : 'none this week'}.
+      `Write a weekly insight for a mental wellness app user. This week: ${avgMood !== null ? `mood has been ${['rough','low','okay','good','great'][Math.round(avgMood)]} overall` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}. Small wins they logged: ${weekWins.length > 0 ? weekWins.slice(0,5).join(', ') : 'none this week'}.
 
-Write 3-4 sentences from an emotional lens — how they showed up for themselves this week. If they logged small wins, reflect specific ones back to them as evidence of progress. If it was a hard week emotionally but they still did self-care, reflect that back as evidence of resilience. Celebrate specific acts of self-care as emotional wins. Never shame, never clinical. End with something genuinely encouraging about the week ahead.`,
+Write 3-4 sentences from an emotional lens — how they showed up for themselves this week. IMPORTANT: Never reference numbers, scores, or scales. Use natural emotional language only. If they logged small wins, reflect specific ones back to them as evidence of progress. If it was a hard week emotionally but they still did self-care, reflect that back as evidence of resilience. Celebrate specific acts of self-care as emotional wins. Never shame, never clinical. End with something genuinely encouraging about the week ahead.`,
       'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only. If the week data suggests persistent struggle, gently remind them the 🤍 crisis heart is always there and that reaching out to a professional is a sign of strength.',
       { model: 'claude-sonnet-4-20250514' }
     );
@@ -11145,7 +11145,7 @@ async function generateRollingInsight() {
   ].filter(Boolean);
 
   const ai = await callClaude(
-    `Write ONE short sentence (max 20 words) for a wellness app's live week view. It's day ${daysIn} of the week. ${avgMood ? `Average mood so far: ${avgMood}/4.` : ''} ${selfCare.length > 0 ? `Self-care done: ${selfCare.join(', ')}.` : ''} Be warm and specific to what's happened. No filler phrases.`,
+    `Write ONE short sentence (max 20 words) for a wellness app's live week view. It's day ${daysIn} of the week. ${avgMood ? `Mood so far: ${['rough','low','okay','good','great'][Math.round(parseFloat(avgMood))]}.` : ''} ${selfCare.length > 0 ? `Self-care done: ${selfCare.join(', ')}.` : ''} Be warm and specific to what's happened. Never reference numbers or scores. No filler phrases.`,
     'You are Bloom. One sentence only, max 20 words, warm and specific.'
   );
   if (ai) {
