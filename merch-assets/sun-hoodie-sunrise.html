@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sun Hoodie — Sunrise Burst (Loud Edition)</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; color: #e8e0d8; font-family: 'DM Sans', sans-serif; padding: 40px 20px; }
+  h1 { text-align: center; font-family: 'Fraunces', serif; font-weight: 400; font-size: 20px; color: #a8a090; margin-bottom: 8px; }
+  .sub { text-align: center; font-size: 13px; color: #585048; margin-bottom: 30px; line-height: 1.6; }
+  .panels { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1200px; margin: 0 auto; }
+  .card { display: flex; flex-direction: column; align-items: center; gap: 8px; background: #1a1a1a; border-radius: 10px; padding: 16px; border: 1px solid #222; }
+  .card canvas { border-radius: 6px; }
+  .info { font-size: 12px; color: #908880; text-align: center; line-height: 1.5; }
+  .info strong { color: #c8c0b8; font-weight: 400; }
+  .btn { padding: 10px 20px; background: #2e1c20; color: #c5a8ab; border: 1px solid #4a2a30; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; width: 100%; }
+  .btn:hover { background: #3a2428; }
+  .btn:disabled { opacity: 0.4; cursor: wait; }
+  .btn .spinner { display: none; }
+  .btn.loading .spinner { display: inline; }
+  .btn.loading .label { display: none; }
+  .status { font-size: 11px; color: #585048; height: 16px; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>UPF 50+ Sun Hoodie — Sunrise Burst</h1>
+<p class="sub">The loud one. Color back in your life. "stay." in the middle of a sunrise.<br>Use desktop browser. Front/Back: 4374x5385px. Sleeves: 3924x4980px. Hood: 2090x2625px.</p>
+
+<div class="panels" id="panels"></div>
+
+<script>
+// JPEG DPI injection
+function setJpegDpi(dataUrl, dpi) {
+  const raw = atob(dataUrl.split(',')[1]);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  const jfif = new Uint8Array([
+    0xFF, 0xE0, 0x00, 0x10,
+    0x4A, 0x46, 0x49, 0x46, 0x00,
+    0x01, 0x02, 0x01,
+    (dpi >> 8) & 0xFF, dpi & 0xFF,
+    (dpi >> 8) & 0xFF, dpi & 0xFF,
+    0x00, 0x00
+  ]);
+  let insertAt = 2;
+  while (insertAt < arr.length - 1) {
+    if (arr[insertAt] === 0xFF && (arr[insertAt + 1] === 0xE0 || arr[insertAt + 1] === 0xE1)) {
+      const segLen = (arr[insertAt + 2] << 8) | arr[insertAt + 3];
+      insertAt += 2 + segLen;
+    } else { break; }
+  }
+  const result = new Uint8Array(2 + jfif.length + arr.length - insertAt);
+  result[0] = 0xFF; result[1] = 0xD8;
+  result.set(jfif, 2);
+  result.set(arr.subarray(insertAt), 2 + jfif.length);
+  const blob = new Blob([result], { type: 'image/jpeg' });
+  return URL.createObjectURL(blob);
+}
+
+const PANELS = [
+  { id: 'front',       label: 'Front (29.16"x35.9")',       w: 4374, h: 5385, pw: 80, hasText: true,  textX: 0.5, textY: 0.35, textSize: 500, textVertical: false },
+  { id: 'back',        label: 'Back (29.16"x35.9")',        w: 4374, h: 5385, pw: 80, hasText: false },
+  { id: 'right-sleeve',label: 'Right Sleeve (26.16"x33.2")',w: 3924, h: 4980, pw: 70, hasText: true,  textX: 0.5, textY: 0.5,  textSize: 550, textVertical: true },
+  { id: 'left-sleeve', label: 'Left Sleeve (26.16"x33.2")', w: 3924, h: 4980, pw: 70, hasText: false },
+  { id: 'left-hood',   label: 'Left Hood (13.93"x17.5")',   w: 2090, h: 2625, pw: 80, hasText: false, hoodSide: 'left' },
+  { id: 'right-hood',  label: 'Right Hood (13.93"x17.5")',  w: 2090, h: 2625, pw: 80, hasText: false, hoodSide: 'right' },
+];
+
+let seed = 77;
+function rand() { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; }
+
+function drawSunrisePattern(ctx, w, h, panelSeed, hasText, textX, textY) {
+  seed = panelSeed;
+
+  const area = w * h;
+  const sf = area / (1500 * 3000);
+
+  // Deep base — dark indigo/purple (pre-dawn sky at bottom)
+  const baseGrad = ctx.createLinearGradient(0, 0, 0, h);
+  baseGrad.addColorStop(0, '#1a0a2e');
+  baseGrad.addColorStop(0.25, '#2d1040');
+  baseGrad.addColorStop(0.45, '#6b1d3a');
+  baseGrad.addColorStop(0.6, '#c44a2a');
+  baseGrad.addColorStop(0.75, '#e8862a');
+  baseGrad.addColorStop(0.88, '#f0b840');
+  baseGrad.addColorStop(1, '#f8d878');
+  ctx.fillStyle = baseGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Radial burst from center-upper area (where stay. will be on front)
+  const cx = w * 0.5, cy = h * 0.35;
+  const burstR = Math.max(w, h) * 0.8;
+  const burst = ctx.createRadialGradient(cx, cy, 0, cx, cy, burstR);
+  burst.addColorStop(0, 'rgba(255,240,200,0.35)');
+  burst.addColorStop(0.15, 'rgba(248,200,80,0.25)');
+  burst.addColorStop(0.3, 'rgba(240,140,50,0.15)');
+  burst.addColorStop(0.5, 'rgba(200,60,60,0.08)');
+  burst.addColorStop(1, 'rgba(26,10,46,0)');
+  ctx.fillStyle = burst;
+  ctx.fillRect(0, 0, w, h);
+
+  // Secondary warm burst lower
+  const burst2 = ctx.createRadialGradient(w * 0.4, h * 0.6, 0, w * 0.4, h * 0.6, burstR * 0.6);
+  burst2.addColorStop(0, 'rgba(240,160,50,0.2)');
+  burst2.addColorStop(0.5, 'rgba(200,80,40,0.08)');
+  burst2.addColorStop(1, 'rgba(26,10,46,0)');
+  ctx.fillStyle = burst2;
+  ctx.fillRect(0, 0, w, h);
+
+  // Color clouds — big soft organic shapes
+  for (let i = 0; i < Math.round(25 * sf); i++) {
+    let x = rand() * w, y = rand() * h;
+    let rx = 150 + rand() * 500, ry = 100 + rand() * 400;
+    let yRatio = y / h;
+    // Color based on vertical position
+    let r, g, b, a;
+    if (yRatio < 0.3) {
+      // Top: purples, deep blues
+      r = 60 + Math.floor(rand() * 80);
+      g = 20 + Math.floor(rand() * 40);
+      b = 120 + Math.floor(rand() * 80);
+      a = 0.08 + rand() * 0.15;
+    } else if (yRatio < 0.55) {
+      // Middle: magentas, hot pinks, reds
+      r = 180 + Math.floor(rand() * 60);
+      g = 30 + Math.floor(rand() * 60);
+      b = 60 + Math.floor(rand() * 80);
+      a = 0.08 + rand() * 0.15;
+    } else if (yRatio < 0.75) {
+      // Lower-mid: oranges, corals
+      r = 220 + Math.floor(rand() * 35);
+      g = 100 + Math.floor(rand() * 60);
+      b = 30 + Math.floor(rand() * 40);
+      a = 0.08 + rand() * 0.12;
+    } else {
+      // Bottom: golds, warm yellows
+      r = 240 + Math.floor(rand() * 15);
+      g = 180 + Math.floor(rand() * 50);
+      b = 40 + Math.floor(rand() * 50);
+      a = 0.06 + rand() * 0.1;
+    }
+    let grad = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
+    grad.addColorStop(0, `rgba(${r},${g},${b},${a})`);
+    grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // Light streaks / rays from burst center
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  for (let i = 0; i < Math.round(30 * sf); i++) {
+    let angle = rand() * Math.PI * 2;
+    let length = 200 + rand() * Math.max(w, h) * 0.5;
+    let width = 2 + rand() * 8;
+    let x1 = cx + Math.cos(angle) * 50;
+    let y1 = cy + Math.sin(angle) * 50;
+    let x2 = cx + Math.cos(angle) * length;
+    let y2 = cy + Math.sin(angle) * length;
+    let rayGrad = ctx.createLinearGradient(x1, y1, x2, y2);
+    let rayAlpha = 0.02 + rand() * 0.06;
+    rayGrad.addColorStop(0, `rgba(255,240,200,${rayAlpha})`);
+    rayGrad.addColorStop(0.5, `rgba(255,200,100,${rayAlpha * 0.5})`);
+    rayGrad.addColorStop(1, 'rgba(255,200,100,0)');
+    ctx.strokeStyle = rayGrad;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Warm organic shapes — like clouds lit by sunrise
+  for (let i = 0; i < Math.round(150 * sf); i++) {
+    let x = rand() * w, y = rand() * h;
+    let size = 20 + rand() * 100;
+    let angle = rand() * Math.PI * 2;
+    let yRatio = y / h;
+    let r, g, b, a;
+    if (yRatio < 0.35) {
+      r = 100 + Math.floor(rand() * 80); g = 30 + Math.floor(rand() * 50); b = 140 + Math.floor(rand() * 60);
+    } else if (yRatio < 0.55) {
+      r = 200 + Math.floor(rand() * 40); g = 50 + Math.floor(rand() * 60); b = 70 + Math.floor(rand() * 60);
+    } else {
+      r = 240 + Math.floor(rand() * 15); g = 140 + Math.floor(rand() * 80); b = 30 + Math.floor(rand() * 60);
+    }
+    a = 0.03 + rand() * 0.1;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(0, -size / 2);
+    ctx.bezierCurveTo(size * 0.6, -size * 0.3, size * 0.5, size * 0.3, 0, size / 2);
+    ctx.bezierCurveTo(-size * 0.5, size * 0.3, -size * 0.6, -size * 0.3, 0, -size / 2);
+    ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Small bright detail shapes
+  for (let i = 0; i < Math.round(200 * sf); i++) {
+    let x = rand() * w, y = rand() * h;
+    let size = 5 + rand() * 35;
+    let angle = rand() * Math.PI * 2;
+    let yRatio = y / h;
+    let r, g, b;
+    if (yRatio < 0.3) {
+      r = 130 + Math.floor(rand() * 60); g = 50 + Math.floor(rand() * 40); b = 180 + Math.floor(rand() * 50);
+    } else if (yRatio < 0.5) {
+      r = 230 + Math.floor(rand() * 25); g = 60 + Math.floor(rand() * 70); b = 80 + Math.floor(rand() * 60);
+    } else if (yRatio < 0.75) {
+      r = 245 + Math.floor(rand() * 10); g = 130 + Math.floor(rand() * 70); b = 30 + Math.floor(rand() * 50);
+    } else {
+      r = 250; g = 200 + Math.floor(rand() * 40); b = 60 + Math.floor(rand() * 60);
+    }
+    let a = 0.03 + rand() * 0.08;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(0, -size / 2);
+    ctx.bezierCurveTo(size * 0.5, -size * 0.2, size * 0.4, size * 0.2, 0, size / 2);
+    ctx.bezierCurveTo(-size * 0.4, size * 0.2, -size * 0.5, -size * 0.2, 0, -size / 2);
+    ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Bright pinpoints — stars fading in the dawn
+  for (let i = 0; i < Math.round(40 * sf); i++) {
+    let x = rand() * w, y = rand() * h * 0.5; // mostly upper half
+    let r = 3 + rand() * 10;
+    let grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+    let a = 0.05 + rand() * 0.15;
+    grad.addColorStop(0, `rgba(255,255,240,${a})`);
+    grad.addColorStop(1, 'rgba(255,255,240,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+
+  // Overall warmth push
+  let warmWash = ctx.createRadialGradient(w * 0.5, h * 0.5, 0, w * 0.5, h * 0.5, Math.max(w, h) * 0.6);
+  warmWash.addColorStop(0, 'rgba(255,200,100,0.04)');
+  warmWash.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = warmWash;
+  ctx.fillRect(0, 0, w, h);
+}
+
+function drawText(ctx, panel) {
+  if (!panel.hasText) return;
+  ctx.save();
+  ctx.translate(panel.w * panel.textX, panel.h * panel.textY);
+  if (panel.textVertical) ctx.rotate(Math.PI / 2);
+  let fs = panel.textSize;
+  ctx.font = `400 ${fs}px Fraunces`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  // White text with subtle warm shadow for contrast
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = 'rgba(255,255,250,0.95)';
+  ctx.fillText('stay.', 0, 0);
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+async function init() {
+  await document.fonts.ready;
+  await new Promise(r => setTimeout(r, 300));
+
+  const container = document.getElementById('panels');
+
+  for (const panel of PANELS) {
+    const aspect = panel.h / panel.w;
+    const pw = panel.pw;
+    const ph = Math.round(pw * aspect);
+    const preview = document.createElement('canvas');
+    preview.width = pw * 2; preview.height = ph * 2;
+    preview.style.width = pw + 'px'; preview.style.height = ph + 'px';
+    const pctx = preview.getContext('2d');
+
+    const pSeed = panel.hoodSide ? 99077 : (77 + PANELS.indexOf(panel) * 1000);
+    if (panel.hoodSide) {
+      const hc = document.createElement('canvas');
+      hc.width = pw * 4; hc.height = ph * 2;
+      drawSunrisePattern(hc.getContext('2d'), hc.width, hc.height, pSeed, false);
+      const srcX = panel.hoodSide === 'left' ? 0 : hc.width / 2;
+      pctx.drawImage(hc, srcX, 0, hc.width / 2, hc.height, 0, 0, pw * 2, ph * 2);
+    } else {
+      drawSunrisePattern(pctx, pw * 2, ph * 2, pSeed, panel.hasText, panel.textX, panel.textY);
+      if (panel.hasText) {
+        pctx.save();
+        pctx.translate(pw * 2 * panel.textX, ph * 2 * panel.textY);
+        if (panel.textVertical) pctx.rotate(Math.PI / 2);
+        let fs = panel.textSize * (pw * 2 / panel.w);
+        pctx.font = `400 ${fs}px Fraunces`;
+        pctx.textAlign = 'center';
+        pctx.textBaseline = 'middle';
+        pctx.fillStyle = 'rgba(255,255,250,0.95)';
+        pctx.fillText('stay.', 0, 0);
+        pctx.restore();
+      }
+    }
+
+    const status = document.createElement('div');
+    status.className = 'status';
+
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.innerHTML = '<span class="label">Download JPEG</span><span class="spinner">Rendering...</span>';
+    btn.onclick = async () => {
+      btn.disabled = true;
+      btn.classList.add('loading');
+      status.textContent = 'Rendering full resolution...';
+      await new Promise(r => setTimeout(r, 50));
+
+      try {
+        let fullCanvas;
+        if (panel.hoodSide) {
+          const hoodW = 4180, hoodH = 2625;
+          const hc = document.createElement('canvas');
+          hc.width = hoodW; hc.height = hoodH;
+          drawSunrisePattern(hc.getContext('2d'), hoodW, hoodH, 99077, false);
+          fullCanvas = document.createElement('canvas');
+          fullCanvas.width = panel.w; fullCanvas.height = panel.h;
+          const fctx = fullCanvas.getContext('2d');
+          const srcX = panel.hoodSide === 'left' ? 0 : hoodW / 2;
+          fctx.drawImage(hc, srcX, 0, hoodW / 2, hoodH, 0, 0, panel.w, panel.h);
+        } else {
+          fullCanvas = document.createElement('canvas');
+          fullCanvas.width = panel.w; fullCanvas.height = panel.h;
+          const fctx = fullCanvas.getContext('2d');
+          const pSeed2 = 77 + PANELS.indexOf(panel) * 1000;
+          drawSunrisePattern(fctx, panel.w, panel.h, pSeed2, panel.hasText, panel.textX, panel.textY);
+          drawText(fctx, panel);
+        }
+
+        await new Promise(r => setTimeout(r, 50));
+        const jpegData = fullCanvas.toDataURL('image/jpeg', 0.95);
+        const withDpi = setJpegDpi(jpegData, 150);
+        const link = document.createElement('a');
+        link.download = `stay-sunrise-v1-${panel.id}.jpg`;
+        link.href = withDpi;
+        link.click();
+        status.textContent = 'Downloaded!';
+      } catch (e) {
+        status.textContent = 'Error: try on desktop browser';
+      }
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    };
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.appendChild(preview);
+    const info = document.createElement('div');
+    info.className = 'info';
+    info.innerHTML = `<strong>${panel.label}</strong><br>${panel.w} x ${panel.h}px`;
+    if (panel.hasText) info.innerHTML += `<br><span style="color:#c5a8ab">"stay." ${panel.textVertical ? 'vertical' : 'center'}</span>`;
+    card.appendChild(info);
+    card.appendChild(btn);
+    card.appendChild(status);
+    container.appendChild(card);
+  }
+}
+
+init();
+</script>
+
+</body>
+</html>
