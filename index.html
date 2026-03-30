@@ -12586,6 +12586,11 @@ function renderSettingsTab() {
       </div>
 
       <div style="background:rgba(176,120,120,0.08);border:1px solid rgba(176,120,120,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
+        <div style="font-weight:500;color:var(--rose-light);margin-bottom:4px">Credible threats of violence</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Messages containing credible threats of violence (threats of mass harm, specific targets, weapons) are blocked immediately and result in an instant ban. These messages are logged with available metadata (timestamp, IP address, message content) and may be reported to law enforcement if we believe the threat is credible and imminent. Bloom takes the safety of its community seriously.</div>
+      </div>
+
+      <div style="background:rgba(176,120,120,0.08);border:1px solid rgba(176,120,120,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
         <div style="font-weight:500;color:var(--rose-light);margin-bottom:4px">Automatic restrictions</div>
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Users who repeatedly post blocked content are automatically restricted from community features. This happens without admin intervention to protect the community in real time.</div>
       </div>
@@ -12645,6 +12650,9 @@ function renderSettingsTab() {
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Buddy system:</strong><br>
         Bloom Buddy connects you with other users for encouragement. All messages are screened for harmful content, grooming language, and contact exchange attempts. Crude and sexual content is blocked in buddy conversations. Users who repeatedly violate these rules are automatically restricted. Despite these protections, we cannot guarantee the behavior of other users. You can unpair at any time.</p>
+
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Threats of violence:</strong><br>
+        Bloom blocks and logs credible threats of violence made through community features (buddy messages, encouragement wall). Logged information may include message content, IP address, timestamp, and user identifiers. Bloom reserves the right to report credible, imminent threats to law enforcement and to cooperate with valid legal requests (subpoenas, court orders) for threat-related records. This applies only to credible violent threats, not to venting, emotional expression, or self-harm language.</p>
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Age requirement:</strong><br>
         Bloom is intended for users aged 16 and older.</p>
@@ -17865,6 +17873,7 @@ async function buddySendMessage(pairId) {
     if (data.flag === 'self-harm') openCrisisSheet();
   } else {
     const reasons = {
+      'threat': 'This message has been blocked. Bloom takes threats of violence seriously. Repeated violations will result in a permanent ban.',
       'rate-limit': 'Easy there! Try again in a bit.',
       'harmful': 'Let\u2019s keep things gentle. Try rephrasing?',
       'safety': 'For everyone\u2019s safety, personal info and contact details can\u2019t be shared here.',
@@ -18622,6 +18631,7 @@ function renderCommunityTab() {
     <div style="font-size:11px;color:var(--text-muted);line-height:1.7">
       This is a safe, moderated space. Messages are anonymous and screened automatically.
       <br>Some messages may appear blurred if flagged — you can choose to view them.
+      <br>Threats of violence are logged and may be reported to authorities.
       <br>Be kind. Be real. Be gentle with each other.
       <br><span style="opacity:0.6">Learn more in Settings → How moderation works</span>
     </div>
@@ -18750,6 +18760,7 @@ async function postToWall() {
       if (data.flag === 'self-harm') setTimeout(() => openCrisisSheet(), 800);
     } else {
       const reasons = {
+        'threat': 'This message has been blocked. Bloom takes threats of violence seriously. Repeated violations will result in a permanent ban.',
         'length': 'Message should be 3-140 characters.',
         'harmful': 'Let\'s keep this space gentle and safe. Try rephrasing?',
         'safety': 'For everyone\'s safety, personal info and contact details can\'t be shared here.',

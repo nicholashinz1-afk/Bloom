@@ -66,6 +66,20 @@ const CRUDE_PATTERNS = [
   /\b(stfu|gtfo|lmao.*ass|dumbass|badass|jackass)\b/i,
 ];
 
+// Credible threats of violence — blocked and logged with full metadata for compliance.
+// These target specific, actionable threats (mass violence, named targets, weapons + intent).
+// This is NOT for venting or self-harm. Only patterns indicating intent to harm others at scale
+// or with specificity that could constitute a credible, reportable threat.
+const CREDIBLE_THREAT_PATTERNS = [
+  /\b(shoot\s*up|bomb|blow\s*up|attack)\s*(the|a|my)?\s*(school|church|mosque|synagogue|temple|hospital|mall|store|building|office|campus)\b/i,
+  /\b(going to|gonna|plan(ning)?\s*to|about to)\s*(shoot|bomb|blow\s*up|attack|stab|kill)\s*(everyone|people|them all|everybody|the whole)\b/i,
+  /\b(brought|have|got)\s*(a|my)\s*(gun|knife|weapon|bomb|explosive)\s*(to|at|in)\s*(school|work|class|church)\b/i,
+  /\b(mass|school|church)\s*(shoot|attack|bomb|stab)/i,
+  /\b(pipe\s*bomb|nail\s*bomb|pressure\s*cooker\s*bomb|explosive\s*device|molotov)\b/i,
+  /\bi('ll|m going to|m gonna|will)\s*(shoot|stab|bomb|blow\s*up|attack)\s*(this|the|my)\s*(school|place|building|office|church)\b/i,
+  /\b(they|you)\s*(deserve|need)\s*to\s*(be\s*)?(shot|bombed|killed|massacred|slaughtered)\b/i,
+];
+
 // Self-harm language — not blocked, but flagged so the client can offer resources
 const SELF_HARM_PATTERNS = [
   /\b(kill myself|end my life|want to die|don'?t want to (be here|live|exist))\b/i,
@@ -75,6 +89,11 @@ const SELF_HARM_PATTERNS = [
 function moderateMessage(text) {
   const lower = text.toLowerCase().trim();
   if (lower.length < 3 || lower.length > 140) return { ok: false, reason: 'length' };
+
+  // Credible threats of violence — highest priority, logged separately for compliance
+  for (const pat of CREDIBLE_THREAT_PATTERNS) {
+    if (pat.test(lower)) return { ok: false, reason: 'threat' };
+  }
 
   // Block directed harm toward others
   for (const pat of DIRECTED_HARM) {
@@ -168,6 +187,35 @@ async function logModeration(source, result) {
   } catch(e) {}
 }
 
+// ── Threat compliance logging ──────────────────────────────
+// Credible violent threats are logged with full metadata (message, IP, timestamp,
+// user identifier) to a separate, long-retention Redis key. This exists solely
+// so that if law enforcement requests records, we have something to produce.
+// These logs are never displayed to users and are only accessible by admin.
+const THREAT_LOG_KEY = 'bloom_mod:threat_log';
+
+async function logThreat(source, userId, messageText, req) {
+  try {
+    const client = await getRedis();
+    const raw = await client.get(THREAT_LOG_KEY);
+    const logs = raw ? JSON.parse(raw) : [];
+    logs.push({
+      ts: Date.now(),
+      source,
+      userId: userId || 'unknown',
+      ip: req?.headers?.['x-forwarded-for']?.split(',')[0]?.trim()
+        || req?.headers?.['x-real-ip']
+        || req?.socket?.remoteAddress
+        || 'unknown',
+      userAgent: (req?.headers?.['user-agent'] || '').slice(0, 200),
+      message: (messageText || '').slice(0, 500),
+    });
+    // Keep up to 1000 threat logs, 1 year retention
+    if (logs.length > 1000) logs.splice(0, logs.length - 1000);
+    await client.set(THREAT_LOG_KEY, JSON.stringify(logs), { EX: 365 * 86400 });
+  } catch(e) {}
+}
+
 // ── User moderation strikes ──────────────────────────────
 // Tracks moderation events per user fingerprint so repeat offenders
 // can be identified and eventually blocked from social features
@@ -200,9 +248,11 @@ async function recordStrike(fp, reason, source, messageText) {
   if (!strikes[fp].banned) {
     const oneDayAgo = Date.now() - 86400000;
     const recentBlocked = strikes[fp].incidents.filter(
-      i => i.ts > oneDayAgo && (i.reason === 'harmful' || i.reason === 'safety' || i.reason === 'inappropriate')
+      i => i.ts > oneDayAgo && (i.reason === 'threat' || i.reason === 'harmful' || i.reason === 'safety' || i.reason === 'inappropriate')
     );
-    if (recentBlocked.length >= 3) {
+    // Immediate ban for credible threats, otherwise 3-strike rule
+    const hasThreat = recentBlocked.some(i => i.reason === 'threat');
+    if (hasThreat || recentBlocked.length >= 3) {
       strikes[fp].banned = true;
       strikes[fp].autoBannedAt = Date.now();
     }
@@ -287,6 +337,9 @@ export default async function handler(req, res) {
       // Record strike for blocked or flagged content
       if (!check.ok) {
         await recordStrike(fp, check.reason, 'wall', text);
+        if (check.reason === 'threat') {
+          await logThreat('wall', fp, text, req);
+        }
         return res.json({ ok: false, reason: check.reason });
       }
       if (check.flag === 'crude') {
@@ -437,6 +490,23 @@ export default async function handler(req, res) {
         incidents: data.incidents.slice(-10), // last 10 incidents
       })).sort((a, b) => b.totalIncidents - a.totalIncidents);
       return res.json({ ok: true, users });
+    }
+
+    // Admin: view credible threat logs (compliance/legal)
+    if (action === 'threat-log') {
+      const adminKey = process.env.ADMIN_KEY;
+      const provided = body.adminKey;
+      if (!adminKey || provided !== adminKey) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+      try {
+        const client = await getRedis();
+        const raw = await client.get(THREAT_LOG_KEY);
+        const logs = raw ? JSON.parse(raw) : [];
+        return res.json({ ok: true, threats: logs.sort((a, b) => b.ts - a.ts) });
+      } catch(e) {
+        return res.json({ ok: true, threats: [] });
+      }
     }
 
     // Admin: ban or unban a user from social features
