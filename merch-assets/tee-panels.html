@@ -70,10 +70,52 @@ function renderAndDownload(colorHex, placementId, textX, textY, textSize, filena
   ctx.fillText('stay.', 0, 0);
   ctx.restore();
 
+  const pngData = c.toDataURL('image/png');
+  const withDpi = setPngDpi(pngData, 150);
   const link = document.createElement('a');
   link.download = filename;
-  link.href = c.toDataURL('image/png');
+  link.href = withDpi;
   link.click();
+}
+
+// Inject 150 DPI into PNG pHYs chunk
+function setPngDpi(dataUrl, dpi) {
+  const raw = atob(dataUrl.split(',')[1]);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+
+  // DPI to pixels per meter
+  const ppm = Math.round(dpi / 0.0254);
+
+  // Build pHYs chunk
+  const phys = new Uint8Array(21);
+  const data = new DataView(phys.buffer);
+  data.setUint32(0, 9); // chunk data length
+  phys[4] = 0x70; phys[5] = 0x48; phys[6] = 0x59; phys[7] = 0x73; // "pHYs"
+  data.setUint32(8, ppm);  // X pixels per unit
+  data.setUint32(12, ppm); // Y pixels per unit
+  phys[16] = 1; // unit: meter
+
+  // CRC32 of type + data
+  const crcTable = [];
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+    crcTable[n] = c;
+  }
+  let crc = 0xFFFFFFFF;
+  for (let i = 4; i < 17; i++) crc = crcTable[(crc ^ phys[i]) & 0xFF] ^ (crc >>> 8);
+  crc ^= 0xFFFFFFFF;
+  data.setUint32(17, crc);
+
+  // Insert after IHDR chunk (8 byte sig + 25 byte IHDR = position 33)
+  const result = new Uint8Array(arr.length + 21);
+  result.set(arr.subarray(0, 33), 0);
+  result.set(phys, 33);
+  result.set(arr.subarray(33), 33 + 21);
+
+  const blob = new Blob([result], { type: 'image/png' });
+  return URL.createObjectURL(blob);
 }
 
 async function init() {

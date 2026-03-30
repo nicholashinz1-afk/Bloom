@@ -33,6 +33,46 @@
 <div class="panels" id="panels"></div>
 
 <script>
+// Inject 150 DPI metadata into JPEG data URL
+function setJpegDpi(dataUrl, dpi) {
+  const raw = atob(dataUrl.split(',')[1]);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+
+  // Build JFIF APP0 segment with DPI
+  const jfif = new Uint8Array([
+    0xFF, 0xE0,       // APP0 marker
+    0x00, 0x10,       // length: 16
+    0x4A, 0x46, 0x49, 0x46, 0x00,  // "JFIF\0"
+    0x01, 0x02,       // version 1.2
+    0x01,             // units: dots per inch
+    (dpi >> 8) & 0xFF, dpi & 0xFF,  // X density
+    (dpi >> 8) & 0xFF, dpi & 0xFF,  // Y density
+    0x00, 0x00        // no thumbnail
+  ]);
+
+  // Find where to insert (after SOI marker FF D8)
+  let insertAt = 2;
+  // Skip existing APP0/APP1 segments
+  while (insertAt < arr.length - 1) {
+    if (arr[insertAt] === 0xFF && (arr[insertAt + 1] === 0xE0 || arr[insertAt + 1] === 0xE1)) {
+      const segLen = (arr[insertAt + 2] << 8) | arr[insertAt + 3];
+      insertAt += 2 + segLen;
+    } else {
+      break;
+    }
+  }
+
+  // Rebuild: SOI + JFIF + rest
+  const result = new Uint8Array(2 + jfif.length + arr.length - insertAt);
+  result[0] = 0xFF; result[1] = 0xD8; // SOI
+  result.set(jfif, 2);
+  result.set(arr.subarray(insertAt), 2 + jfif.length);
+
+  const blob = new Blob([result], { type: 'image/jpeg' });
+  return URL.createObjectURL(blob);
+}
+
 const PANELS = [
   { id: 'front',       label: 'Front',        w: 1500, h: 3000, pw: 100, hasText: true,  textX: 0.5, textY: 0.42, textSize: 220, textVertical: false },
   { id: 'back',        label: 'Back',         w: 1500, h: 3000, pw: 100, hasText: false },
@@ -159,24 +199,6 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
     }
   }
 
-  // Text clearing glow
-  if (hasText) {
-    let cx = w * textX, cy = h * textY;
-    let gr = Math.max(w, h) * 0.18;
-    let glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, gr);
-    glow.addColorStop(0, 'rgba(232,220,192,0.25)');
-    glow.addColorStop(0.3, 'rgba(200,191,154,0.12)');
-    glow.addColorStop(0.6, 'rgba(138,171,122,0.06)');
-    glow.addColorStop(1, 'rgba(22,46,26,0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, w, h);
-    let glow2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, gr * 0.5);
-    glow2.addColorStop(0, 'rgba(232,220,192,0.15)');
-    glow2.addColorStop(1, 'rgba(232,220,192,0)');
-    ctx.fillStyle = glow2;
-    ctx.fillRect(0, 0, w, h);
-  }
-
   // Sun wash
   let sunWash = ctx.createLinearGradient(w * 0.4, 0, w * 0.6, h);
   sunWash.addColorStop(0, 'rgba(200,190,150,0.04)');
@@ -195,13 +217,7 @@ function drawText(ctx, panel) {
   ctx.font = `400 ${fs}px Fraunces`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.shadowColor = 'rgba(232,220,192,0.3)';
-  ctx.shadowBlur = 20;
-  ctx.fillStyle = 'rgba(232,220,192,0.4)';
-  ctx.fillText('stay.', 0, 0);
-  ctx.shadowColor = 'rgba(232,220,192,0.15)';
-  ctx.shadowBlur = 8;
-  ctx.fillStyle = 'rgba(232,220,192,0.88)';
+  ctx.fillStyle = 'rgba(232,220,192,0.9)';
   ctx.fillText('stay.', 0, 0);
   ctx.restore();
 }
@@ -246,9 +262,7 @@ async function init() {
         pctx.font = `400 ${fs}px Fraunces`;
         pctx.textAlign = 'center';
         pctx.textBaseline = 'middle';
-        pctx.shadowColor = 'rgba(232,220,192,0.3)';
-        pctx.shadowBlur = 4;
-        pctx.fillStyle = 'rgba(232,220,192,0.88)';
+        pctx.fillStyle = 'rgba(232,220,192,0.9)';
         pctx.fillText('stay.', 0, 0);
         pctx.restore();
       }
@@ -295,9 +309,12 @@ async function init() {
 
         await new Promise(r => setTimeout(r, 50));
 
+        const jpegData = fullCanvas.toDataURL('image/jpeg', 0.95);
+        const withDpi = setJpegDpi(jpegData, 150);
+
         const link = document.createElement('a');
-        link.download = `stay-hoodie-v2-${panel.id}.jpg`;
-        link.href = fullCanvas.toDataURL('image/jpeg', 0.95);
+        link.download = `stay-hoodie-v3-${panel.id}.jpg`;
+        link.href = withDpi;
         link.click();
 
         status.textContent = 'Downloaded!';
