@@ -27,8 +27,8 @@
 <body>
 
 <h1>UPF 50+ Sun Hoodie — Panel Files</h1>
-<p class="sub">Tap "Download" to render and save each panel. All panels: 1500 x 3000 px, 150 DPI (Printful spec).</p>
-<p class="sub" style="margin-top:-10px;color:#484040;">Renders one at a time. Should be fast at this size.</p>
+<p class="sub">Tap "Download" to render and save each panel at 150 DPI. Large files, use desktop browser.</p>
+<p class="sub" style="margin-top:-10px;color:#484040;">Front/Back: 4374x5385px. Sleeves: 3924x4980px. Hood: 2090x2625px.</p>
 
 <div class="panels" id="panels"></div>
 
@@ -74,12 +74,12 @@ function setJpegDpi(dataUrl, dpi) {
 }
 
 const PANELS = [
-  { id: 'front',       label: 'Front',        w: 1500, h: 3000, pw: 100, hasText: true,  textX: 0.5, textY: 0.42, textSize: 220, textVertical: false },
-  { id: 'back',        label: 'Back',         w: 1500, h: 3000, pw: 100, hasText: false },
-  { id: 'right-sleeve',label: 'Right Sleeve', w: 1500, h: 3000, pw: 100, hasText: true,  textX: 0.5, textY: 0.5,  textSize: 180, textVertical: true },
-  { id: 'left-sleeve', label: 'Left Sleeve',  w: 1500, h: 3000, pw: 100, hasText: false },
-  { id: 'left-hood',   label: 'Left Hood',    w: 1500, h: 3000, pw: 100, hasText: false, hoodSide: 'left' },
-  { id: 'right-hood',  label: 'Right Hood',   w: 1500, h: 3000, pw: 100, hasText: false, hoodSide: 'right' },
+  { id: 'front',       label: 'Front (29.16"x35.9")',       w: 4374, h: 5385, pw: 80, hasText: true,  textX: 0.5, textY: 0.35, textSize: 500, textVertical: false },
+  { id: 'back',        label: 'Back (29.16"x35.9")',        w: 4374, h: 5385, pw: 80, hasText: false },
+  { id: 'right-sleeve',label: 'Right Sleeve (26.16"x33.2")',w: 3924, h: 4980, pw: 70, hasText: true,  textX: 0.5, textY: 0.5,  textSize: 550, textVertical: true },
+  { id: 'left-sleeve', label: 'Left Sleeve (26.16"x33.2")', w: 3924, h: 4980, pw: 70, hasText: false },
+  { id: 'left-hood',   label: 'Left Hood (13.93"x17.5")',   w: 2090, h: 2625, pw: 80, hasText: false, hoodSide: 'left' },
+  { id: 'right-hood',  label: 'Right Hood (13.93"x17.5")',  w: 2090, h: 2625, pw: 80, hasText: false, hoodSide: 'right' },
 ];
 
 let seed = 42;
@@ -108,7 +108,7 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
   // Depth
   for (let i = 0; i < 18; i++) {
     let x = rand() * w, y = rand() * h;
-    let rx = 60 + rand() * 200, ry = 60 + rand() * 180;
+    let rx = 150 + rand() * 500, ry = 150 + rand() * 450;
     let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
     g.addColorStop(0, `rgba(10,22,12,${0.2 + rand() * 0.25})`);
     g.addColorStop(1, 'rgba(10,22,12,0)');
@@ -119,7 +119,7 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
   // Mid-tone
   for (let i = 0; i < 20; i++) {
     let x = rand() * w, y = rand() * h;
-    let rx = 50 + rand() * 150, ry = 50 + rand() * 130;
+    let rx = 120 + rand() * 400, ry = 120 + rand() * 350;
     let g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
     g.addColorStop(0, `rgba(28,50,30,${0.15 + rand() * 0.2})`);
     g.addColorStop(1, 'rgba(28,50,30,0)');
@@ -130,7 +130,7 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
   // Large leaves
   for (let i = 0; i < 80; i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 15 + rand() * 70;
+    let size = 40 + rand() * 180;
     let angle = rand() * Math.PI * 2;
     let green = 46 + Math.floor(rand() * 40);
     let alpha = 0.08 + rand() * 0.18;
@@ -140,7 +140,7 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
   // Medium leaves
   for (let i = 0; i < 100; i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 10 + rand() * 40;
+    let size = 25 + rand() * 100;
     let angle = rand() * Math.PI * 2;
     let green = 58 + Math.floor(rand() * 50);
     let alpha = 0.06 + rand() * 0.15;
@@ -150,7 +150,7 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
   // Bright accents
   for (let i = 0; i < 50; i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 16 + rand() * 60;
+    let size = 40 + rand() * 150;
     let angle = rand() * Math.PI * 2;
     let alpha = 0.05 + rand() * 0.1;
     drawLeaf(ctx, x, y, size, size * (0.5 + rand() * 0.3), angle, `rgba(90,${130 + Math.floor(rand()*30)},70,${alpha})`);
@@ -159,7 +159,7 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
   // Warm sun spots
   for (let i = 0; i < 60; i++) {
     let x = rand() * w, y = rand() * h;
-    let size = 10 + rand() * 44;
+    let size = 25 + rand() * 110;
     let angle = rand() * Math.PI * 2;
     let alpha = 0.04 + rand() * 0.1;
     drawLeaf(ctx, x, y, size, size * (0.6 + rand() * 0.3), angle, `rgba(${200 + Math.floor(rand()*30)},${180 + Math.floor(rand()*25)},${130 + Math.floor(rand()*30)},${alpha})`);
@@ -168,7 +168,7 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
   // Pinpoints
   for (let i = 0; i < 40; i++) {
     let x = rand() * w, y = rand() * h;
-    let r = 6 + rand() * 16;
+    let r = 15 + rand() * 40;
     let g = ctx.createRadialGradient(x, y, 0, x, y, r);
     g.addColorStop(0, `rgba(232,220,192,${0.08 + rand() * 0.12})`);
     g.addColorStop(1, 'rgba(232,220,192,0)');
@@ -185,16 +185,16 @@ function drawForestPattern(ctx, w, h, panelSeed, hasText, textX, textY) {
     ctx.moveTo(sx, sy);
     let segs = 3 + Math.floor(rand() * 4);
     for (let j = 0; j < segs; j++) {
-      sx += (rand() - 0.3) * 100;
-      sy += 30 + rand() * 80;
+      sx += (rand() - 0.3) * 250;
+      sy += 80 + rand() * 200;
       ctx.lineTo(sx, sy);
     }
     ctx.stroke();
     if (rand() > 0.4) {
       ctx.lineWidth = 1.5 + rand() * 2;
-      let bx = sx - (rand() - 0.5) * 60, by = sy - rand() * 60;
+      let bx = sx - (rand() - 0.5) * 150, by = sy - rand() * 150;
       ctx.beginPath(); ctx.moveTo(bx, by);
-      ctx.lineTo(bx + (rand() - 0.5) * 80, by + 20 + rand() * 50);
+      ctx.lineTo(bx + (rand() - 0.5) * 200, by + 50 + rand() * 130);
       ctx.stroke();
     }
   }
@@ -287,7 +287,7 @@ async function init() {
 
         if (panel.hoodSide) {
           // Render continuous hood then split
-          const hoodW = 3000, hoodH = 3000;
+          const hoodW = 4180, hoodH = 2625;
           const hc = document.createElement('canvas');
           hc.width = hoodW; hc.height = hoodH;
           const hctx = hc.getContext('2d');
