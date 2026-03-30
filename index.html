@@ -6063,6 +6063,7 @@ async function sendLocalNotification(title, body, tag) {
       badge: '/icon.svg',
       tag: tag || 'bloom',
       renotify: false,
+      data: { url: '/' },
     });
   } catch(e) {}
 }
@@ -16858,6 +16859,9 @@ function initOneSignal() {
         appId: '90cb3151-0f7d-4848-afb4-1fb4c8c890a8',
         safari_web_id: 'web.onesignal.auto.3cd6b41f-0715-4da8-9007-02ca4af2dc44',
         notifyButton: { enable: true },
+        defaultUrl: 'https://bloomselfcare.app',
+        notificationClickHandlerMatch: 'origin',
+        notificationClickHandlerAction: 'focus',
       });
       _osLog('init success');
     } catch(initErr) {
