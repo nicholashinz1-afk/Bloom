@@ -27,25 +27,25 @@ async function render() {
   const c = document.getElementById('icon');
   const ctx = c.getContext('2d');
 
-  // Background — deep forest green
+  // Background — deep forest green, fill entire canvas
   ctx.fillStyle = '#1c2e20';
   ctx.fillRect(0, 0, 500, 500);
 
-  // Shop name "SaidGently" in Fraunces Light, cream
+  // Shop name "SaidGently" in Fraunces Light, cream — bigger
   ctx.save();
-  ctx.translate(250, 220);
-  ctx.font = '300 52px Fraunces';
+  ctx.translate(250, 210);
+  ctx.font = '300 72px Fraunces';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#e8e0d0';
-  ctx.fillText('Said', 0, -20);
-  ctx.fillText('Gently', 0, 35);
+  ctx.fillText('Said', 0, -30);
+  ctx.fillText('Gently', 0, 45);
   ctx.restore();
 
-  // Small "stay." underneath as a subtle hint
+  // Small "stay." underneath
   ctx.save();
-  ctx.translate(250, 310);
-  ctx.font = '400 22px Fraunces';
+  ctx.translate(250, 320);
+  ctx.font = '400 30px Fraunces';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#d4ad6a';
@@ -55,7 +55,7 @@ async function render() {
 
   document.getElementById('dl').onclick = () => {
     const link = document.createElement('a');
-    link.download = 'saidgently-icon.png';
+    link.download = 'saidgently-icon-v2.png';
     link.href = c.toDataURL('image/png');
     link.click();
   };
