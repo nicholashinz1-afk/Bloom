@@ -320,6 +320,31 @@ Note: Fraunces Medium weight (500) used for hat embroidery since thin serif stro
 
 **Result: Thousands of users across multiple languages**
 
+### Safety & Compliance (Completed March 2026)
+- [x] Credible threat detection (CREDIBLE_THREAT_PATTERNS tier in shared moderation module)
+- [x] Threat compliance logging with full metadata (IP, user agent, message, 1-year retention)
+- [x] Admin threat alerts via email (Resend), push (OneSignal), and webhook
+- [x] Incident response plan (INCIDENT_RESPONSE.md)
+- [x] Prompt injection fix (server-side system prompt allowlist in api/claude.js)
+- [x] AI endpoint rate limiting (20 req/hr per IP)
+- [x] Admin key moved from URL params to X-Admin-Key header
+- [x] Buddy receiver crisis guidance (flag stored on message, partner sees inline note)
+- [x] HSTS security header
+- [x] Terms of Service acceptance mechanism (onboarding + existing user gate)
+- [x] Three-tier age gate: under 13 (blocked with crisis resources), 13-15 (solo only), 16+ (full)
+- [x] Self-serve age group update in Settings
+- [x] OneSignal privacy disclosure fix (genericized push notification content)
+- [x] Anthropic data retention claim corrected
+- [x] GDPR data deletion endpoint (delete-my-data in buddy.js)
+- [x] AGPL-3.0 license notice visible to users
+- [x] Health claims language softened (correlational, not causal)
+- [x] Expanded self-harm detection (6 additional indirect crisis patterns)
+- [x] Shared moderation module (api/moderation.js, single source of truth)
+- [x] Trauma-informed under-13 messaging (crisis resources, not just "talk to parents")
+- [x] Crisis resource descriptions clarified (988 vs Crisis Text Line distinction)
+- [ ] **Set up Resend email alerts** (create account, verify domain, add env vars: RESEND_API_KEY, ALERT_EMAIL_TO, ALERT_EMAIL_FROM)
+- [ ] **Lawyer review of Terms of Use, Privacy Policy, and threat reporting language**
+
 ### Phase 5 -- Long-term Architecture (Month 6+)
 - [ ] Evaluate migration to Cloudflare Pages + Workers (if Vercel limits are hit)
 - [ ] Offline-first PWA enhancements
