@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaidGently — Shop Banner</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; font-family: sans-serif; color: #888; }
+  .label { font-size: 13px; }
+  canvas { border-radius: 4px; border: 1px solid #333; }
+  .btn { padding: 10px 20px; background: #1c2e20; color: #a8c5ab; border: 1px solid #2a4a30; border-radius: 6px; font-size: 13px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="label">Etsy shop banner — 1200x300px (tap to download)</div>
+<canvas id="banner" width="1200" height="300" style="width:100%;max-width:600px;height:auto;"></canvas>
+<button class="btn" id="dl">Download PNG</button>
+
+<script>
+async function render() {
+  await document.fonts.ready;
+  await new Promise(r => setTimeout(r, 400));
+
+  const c = document.getElementById('banner');
+  const ctx = c.getContext('2d');
+  const W = 1200, H = 300;
+
+  // Background
+  ctx.fillStyle = '#1c2e20';
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle depth variation
+  for (let i = 0; i < 8; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    const r = 80 + Math.random() * 200;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(28,50,30,0.2)');
+    g.addColorStop(1, 'rgba(22,46,26,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Subtle leaf shapes
+  for (let i = 0; i < 30; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    const size = 10 + Math.random() * 40;
+    const angle = Math.random() * Math.PI * 2;
+    const alpha = 0.04 + Math.random() * 0.08;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(0, -size / 2);
+    ctx.bezierCurveTo(size * 0.4, -size * 0.2, size * 0.3, size * 0.2, 0, size / 2);
+    ctx.bezierCurveTo(-size * 0.3, size * 0.2, -size * 0.4, -size * 0.2, 0, -size / 2);
+    ctx.fillStyle = `rgba(58,90,46,${alpha})`;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Warm glow in center
+  const glow = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, 300);
+  glow.addColorStop(0, 'rgba(212,173,106,0.08)');
+  glow.addColorStop(1, 'rgba(22,46,26,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  // "stay." centered, amber
+  ctx.save();
+  ctx.translate(W * 0.5, H * 0.48);
+  ctx.font = '400 72px Fraunces';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(212,173,106,0.85)';
+  ctx.fillText('stay.', 0, 0);
+  ctx.restore();
+
+  document.getElementById('dl').onclick = () => {
+    const link = document.createElement('a');
+    link.download = 'saidgently-banner.png';
+    link.href = c.toDataURL('image/png');
+    link.click();
+  };
+}
+render();
+</script>
+
+</body>
+</html>
