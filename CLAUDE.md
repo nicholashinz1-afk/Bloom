@@ -87,6 +87,9 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 ## Cost Model
 
 - **AI reflections:** Default to `claude-haiku-4-5-20251001` for daily journal reflections and cognitive reframes (cheap, fast). Use `claude-sonnet-4-20250514` for weekly insights and monthly reflections (richer, synthesizes more data). Model whitelist in `api/claude.js` prevents abuse.
+- **Do not downgrade Sonnet to Haiku for weekly/monthly.** These are the moments users feel seen. Sonnet is better at weaving specific details (mood data, habit counts, journal excerpts) into something personal. The quality difference matters for a mental health app.
+- **Do not replace Haiku with open-source models (e.g. Cloudflare Workers AI) for daily reflections.** Haiku reliably follows complex system prompts including crisis detection instructions. Open models are less consistent with nuanced instruction-following. For a mental health app where someone might journal on their worst day, that reliability gap is not worth the cost savings.
+- **Cost at scale:** ~$0.06/user/month on current Haiku+Sonnet split. ~$240/month at 1,000 DAU.
 - **Telemetry:** Batched client-side (queue + flush every 30s or on page hide/unload via sendBeacon). Reduces Vercel invocations by ~50-70%.
 - **Free tier limits:** Vercel 100K invocations/month, Upstash 10K commands/day, OneSignal unlimited web push.
 - **Estimated capacity:** ~400 DAU on current setup. See `SCALABILITY_PROPOSAL.md` for full analysis.
