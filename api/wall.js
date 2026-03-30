@@ -80,10 +80,19 @@ const CREDIBLE_THREAT_PATTERNS = [
   /\b(they|you)\s*(deserve|need)\s*to\s*(be\s*)?(shot|bombed|killed|massacred|slaughtered)\b/i,
 ];
 
-// Self-harm language — not blocked, but flagged so the client can offer resources
+// Self-harm language — not blocked, but flagged so the client can offer resources.
+// These are intentionally broad because false positives only show crisis resources
+// (the message still goes through). Better to surface help for someone who doesn't
+// need it than to miss someone who does.
 const SELF_HARM_PATTERNS = [
   /\b(kill myself|end my life|want to die|don'?t want to (be here|live|exist))\b/i,
   /\b(suicide|suicidal|self[- ]?harm|cut myself|hurt myself)\b/i,
+  /\b(can'?t (do this|go on|take it) any\s*more)\b/i,
+  /\b(what'?s the point|no point|no reason to (live|go on|continue))\b/i,
+  /\b(nobody would (miss|care|notice))\b/i,
+  /\b(better off (without me|dead))\b/i,
+  /\b(don'?t (care|want to) wake up)\b/i,
+  /\b(wish i (wasn'?t|weren'?t) (here|alive|born))\b/i,
 ];
 
 function moderateMessage(text) {

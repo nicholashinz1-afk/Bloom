@@ -79,10 +79,19 @@ const CREDIBLE_THREAT_PATTERNS = [
   /\b(they|you)\s*(deserve|need)\s*to\s*(be\s*)?(shot|bombed|killed|massacred|slaughtered)\b/i,
 ];
 
-// Self-harm language — not blocked, but flagged so the client can offer resources
+// Self-harm language — not blocked, but flagged so the client can offer resources.
+// These are intentionally broad because false positives only show crisis resources
+// (the message still goes through). Better to surface help for someone who doesn't
+// need it than to miss someone who does.
 const SELF_HARM_PATTERNS = [
   /\b(kill myself|end my life|want to die|don'?t want to (be here|live|exist))\b/i,
   /\b(suicide|suicidal|self[- ]?harm|cut myself|hurt myself)\b/i,
+  /\b(can'?t (do this|go on|take it) any\s*more)\b/i,
+  /\b(what'?s the point|no point|no reason to (live|go on|continue))\b/i,
+  /\b(nobody would (miss|care|notice))\b/i,
+  /\b(better off (without me|dead))\b/i,
+  /\b(don'?t (care|want to) wake up)\b/i,
+  /\b(wish i (wasn'?t|weren'?t) (here|alive|born))\b/i,
 ];
 
 function moderateMessage(text, source = 'buddy') {
@@ -842,7 +851,7 @@ export default async function handler(req, res) {
     const partner = await kvGet(`bloom_buddy:${targetPair.partnerId}`);
     const myProfile = await kvGet(`bloom_buddy:${buddyId}`);
     if (partner?.oneSignalId) {
-      await sendPush(partner.oneSignalId, 'bloom buddy', `${myProfile?.name || 'Your buddy'}: ${text.slice(0, 80)}`);
+      await sendPush(partner.oneSignalId, 'bloom buddy', `${myProfile?.name || 'Your bloom buddy'} sent you a message`);
     }
 
     const resp = { ok: true, message: msg };
@@ -948,6 +957,48 @@ export default async function handler(req, res) {
         partner.blocked = true;
         await kvSet(`bloom_buddy:${targetPair.partnerId}`, partner);
       }
+    }
+
+    return res.json({ ok: true });
+  }
+
+  // ── DELETE MY DATA: GDPR right to erasure ──────────────
+  if (action === 'delete-my-data') {
+    if (!buddyId) return res.status(400).json({ error: 'Missing buddyId' });
+
+    const lookup = await getLookup(buddyId);
+
+    // Remove messages from all pair threads and update partner lookups
+    for (const pair of lookup.pairs) {
+      // Delete message thread
+      await kvDel(`bloom_buddy_msgs:${pair.pairId}`);
+      // Delete pair record
+      await kvDel(`bloom_buddy_pair:${pair.pairId}`);
+      // Remove this pair from partner's lookup
+      if (pair.partnerId) {
+        await removePairFromLookup(pair.partnerId, pair.pairId);
+      }
+    }
+
+    // Delete profile and lookup
+    await kvDel(`bloom_buddy:${buddyId}`);
+    await kvDel(`bloom_buddy_lookup:${buddyId}`);
+
+    // Remove from matchmaking queue if present
+    try {
+      const client = await getRedis();
+      const queue = await kvGet('bloom_buddy_queue') || [];
+      const filtered = queue.filter(q => q.buddyId !== buddyId);
+      if (filtered.length !== queue.length) {
+        await kvSet('bloom_buddy_queue', filtered);
+      }
+    } catch(e) {}
+
+    // Remove moderation strikes (but NOT threat logs, which have legitimate retention)
+    const strikes = await getStrikes();
+    if (strikes[buddyId]) {
+      delete strikes[buddyId];
+      await saveStrikes(strikes);
     }
 
     return res.json({ ok: true });

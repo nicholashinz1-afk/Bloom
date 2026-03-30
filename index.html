@@ -12624,10 +12624,10 @@ function renderSettingsTab() {
 
       <p style="margin-bottom:10px"><strong style="color:var(--cream)">What is sent to external services:</strong></p>
       <ul style="padding-left:18px;margin-bottom:10px">
-        <li style="margin-bottom:6px"><strong>AI reflections:</strong> When you use AI features (journal reflections, weekly insights, monthly reflections), your prompt text is sent to Anthropic's Claude API to generate a response. This data is not stored or linked to your identity by Bloom or Anthropic. <em>Note: For very low mood entries and hard day mode, Bloom uses pre-written responses instead of AI.</em></li>
+        <li style="margin-bottom:6px"><strong>AI reflections:</strong> When you use AI features (journal reflections, weekly insights, monthly reflections), your prompt text is sent to Anthropic's Claude API to generate a response. Bloom does not store this data or link it to your identity. For how Anthropic handles API data, see <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener" style="color:var(--sage-light)">Anthropic's privacy policy</a>. <em>Note: For very low mood entries and hard day mode, Bloom uses pre-written responses instead of AI.</em></li>
         <li style="margin-bottom:6px"><strong>Bloom Buddy:</strong> If you use the buddy feature, your display name, mood (if sharing is on), days shown up, habit completion percentage, and messages are stored on our server (Redis/Vercel KV) to enable the pairing. Your journal entries, specific habits, and other private data are never shared.</li>
         <li style="margin-bottom:6px"><strong>Encouragement Wall:</strong> Posts you submit to the community wall are stored on our server without any identifying information attached.</li>
-        <li style="margin-bottom:6px"><strong>Push Notifications:</strong> If enabled, OneSignal processes a device identifier for delivery. No personal content is included.</li>
+        <li style="margin-bottom:6px"><strong>Push Notifications:</strong> If enabled, OneSignal processes a device identifier and notification content for delivery. Notifications may include your buddy's display name and activity updates. See OneSignal's privacy policy for their data practices.</li>
       </ul>
 
       <p style="margin-bottom:10px"><strong style="color:var(--cream)">Backups:</strong><br>
@@ -12659,6 +12659,10 @@ function renderSettingsTab() {
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Data responsibility:</strong><br>
         Because your data is stored locally on your device, you are responsible for maintaining backups. Bloom is not liable for data loss due to browser clearing, device changes, or Safari's storage policies.</p>
+
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Delete community data:</strong><br>
+        You can delete all your server-side community data (buddy profile, messages, pairs, moderation history) at any time. This unpairs all buddies and is irreversible. Threat logs are retained separately per our threat reporting policy.</p>
+        <button onclick="deleteCommunityData()" style="padding:8px 16px;background:rgba(176,120,120,0.15);color:var(--rose-light);border:1px solid rgba(176,120,120,0.3);border-radius:var(--r-md);font-size:12px;cursor:pointer;margin-top:4px">Delete my community data</button>
       </div>
 
       <div style="font-size:11px;color:var(--text-muted);margin-top:8px">Last updated: March 2026</div>
@@ -12722,7 +12726,7 @@ function renderSettingsTab() {
             <span style="font-size:18px">📂</span>
             <div>
               <div style="font-weight:500">View source code</div>
-              <div style="font-size:11px;color:var(--text-muted)">Bloom is open source on GitHub</div>
+              <div style="font-size:11px;color:var(--text-muted)">Free and open source under AGPL-3.0</div>
             </div>
           </a>
         </div>
@@ -12754,7 +12758,10 @@ function renderSettingsTab() {
     </div>`;
   }
 
-  html += `<div style="text-align:center;padding:20px 0 8px;font-size:11px;color:var(--text-muted)">bloom v${VERSION} · made with care 🌿</div>`;
+  html += `<div style="text-align:center;padding:20px 0 4px;font-size:11px;color:var(--text-muted)">bloom v${VERSION} · made with care 🌿</div>`;
+  html += `<div style="text-align:center;padding:0 0 4px;font-size:10px;color:var(--text-muted);opacity:0.6">
+    Free and open source software · <a href="https://github.com/nicholashinz1-afk/Bloom/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--text-muted);text-decoration:underline">AGPL-3.0</a>
+  </div>`;
   html += `<div style="text-align:center;padding:0 0 16px">
     <a href="https://ko-fi.com/bloomselfcare" target="_blank" rel="noopener" style="font-size:13px;color:var(--text-secondary);text-decoration:none;font-family:Fraunces,serif;font-style:italic">
       help keep bloom free ☕
@@ -15327,7 +15334,7 @@ const SCIENCE_SECTIONS = {
     title: 'Breathing exercises',
     tip: 'The 4-7-8 technique activates your vagus nerve, shifting your body from stress mode to rest mode.',
     full: `<p>The <strong>4-7-8 breathing technique</strong> (inhale 4, hold 7, exhale 8) was developed by Dr. Andrew Weil based on pranayama breathing practices. The extended exhale activates the <strong>vagus nerve</strong>, which triggers the parasympathetic nervous system, your body's "rest and digest" mode.</p>
-    <p>A 2017 study in <em>Frontiers in Psychology</em> found that diaphragmatic breathing significantly reduced cortisol levels (the stress hormone) after just 8 weeks of practice. Research suggests that even a single session may help you feel calmer and more grounded. bloom offers this without any streak or pressure. It's here whenever you need it.</p>`,
+    <p>A 2017 study in <em>Frontiers in Psychology</em> found that diaphragmatic breathing was associated with lower cortisol levels (the stress hormone) after 8 weeks of practice. Research suggests that even a single session may help you feel calmer and more grounded. bloom offers this without any streak or pressure. It's here whenever you need it.</p>`,
     sources: [
       'Ma, X., et al. (2017). The effect of diaphragmatic breathing on attention, negative affect, and stress. <em>Frontiers in Psychology</em>, 8, 874.',
       'Gerritsen, R. J. S. & Band, G. P. H. (2018). Breath of life: The respiratory vagal stimulation model of contemplative activity. <em>Frontiers in Human Neuroscience</em>, 12, 397.',
@@ -15345,7 +15352,7 @@ const SCIENCE_SECTIONS = {
   },
   buddy: {
     title: 'Bloom buddy',
-    tip: 'Having even one person who checks in on you significantly improves follow-through and emotional wellbeing.',
+    tip: 'Having even one person who checks in on you is associated with better follow-through and emotional wellbeing.',
     full: `<p>Decades of research on <strong>social support and health</strong> show that perceived social support, simply knowing someone is aware of your efforts, is one of the strongest predictors of sustained behavior change. A landmark meta-analysis by Holt-Lunstad et al. found that strong social connections improved the odds of survival by <strong>50%</strong>, making loneliness a health risk comparable to smoking.</p>
     <p>bloom buddy applies this through <strong>mutual accountability</strong>: your buddy can see your streak and completion percentage (not your private data), and you can see theirs. This light-touch visibility leverages what behavioral scientists call the <strong>Köhler effect</strong>. People work harder when they know someone is counting on them. Research by Irwin et al. showed that partnered exercise adherence was significantly higher than solo exercise, even when partners never spoke.</p>
     <p>Critically, bloom buddy is designed as <strong>encouragement, not surveillance</strong>. Your buddy gets notified when you're having a hard day so they can send support, not so they can judge. This mirrors findings from self-determination theory (Deci & Ryan) showing that autonomy-supportive relationships foster intrinsic motivation, while controlling ones undermine it.</p>`,
@@ -15359,7 +15366,7 @@ const SCIENCE_SECTIONS = {
     title: 'Encouragement wall',
     tip: 'Giving kindness to strangers benefits you as much as receiving it. Anonymous generosity reduces stress and increases wellbeing.',
     full: `<p>Research on <strong>prosocial behavior</strong> consistently shows that helping others, even strangers, even anonymously, improves the helper's own mood, reduces stress, and increases a sense of meaning. A study by Dunn et al. published in <em>Science</em> demonstrated that spending money on others produced greater happiness than spending on oneself, regardless of income.</p>
-    <p>The encouragement wall applies the concept of <strong>anonymous prosocial action</strong>: writing a kind word for a stranger you'll never meet. This removes social performance anxiety while preserving the wellbeing benefits. Research by Lyubomirsky et al. found that performing acts of kindness, particularly varied ones, significantly increased happiness over a 10-week period.</p>
+    <p>The encouragement wall applies the concept of <strong>anonymous prosocial action</strong>: writing a kind word for a stranger you'll never meet. This removes social performance anxiety while preserving the wellbeing benefits. Research by Lyubomirsky et al. found that performing acts of kindness, particularly varied ones, was associated with increased happiness over a 10-week period.</p>
     <p>There's also a <strong>receiving</strong> benefit: reading kind words from anonymous strangers activates a sense of common humanity, a core component of Kristin Neff's model of <strong>self-compassion</strong>. Knowing that someone out there thought of you, without knowing you, can counter the isolation that often accompanies difficult mental health days.</p>`,
     sources: [
       'Dunn, E. W., et al. (2008). Spending money on others promotes happiness. <em>Science</em>, 319(5870), 1687–1688.',
@@ -15380,9 +15387,9 @@ const SCIENCE_SECTIONS = {
   },
   bodyscan: {
     title: 'Body scan',
-    tip: 'Noticing your body without trying to fix it builds interoceptive awareness, a skill linked to better emotional regulation.',
-    full: `<p>The <strong>body scan</strong> is a core component of Mindfulness-Based Stress Reduction (MBSR), developed by Jon Kabat-Zinn at UMass Medical School. It trains <strong>interoceptive awareness</strong>, the ability to sense internal body signals, which research has linked to improved emotional regulation, reduced anxiety, and greater self-awareness.</p>
-    <p>A 2015 study in <em>Frontiers in Psychology</em> found that three months of contemplative training significantly improved participants' interoceptive awareness, their ability to notice and understand signals from their own body. A broader review by Creswell (2017) confirmed that mindfulness interventions produce reliable benefits for stress, anxiety, and emotional regulation. The technique asks you to <strong>notice without fixing</strong>. This non-judgmental observation is itself therapeutic, teaching the brain that discomfort can be acknowledged without requiring an immediate response.</p>
+    tip: 'Noticing your body without trying to fix it builds interoceptive awareness, a skill research suggests may support emotional regulation.',
+    full: `<p>The <strong>body scan</strong> is a core component of Mindfulness-Based Stress Reduction (MBSR), developed by Jon Kabat-Zinn at UMass Medical School. It trains <strong>interoceptive awareness</strong>, the ability to sense internal body signals, which research suggests may support emotional regulation, reduce anxiety, and increase self-awareness.</p>
+    <p>A 2015 study in <em>Frontiers in Psychology</em> found that three months of contemplative training was associated with improved interoceptive awareness, participants' ability to notice and understand signals from their own body. A broader review by Creswell (2017) found that mindfulness interventions were associated with benefits for stress, anxiety, and emotional regulation. The technique asks you to <strong>notice without fixing</strong>. This non-judgmental observation is itself therapeutic, teaching the brain that discomfort can be acknowledged without requiring an immediate response.</p>
     <p>Bloom's body scan is intentionally brief (~3 minutes) to keep the barrier low. Research suggests that even short mindfulness practices produce measurable benefits when done consistently.</p>`,
     sources: [
       'Kabat-Zinn, J. (1990). Full catastrophe living: Using the wisdom of your body and mind to face stress, pain, and illness. <em>Delacorte Press</em>.',
@@ -16753,9 +16760,24 @@ function renderOBReady(body, footer) {
             Everything you write in bloom — your journal, your moods, your habits — lives only on this device. It's never uploaded, never shared, and never seen by anyone else. Not us, not anyone.
           </div>
           <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-top:8px">
-            The only exception is when you use the AI features — those prompts are sent to Claude to generate a response, but are never stored or linked to you.
+            The only exception is when you use the AI features — those prompts are sent to Anthropic's Claude API to generate a response. Bloom does not store them.
           </div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:8px">Full privacy policy and terms available in Settings.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:22px;flex-shrink:0">📋</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px">Terms of use</div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+            By using bloom, you agree to the <span onclick="obShowTerms()" style="color:var(--sage-light);text-decoration:underline;cursor:pointer">Terms of Use and Privacy Policy</span>.
+          </div>
+          <label style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;cursor:pointer">
+            <input type="checkbox" id="ob-terms-check" onchange="obTermsChanged()" style="margin-top:3px;min-width:16px;min-height:16px;accent-color:var(--sage)">
+            <span style="font-size:12px;color:var(--text-secondary);line-height:1.5">I've read and agree to the Terms of Use and Privacy Policy</span>
+          </label>
         </div>
       </div>
     </div>
@@ -16779,10 +16801,12 @@ function renderOBReady(body, footer) {
       <div id="ob-backup-url" style="display:none;margin-top:10px" class="backup-url-box"></div>
     </div>
   `;
-  const canFinish = obData.ageGroup === '16plus';
+  const termsAccepted = !!obData.termsAccepted;
+  const canFinish = obData.ageGroup === '16plus' && termsAccepted;
+  const btnLabel = !obData.ageGroup ? 'Select your age above' : !termsAccepted ? 'Accept terms to continue' : "I'm ready";
   footer.innerHTML = `
     <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
-    <button class="btn btn-primary" id="ob-btn-finish" style="flex:1;${canFinish ? '' : 'opacity:0.4;pointer-events:none'}">${canFinish ? "I'm ready" : "Select your age above"}</button>
+    <button class="btn btn-primary" id="ob-btn-finish" style="flex:1;${canFinish ? '' : 'opacity:0.4;pointer-events:none'}">${btnLabel}</button>
   `;
   document.getElementById('ob-btn-back').addEventListener('click', obBack);
   if (canFinish) document.getElementById('ob-btn-finish').addEventListener('click', completeOnboarding);
@@ -16791,6 +16815,39 @@ function renderOBReady(body, footer) {
 function obSetAge(group) {
   obData.ageGroup = group;
   renderOnboarding();
+}
+
+function obTermsChanged() {
+  const el = document.getElementById('ob-terms-check');
+  obData.termsAccepted = el?.checked || false;
+  renderOnboarding();
+}
+
+function obShowTerms() {
+  // Open the privacy/terms section in a simple alert-style view during onboarding
+  const sheet = document.createElement('div');
+  sheet.id = 'ob-terms-sheet';
+  sheet.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9999;overflow-y:auto;padding:20px;padding-bottom:80px';
+  sheet.innerHTML = `
+    <div style="max-width:500px;margin:0 auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-family:Fraunces,serif;font-size:18px;color:var(--cream)">Terms of Use & Privacy Policy</div>
+        <button onclick="document.getElementById('ob-terms-sheet').remove()" style="background:none;border:none;color:var(--text-muted);font-size:24px;cursor:pointer;padding:4px">&times;</button>
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Not medical advice:</strong><br>
+        Bloom is a self-care companion app. It is not therapy, counseling, medical advice, or crisis intervention. It is not a substitute for professional mental health care.</p>
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Your data:</strong><br>
+        Journal entries, mood logs, and habits stay on your device. AI features send prompts to Anthropic's Claude API. Bloom does not store them. Community features (buddy, wall) store display names and messages on our server.</p>
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Community features:</strong><br>
+        All messages are screened for harmful content, grooming language, and contact exchange attempts. Users who repeatedly violate rules are automatically restricted. Credible threats of violence are logged and may be reported to law enforcement.</p>
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Age requirement:</strong><br>
+        Bloom is intended for users aged 16 and older.</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:16px">Full details available in Settings after onboarding.</p>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(sheet);
 }
 
 function obSetPace(gradual) {
@@ -16823,6 +16880,8 @@ function completeOnboarding() {
     ...obData,
     onboarded: true,
     onboardDate: today(),
+    termsAcceptedAt: Date.now(),
+    termsVersion: '2026-03',
     progressiveDisclosure: obData.progressiveDisclosure !== false, // default true (gradual)
   };
 
@@ -18591,6 +18650,26 @@ function renderCommunityTab() {
   const scroll = document.getElementById('community-scroll');
   if (!scroll) return;
 
+  // Existing users who haven't accepted terms: show one-time consent prompt before community features
+  const prefs = load('bloom_prefs', {});
+  if (!prefs.termsAcceptedAt) {
+    scroll.innerHTML = `
+      <div style="text-align:center;padding:40px 20px">
+        <div style="font-size:32px;margin-bottom:12px">📋</div>
+        <div style="font-family:Fraunces,serif;font-size:18px;color:var(--cream);margin-bottom:12px">Updated terms</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;max-width:360px;margin-left:auto;margin-right:auto">
+          Before using community features, please review and accept the updated Terms of Use and Privacy Policy.
+          Community messages are screened for safety. Credible threats of violence are logged and may be reported to authorities.
+        </div>
+        <div style="max-width:320px;margin:0 auto">
+          <button class="btn btn-secondary btn-block" style="margin-bottom:10px" onclick="openSettingsSection('privacy')">Read full terms</button>
+          <button class="btn btn-primary btn-block" onclick="acceptTermsForCommunity()">I agree to the Terms of Use</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
   let html = '';
 
   // Wall header
@@ -18730,6 +18809,34 @@ function updateWallCharCount() {
   const input = document.getElementById('wall-input');
   const count = document.getElementById('wall-char-count');
   if (input && count) count.textContent = `${input.value.length}/140`;
+}
+
+async function deleteCommunityData() {
+  if (!confirm('This will permanently delete all your community data: buddy profile, messages, pairs, and moderation history. This cannot be undone. Continue?')) return;
+  if (!confirm('Are you sure? All buddy connections will be lost.')) return;
+  const buddyId = load('bloom_buddy_id', null);
+  if (buddyId) {
+    try {
+      await timedFetch('/api/buddy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete-my-data', buddyId }),
+      });
+    } catch(e) {}
+  }
+  // Clear local buddy state
+  localStorage.removeItem('bloom_buddy_id');
+  localStorage.removeItem('bloom_wall_fp');
+  alert('Your community data has been deleted.');
+  if (typeof renderCommunityTab === 'function') renderCommunityTab();
+}
+
+function acceptTermsForCommunity() {
+  const prefs = load('bloom_prefs', {});
+  prefs.termsAcceptedAt = Date.now();
+  prefs.termsVersion = '2026-03';
+  save('bloom_prefs', prefs);
+  renderCommunityTab();
 }
 
 async function postToWall() {
