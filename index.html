@@ -8926,10 +8926,15 @@ function renderTodayTab() {
         const htGoal = htGoalPrefs[t.id] || 1;
         // Count completions this week from history
         let htWeekCount = 0;
+        const htToday = today();
         getWeekDates().forEach(d => {
-          const hist = state.historyData[d];
-          if (hist?.habits?.['ht_' + t.id]) htWeekCount++;
-          if (d === today() && td['ht_' + t.id]) htWeekCount++;
+          if (d === htToday) {
+            // For today, use todayData as source of truth (avoid double-count with archived history)
+            if (td['ht_' + t.id]) htWeekCount++;
+          } else {
+            const hist = state.historyData[d];
+            if (hist?.habits?.['ht_' + t.id]) htWeekCount++;
+          }
         });
         if (htDone[t.id] && !td['ht_' + t.id]) htWeekCount = Math.max(htWeekCount, 1);
         htWeekCount = Math.max(htWeekCount, htDone[t.id] ? 1 : 0);
