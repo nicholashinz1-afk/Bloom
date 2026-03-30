@@ -11560,6 +11560,16 @@ function renderSettingsTab() {
       <div><div class="toggle-label">Your name</div></div>
       <input type="text" id="settings-name" aria-label="Your name" value="${prefs.name || ''}" style="width:140px;padding:6px 10px;font-size:13px" onchange="saveSettingsName()">
     </div>
+    <div class="toggle-row" style="border-bottom:none;margin-bottom:12px">
+      <div>
+        <div class="toggle-label">Age group</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${prefs.ageGroup === '13to15' ? 'Community features available at 16+' : 'Community features enabled'}</div>
+      </div>
+      <select id="settings-age-group" aria-label="Age group" onchange="saveSettingsAgeGroup()" style="padding:6px 10px;font-size:13px;background:var(--card-bg);color:var(--cream);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-md)">
+        <option value="13to15" ${prefs.ageGroup === '13to15' ? 'selected' : ''}>13 to 15</option>
+        <option value="16plus" ${prefs.ageGroup !== '13to15' ? 'selected' : ''}>16 or older</option>
+      </select>
+    </div>
     <div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05)">
       <div style="font-size:32px">${level.emoji}</div>
       <div>
@@ -12432,7 +12442,7 @@ function renderSettingsTab() {
         It is not therapy, counseling, or medical advice. If you are struggling, please reach out to a licensed therapist or counselor. Tap the 🤍 in the header any time for immediate crisis resources.
       </div>
       <div style="font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.6">
-        bloom is intended for users aged 16 and older.
+        bloom is intended for users aged 13 and older. Community features (buddy system, encouragement wall) require age 16+.
       </div>
     </div>
     <div style="background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
@@ -12655,7 +12665,7 @@ function renderSettingsTab() {
         Bloom blocks and logs credible threats of violence made through community features (buddy messages, encouragement wall). Logged information may include message content, IP address, timestamp, and user identifiers. Bloom reserves the right to report credible, imminent threats to law enforcement and to cooperate with valid legal requests (subpoenas, court orders) for threat-related records. This applies only to credible violent threats, not to venting, emotional expression, or self-harm language.</p>
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Age requirement:</strong><br>
-        Bloom is intended for users aged 16 and older.</p>
+        Bloom is intended for users aged 13 and older. Community features (buddy system, encouragement wall) are available to users 16 and older. Users aged 13-15 have access to all solo features (journaling, mood tracking, habits, breathing exercises, crisis resources) but cannot use community features.</p>
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Data responsibility:</strong><br>
         Because your data is stored locally on your device, you are responsible for maintaining backups. Bloom is not liable for data loss due to browser clearing, device changes, or Safari's storage policies.</p>
@@ -13308,6 +13318,24 @@ function setWaterGoal(amount) {
 function saveSettingsName() {
   const input = document.getElementById('settings-name');
   if (input) { state.prefs.name = input.value; save('bloom_prefs', state.prefs); }
+}
+
+function saveSettingsAgeGroup() {
+  const select = document.getElementById('settings-age-group');
+  if (!select) return;
+  const newGroup = select.value;
+  const oldGroup = state.prefs.ageGroup;
+  state.prefs.ageGroup = newGroup;
+
+  // Upgrading to 16+: require terms acceptance for community features
+  if (newGroup === '16plus' && oldGroup === '13to15') {
+    // Clear terms so they're prompted when they open community tab
+    delete state.prefs.termsAcceptedAt;
+    delete state.prefs.termsVersion;
+  }
+
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
 }
 
 function saveHabitTrigger(habitId) {
@@ -16735,19 +16763,23 @@ function renderOBReady(body, footer) {
       <div style="display:flex;align-items:flex-start;gap:12px">
         <span style="font-size:22px;flex-shrink:0">🎂</span>
         <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px">Age acknowledgment</div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px">How old are you?</div>
           <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:10px">
-            bloom is designed for users aged 16 and older.
+            This helps bloom give you the right experience. Community features (buddy system and encouragement wall) are available for users 16 and older.
           </div>
           <div id="ob-age-gate" style="display:flex;flex-direction:column;gap:8px">
             <div onclick="obSetAge('16plus')" id="ob-age-16" style="padding:10px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid ${obData.ageGroup === '16plus' ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};background:${obData.ageGroup === '16plus' ? 'rgba(var(--sage-rgb),0.08)' : 'transparent'};font-size:13px;color:var(--cream);transition:all 0.2s">
               I'm 16 or older
             </div>
-            <div onclick="obSetAge('under16')" id="ob-age-u16" style="padding:10px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid ${obData.ageGroup === 'under16' ? 'rgba(176,120,120,0.4)' : 'rgba(255,255,255,0.08)'};background:${obData.ageGroup === 'under16' ? 'rgba(176,120,120,0.08)' : 'transparent'};font-size:13px;color:var(--cream);transition:all 0.2s">
-              I'm under 16
+            <div onclick="obSetAge('13to15')" id="ob-age-13" style="padding:10px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid ${obData.ageGroup === '13to15' ? 'rgba(201,149,74,0.4)' : 'rgba(255,255,255,0.08)'};background:${obData.ageGroup === '13to15' ? 'rgba(201,149,74,0.08)' : 'transparent'};font-size:13px;color:var(--cream);transition:all 0.2s">
+              I'm 13 to 15
+            </div>
+            <div onclick="obSetAge('under13')" id="ob-age-u13" style="padding:10px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid ${obData.ageGroup === 'under13' ? 'rgba(176,120,120,0.4)' : 'rgba(255,255,255,0.08)'};background:${obData.ageGroup === 'under13' ? 'rgba(176,120,120,0.08)' : 'transparent'};font-size:13px;color:var(--cream);transition:all 0.2s">
+              I'm under 13
             </div>
           </div>
-          ${obData.ageGroup === 'under16' ? '<div style="font-size:12px;color:var(--rose-light);margin-top:8px;line-height:1.6">bloom is designed for users 16 and older. If you\'re looking for mental health support, please talk to a parent, guardian, or school counselor who can help you find age-appropriate resources.</div>' : ''}
+          ${obData.ageGroup === '13to15' ? '<div style="font-size:12px;color:var(--amber-light);margin-top:8px;line-height:1.6">Welcome to bloom. You\'ll have access to journaling, mood tracking, breathing exercises, and crisis resources. Community features (buddy system and encouragement wall) will be available when you\'re 16.</div>' : ''}
+          ${obData.ageGroup === 'under13' ? '<div style="font-size:12px;color:var(--rose-light);margin-top:8px;line-height:1.6">bloom is designed for users 13 and older. If you\'re looking for mental health support, please talk to a parent, guardian, or school counselor who can help you find age-appropriate resources.</div>' : ''}
         </div>
       </div>
     </div>
@@ -16802,8 +16834,9 @@ function renderOBReady(body, footer) {
     </div>
   `;
   const termsAccepted = !!obData.termsAccepted;
-  const canFinish = obData.ageGroup === '16plus' && termsAccepted;
-  const btnLabel = !obData.ageGroup ? 'Select your age above' : !termsAccepted ? 'Accept terms to continue' : "I'm ready";
+  const validAge = obData.ageGroup === '16plus' || obData.ageGroup === '13to15';
+  const canFinish = validAge && termsAccepted;
+  const btnLabel = !obData.ageGroup ? 'Select your age above' : obData.ageGroup === 'under13' ? 'bloom is for ages 13+' : !termsAccepted ? 'Accept terms to continue' : "I'm ready";
   footer.innerHTML = `
     <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
     <button class="btn btn-primary" id="ob-btn-finish" style="flex:1;${canFinish ? '' : 'opacity:0.4;pointer-events:none'}">${btnLabel}</button>
@@ -16842,7 +16875,7 @@ function obShowTerms() {
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Community features:</strong><br>
         All messages are screened for harmful content, grooming language, and contact exchange attempts. Users who repeatedly violate rules are automatically restricted. Credible threats of violence are logged and may be reported to law enforcement.</p>
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Age requirement:</strong><br>
-        Bloom is intended for users aged 16 and older.</p>
+        Bloom is for users 13 and older. Community features are available at 16+.</p>
         <p style="font-size:12px;color:var(--text-muted);margin-top:16px">Full details available in Settings after onboarding.</p>
       </div>
     </div>
@@ -18650,8 +18683,30 @@ function renderCommunityTab() {
   const scroll = document.getElementById('community-scroll');
   if (!scroll) return;
 
-  // Existing users who haven't accepted terms: show one-time consent prompt before community features
   const prefs = load('bloom_prefs', {});
+
+  // Under-16 users: community features are not available
+  if (prefs.ageGroup === '13to15') {
+    scroll.innerHTML = `
+      <div style="text-align:center;padding:40px 20px">
+        <div style="font-size:32px;margin-bottom:12px">💛</div>
+        <div style="font-family:Fraunces,serif;font-size:18px;color:var(--cream);margin-bottom:12px">Community features</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;max-width:360px;margin-left:auto;margin-right:auto">
+          The buddy system and encouragement wall are available for users 16 and older. This is to keep community interactions safe for everyone.
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px;max-width:360px;margin-left:auto;margin-right:auto">
+          You still have access to everything else in bloom: journaling, mood tracking, breathing exercises, wellness tools, and crisis resources. Those are the heart of bloom, and they're all yours.
+        </div>
+        <div style="max-width:320px;margin:0 auto">
+          <button class="btn btn-secondary btn-block" onclick="openCrisisSheet()">Crisis resources</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:16px">You can update your age group in Settings when you turn 16.</div>
+      </div>
+    `;
+    return;
+  }
+
+  // Existing users who haven't accepted terms: show one-time consent prompt before community features
   if (!prefs.termsAcceptedAt) {
     scroll.innerHTML = `
       <div style="text-align:center;padding:40px 20px">
