@@ -118,8 +118,28 @@ Bloom's Terms of Use (visible in Settings and accepted during onboarding) disclo
 
 To receive real-time alerts, configure these environment variables in Vercel:
 
-- `ALERT_WEBHOOK_URL`: A webhook URL that receives POST requests with JSON `{ text, content }`. Works with Discord webhooks, Slack incoming webhooks, Zapier, Make, or any email relay service.
-- `ADMIN_ONESIGNAL_ID` (optional): Your OneSignal subscription ID for push notifications on threat detection.
+### Email alerts (recommended)
+
+1. Sign up at [resend.com](https://resend.com) (free tier: 100 emails/day)
+2. Add and verify your domain (`bloomselfcare.app`) in Resend's dashboard. This involves adding a few DNS records (MX, SPF, DKIM) to your domain's DNS settings in Vercel or your registrar. Resend walks you through it.
+3. Create an API key in Resend's dashboard
+4. Set these env vars in Vercel:
+   - `RESEND_API_KEY`: Your Resend API key
+   - `ALERT_EMAIL_TO`: `bloomhabits@proton.me`
+   - `ALERT_EMAIL_FROM`: `Bloom Alerts <alerts@bloomselfcare.app>` (must use your verified domain)
+
+Threat alert emails include a formatted HTML view with the full message, metadata, and incident response steps.
+
+### Push notifications
+
+1. Open Bloom on your phone and enable push notifications
+2. Find your OneSignal subscription ID in the OneSignal dashboard (Audience > Subscriptions)
+3. Set in Vercel:
+   - `ADMIN_ONESIGNAL_ID`: Your OneSignal subscription ID
+
+### Webhook (optional, for Discord/Slack/etc.)
+
+- `ALERT_WEBHOOK_URL`: A webhook URL that receives POST requests with JSON `{ text, content }`. Works with Discord webhooks, Slack incoming webhooks, Zapier, Make, or any service that accepts webhook POSTs.
 
 ## Review schedule
 

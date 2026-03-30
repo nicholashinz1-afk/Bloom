@@ -93,17 +93,45 @@ async function logThreat(source, userId, messageText, req) {
 
 // ── Admin alert for credible threats ───────────────────────
 async function alertAdmin(entry) {
-  const webhookUrl = process.env.ALERT_WEBHOOK_URL;
-  if (!webhookUrl) return;
   const timestamp = new Date(entry.ts).toISOString();
   const summary = `CREDIBLE THREAT DETECTED\n\nSource: ${entry.source}\nTime: ${timestamp}\nUser: ${entry.userId}\nIP: ${entry.ip}\nMessage: ${entry.message}\n\nINCIDENT RESPONSE:\n1. Review the full threat log in the admin dashboard\n2. Assess whether the threat is specific, credible, and imminent\n3. If credible: contact local law enforcement or submit an FBI tip at tips.fbi.gov\n4. The user has been auto-banned from all community features\n5. Preserve all evidence (do not delete the threat log entry)`;
-  try {
-    await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: summary, content: summary }),
-    });
-  } catch(e) {}
+
+  const promises = [];
+
+  // Email alert via Resend
+  const resendKey = process.env.RESEND_API_KEY;
+  const alertEmail = process.env.ALERT_EMAIL_TO;
+  if (resendKey && alertEmail) {
+    promises.push(
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${resendKey}`,
+        },
+        body: JSON.stringify({
+          from: process.env.ALERT_EMAIL_FROM || 'Bloom Alerts <alerts@bloomselfcare.app>',
+          to: [alertEmail],
+          subject: `[BLOOM] Credible threat detected via ${entry.source}`,
+          text: summary,
+        }),
+      }).catch(() => {})
+    );
+  }
+
+  // Webhook (Discord, Slack, etc.)
+  const webhookUrl = process.env.ALERT_WEBHOOK_URL;
+  if (webhookUrl) {
+    promises.push(
+      fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: summary, content: summary }),
+      }).catch(() => {})
+    );
+  }
+
+  await Promise.allSettled(promises);
 }
 
 // ── User moderation strikes ──────────────────────────────

@@ -101,28 +101,78 @@ async function logThreat(source, userId, messageText, req) {
 }
 
 // ── Admin alert for credible threats ───────────────────────
-// Sends a webhook notification so the admin is aware in real time.
-// Configure ALERT_WEBHOOK_URL in Vercel env vars to point at any
-// webhook-compatible service (Discord, Slack, email relay, etc.).
-// Also sends a push notification via OneSignal if ADMIN_ONESIGNAL_ID is set.
+// Sends up to 3 notifications when a credible threat is detected:
+// 1. Email via Resend (RESEND_API_KEY + ALERT_EMAIL_TO)
+// 2. Push notification via OneSignal (ADMIN_ONESIGNAL_ID)
+// 3. Webhook POST (ALERT_WEBHOOK_URL) for Discord/Slack/etc.
 async function alertAdmin(entry) {
-  const webhookUrl = process.env.ALERT_WEBHOOK_URL;
-  const adminPushId = process.env.ADMIN_ONESIGNAL_ID;
   const timestamp = new Date(entry.ts).toISOString();
   const summary = `CREDIBLE THREAT DETECTED\n\nSource: ${entry.source}\nTime: ${timestamp}\nUser: ${entry.userId}\nIP: ${entry.ip}\nMessage: ${entry.message}\n\nINCIDENT RESPONSE:\n1. Review the full threat log in the admin dashboard\n2. Assess whether the threat is specific, credible, and imminent\n3. If credible: contact local law enforcement or submit an FBI tip at tips.fbi.gov\n4. The user has been auto-banned from all community features\n5. Preserve all evidence (do not delete the threat log entry)`;
 
+  const promises = [];
+
+  // Email alert via Resend
+  const resendKey = process.env.RESEND_API_KEY;
+  const alertEmail = process.env.ALERT_EMAIL_TO;
+  if (resendKey && alertEmail) {
+    promises.push(
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${resendKey}`,
+        },
+        body: JSON.stringify({
+          from: process.env.ALERT_EMAIL_FROM || 'Bloom Alerts <alerts@bloomselfcare.app>',
+          to: [alertEmail],
+          subject: `[BLOOM] Credible threat detected via ${entry.source}`,
+          text: summary,
+          html: `<div style="font-family:monospace;white-space:pre-wrap;background:#1a1a1a;color:#e0e0e0;padding:20px;border-radius:8px">
+<h2 style="color:#b07878;margin-top:0">CREDIBLE THREAT DETECTED</h2>
+<p><strong>Source:</strong> ${entry.source}<br>
+<strong>Time:</strong> ${timestamp}<br>
+<strong>User ID:</strong> ${entry.userId}<br>
+<strong>IP:</strong> ${entry.ip}<br>
+<strong>User Agent:</strong> ${(entry.userAgent || '').slice(0, 100)}</p>
+<div style="background:#2a1a1a;padding:12px;border-radius:4px;border:1px solid #b07878;margin:12px 0">
+<strong>Message:</strong><br>${entry.message}
+</div>
+<h3 style="color:#c9954a">Incident Response Steps</h3>
+<ol>
+<li>Review the full threat log in the <a href="https://bloomselfcare.app/admin.html" style="color:#8fbc8f">admin dashboard</a></li>
+<li>Assess whether the threat is specific, credible, and imminent</li>
+<li>If credible: contact local law enforcement or submit an FBI tip at <a href="https://tips.fbi.gov" style="color:#8fbc8f">tips.fbi.gov</a></li>
+<li>The user has been auto-banned from all community features</li>
+<li>Preserve all evidence (do not delete the threat log entry)</li>
+</ol>
+<p style="color:#888;font-size:12px">See INCIDENT_RESPONSE.md for the full playbook.</p>
+</div>`,
+        }),
+      }).catch(() => {})
+    );
+  }
+
+  // Push notification via OneSignal
+  const adminPushId = process.env.ADMIN_ONESIGNAL_ID;
+  if (adminPushId) {
+    promises.push(
+      sendPush(adminPushId, 'BLOOM: Credible threat detected', `Threat logged from ${entry.source}. Check admin dashboard immediately.`)
+    );
+  }
+
+  // Webhook (Discord, Slack, etc.)
+  const webhookUrl = process.env.ALERT_WEBHOOK_URL;
   if (webhookUrl) {
-    try {
-      await fetch(webhookUrl, {
+    promises.push(
+      fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: summary, content: summary }),
-      });
-    } catch(e) {}
+      }).catch(() => {})
+    );
   }
-  if (adminPushId) {
-    await sendPush(adminPushId, 'BLOOM: Credible threat detected', `Threat logged from ${entry.source}. Check admin dashboard immediately.`);
-  }
+
+  await Promise.allSettled(promises);
 }
 
 // ── User moderation strikes (shared store with wall.js) ─────
