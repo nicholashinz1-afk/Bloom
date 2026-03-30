@@ -15,8 +15,8 @@
 </head>
 <body>
 
-<div class="label">Etsy shop banner — 1200x300px (tap to download)</div>
-<canvas id="banner" width="1200" height="300" style="width:100%;max-width:600px;height:auto;"></canvas>
+<div class="label">Etsy shop banner — 3360x840px (tap to download)</div>
+<canvas id="banner" width="3360" height="840" style="width:100%;max-width:700px;height:auto;"></canvas>
 <button class="btn" id="dl">Download PNG</button>
 
 <script>
@@ -26,17 +26,17 @@ async function render() {
 
   const c = document.getElementById('banner');
   const ctx = c.getContext('2d');
-  const W = 1200, H = 300;
+  const W = 3360, H = 840;
 
   // Background
   ctx.fillStyle = '#1c2e20';
   ctx.fillRect(0, 0, W, H);
 
-  // Subtle depth variation
-  for (let i = 0; i < 8; i++) {
+  // Depth variation
+  for (let i = 0; i < 12; i++) {
     const x = Math.random() * W;
     const y = Math.random() * H;
-    const r = 80 + Math.random() * 200;
+    const r = 150 + Math.random() * 400;
     const g = ctx.createRadialGradient(x, y, 0, x, y, r);
     g.addColorStop(0, 'rgba(28,50,30,0.2)');
     g.addColorStop(1, 'rgba(22,46,26,0)');
@@ -44,11 +44,11 @@ async function render() {
     ctx.fillRect(0, 0, W, H);
   }
 
-  // Subtle leaf shapes
-  for (let i = 0; i < 30; i++) {
+  // Leaf shapes
+  for (let i = 0; i < 60; i++) {
     const x = Math.random() * W;
     const y = Math.random() * H;
-    const size = 10 + Math.random() * 40;
+    const size = 15 + Math.random() * 60;
     const angle = Math.random() * Math.PI * 2;
     const alpha = 0.04 + Math.random() * 0.08;
     ctx.save();
@@ -64,25 +64,35 @@ async function render() {
   }
 
   // Warm glow in center
-  const glow = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, 300);
-  glow.addColorStop(0, 'rgba(212,173,106,0.08)');
+  const glow = ctx.createRadialGradient(W * 0.5, H * 0.45, 0, W * 0.5, H * 0.45, 500);
+  glow.addColorStop(0, 'rgba(212,173,106,0.1)');
   glow.addColorStop(1, 'rgba(22,46,26,0)');
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
 
-  // "stay." centered, amber
+  // "stay." centered, amber, large
   ctx.save();
-  ctx.translate(W * 0.5, H * 0.48);
-  ctx.font = '400 72px Fraunces';
+  ctx.translate(W * 0.5, H * 0.38);
+  ctx.font = '400 200px Fraunces';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(212,173,106,0.85)';
   ctx.fillText('stay.', 0, 0);
   ctx.restore();
 
+  // Mission line underneath
+  ctx.save();
+  ctx.translate(W * 0.5, H * 0.72);
+  ctx.font = '300 36px Fraunces';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(232,224,208,0.4)';
+  ctx.fillText('100% of profits fund free mental health tools', 0, 0);
+  ctx.restore();
+
   document.getElementById('dl').onclick = () => {
     const link = document.createElement('a');
-    link.download = 'saidgently-banner.png';
+    link.download = 'saidgently-banner-v2.png';
     link.href = c.toDataURL('image/png');
     link.click();
   };
