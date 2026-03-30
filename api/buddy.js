@@ -222,7 +222,16 @@ async function recordStrike(userId, reason, source, messageText) {
 async function isUserBanned(userId) {
   if (!userId) return false;
   const strikes = await getStrikes();
-  return strikes[userId]?.banned === true;
+  const user = strikes[userId];
+  if (!user?.banned) return false;
+  // Auto-bans expire after 24 hours. Admin bans (no autoBannedAt) are permanent.
+  if (user.autoBannedAt && Date.now() - user.autoBannedAt > 86400000) {
+    user.banned = false;
+    delete user.autoBannedAt;
+    await saveStrikes(strikes);
+    return false;
+  }
+  return true;
 }
 
 // ── OneSignal push notification helper ──────────────────────
@@ -740,7 +749,7 @@ export default async function handler(req, res) {
 
     // Check if user is banned from social features
     if (await isUserBanned(buddyId)) {
-      return res.json({ ok: false, reason: 'filtered' });
+      return res.json({ ok: false, reason: 'banned' });
     }
 
     const check = moderateMessage(text, 'buddy');

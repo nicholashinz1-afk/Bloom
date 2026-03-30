@@ -214,7 +214,16 @@ async function recordStrike(fp, reason, source, messageText) {
 async function isUserBanned(fp) {
   if (!fp || fp === 'anon') return false;
   const strikes = await getStrikes();
-  return strikes[fp]?.banned === true;
+  const user = strikes[fp];
+  if (!user?.banned) return false;
+  // Auto-bans expire after 24 hours. Admin bans (no autoBannedAt) are permanent.
+  if (user.autoBannedAt && Date.now() - user.autoBannedAt > 86400000) {
+    user.banned = false;
+    delete user.autoBannedAt;
+    await saveStrikes(strikes);
+    return false;
+  }
+  return true;
 }
 
 async function getMessages() {
@@ -269,7 +278,7 @@ export default async function handler(req, res) {
 
       // Check if user is banned from social features
       if (await isUserBanned(fp)) {
-        return res.json({ ok: false, reason: 'filtered' });
+        return res.json({ ok: false, reason: 'banned' });
       }
 
       const check = moderateMessage(text);

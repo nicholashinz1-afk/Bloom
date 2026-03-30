@@ -17870,9 +17870,10 @@ async function buddySendMessage(pairId) {
       'safety': 'For everyone\u2019s safety, personal info and contact details can\u2019t be shared here.',
       'inappropriate': 'Let\u2019s keep buddy conversations respectful. Try rephrasing?',
       'filtered': 'Some words aren\u2019t allowed. Try rephrasing?',
+      'banned': 'Community features are temporarily paused for your account. This will lift automatically within 24 hours.',
       'not-paired': 'You\u2019re not paired with a buddy.',
     };
-    showBuddyStatusForPair(pairId, reasons[data.reason] || 'Couldn\u2019t send. Try again?', 'var(--amber)');
+    showBuddyStatusForPair(pairId, reasons[data.reason] || 'Couldn\u2019t send. Try again?', data.reason === 'banned' ? 'var(--rose)' : 'var(--amber)');
   }
 }
 
@@ -18753,10 +18754,11 @@ async function postToWall() {
         'harmful': 'Let\'s keep this space gentle and safe. Try rephrasing?',
         'safety': 'For everyone\'s safety, personal info and contact details can\'t be shared here.',
         'filtered': 'Some words aren\'t allowed here to keep this space safe. Try rephrasing?',
+        'banned': 'Community features are temporarily paused for your account. This will lift automatically within 24 hours.',
         'rate-limit': 'You\'ve shared recently -- come back in a bit to post again.',
         'no-text': 'Write a few words of encouragement.',
       };
-      showWallStatus(reasons[data.reason] || 'Something went wrong. Try again?', 'var(--amber)');
+      showWallStatus(reasons[data.reason] || 'Something went wrong. Try again?', data.reason === 'banned' ? 'var(--rose)' : 'var(--amber)');
     }
   } catch(e) {
     showWallStatus('Couldn\'t connect. Your kindness will have to wait a moment.', 'var(--text-muted)');
