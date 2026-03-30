@@ -3818,7 +3818,7 @@ function save(key, value) {
       // IndexedDB backup will still get the write below
     }
   }
-  dbSet(key, str);
+  dbSet(key, str).catch(e => console.warn('IndexedDB backup failed for', key, e));
 }
 
 function checkStorageQuota() {
@@ -5402,7 +5402,7 @@ async function saveOpenJournal() {
   } else {
     ai = await callClaude(
       `Someone is having a hard day and wrote: "${text}". Respond with just 1-2 sentences of warm, human presence. No advice. No silver linings. Just witness what they said and remind them they're not alone.`,
-      'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity, no advice. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis, you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care.'
+      'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity, no advice. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis (e.g. wanting to die, wishing not to wake up, feeling everyone would be better off without them, wanting to end it all), you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care. Do NOT flag general sadness, frustration, or hopelessness as crisis. Venting is healthy.'
     );
   }
 
@@ -6868,7 +6868,7 @@ const CELEBRATIONS = {
       { title: 'Endorphins unlocked.', sub: 'You earned every single one.' },
       { title: 'That was all you.', sub: 'Your body is grateful.' },
       { title: 'You moved your body.', sub: 'That\'s a genuine act of self-care.' },
-      { title: 'You chose the hard thing.', sub: 'That\'s character.' },
+      { title: 'You chose the hard thing.', sub: 'That takes real effort.' },
       { title: 'Energy: invested.', sub: 'Watch it come back to you tenfold.' },
     ],
   },
@@ -6982,7 +6982,7 @@ const CELEBRATIONS = {
     confetti: true,
     messages: [
       { title: 'All done for today!', sub: 'Every single thing. You showed up fully.' },
-      { title: 'Perfect day logged 🌟', sub: 'Go be easy on yourself now — you\'ve earned it.' },
+      { title: 'Full day logged 🌟', sub: 'Go be easy on yourself now. You showed up.' },
       { title: 'Today was yours.', sub: 'Every habit, every check. Well done.' },
     ],
   },
@@ -7055,7 +7055,7 @@ const CELEBRATIONS = {
       { title: 'You went the extra step.', sub: 'That\'s real self-care.' },
       { title: 'Above and beyond.', sub: 'Your dentist would be proud.' },
       { title: 'The full routine.', sub: 'Thoroughness is a form of love.' },
-      { title: 'Commitment level: serious.', sub: 'You don\'t cut corners on yourself.' },
+      { title: 'Commitment level: serious.', sub: 'The extra effort counts.' },
       { title: 'Deep clean.', sub: 'The little things you do for future you.' },
     ],
   },
@@ -7906,6 +7906,26 @@ function getScriptedResponse() {
 }
 
 const AI_FALLBACK_RESPONSE = "You showed up today, and that matters. Whatever you're carrying, you don't have to carry it alone.";
+const AI_FALLBACK_CRISIS = "What you're feeling is real, and you deserve support. Please tap the 🤍 in the top corner for people who can help right now. You don't have to go through this alone.";
+
+// Check if text contains crisis-specific language (same narrow set as server moderation)
+function containsCrisisLanguage(text) {
+  if (!text) return false;
+  const lower = text.toLowerCase();
+  const patterns = [
+    /\b(kill myself|end my life|want to die|don'?t want to (be here|live|exist|be alive))\b/,
+    /\b(suicide|suicidal|self[- ]?harm|cut myself|hurt myself)\b/,
+    /\beveryone would be better off without me\b/,
+    /\bwish i (didn'?t|wouldn'?t|won'?t) wake up\b/,
+    /\bwant to end it all\b/,
+  ];
+  return patterns.some(p => p.test(lower));
+}
+
+function getFallbackResponse(userInput) {
+  if (containsCrisisLanguage(userInput)) return AI_FALLBACK_CRISIS;
+  return AI_FALLBACK_RESPONSE;
+}
 
 async function callClaude(prompt, systemPrompt, options) {
   // Track AI reflection usage for journey analysis
@@ -7926,14 +7946,14 @@ async function callClaude(prompt, systemPrompt, options) {
       body: JSON.stringify(body)
     });
     const data = await res.json();
-    return filterAIResponse(data.text || AI_FALLBACK_RESPONSE);
+    return filterAIResponse(data.text || getFallbackResponse(prompt), prompt);
   } catch(e) {
-    return AI_FALLBACK_RESPONSE;
+    return getFallbackResponse(prompt);
   }
 }
 
 // Safety filter for AI-generated text — catches clinical/diagnostic/medication language
-function filterAIResponse(text) {
+function filterAIResponse(text, userInput) {
   const unsafePatterns = [
     /\b(diagnos(e[ds]?|ing|is)|disorder|syndrome|patholog)\b/i,
     /\b(prescri(be|ption)|medica(te|tion)|dosage|mg|milligram|SSRI|SNRI|benzodiazepine|antidepressant|antipsychotic|anxiolytic)\b/i,
@@ -7943,7 +7963,7 @@ function filterAIResponse(text) {
     /\b(therapist recommends|clinical(ly)?|psychiatric|psychologist says)\b/i,
   ];
   for (const pat of unsafePatterns) {
-    if (pat.test(text)) return AI_FALLBACK_RESPONSE;
+    if (pat.test(text)) return getFallbackResponse(userInput);
   }
   return text;
 }
@@ -8460,7 +8480,9 @@ function renderInlineBreathPhase() {
   if (inlineBreathCycle >= 4) {
     if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
     state.wellnessData.breathSessions++;
+    state.todayData.breathCount = (state.todayData.breathCount || 0) + 1;
     saveState();
+    archiveToday();
     celebrate('breath', document.getElementById('inline-breath-zone'));
     ui.innerHTML = `
       <div style="text-align:center;padding:8px 0">
@@ -8513,7 +8535,9 @@ function stopInlineBreathing() {
   if (inlineBreathInterval) clearInterval(inlineBreathInterval);
   if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
   state.wellnessData.breathSessions++;
+  state.todayData.breathCount = (state.todayData.breathCount || 0) + 1;
   saveState();
+  archiveToday();
   playSound('breath_done');
   const ui = document.getElementById('inline-breath-ui');
   if (ui) ui.innerHTML = `
@@ -9843,18 +9867,24 @@ async function saveJournal() {
     checkMilestones();
   }
 
-  const ai = await callClaude(
-    `The user wrote in their journal: "${text}". Write a warm, brief (2-3 sentence) response that acknowledges what they shared without offering unsolicited advice. Be human and compassionate.`,
-    'You are Bloom, a gentle wellness companion. Never clinical. Warm, brief, human. 2-3 sentences max. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis, you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care.'
-  );
+  // Capture direct reference before async gap to avoid stale index
+  const entry = state.wellnessData.journal[t][entryIndex];
 
-  state.loadingJournalAI = false;
-  if (ai && state.wellnessData.journal[t][entryIndex]) {
-    state.wellnessData.journal[t][entryIndex].ai = ai;
-    saveState();
-    archiveToday();
+  try {
+    const ai = await callClaude(
+      `The user wrote in their journal: "${text}". Write a warm, brief (2-3 sentence) response that acknowledges what they shared without offering unsolicited advice. Be human and compassionate.`,
+      'You are Bloom, a gentle wellness companion. Never clinical. Warm, brief, human. 2-3 sentences max. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis (e.g. wanting to die, wishing not to wake up, feeling everyone would be better off without them, wanting to end it all), you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care. Do NOT flag general sadness, frustration, or hopelessness as crisis. Venting is healthy.'
+    );
+
+    if (ai && entry) {
+      entry.ai = ai;
+      saveState();
+      archiveToday();
+    }
+  } finally {
+    state.loadingJournalAI = false;
+    renderWellnessTab();
   }
-  renderWellnessTab();
 }
 
 function editJournal() {
@@ -9942,17 +9972,20 @@ async function saveReflection(qi) {
   }
 
   const q = REFLECTION_QUESTIONS[qi];
-  const ai = await callClaude(
-    `The reflection question was: "${q}". The user answered: "${text}". Write a thoughtful 1-2 sentence response that acknowledges their reflection with warmth.`,
-    'You are Bloom. 1-2 sentences. Warm, not clinical. If the user expresses distress, self-harm, or crisis, gently point them to the 🤍 crisis heart for immediate support.'
-  );
+  try {
+    const ai = await callClaude(
+      `The reflection question was: "${q}". The user answered: "${text}". Write a thoughtful 1-2 sentence response that acknowledges their reflection with warmth.`,
+      'You are Bloom. 1-2 sentences. Warm, not clinical. If the user expresses suicidal thoughts, self-harm, or acute crisis (e.g. wanting to die, wishing not to wake up, feeling everyone would be better off without them), gently point them to the 🤍 crisis heart for immediate support. Do NOT flag general sadness or frustration as crisis.'
+    );
 
-  state.loadingReflectionAI[qi] = false;
-  if (ai) {
-    state.wellnessData.reflections[ws][qi].ai = ai;
-    saveState();
+    if (ai) {
+      state.wellnessData.reflections[ws][qi].ai = ai;
+      saveState();
+    }
+  } finally {
+    state.loadingReflectionAI[qi] = false;
+    renderWellnessTab();
   }
-  renderWellnessTab();
 }
 
 async function generateWeeklyInsight(e) {
@@ -9976,7 +10009,7 @@ async function generateWeeklyInsight(e) {
   const therapyCount = wd.w_therapy || 0;
   const journalDays = weekDates.filter(d => getJournalEntries(d).length > 0).length;
   const waterDays = weekDates.filter(d => (state.historyData[d]?.habits?.waterXPGiven)).length;
-  const breathSessions = state.wellnessData?.breathSessions || 0;
+  const breathSessions = weekDates.reduce((sum, d) => sum + (state.historyData[d]?.habits?.breathCount || 0), 0);
 
   // Journal excerpts
   const journals = weekDates.map(d => getLatestJournalText(d)).filter(Boolean);
@@ -9994,28 +10027,32 @@ async function generateWeeklyInsight(e) {
   ].filter(Boolean).join(', ');
 
   trackFeature('weekly_insight');
-  const ai = await callClaude(
-    `Write a weekly insight for a mental wellness app user. This week: ${avgMood ? `average mood ${avgMood}/4` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}. Small wins they logged: ${weekWins.length > 0 ? weekWins.slice(0,5).join(', ') : 'none this week'}.
+  try {
+    const ai = await callClaude(
+      `Write a weekly insight for a mental wellness app user. This week: ${avgMood ? `average mood ${avgMood}/4` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}. Small wins they logged: ${weekWins.length > 0 ? weekWins.slice(0,5).join(', ') : 'none this week'}.
 
 Write 3-4 sentences from an emotional lens — how they showed up for themselves this week. If they logged small wins, reflect specific ones back to them as evidence of progress. If it was a hard week emotionally but they still did self-care, reflect that back as evidence of resilience. Celebrate specific acts of self-care as emotional wins. Never shame, never clinical. End with something genuinely encouraging about the week ahead.`,
-    'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only. If the week data suggests persistent struggle, gently remind them the 🤍 crisis heart is always there and that reaching out to a professional is a sign of strength.',
-    { model: 'claude-sonnet-4-20250514' }
-  );
+      'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only. If the week data suggests persistent struggle, gently remind them the 🤍 crisis heart is always there and that reaching out to a professional is a sign of strength.',
+      { model: 'claude-sonnet-4-20250514' }
+    );
 
-  const d = new Date();
-  const wl = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  if (!state.wellnessData.insights) state.wellnessData.insights = [];
+    const d = new Date();
+    const wl = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (!state.wellnessData.insights) state.wellnessData.insights = [];
 
-  // Replace existing insight for this week or add new
-  const existingIdx = state.wellnessData.insights.findIndex(i => i.weekKey === ws);
-  const insightEntry = { weekLabel: wl, weekKey: ws, text: ai || 'You showed up for yourself this week. Every single act of care mattered.', date: today() };
-  if (existingIdx > -1) state.wellnessData.insights[existingIdx] = insightEntry;
-  else state.wellnessData.insights.push(insightEntry);
-  if (state.wellnessData.insights.length > 8) state.wellnessData.insights.shift();
+    // Replace existing insight for this week or add new
+    const existingIdx = state.wellnessData.insights.findIndex(i => i.weekKey === ws);
+    const insightEntry = { weekLabel: wl, weekKey: ws, text: ai || 'You showed up for yourself this week. Every single act of care mattered.', date: today() };
+    if (existingIdx > -1) state.wellnessData.insights[existingIdx] = insightEntry;
+    else state.wellnessData.insights.push(insightEntry);
+    if (state.wellnessData.insights.length > 8) state.wellnessData.insights.shift();
 
-  saveState();
-  celebrate('insight', document.querySelector('.tab-scroll'));
-  renderWellnessTab();
+    saveState();
+    celebrate('insight', document.querySelector('.tab-scroll'));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Generate insight'; }
+    renderWellnessTab();
+  }
 }
 
 async function generateWeeklySummary() {
@@ -10107,6 +10144,13 @@ const POSITIVE_WORDS = new Set([
   'unstoppable', 'unbreakable', 'good', 'great', 'better', 'best',
 ]);
 
+// Check if a match position in text is preceded by negation words
+const NEGATION_RE = /\b(not|never|no longer|hardly|barely|don'?t|doesn'?t|isn'?t|aren'?t|wasn'?t|can'?t|couldn'?t|won'?t|wouldn'?t|shouldn'?t)\s+/;
+function isNegated(text, matchIndex) {
+  const lookback = text.substring(Math.max(0, matchIndex - 30), matchIndex);
+  return NEGATION_RE.test(lookback);
+}
+
 function extractPositiveWords(text, isAffirmation) {
   if (!text) return [];
   const lower = text.toLowerCase();
@@ -10150,6 +10194,8 @@ function extractPositiveWords(text, isAffirmation) {
   for (const pat of patterns) {
     let match;
     while ((match = pat.exec(lower)) !== null) {
+      // Skip if the match is preceded by negation (e.g. "I'm not strong")
+      if (isNegated(lower, match.index)) continue;
       // Some patterns capture 2 groups (the "and" pattern)
       const captures = [match[1], match[2]].filter(Boolean);
       for (const word of captures) {
@@ -10385,7 +10431,9 @@ function renderBreathPhase() {
   if (breathCycle >= 4) {
     if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
     state.wellnessData.breathSessions++;
+    state.todayData.breathCount = (state.todayData.breathCount || 0) + 1;
     saveState();
+    archiveToday();
     celebrate('breath', document.getElementById('breath-card'));
     // Post-cycle prompt — invite them to keep going
     ui.innerHTML = `
@@ -10437,7 +10485,9 @@ function stopBreathing() {
   if (breathInterval) clearInterval(breathInterval);
   if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
   state.wellnessData.breathSessions++;
+  state.todayData.breathCount = (state.todayData.breathCount || 0) + 1;
   saveState();
+  archiveToday();
   playSound('breath_done');
   const ui = document.getElementById('breath-ui');
   if (ui) ui.innerHTML = `
@@ -11006,7 +11056,7 @@ function renderProgressTab() {
   // Wellness stats
   const journalCount = weekDates.filter(d => getJournalEntries(d).length > 0).length;
   const reflectCount = Object.keys(state.wellnessData?.reflections?.[weekStart()] || {}).length;
-  const breathCount = state.wellnessData?.breathSessions || 0;
+  const breathCount = weekDates.reduce((sum, d) => sum + (state.historyData[d]?.habits?.breathCount || 0), 0);
   const exerciseCount = state.weekData?.w_exercise || 0;
 
   // Only show stats that are active (count > 0)
@@ -12557,8 +12607,8 @@ function renderSettingsTab() {
       </div>
 
       <div style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
-        <div style="font-weight:500;color:var(--amber-light);margin-bottom:4px">Crisis support (allowed)</div>
-        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">If we detect language that suggests you might be in crisis, your message is still posted, but we'll gently surface crisis resources. Your feelings are always valid here.</div>
+        <div style="font-weight:500;color:var(--amber-light);margin-bottom:4px">Crisis support</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">If we detect language that suggests you might be in crisis, we'll gently surface crisis resources. To protect other vulnerable readers, these messages are held privately rather than posted to the public wall. Your feelings are always valid here.</div>
       </div>
 
       <div style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
@@ -12580,7 +12630,7 @@ function renderSettingsTab() {
 
       <p style="margin-bottom:10px"><strong style="color:var(--cream)">What is sent to external services:</strong></p>
       <ul style="padding-left:18px;margin-bottom:10px">
-        <li style="margin-bottom:6px"><strong>AI reflections:</strong> When you use AI features (journal reflections, weekly insights, monthly reflections), your prompt text is sent to Anthropic's Claude API to generate a response. This data is not stored or linked to your identity by Bloom or Anthropic. <em>Note: For very low mood entries and hard day mode, Bloom uses pre-written responses instead of AI.</em></li>
+        <li style="margin-bottom:6px"><strong>AI reflections:</strong> When you use AI features (journal reflections, weekly insights, cognitive reframes), the text you write is sent to Anthropic's Claude API for processing. Anthropic does not use API inputs to train their models. Each reflection is a standalone request with no conversation history. Bloom does not store your journal text on any server. <em>Note: For very low mood entries and hard day mode, Bloom uses pre-written responses instead of AI.</em></li>
         <li style="margin-bottom:6px"><strong>Bloom Buddy:</strong> If you use the buddy feature, your display name, mood (if sharing is on), days shown up, habit completion percentage, and messages are stored on our server (Redis/Vercel KV) to enable the pairing. Your journal entries, specific habits, and other private data are never shared.</li>
         <li style="margin-bottom:6px"><strong>Encouragement Wall:</strong> Posts you submit to the community wall are stored on our server without any identifying information attached.</li>
         <li style="margin-bottom:6px"><strong>Push Notifications:</strong> If enabled, OneSignal processes a device identifier for delivery. No personal content is included.</li>
@@ -12595,6 +12645,12 @@ function renderSettingsTab() {
       <p style="margin-bottom:10px"><strong style="color:var(--cream)">HIPAA and institutional use:</strong><br>
       Bloom is not a HIPAA-covered entity and does not collect, store, or transmit protected health information (PHI). All personal data (journal entries, mood logs, habits) is stored locally on the user's device and is never sent to Bloom's servers. Community features (buddy, wall) store only display names and messages, none of which constitute PHI. This makes Bloom suitable for recommendation by counseling centers and institutions without creating data liability or compliance obligations.</p>
 
+      <p style="margin-bottom:10px"><strong style="color:var(--cream)">International users:</strong><br>
+      Bloom is operated from the United States. If you use community features (Bloom Buddy, Encouragement Wall), anonymized message data is processed and stored in the United States. By using these features, you consent to this data transfer. If you need your community data removed, contact bloomhabits@proton.me.</p>
+
+      <p style="margin-bottom:10px"><strong style="color:var(--cream)">Data breach notification:</strong><br>
+      In the unlikely event of a data breach affecting community features (Bloom Buddy or Encouragement Wall), we will notify affected users as soon as reasonably possible and provide information about what data may have been compromised.</p>
+
       <div style="border-top:1px solid rgba(255,255,255,0.06);margin:16px 0;padding-top:16px">
         <div style="font-weight:500;color:var(--cream);margin-bottom:8px;font-size:14px">Terms of Use</div>
 
@@ -12602,7 +12658,7 @@ function renderSettingsTab() {
         Bloom is a self-care companion app. It is not therapy, counseling, medical advice, or crisis intervention. It is not a substitute for professional mental health care. If you are in crisis, please use the 🤍 crisis resources or contact emergency services.</p>
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">AI-generated content:</strong><br>
-        AI reflections are generated by a language model. They may occasionally be inaccurate, unhelpful, or inappropriate. They should not be relied upon for mental health decisions. A "Did this feel helpful?" option is provided so you can flag unhelpful responses.</p>
+        AI reflections are generated by a language model and are not professional mental health advice. They should not be acted upon as guidance for mental health decisions. Bloom makes no warranties regarding the accuracy, safety, or appropriateness of AI-generated responses. Bloom and its creator are not liable for any harm, distress, decisions, or actions taken based on AI-generated content. If you experience distress after reading an AI response, please contact a mental health professional or use the 🤍 crisis resources immediately. A "Did this feel helpful?" option is provided so you can flag unhelpful responses.</p>
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Buddy system:</strong><br>
         Bloom Buddy connects you with other users for encouragement. All messages are screened for harmful content, grooming language, and contact exchange attempts. Crude and sexual content is blocked in buddy conversations. Users who repeatedly violate these rules are automatically restricted. Despite these protections, we cannot guarantee the behavior of other users. You can unpair at any time.</p>
@@ -12612,6 +12668,12 @@ function renderSettingsTab() {
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Data responsibility:</strong><br>
         Because your data is stored locally on your device, you are responsible for maintaining backups. Bloom is not liable for data loss due to browser clearing, device changes, or Safari's storage policies.</p>
+
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Community content:</strong><br>
+        Bloom moderates community content (Bloom Buddy and Encouragement Wall) in good faith to maintain a safe environment. Despite these efforts, Bloom cannot guarantee that all harmful content will be caught or prevented. Bloom is not liable for content posted by other users.</p>
+
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Limitation of liability:</strong><br>
+        Bloom is provided "as is" without warranty of any kind, express or implied. To the maximum extent permitted by law, Bloom and its creator shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of data, arising from your use of this service.</p>
       </div>
 
       <div style="font-size:11px;color:var(--text-muted);margin-top:8px">Last updated: March 2026</div>
@@ -16504,7 +16566,7 @@ function renderOBReady(body, footer) {
               I'm under 16
             </div>
           </div>
-          ${obData.ageGroup === 'under16' ? '<div style="font-size:12px;color:var(--rose-light);margin-top:8px;line-height:1.6">bloom is designed for users 16 and older. If you\'re looking for mental health support, please talk to a parent, guardian, or school counselor who can help you find age-appropriate resources.</div>' : ''}
+          ${obData.ageGroup === 'under16' ? '<div style="font-size:12px;color:var(--rose-light);margin-top:8px;line-height:1.6">bloom is designed for users 16 and older, but you still deserve support. Here are resources made for people your age:</div><div style="margin-top:8px;font-size:12px;line-height:1.8"><div style="margin-bottom:4px"><strong style="color:var(--sky-light)">Crisis Text Line</strong> — Text HOME to 741741</div><div style="margin-bottom:4px"><strong style="color:var(--sky-light)">Teen Line</strong> — Call 1-800-852-8336 (6pm-10pm PT)</div><div style="margin-bottom:4px"><strong style="color:var(--sky-light)">findahelpline.com</strong> — International support in 40+ languages</div><div style="color:var(--text-muted);margin-top:6px">These are free, confidential, and staffed by people who care.</div></div>' : ''}
         </div>
       </div>
     </div>
@@ -19046,6 +19108,20 @@ function initApp() {
       hasBuddy,
     });
   }, 2000);
+  // Offline indicator — gentle banner when network is down
+  window.addEventListener('offline', () => {
+    if (document.getElementById('bloom-offline-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'bloom-offline-banner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(201,149,74,0.15);backdrop-filter:blur(8px);padding:8px 16px;text-align:center;font-size:12px;color:var(--amber-light);border-bottom:1px solid rgba(201,149,74,0.2)';
+    banner.textContent = "You're offline. Your data is saved locally. AI reflections will be available when you reconnect.";
+    document.body.prepend(banner);
+  });
+  window.addEventListener('online', () => {
+    const banner = document.getElementById('bloom-offline-banner');
+    if (banner) banner.remove();
+  });
+
   renderDailyQuote();
   applySeasonalTheme();
   checkNewWeek();

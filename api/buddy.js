@@ -65,10 +65,16 @@ const SPAM_PATTERNS = [
   /@|#|\$\$|[<>]/,
 ];
 
-// Self-harm language — not blocked, but flagged so the client can offer resources
+// Self-harm language — not blocked, but flagged so the client can offer resources.
+// Only flag language specifically about ending one's life or self-harm intent.
+// Do NOT flag general distress, hopelessness, or venting — Bloom exists for people
+// having a hard time, and they should never feel surveilled for expressing pain.
 const SELF_HARM_PATTERNS = [
-  /\b(kill myself|end my life|want to die|don'?t want to (be here|live|exist))\b/i,
+  /\b(kill myself|end my life|want to die|don'?t want to (be here|live|exist|be alive))\b/i,
   /\b(suicide|suicidal|self[- ]?harm|cut myself|hurt myself)\b/i,
+  /\beveryone would be better off without me\b/i,
+  /\bwish I (didn'?t|wouldn'?t|won'?t) wake up\b/i,
+  /\bwant to end it all\b/i,
 ];
 
 function moderateMessage(text, source = 'buddy') {
@@ -138,21 +144,21 @@ async function kvGet(key) {
     const val = await client.get(key);
     if (val === null) return null;
     return JSON.parse(val);
-  } catch(e) { return null; }
+  } catch(e) { console.error('kvGet failed:', key, e.message); return null; }
 }
 
 async function kvSet(key, value) {
   try {
     const client = await getRedis();
     await client.set(key, JSON.stringify(value));
-  } catch(e) {}
+  } catch(e) { console.error('kvSet failed:', key, e.message); }
 }
 
 async function kvDel(key) {
   try {
     const client = await getRedis();
     await client.del(key);
-  } catch(e) {}
+  } catch(e) { console.error('kvDel failed:', key, e.message); }
 }
 
 // Log moderation events to diagnostics

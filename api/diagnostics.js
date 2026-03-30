@@ -20,7 +20,7 @@ async function kvGet(key) {
     const val = await client.get(key);
     if (val === null) return null;
     return JSON.parse(val);
-  } catch(e) { return null; }
+  } catch(e) { console.error('kvGet failed:', key, e.message); return null; }
 }
 
 async function kvSet(key, value, ttlSeconds) {
@@ -31,7 +31,7 @@ async function kvSet(key, value, ttlSeconds) {
     } else {
       await client.set(key, JSON.stringify(value));
     }
-  } catch(e) {}
+  } catch(e) { console.error('kvSet failed:', key, e.message); }
 }
 
 // ── Keys ──────────────────────────────────────────────────

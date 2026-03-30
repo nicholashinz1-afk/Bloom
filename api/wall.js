@@ -66,10 +66,16 @@ const CRUDE_PATTERNS = [
   /\b(stfu|gtfo|lmao.*ass|dumbass|badass|jackass)\b/i,
 ];
 
-// Self-harm language — not blocked, but flagged so the client can offer resources
+// Self-harm language — not blocked, but flagged so the client can offer resources.
+// Only flag language specifically about ending one's life or self-harm intent.
+// Do NOT flag general distress, hopelessness, or venting — Bloom exists for people
+// having a hard time, and they should never feel surveilled for expressing pain.
 const SELF_HARM_PATTERNS = [
-  /\b(kill myself|end my life|want to die|don'?t want to (be here|live|exist))\b/i,
+  /\b(kill myself|end my life|want to die|don'?t want to (be here|live|exist|be alive))\b/i,
   /\b(suicide|suicidal|self[- ]?harm|cut myself|hurt myself)\b/i,
+  /\beveryone would be better off without me\b/i,
+  /\bwish I (didn'?t|wouldn'?t|won'?t) wake up\b/i,
+  /\bwant to end it all\b/i,
 ];
 
 function moderateMessage(text) {
@@ -135,14 +141,14 @@ async function kvGet(key) {
     const val = await client.get(key);
     if (val === null) return null;
     return JSON.parse(val);
-  } catch(e) { return null; }
+  } catch(e) { console.error('kvGet failed:', key, e.message); return null; }
 }
 
 async function kvSet(key, value) {
   try {
     const client = await getRedis();
     await client.set(key, JSON.stringify(value));
-  } catch(e) {}
+  } catch(e) { console.error('kvSet failed:', key, e.message); }
 }
 
 // Log moderation events to diagnostics
@@ -165,7 +171,7 @@ async function logModeration(source, result) {
     const counterKey = result.ok ? (result.flag ? 'mod_flagged' : 'mod_allowed') : 'mod_blocked';
     dayStats[counterKey] = (dayStats[counterKey] || 0) + 1;
     await client.set(dayKey, JSON.stringify(dayStats), { EX: 90 * 86400 });
-  } catch(e) {}
+  } catch(e) { console.error('logModeration failed:', e.message); }
 }
 
 // ── User moderation strikes ──────────────────────────────
@@ -291,6 +297,13 @@ export default async function handler(req, res) {
       }
       if (check.flag === 'crude') {
         await recordStrike(fp, 'crude', 'wall', text);
+      }
+
+      // Self-harm flagged posts: don't show on public wall (contagion risk).
+      // Return success + flag so the poster gets crisis resources, but hold
+      // the message for admin review instead of publishing it to the feed.
+      if (check.flag === 'self-harm') {
+        return res.json({ ok: true, flag: 'self-harm', held: true });
       }
 
       const messages = await getMessages();

@@ -564,11 +564,16 @@ let adminKey = '';
 let dashboardData = null;
 let refreshInterval = null;
 
+function adminFetch(url, opts = {}) {
+  opts.headers = { ...opts.headers, 'X-Admin-Key': adminKey };
+  return fetch(url, opts);
+}
+
 function authenticate() {
   adminKey = document.getElementById('admin-key-input').value.trim();
   if (!adminKey) return;
 
-  fetch('/api/diagnostics?view=dashboard&key=' + encodeURIComponent(adminKey))
+  adminFetch('/api/diagnostics?view=dashboard')
     .then(r => r.json())
     .then(data => {
       if (data.error || !data.ok || !data.summary) {
@@ -595,7 +600,7 @@ function startAutoRefresh() {
 
 async function loadDashboard() {
   try {
-    const res = await fetch('/api/diagnostics?view=dashboard&key=' + encodeURIComponent(adminKey));
+    const res = await adminFetch('/api/diagnostics?view=dashboard');
     const data = await res.json();
     if (data.ok) {
       dashboardData = data.summary;
@@ -1007,7 +1012,7 @@ async function runAllAgents() {
   Object.keys(AGENT_LABELS).forEach(type => showAgentLoading(type));
 
   try {
-    const res = await fetch('/api/admin-agents?key=' + encodeURIComponent(adminKey), {
+    const res = await adminFetch('/api/admin-agents', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ agent: 'all' }),
@@ -1041,7 +1046,7 @@ async function runSingleAgent(type) {
   showAgentLoading(type);
 
   try {
-    const res = await fetch('/api/admin-agents?key=' + encodeURIComponent(adminKey), {
+    const res = await adminFetch('/api/admin-agents', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ agent: type }),
@@ -1065,7 +1070,7 @@ async function runSingleAgent(type) {
 
 async function loadAgentHistory() {
   try {
-    const res = await fetch('/api/admin-agents?key=' + encodeURIComponent(adminKey));
+    const res = await adminFetch('/api/admin-agents');
     const data = await res.json();
 
     if (data.ok && data.reports) {
@@ -1189,7 +1194,7 @@ function renderWallAdmin() {
 async function moderateWallMsg(id, type) {
   if (type === 'remove' && !confirm('Remove this message permanently?')) return;
   try {
-    const res = await fetch('/api/wall', {
+    const res = await adminFetch('/api/wall', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'moderate', id, type, adminKey }),
@@ -1208,7 +1213,7 @@ async function moderateWallMsg(id, type) {
 async function rescanWallMessages() {
   if (!confirm('Re-scan all wall messages against current moderation filters?\n\nThis will flag any existing messages that match the crude/off-topic filter and record strikes against their authors.')) return;
   try {
-    const res = await fetch('/api/wall', {
+    const res = await adminFetch('/api/wall', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'rescan', adminKey }),
@@ -1233,7 +1238,7 @@ async function loadFlaggedUsers() {
   const container = document.getElementById('flagged-users-list');
   container.innerHTML = '<div class="loading">Loading flagged users...</div>';
   try {
-    const res = await fetch('/api/wall', {
+    const res = await adminFetch('/api/wall', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'flagged-users', adminKey }),
@@ -1295,7 +1300,7 @@ async function toggleBanUser(fp, ban) {
   const action = ban ? 'ban this user from all social features' : 'unban this user';
   if (!confirm(`Are you sure you want to ${action}?\n\nFingerprint: ${fp}`)) return;
   try {
-    const res = await fetch('/api/wall', {
+    const res = await adminFetch('/api/wall', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'ban-user', fp, banned: ban, adminKey }),
@@ -1318,7 +1323,7 @@ async function loadLevelAnalytics() {
   const container = document.getElementById('levels-content');
   container.innerHTML = '<div class="loading">Loading level analytics...</div>';
   try {
-    const res = await fetch('/api/diagnostics?view=level_analytics&key=' + encodeURIComponent(adminKey));
+    const res = await adminFetch('/api/diagnostics?view=level_analytics');
     const data = await res.json();
     if (data.ok) {
       levelData = data.levelAnalytics;

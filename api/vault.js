@@ -100,6 +100,8 @@ export default async function handler(req, res) {
       }
 
       case 'save': {
+        const allowed = await checkRateLimit(req);
+        if (!allowed) return res.status(429).json({ ok: false, error: 'rate_limited' });
         if (!blob || typeof blob !== 'string') {
           return res.status(400).json({ error: 'Missing blob' });
         }
@@ -123,6 +125,8 @@ export default async function handler(req, res) {
       }
 
       case 'delete': {
+        const allowed = await checkRateLimit(req);
+        if (!allowed) return res.status(429).json({ ok: false, error: 'rate_limited' });
         await client.del(key);
         return res.json({ ok: true });
       }
