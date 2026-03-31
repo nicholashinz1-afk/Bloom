@@ -3146,11 +3146,11 @@ select:focus {
 <!-- Daily affirmation overlay -->
 <div id="affirmation-overlay" style="display:none">
   <div class="affirmation-name" id="affirmation-greeting"></div>
-  <div class="affirmation-line" id="aff-1">I am kind</div>
-  <div class="affirmation-line" id="aff-2">I am smart</div>
-  <div class="affirmation-line" id="aff-3">I am brave</div>
-  <div class="affirmation-line" id="aff-4">I am important</div>
-  <div class="affirmation-line final" id="aff-5"><em>I am <strong>enough</strong></em></div>
+  <div class="affirmation-line" id="aff-1"></div>
+  <div class="affirmation-line" id="aff-2"></div>
+  <div class="affirmation-line" id="aff-3"></div>
+  <div class="affirmation-line" id="aff-4"></div>
+  <div class="affirmation-line final" id="aff-5"></div>
   <div class="affirmation-begin" id="affirmation-begin">
     <button class="btn btn-ghost" onclick="dismissAffirmation()" style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--text-secondary);border-color:rgba(255,255,255,0.08)">
       Begin your day →
@@ -3577,12 +3577,68 @@ const JOURNAL_PROMPTS_LOW = [
   "If you could wrap yourself in something comforting, what would it be?",
 ];
 
+// Direct voice prompts — young-coded, shorter, about identity/pressure/creativity
+const JOURNAL_PROMPTS_REAL = [
+  "What's something you're overthinking right now?",
+  "What would your day look like if nobody was watching?",
+  "What's a conversation you keep replaying in your head?",
+  "What did you create today, and how did it feel?",
+  "What's one thing you wish people understood about you?",
+  "Who made you feel seen today?",
+  "What pressure are you putting on yourself that you don't need to?",
+  "What's something you're figuring out about who you are?",
+  "What's a song that matches how you feel right now?",
+  "What's the bravest thing you did today, even if it was small?",
+  "What's something you used to believe about yourself that's changing?",
+  "If you could text your future self one thing, what would it be?",
+  "What did you almost say today but didn't?",
+  "What's something only your close friends know about you?",
+  "Did anything surprise you about yourself today?",
+  "What's one rule you follow that you didn't choose?",
+  "What's draining your energy that you haven't named yet?",
+  "What's something you did today just because you wanted to?",
+  "What would you do differently if you knew nobody would judge you?",
+  "What's the last thing that made you laugh?",
+  "What are you tired of pretending about?",
+  "What would you say to someone going through what you're going through?",
+  "What's one thing that actually went right today?",
+  "What does your gut keep telling you that you keep ignoring?",
+  "What's something you're proud of that nobody saw?",
+  "Who do you wish you could talk to right now?",
+  "What's one thing you want to stop apologizing for?",
+  "What's something that matters to you more than people realize?",
+  "What does your ideal tomorrow look like?",
+  "What's a thought that keeps coming back no matter what you do?",
+];
+
+const JOURNAL_PROMPTS_REAL_LOW = [
+  "You don't have to perform okay right now. What's actually going on?",
+  "What's one thing that feels too big to say out loud?",
+  "If someone could take one thing off your plate, what would it be?",
+  "What's something you need that you're not getting?",
+  "It's okay to not have the words. Just put something here.",
+  "What would you tell your best friend if they felt like this?",
+  "You don't have to fix this. What do you just need to say?",
+  "What would make right now even a little more okay?",
+  "Nobody's grading this. What's real right now?",
+  "What's the heaviest thing you're carrying today?",
+  "If you could scream one thing into the void, what would it be?",
+  "What do you wish someone would just understand without you having to explain?",
+  "You showed up. That counts. What do you need?",
+  "What's one thing you keep pushing through that you shouldn't have to?",
+  "It's okay to be done for today. What would rest look like?",
+];
 
 function getJournalPrompt() {
   const mood = state.todayData?.mood;
   const isLow = mood !== undefined && mood >= 0 && mood <= 1;
-  const prompts = isLow ? JOURNAL_PROMPTS_LOW : JOURNAL_PROMPTS;
-  const key = isLow ? 'shownPromptsLow' : 'shownPrompts';
+  const isReal = state.prefs?.voice === 'real';
+  const prompts = isLow
+    ? (isReal ? JOURNAL_PROMPTS_REAL_LOW : JOURNAL_PROMPTS_LOW)
+    : (isReal ? JOURNAL_PROMPTS_REAL : JOURNAL_PROMPTS);
+  const key = isLow
+    ? (isReal ? 'shownPromptsRealLow' : 'shownPromptsLow')
+    : (isReal ? 'shownPromptsReal' : 'shownPrompts');
   const offset = state.journalPromptOffset || 0;
 
   // Return cached prompt if we already picked one for this day+offset combo
@@ -5851,6 +5907,30 @@ function checkDailyAffirmation() {
   setTimeout(() => showDailyAffirmation(), 300);
 }
 
+const AFFIRMATIONS_DEFAULT = [
+  'I am kind', 'I am smart', 'I am brave', 'I am important', 'I am enough'
+];
+const AFFIRMATIONS_REAL = [
+  "Not everything has to be deep",
+  "You're not falling behind",
+  "It's okay to not know yet",
+  "Today was a lot. That's enough to say",
+  "You don't owe anyone your energy"
+];
+
+function getAffirmationLines() {
+  // Priority: custom opt-in > voice-specific > default
+  if (state.prefs?.useCustomAffirmations) {
+    const custom = state.wellnessData?.affirmations || [];
+    if (custom.length >= 3) {
+      const shuffled = [...custom].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, 5);
+    }
+  }
+  if (state.prefs?.voice === 'real') return AFFIRMATIONS_REAL;
+  return AFFIRMATIONS_DEFAULT;
+}
+
 function showDailyAffirmation() {
   const overlay = document.getElementById('affirmation-overlay');
   if (!overlay) return;
@@ -5859,6 +5939,19 @@ function showDailyAffirmation() {
   const greeting = document.getElementById('affirmation-greeting');
   if (greeting && name) {
     greeting.textContent = `Good to see you, ${name}.`;
+  }
+
+  // Populate affirmation lines dynamically
+  const lines = getAffirmationLines();
+  for (let i = 0; i < 5; i++) {
+    const el = document.getElementById(`aff-${i + 1}`);
+    if (el && lines[i]) {
+      if (i === 4) {
+        el.innerHTML = `<em>${lines[i]}</em>`;
+      } else {
+        el.textContent = lines[i];
+      }
+    }
   }
 
   overlay.style.display = 'flex';
@@ -8630,7 +8723,47 @@ function renderTodayTab() {
         </div>`).join('')}
       </div>
     </div>
+    ${td.mood !== undefined && !td.quickThought ? `<div id="quick-thought-section" style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.05);padding-top:12px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="quick-thought-input" placeholder="One thought, if you want..." maxlength="140" aria-label="Quick thought"
+          style="flex:1;padding:8px 12px;font-size:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r-md);color:var(--cream);font-family:Instrument Sans,sans-serif"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();saveQuickThought()}">
+        <button onclick="saveQuickThought()" class="btn btn-primary btn-sm" style="white-space:nowrap">Done</button>
+      </div>
+    </div>` : ''}
+    ${td.quickThought ? `<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.05);padding-top:10px">
+      <div style="font-size:12px;color:var(--text-muted);font-style:italic">"${td.quickThought}"</div>
+    </div>` : ''}
   </div>`;
+
+  // --- CREATIVE CHECK-IN (voice='real' only, hidden on hard days) ---
+  if (state.prefs?.voice === 'real' && !td.gentleMode && !state.hardDayMode) {
+    const cc = td.creativeCheckin;
+    const creativeTypes = [
+      { id: 'music', icon: '🎵', label: 'Music' },
+      { id: 'visual', icon: '🎨', label: 'Visual' },
+      { id: 'writing', icon: '✍️', label: 'Writing' },
+      { id: 'dance', icon: '💃', label: 'Dance' },
+      { id: 'theater', icon: '🎭', label: 'Theater' },
+      { id: 'other', icon: '✨', label: 'Other' },
+    ];
+    html += `<div class="card">
+      <div class="card-title">🎨 What did you create today?</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:${cc?.type ? '10px' : '0'}">
+        ${creativeTypes.map(t => `<div onclick="setCreativeType('${t.id}')" style="
+          padding:6px 12px;border-radius:99px;font-size:12px;cursor:pointer;
+          border:1px solid ${cc?.type === t.id ? 'var(--sage)' : 'rgba(255,255,255,0.08)'};
+          background:${cc?.type === t.id ? 'rgba(var(--sage-rgb),0.15)' : 'rgba(255,255,255,0.03)'};
+          color:${cc?.type === t.id ? 'var(--sage-light)' : 'var(--text-secondary)'};
+          transition:all 0.15s">${t.icon} ${t.label}</div>`).join('')}
+      </div>
+      ${cc?.type ? `<div style="margin-top:4px">
+        <input type="text" id="creative-note-input" placeholder="How did it feel?" maxlength="140" value="${cc.note || ''}" aria-label="Creative check-in note"
+          style="width:100%;padding:8px 12px;font-size:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r-md);color:var(--cream);font-family:Instrument Sans,sans-serif"
+          onchange="saveCreativeNote()">
+      </div>` : ''}
+    </div>`;
+  }
 
   // --- GENTLE MODE TOGGLE ---
   const isGentleMode = !!td.gentleMode;
@@ -9321,6 +9454,54 @@ function showCrisisFeelingsNudge() {
   setTimeout(() => { const el = document.getElementById('crisis-feelings-nudge'); if (el) el.remove(); }, 15000);
 }
 
+function setCreativeType(type) {
+  if (!state.todayData.creativeCheckin) state.todayData.creativeCheckin = {};
+  const wasEmpty = !state.todayData.creativeCheckin.type;
+  state.todayData.creativeCheckin.type = type;
+  saveState();
+  archiveToday();
+  if (wasEmpty) {
+    addXP(10, null);
+    trackFeature('creative_checkin');
+  }
+  renderTodayTab();
+}
+
+function saveCreativeNote() {
+  const input = document.getElementById('creative-note-input');
+  if (!input) return;
+  if (!state.todayData.creativeCheckin) state.todayData.creativeCheckin = {};
+  state.todayData.creativeCheckin.note = input.value.trim();
+  saveState();
+  archiveToday();
+}
+
+function saveQuickThought() {
+  const input = document.getElementById('quick-thought-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  const t = today();
+  state.todayData.quickThought = text;
+
+  // Save as a journal entry so it shows in history
+  if (!state.wellnessData.journal) state.wellnessData.journal = {};
+  if (!state.wellnessData.journal[t]) state.wellnessData.journal[t] = [];
+  state.wellnessData.journal[t].push({
+    text,
+    prompt: 'Quick thought',
+    ts: Date.now(),
+  });
+
+  saveState();
+  archiveToday();
+  addXP(20, null);
+  trackFeature('quick_thought');
+  celebrate('journal', input);
+  renderTodayTab();
+}
+
 function logMood(val) {
   const wasLow = state.todayData.mood !== undefined && state.todayData.mood >= 0 && state.todayData.mood <= 2;
   const prevMood = state.todayData.mood;
@@ -9629,6 +9810,10 @@ function renderWellnessTab() {
         <div onclick="removeAffirmation(${i})" style="color:var(--text-muted);cursor:pointer;font-size:12px">✕</div>
       </div>`).join('')}
     </div>
+    ${allAffirmations.length >= 3 ? `<div class="toggle-row" style="border-bottom:none;padding:8px 0 0">
+      <div style="font-size:12px;color:var(--text-secondary)">Use these for morning greeting</div>
+      <div class="toggle${state.prefs?.useCustomAffirmations ? ' on' : ''}" onclick="toggleCustomAffirmationMorning()"></div>
+    </div>` : ''}
   </div>`;
 
   // Just write — open journal anytime
@@ -10079,6 +10264,12 @@ function addWin() {
   saveState();
   checkFirstTaskStreak();
   celebrate('win', input);
+  renderWellnessTab();
+}
+
+function toggleCustomAffirmationMorning() {
+  state.prefs.useCustomAffirmations = !state.prefs.useCustomAffirmations;
+  save('bloom_prefs', state.prefs);
   renderWellnessTab();
 }
 
@@ -11584,6 +11775,16 @@ function renderSettingsTab() {
       <select id="settings-age-group" aria-label="Age group" onchange="saveSettingsAgeGroup()" style="padding:6px 10px;font-size:13px;background:var(--card-bg);color:var(--cream);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-md)">
         <option value="13to15" ${prefs.ageGroup === '13to15' ? 'selected' : ''}>13 to 15</option>
         <option value="16plus" ${prefs.ageGroup !== '13to15' ? 'selected' : ''}>16 or older</option>
+      </select>
+    </div>
+    <div class="toggle-row" style="border-bottom:none;margin-bottom:12px">
+      <div>
+        <div class="toggle-label">Voice</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Shapes prompts and morning greeting</div>
+      </div>
+      <select id="settings-voice" aria-label="Voice preference" onchange="saveSettingsVoice()" style="padding:6px 10px;font-size:13px;background:var(--card-bg);color:var(--cream);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-md)">
+        <option value="real" ${prefs.voice === 'real' ? 'selected' : ''}>Direct</option>
+        <option value="reflective" ${prefs.voice !== 'real' ? 'selected' : ''}>Reflective</option>
       </select>
     </div>
     <div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05)">
@@ -13364,6 +13565,13 @@ function saveSettingsAgeGroup() {
 
   save('bloom_prefs', state.prefs);
   renderSettingsTab();
+}
+
+function saveSettingsVoice() {
+  const select = document.getElementById('settings-voice');
+  if (!select) return;
+  state.prefs.voice = select.value;
+  save('bloom_prefs', state.prefs);
 }
 
 function saveHabitTrigger(habitId) {
@@ -15715,19 +15923,17 @@ let obData = {
   multiBuddy: false,
   buddyShareMood: true,
   readiness: null, // 'ready' | 'gentle' | 'exploring'
+  voice: null, // 'real' | 'reflective'
 };
 
 // Adaptive onboarding — path depends on readiness
 function getOBPath() {
   if (obData.readiness === 'ready') {
-    // Full setup: Welcome+Name → Readiness → Habits+SelfCare → Appearance+Sound+Notifications → Ready
-    return ['welcome', 'readiness', 'routine', 'customize', 'install', 'ready'];
+    return ['welcome', 'readiness', 'voice', 'routine', 'customize', 'install', 'ready'];
   } else if (obData.readiness === 'gentle') {
-    // Minimal: Welcome+Name → Readiness → Install → Ready (smart defaults, gentle mode)
-    return ['welcome', 'readiness', 'install', 'ready'];
+    return ['welcome', 'readiness', 'voice', 'install', 'ready'];
   } else if (obData.readiness === 'exploring') {
-    // Quick: Welcome+Name → Readiness → Appearance → Install → Ready
-    return ['welcome', 'readiness', 'customize', 'install', 'ready'];
+    return ['welcome', 'readiness', 'voice', 'customize', 'install', 'ready'];
   }
   // Before readiness is chosen
   return ['welcome', 'readiness'];
@@ -15748,6 +15954,7 @@ function renderOnboarding() {
   switch(currentStep) {
     case 'welcome':   renderOBWelcomeAndName(body, footer); break;
     case 'readiness':  renderOBReadiness(body, footer); break;
+    case 'voice':      renderOBVoice(body, footer); break;
     case 'routine':    renderOBRoutine(body, footer); break;
     case 'customize':  renderOBCustomize(body, footer); break;
     case 'install':    renderOBInstall(body, footer); break;
@@ -15864,6 +16071,50 @@ function renderOBReadiness(body, footer) {
 
 function obSetReadiness(val) {
   obData.readiness = val;
+  renderOnboarding();
+}
+
+function renderOBVoice(body, footer) {
+  const v = obData.voice;
+  body.innerHTML = `
+    <div style="text-align:center;margin-bottom:24px">
+      <div class="ob-title" style="text-align:center">One more thing so bloom<br>can feel more like you${obData.name ? ', ' + obData.name : ''}</div>
+      <div class="ob-sub" style="text-align:center;margin-bottom:0">This shapes your journal prompts and morning greeting. You can always change it in Settings.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div onclick="obSetVoice('real')" style="
+        padding:16px;border-radius:var(--r-xl);cursor:pointer;
+        border:2px solid ${v === 'real' ? 'rgba(var(--sage-rgb),0.5)' : 'rgba(255,255,255,0.08)'};
+        background:${v === 'real' ? 'rgba(var(--sage-rgb),0.1)' : 'var(--bg-card)'};
+        transition:all 0.2s">
+        <div style="font-size:14px;color:var(--cream);font-family:Fraunces,serif;font-style:italic;line-height:1.8">
+          "Not everything has to be deep"<br>
+          "You're not falling behind"<br>
+          "It's okay to not know yet"
+        </div>
+      </div>
+      <div onclick="obSetVoice('reflective')" style="
+        padding:16px;border-radius:var(--r-xl);cursor:pointer;
+        border:2px solid ${v === 'reflective' ? 'rgba(var(--sage-rgb),0.5)' : 'rgba(255,255,255,0.08)'};
+        background:${v === 'reflective' ? 'rgba(var(--sage-rgb),0.1)' : 'var(--bg-card)'};
+        transition:all 0.2s">
+        <div style="font-size:14px;color:var(--cream);font-family:Fraunces,serif;font-style:italic;line-height:1.8">
+          "I am kind. I am brave. I am enough"<br>
+          "What are you learning to accept about yourself?"<br>
+          "What does growth feel like for you lately?"
+        </div>
+      </div>
+    </div>`;
+  footer.innerHTML = `
+    <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
+    <button class="btn btn-primary" id="ob-btn-next" style="flex:1;${v ? '' : 'opacity:0.4;pointer-events:none'}">${v ? 'Continue' : 'Choose above'}</button>
+  `;
+  document.getElementById('ob-btn-back').addEventListener('click', obBack);
+  if (v) document.getElementById('ob-btn-next').addEventListener('click', obNext);
+}
+
+function obSetVoice(val) {
+  obData.voice = val;
   renderOnboarding();
 }
 
