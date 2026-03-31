@@ -8736,34 +8736,7 @@ function renderTodayTab() {
     </div>` : ''}
   </div>`;
 
-  // --- CREATIVE CHECK-IN (voice='real' only, hidden on hard days) ---
-  if (state.prefs?.voice === 'real' && !td.gentleMode && !state.hardDayMode) {
-    const cc = td.creativeCheckin;
-    const creativeTypes = [
-      { id: 'music', icon: '🎵', label: 'Music' },
-      { id: 'visual', icon: '🎨', label: 'Visual' },
-      { id: 'writing', icon: '✍️', label: 'Writing' },
-      { id: 'dance', icon: '💃', label: 'Dance' },
-      { id: 'theater', icon: '🎭', label: 'Theater' },
-      { id: 'other', icon: '✨', label: 'Other' },
-    ];
-    html += `<div class="card">
-      <div class="card-title">🎨 What did you create today?</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:${cc?.type ? '10px' : '0'}">
-        ${creativeTypes.map(t => `<div onclick="setCreativeType('${t.id}')" style="
-          padding:6px 12px;border-radius:99px;font-size:12px;cursor:pointer;
-          border:1px solid ${cc?.type === t.id ? 'var(--sage)' : 'rgba(255,255,255,0.08)'};
-          background:${cc?.type === t.id ? 'rgba(var(--sage-rgb),0.15)' : 'rgba(255,255,255,0.03)'};
-          color:${cc?.type === t.id ? 'var(--sage-light)' : 'var(--text-secondary)'};
-          transition:all 0.15s">${t.icon} ${t.label}</div>`).join('')}
-      </div>
-      ${cc?.type ? `<div style="margin-top:4px">
-        <input type="text" id="creative-note-input" placeholder="How did it feel?" maxlength="140" value="${cc.note || ''}" aria-label="Creative check-in note"
-          style="width:100%;padding:8px 12px;font-size:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r-md);color:var(--cream);font-family:Instrument Sans,sans-serif"
-          onchange="saveCreativeNote()">
-      </div>` : ''}
-    </div>`;
-  }
+
 
   // --- GENTLE MODE TOGGLE ---
   const isGentleMode = !!td.gentleMode;
@@ -9452,28 +9425,6 @@ function showCrisisFeelingsNudge() {
     </div>`;
   document.body.appendChild(nudge);
   setTimeout(() => { const el = document.getElementById('crisis-feelings-nudge'); if (el) el.remove(); }, 15000);
-}
-
-function setCreativeType(type) {
-  if (!state.todayData.creativeCheckin) state.todayData.creativeCheckin = {};
-  const wasEmpty = !state.todayData.creativeCheckin.type;
-  state.todayData.creativeCheckin.type = type;
-  saveState();
-  archiveToday();
-  if (wasEmpty) {
-    addXP(10, null);
-    trackFeature('creative_checkin');
-  }
-  renderTodayTab();
-}
-
-function saveCreativeNote() {
-  const input = document.getElementById('creative-note-input');
-  if (!input) return;
-  if (!state.todayData.creativeCheckin) state.todayData.creativeCheckin = {};
-  state.todayData.creativeCheckin.note = input.value.trim();
-  saveState();
-  archiveToday();
 }
 
 function saveQuickThought() {
