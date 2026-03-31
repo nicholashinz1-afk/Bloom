@@ -59,12 +59,46 @@ function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
-// Increment a counter in daily stats
-async function incrementDaily(field) {
+// Atomically update daily stats using Redis WATCH/MULTI/EXEC
+// - fields: string or array of counter fields to increment
+// - transform: optional function(stats) that mutates stats before writing
+async function incrementDaily(fields, transform) {
+  if (typeof fields === 'string') fields = [fields];
   const key = KEYS.dailyStats(todayKey());
-  const stats = await kvGet(key) || {};
-  stats[field] = (stats[field] || 0) + 1;
-  await kvSet(key, stats, NINETY_DAYS);
+  const client = await getRedis();
+
+  // Retry loop for optimistic locking (WATCH/MULTI/EXEC)
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      await client.watch(key);
+      const raw = await client.get(key);
+      const stats = raw ? JSON.parse(raw) : {};
+
+      // Apply increments
+      for (const field of fields) {
+        stats[field] = (stats[field] || 0) + 1;
+      }
+
+      // Apply custom transform (e.g. uid tracking) using fresh data
+      if (transform) {
+        transform(stats);
+      }
+
+      // Execute atomically: only succeeds if key wasn't modified since WATCH
+      const multi = client.multi();
+      multi.set(key, JSON.stringify(stats), { EX: NINETY_DAYS });
+      const results = await multi.exec();
+
+      if (results !== null) {
+        return; // Success
+      }
+      // results === null means another client modified the key; retry
+    } catch (e) {
+      console.error('incrementDaily transaction failed:', e.message);
+      try { await client.unwatch(); } catch (_) {}
+      if (attempt === 4) throw e;
+    }
+  }
 }
 
 // ── Validation ────────────────────────────────────────────
@@ -194,21 +228,17 @@ export default async function handler(req, res) {
       }
 
       case 'session_start': {
-        // Track unique users per day using anonymous uid
+        // Track unique users per day + event count in a single atomic write
         const uid = body.uid;
-        if (uid && typeof uid === 'string') {
-          const dayKey = KEYS.dailyStats(todayKey());
-          const stats = await kvGet(dayKey) || {};
-          // Store unique uids as a comma-separated string (lightweight set)
+        const uidTransform = (uid && typeof uid === 'string') ? (stats) => {
+          // Build uid set from the WATCH-protected stats (always fresh)
           const uidSet = stats._uids ? new Set(stats._uids.split(',')) : new Set();
           uidSet.add(uid.slice(0, 20));
           stats._uids = [...uidSet].join(',');
           stats.unique_users = uidSet.size;
-          await kvSet(dayKey, stats, NINETY_DAYS);
-        }
-        // Also track as regular event
+        } : null;
         await appendToList(KEYS.events, { event: 'session_start', ts });
-        await incrementDaily('event:session_start');
+        await incrementDaily('event:session_start', uidTransform);
         if (res) return res.json({ ok: true });
         return;
       }
@@ -236,8 +266,7 @@ export default async function handler(req, res) {
         const progress = await kvGet(progressKey) || {};
         if (!progress[level]) progress[level] = ts;
         await kvSet(progressKey, progress, NINETY_DAYS);
-        await incrementDaily('event:level_snapshot');
-        await incrementDaily('level:' + level);
+        await incrementDaily(['event:level_snapshot', 'level:' + level]);
         if (res) return res.json({ ok: true });
         return;
       }
