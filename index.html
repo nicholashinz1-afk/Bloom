@@ -11875,7 +11875,7 @@ function renderSettingsTab() {
     <div class="toggle-row" style="border-bottom:none;margin-bottom:12px">
       <div>
         <div class="toggle-label">Voice</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Shapes prompts and morning greeting</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">How bloom talks to you</div>
       </div>
       <select id="settings-voice" aria-label="Voice preference" onchange="saveSettingsVoice()" style="padding:6px 10px;font-size:13px;background:var(--card-bg);color:var(--cream);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-md)">
         <option value="real" ${prefs.voice === 'real' ? 'selected' : ''}>Direct</option>
@@ -16174,7 +16174,7 @@ function renderOBVoice(body, footer) {
   body.innerHTML = `
     <div style="text-align:center;margin-bottom:24px">
       <div class="ob-title" style="text-align:center">One more thing so bloom<br>can feel more like you${obData.name ? ', ' + obData.name : ''}</div>
-      <div class="ob-sub" style="text-align:center;margin-bottom:0">This shapes your journal prompts and morning greeting. You can always change it in Settings.</div>
+      <div class="ob-sub" style="text-align:center;margin-bottom:0">You can change this anytime in Settings.</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div onclick="obSetVoice('real')" style="
