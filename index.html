@@ -8108,7 +8108,7 @@ function _dlDiag(d) {
 // These are hand-written, vetted responses used instead of generative AI
 // when the user is most vulnerable. They prioritize safety and warmth.
 const SCRIPTED_LOW_MOOD_RESPONSES = [
-  "What you're feeling right now is real, and it matters. You don't have to push through anything — just being here is enough.",
+  "What you're feeling right now is real, and it matters. You don't have to do anything with it. Just being here is enough.",
   "Hard moments don't last forever, even when they feel endless. You showed up today, and that counts for something.",
   "There's no right way to feel right now. Whatever is heavy, you don't have to carry it alone — the 🤍 is there whenever you need it.",
   "Some days are just hard. That's not a failure — it's being human. You're allowed to take this one moment at a time.",
@@ -8616,8 +8616,8 @@ function renderTodayTop() {
         : 'Two hard days in a row takes real courage to keep going. You\'re not alone.');
     } else {
       lowMoodMessage = isRealVoice
-        ? 'Rough day. You don\'t have to push through anything right now.'
-        : 'Hard days happen. You don\'t have to push through anything right now.';
+        ? 'Rough day. You\'re allowed to just be here.'
+        : 'Hard days happen. You\'re allowed to just be here right now.';
     }
 
     html += `<div class="banner banner-low-mood" id="low-mood-banner">
