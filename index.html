@@ -3448,7 +3448,7 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: '<strong>Choose your voice</strong> — bloom now speaks in two tones: <em>Direct</em> (short, honest, no fluff) and <em>Reflective</em> (warm, grounded, gentle). Your choice shapes prompts, celebrations, and your morning greeting. Pick yours in Settings under Voice.', spotlight: null, tab: 'settings' },
+  { text: '<strong>Choose your voice</strong> — bloom now speaks in two tones: <em>Keep it real</em> (short, honest, no fluff) and <em>Keep it gentle</em> (warm, grounded, steady). Your choice shapes prompts, celebrations, and your morning greeting. Pick yours in Settings under Voice.', spotlight: null, tab: 'settings' },
   { text: '<strong>Daily community prompt</strong> — a new question appears at the top of the Community tab each day. Your answer saves to your journal, and others can see that people answered, but never what anyone wrote. Private reflection with a sense of connection.', spotlight: null, tab: 'community' },
   { text: '<strong>Quick thoughts</strong> — after logging your mood, a small text field appears so you can jot one thought and move on. It saves as a journal entry. No pressure to write more.', spotlight: null },
   { text: '<strong>Shared milestones</strong> — if you have a buddy, you\'ll now see how many days you\'ve both shown up. It never goes down, just like your own days count.', spotlight: null, tab: 'community' },
@@ -11932,8 +11932,8 @@ function renderSettingsTab() {
         <div style="font-size:11px;color:var(--text-muted);margin-top:2px">How bloom talks to you</div>
       </div>
       <select id="settings-voice" aria-label="Voice preference" onchange="saveSettingsVoice()" style="padding:6px 10px;font-size:13px;background:var(--card-bg);color:var(--cream);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-md)">
-        <option value="real" ${prefs.voice === 'real' ? 'selected' : ''}>Direct</option>
-        <option value="reflective" ${prefs.voice !== 'real' ? 'selected' : ''}>Reflective</option>
+        <option value="real" ${prefs.voice === 'real' ? 'selected' : ''}>Keep it real</option>
+        <option value="reflective" ${prefs.voice !== 'real' ? 'selected' : ''}>Keep it gentle</option>
       </select>
     </div>
     <div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05)">
@@ -17039,21 +17039,6 @@ function renderOBReady(body, footer) {
     </div>
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:flex-start;gap:12px">
-        <span style="font-size:22px;flex-shrink:0">📋</span>
-        <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px">Terms of use</div>
-          <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
-            By using bloom, you agree to the <span onclick="obShowTerms()" style="color:var(--sage-light);text-decoration:underline;cursor:pointer">Terms of Use and Privacy Policy</span>.
-          </div>
-          <label style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;cursor:pointer">
-            <input type="checkbox" id="ob-terms-check" onchange="obTermsChanged()" style="margin-top:3px;min-width:16px;min-height:16px;accent-color:var(--sage)">
-            <span style="font-size:12px;color:var(--text-secondary);line-height:1.5">I've read and agree to the Terms of Use and Privacy Policy</span>
-          </label>
-        </div>
-      </div>
-    </div>
-    <div class="card" style="margin-bottom:12px">
-      <div style="display:flex;align-items:flex-start;gap:12px">
         <span style="font-size:22px;flex-shrink:0">💛</span>
         <div>
           <div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px">bloom is not a substitute for professional care</div>
@@ -17064,12 +17049,18 @@ function renderOBReady(body, footer) {
       </div>
     </div>
     <div class="card">
-      <div style="font-size:14px;font-weight:500;margin-bottom:10px">💾 Save a backup link</div>
-      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">
-        Because your data lives only on this device, we recommend saving a restore link — it lets you recover everything if you switch phones or clear your browser.
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:22px;flex-shrink:0">📋</span>
+        <div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+            By using bloom, you agree to the <span onclick="obShowTerms()" style="color:var(--sage-light);text-decoration:underline;cursor:pointer">Terms of Use and Privacy Policy</span>.
+          </div>
+          <label style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;cursor:pointer" onclick="event.stopPropagation()">
+            <input type="checkbox" id="ob-terms-check" ${obData.termsAccepted ? 'checked' : ''} onchange="obTermsChanged()" style="margin-top:3px;min-width:16px;min-height:16px;accent-color:var(--sage)">
+            <span style="font-size:12px;color:var(--text-secondary);line-height:1.5">I've read and agree to the Terms of Use and Privacy Policy</span>
+          </label>
+        </div>
       </div>
-      <button class="btn btn-secondary btn-block" onclick="obShowBackup()">Generate backup link</button>
-      <div id="ob-backup-url" style="display:none;margin-top:10px" class="backup-url-box"></div>
     </div>
   `;
   const termsAccepted = !!obData.termsAccepted;
@@ -17092,7 +17083,20 @@ function obSetAge(group) {
 function obTermsChanged() {
   const el = document.getElementById('ob-terms-check');
   obData.termsAccepted = el?.checked || false;
-  renderOnboarding();
+  // Update button state without full re-render (which would reset checkbox)
+  const validAge = obData.ageGroup === '16plus' || obData.ageGroup === '13to15';
+  const canFinish = validAge && obData.termsAccepted;
+  const btn = document.getElementById('ob-btn-finish');
+  if (btn) {
+    btn.style.opacity = canFinish ? '' : '0.4';
+    btn.style.pointerEvents = canFinish ? '' : 'none';
+    btn.textContent = canFinish ? "I'm ready" : 'Accept terms to continue';
+    if (canFinish) {
+      btn.onclick = completeOnboarding;
+    } else {
+      btn.onclick = null;
+    }
+  }
 }
 
 function obShowTerms() {
