@@ -110,7 +110,7 @@ See `SCALABILITY_PROPOSAL.md` for the full proposal. Summary of phases:
 1. **Quick wins (done)** — Haiku/Sonnet split, telemetry batching, accessibility fixes
 2. **Free AI tier (next)** — Cloudflare Workers AI as primary LLM, Claude as fallback
 3. **Sustainability** — Ko-fi/GitHub Sponsors, Awesome Foundation (applied), Anthropic credits (emailed), funding.json (done), merch line (planning, first phrase: "Stay."), NLnet (needs tech co-applicant), NSF SBIR (paused), Detroit Startup Fund (watch for Round 3)
-4. **Reach** — School outreach (DePauw, Interlochen — emailed), internationalization, crisis org partnerships
+4. **Reach** — School outreach (DePauw — emailed, Interlochen — discovery call April 6), internationalization, crisis org partnerships
 5. **Architecture** — Cloudflare Pages + Workers migration if Vercel limits are hit
 
 **IMPORTANT:** When updating the project roadmap or sustainability status, always update BOTH `SCALABILITY_PROPOSAL.md` AND `admin.html`. These must stay in sync.

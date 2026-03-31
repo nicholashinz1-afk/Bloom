@@ -308,6 +308,7 @@ Note: Fraunces Medium weight (500) used for hat embroidery since thin serif stro
 - [x] Purchase a custom domain (bloomselfcare.app)
 - [x] Submit Bloom to PsyberGuide for credibility review (emailed March 2026)
 - [x] Reach out to university counseling centers for feedback (MCTS Rose, Schoolcraft, Wayne State, DePauw, Interlochen)
+- [ ] Interlochen discovery call with counseling director (scheduled April 6, 2026 at 9:30 AM)
 - [ ] Internationalization framework + first community translations
 - [ ] Reach out to crisis organizations for cross-promotion
 - [ ] Apply for larger grants (McGovern Foundation, Google.org)
@@ -406,7 +407,7 @@ Open Collective rejected Bloom's fiscal sponsorship application (March 2026) -- 
 |--------|---------------|--------|
 | ~~Apply for GitHub Sponsors~~ | ~~Developer-facing donations, 0% fees~~ | Done |
 | Submit Bloom to PsyberGuide (psyberguide.org) | Credibility rating for digital mental health tools | Done (emailed info@psyberguide.org) |
-| Email 5-10 university counseling centers asking for feedback | Feedback relationships turn into pilot programs | In progress (MCTS Rose, Schoolcraft, Wayne State, DePauw counseling services, Interlochen Dr. Kern sent) |
+| Email 5-10 university counseling centers asking for feedback | Feedback relationships turn into pilot programs | In progress (MCTS Rose, Schoolcraft, Wayne State, DePauw counseling services, Interlochen Dr. Kern: discovery call April 6) |
 | Reach out to employer/parent company about wellness program adoption | Corporate adoption = immediate users + credibility for grant applications | Done (pitched internally) |
 | Ask a licensed therapist/counselor to review Bloom and write a 2-3 sentence letter of support | One endorsement from a LCSW/psychologist opens institutional doors | In progress (therapist reviewing) |
 | Add explicit "not a HIPAA covered entity / no PHI" statement to privacy policy | Makes institutional legal teams relax | Done |
