@@ -110,7 +110,38 @@ See `SCALABILITY_PROPOSAL.md` for the full proposal. Summary of phases:
 1. **Quick wins (done)** — Haiku/Sonnet split, telemetry batching, accessibility fixes
 2. **Free AI tier (next)** — Cloudflare Workers AI as primary LLM, Claude as fallback
 3. **Sustainability** — Ko-fi/GitHub Sponsors, Awesome Foundation (applied), Anthropic credits (emailed), funding.json (done), merch line (planning, first phrase: "Stay."), NLnet (needs tech co-applicant), NSF SBIR (paused), Detroit Startup Fund (watch for Round 3)
-4. **Reach** — School outreach (DePauw — emailed, Interlochen — discovery call April 6), internationalization, crisis org partnerships
+4. **Reach** — School outreach (DePauw — emailed, Interlochen — discovery call April 6 at 9:30 AM, 30 min, Dr. Kern counseling director), internationalization, crisis org partnerships
+
+## Interlochen Call Prep (Dr. Kern, April 6)
+
+### His Two Concerns (from his email)
+1. **Parental consent for pilots:** Our answer is Bloom doesn't need a pilot. No accounts, no data collection, no deployment. Everything stays on the student's device. Three-tier age gate (under 13 blocked, 13-15 solo only, 16+ full). A counselor can recommend it like they'd recommend a breathing exercise.
+2. **Getting teenagers to engage consistently:** Our answer is the voice preference system. Students pick how the app talks to them at setup. Direct voice vs gentle voice. Shapes every touchpoint. Plus daily community prompt (private journaling with social presence), no-guilt "days shown up" (never resets), Hard Day Mode (app gets gentler when you're low), quick check-in (mood + one thought, 10 seconds).
+
+### Key Talking Points
+- Nick is IAA alum, class of '09. Built Bloom after partial hospitalization program in 2025.
+- Bloom is free, always will be. AGPL open source. No company, no investors.
+- All data local. AI reflections sent to Anthropic API but not stored. Community features are opt-in and anonymous.
+- Crisis resources always one tap away (white heart button). 988, Crisis Text Line, findahelpline.com.
+- v3.5.0 shipped with voice preference, community prompt, shared milestones, quick check-in, theme-aware visuals.
+
+### Questions to Ask Dr. Kern
+1. "What does your current between-session toolkit look like for students?" (understand gaps)
+2. "When students are on a waitlist for counseling, what do you point them to?" (Bloom fits here)
+3. "What would make you comfortable recommending a tool like this to a student?" (let him set the bar)
+4. "Are there specific concerns about AI-powered tools in a counseling context?" (get ahead of skepticism)
+5. "How do arts students at Interlochen typically handle the emotional intensity of the program?" (shows you understand IAA culture)
+6. "Would it help if I put together a short safety overview for your team?" (offer value, don't ask for commitment)
+7. "What does consistent engagement actually look like for the tools that do work with your students?" (learn what success means to him)
+8. "Are there specific times of year or transitions where students struggle most?" (orientation, auditions, juries, homesickness)
+9. "If a student told you an app helped them, what would that look like?" (define the outcome he cares about)
+10. "Is there anything I should know about what your students are dealing with that I might not think of as an outsider?" (humility, let him teach you)
+
+### Soft Ask (Don't Ask for a Pilot)
+"I'm not looking for a formal pilot or anything that creates work for your team. What I'd love is your honest feedback as a counseling professional. If you think it's something worth sharing with students, great. If you see gaps, I want to hear that too. I'm an alum, I care about this place, and I want to build something that actually helps."
+
+### If He's Enthusiastic
+Float: "If you ever wanted to share it with a few students informally and let me know how it lands, that would be incredibly valuable."
 5. **Architecture** — Cloudflare Pages + Workers migration if Vercel limits are hit
 
 **IMPORTANT:** When updating the project roadmap or sustainability status, always update BOTH `SCALABILITY_PROPOSAL.md` AND `admin.html`. These must stay in sync.
