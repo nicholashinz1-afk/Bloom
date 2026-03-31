@@ -19192,6 +19192,7 @@ async function submitPromptResponse() {
   celebrate('community_prompt', input);
 
   // Ping server with anonymous count (no text sent)
+  renderCommunityTab();
   try {
     const resp = await fetch('/api/wall', {
       method: 'POST',
@@ -19201,8 +19202,6 @@ async function submitPromptResponse() {
     const data = await resp.json();
     if (data.count) updatePromptPresence(data.count);
   } catch(e) { /* journal entry saved locally regardless */ }
-
-  renderCommunityTab();
 }
 
 function updatePromptPresence(count) {
