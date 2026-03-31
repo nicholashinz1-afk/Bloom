@@ -4948,7 +4948,7 @@ function checkStreakMilestone(totalDays) {
   if (shownMilestones.includes(totalDays)) return;
   shownMilestones.push(totalDays);
   save('bloom_shown_milestones', shownMilestones);
-  const messages = {
+  const messagesDefault = {
     5:   { title: '5 days!', sub: 'Five days you chose to show up. That\'s real.' },
     10:  { title: '10 days!', sub: 'Double digits. You\'re building something.' },
     25:  { title: '25 days!', sub: 'Twenty-five days of caring for yourself.' },
@@ -4959,6 +4959,18 @@ function checkStreakMilestone(totalDays) {
     200: { title: '200 days!', sub: 'Two hundred days of you. That\'s a practice.' },
     365: { title: 'One full year!', sub: 'A year of showing up. There are no words.' },
   };
+  const messagesReal = {
+    5:   { title: '5 days.', sub: 'Nobody made you do this. That says something.' },
+    10:  { title: '10 days.', sub: 'Double digits. You just kept going.' },
+    25:  { title: '25 days.', sub: 'That\'s not luck. That\'s you.' },
+    50:  { title: '50 days.', sub: 'Fifty. Half a hundred. You built that.' },
+    75:  { title: '75 days.', sub: 'Seventy-five days of choosing yourself. Quietly, steadily.' },
+    100: { title: '100.', sub: 'One hundred days. You did that. Quietly, consistently, you.' },
+    150: { title: '150.', sub: 'You keep showing up. That\'s the whole answer.' },
+    200: { title: '200.', sub: 'Two hundred days of choosing yourself.' },
+    365: { title: 'One year.', sub: 'You showed up for a whole year. That\'s yours forever.' },
+  };
+  const messages = state.prefs?.voice === 'real' ? messagesReal : messagesDefault;
   const msg = messages[totalDays];
   if (!msg) return;
   setTimeout(() => {
@@ -5659,7 +5671,7 @@ const WINDDOWN_AFFIRMATIONS = [
 const WINDDOWN_AFFIRMATIONS_REAL = [
   'You made it through today. That\'s it. That\'s the whole thing.',
   'Whatever tomorrow is, it\'s not tonight\'s problem.',
-  'Put the phone down after this. You earned it.',
+  'After this, you\'re done. For real.',
   'Today is done. Let it be done.',
   'Nothing left to prove today.',
   'Rest. You did the thing.',
@@ -6987,6 +6999,12 @@ const CELEBRATIONS = {
       { title: 'One of those quiet victories.', sub: 'Not everyone understands how big this is.' },
       { title: 'Renewed.', sub: 'Body and spirit, a little lighter.' },
     ],
+    realMessages: [
+      { title: 'Shower? Done.', sub: 'That\'s not small.' },
+      { title: 'Reset.', sub: 'Some days that\'s the hardest one.' },
+      { title: 'Clean.', sub: 'You did the thing.' },
+      { title: 'Handled.', sub: 'That took more than people think.' },
+    ],
   },
   w_exercise: {
     emoji: '💪', xp: 20,
@@ -6999,6 +7017,12 @@ const CELEBRATIONS = {
       { title: 'You moved your body.', sub: 'That\'s a genuine act of self-care.' },
       { title: 'You chose the hard thing.', sub: 'That takes real effort.' },
       { title: 'Energy: invested.', sub: 'Watch it come back to you tenfold.' },
+    ],
+    realMessages: [
+      { title: 'Moved.', sub: 'That\'s yours now.' },
+      { title: 'Exercise? Done.', sub: 'You did that.' },
+      { title: 'Body moved.', sub: 'It didn\'t have to be a lot.' },
+      { title: 'Got it in.', sub: 'That counts.' },
     ],
   },
   w_outside: {
@@ -7013,6 +7037,12 @@ const CELEBRATIONS = {
       { title: 'You left the house.', sub: 'On some days, that\'s heroic.' },
       { title: 'Green therapy.', sub: 'Your nervous system thanks you.' },
     ],
+    realMessages: [
+      { title: 'Outside.', sub: 'Even for a minute. It counts.' },
+      { title: 'Fresh air? Got it.', sub: 'Done.' },
+      { title: 'Went outside.', sub: 'Some days that\'s everything.' },
+      { title: 'Out.', sub: 'The sky was there. You were in it.' },
+    ],
   },
   w_therapy: {
     emoji: '🛋️', xp: 25,
@@ -7026,6 +7056,12 @@ const CELEBRATIONS = {
       { title: 'Proud of you.', sub: 'Not everyone has the courage to sit in that chair.' },
       { title: 'You chose yourself today.', sub: 'That\'s what healing looks like.' },
     ],
+    realMessages: [
+      { title: 'Session done.', sub: 'You went. That matters.' },
+      { title: 'Showed up.', sub: 'That\'s brave and you know it.' },
+      { title: 'Therapy? Logged.', sub: 'You\'re doing the work.' },
+      { title: 'Kept the appointment.', sub: 'Future you is glad.' },
+    ],
   },
   household: {
     emoji: '🏠', xp: 15,
@@ -7033,6 +7069,11 @@ const CELEBRATIONS = {
       { title: 'Task done!', sub: 'One less weight on your mind.' },
       { title: 'Your space thanks you.', sub: 'Small acts of care add up.' },
       { title: 'Done and dusted.', sub: 'A tidy space, a clearer mind.' },
+    ],
+    realMessages: [
+      { title: 'Done.', sub: 'One less thing.' },
+      { title: 'Handled.', sub: 'Your space is better for it.' },
+      { title: 'Checked off.', sub: 'Moving on.' },
     ],
   },
   mood: {
@@ -7054,6 +7095,10 @@ const CELEBRATIONS = {
       { title: 'Sleep logged.', sub: 'Rest is part of the work too.' },
       { title: 'Thanks for tracking.', sub: 'Sleep shapes everything.' },
     ],
+    realMessages: [
+      { title: 'Logged.', sub: 'Sleep matters. You tracked it.' },
+      { title: 'Noted.', sub: 'Rest is doing something.' },
+    ],
   },
   water: {
     emoji: '💧', xp: 15,
@@ -7061,6 +7106,11 @@ const CELEBRATIONS = {
       { title: 'Water goal reached! 💧', sub: 'Your body is saying thank you right now.' },
       { title: 'Three bottles — done!', sub: 'Hydration is self-care. You nailed it.' },
       { title: 'Fully hydrated today.', sub: 'One of the kindest things you can do.' },
+    ],
+    realMessages: [
+      { title: 'Water goal? Hit.', sub: 'Your body noticed.' },
+      { title: 'Hydrated.', sub: 'That\'s the whole thing.' },
+      { title: 'All the water. Done.', sub: 'Good.' },
     ],
     confetti: true,
   },
@@ -7070,6 +7120,11 @@ const CELEBRATIONS = {
       { title: 'Nourishment — checked ✓', sub: 'Feeding yourself is an act of love.' },
       { title: 'You fed yourself today.', sub: 'That matters more than you know.' },
       { title: 'Body fuelled.', sub: 'Nourishment is the foundation of everything.' },
+    ],
+    realMessages: [
+      { title: 'Ate.', sub: 'That\'s a real one.' },
+      { title: 'Fed yourself.', sub: 'Some days that\'s the win.' },
+      { title: 'Nourished.', sub: 'Good.' },
     ],
   },
   journal: {
@@ -7101,7 +7156,7 @@ const CELEBRATIONS = {
       { title: 'A win is a win.', sub: 'No matter how small.' },
     ],
     realMessages: [
-      { title: 'W.', sub: 'Logged it.' },
+      { title: 'Win noted.', sub: 'Hold onto that one.' },
       { title: 'That happened.', sub: 'Don\'t forget it.' },
       { title: 'Win.', sub: 'Big or small, it counts.' },
     ],
@@ -8068,7 +8123,7 @@ const SCRIPTED_LOW_MOOD_RESPONSES_REAL = [
   "This sucks. You're allowed to say that. The 🤍 is there if you need it.",
   "Not every day is going to be good. This one doesn't have to be.",
   "You don't owe anyone a good mood. Take up space exactly as you are.",
-  "Rough one. You don't have to figure it out. Just get through it.",
+  "Rough one. You don't have to figure it out. Just be here for now.",
   "Hey. You opened the app. On a day like this, that's a lot.",
   "You're carrying something heavy. You don't have to put it down or pick it up. Just hold it for now.",
 ];
@@ -8561,7 +8616,7 @@ function renderTodayTop() {
         : 'Two hard days in a row takes real courage to keep going. You\'re not alone.');
     } else {
       lowMoodMessage = isRealVoice
-        ? 'Rough day? Yeah. You don\'t have to do anything about it.'
+        ? 'Rough day. You don\'t have to push through anything right now.'
         : 'Hard days happen. You don\'t have to push through anything right now.';
     }
 
@@ -8829,8 +8884,10 @@ function renderTodayTab() {
   const isGentleMode = !!td.gentleMode;
   const isLowMoodDay = td.mood !== undefined && td.mood >= 0 && td.mood <= 1;
   const gentleLabel = isGentleMode
-    ? 'Gentle mode — showing less today'
-    : (isLowMoodDay ? 'Gentle mode available — tap to reduce pressure' : 'Need a gentler day? Tap here');
+    ? (state.prefs?.voice === 'real' ? 'Gentle mode on. Less stuff today.' : 'Gentle mode — showing less today')
+    : (isLowMoodDay
+      ? (state.prefs?.voice === 'real' ? 'Want less on your plate? Tap here.' : 'Gentle mode available — tap to reduce pressure')
+      : (state.prefs?.voice === 'real' ? 'Too much? Tap to dial it back.' : 'Need a gentler day? Tap here'));
   html += `<div onclick="toggleGentleMode()" style="
     display:flex;align-items:center;gap:10px;
     padding:10px 16px;margin-bottom:12px;cursor:pointer;
