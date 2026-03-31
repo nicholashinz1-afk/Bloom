@@ -1,4 +1,72 @@
+// Vercel serverless function for Claude AI reflections
+// Proxies to Anthropic API with server-side system prompt control and rate limiting
+
+import { createClient } from 'redis';
+
+// ── Server-side system prompt allowlist ────────────────────
+// The client sends a context key, NOT a raw system prompt.
+// This prevents prompt injection attacks where an attacker could
+// override safety behavior to make the AI give medical advice,
+// diagnoses, or harmful content.
+const SYSTEM_PROMPTS = {
+  journal: 'You are Bloom, a gentle wellness companion. Never clinical. Warm, brief, human. 2-3 sentences max. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis, you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care.',
+  hard_day: 'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity, no advice. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis, you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care.',
+  reflection: 'You are Bloom. 1-2 sentences. Warm, not clinical. If the user expresses distress, self-harm, or crisis, gently point them to the 🤍 crisis heart for immediate support.',
+  weekly: 'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only. If the week data suggests persistent struggle, gently remind them the 🤍 crisis heart is always there and that reaching out to a professional is a sign of strength.',
+  monthly: 'You are Bloom. 3-4 sentences. Warm, personal, never clinical. If mood data suggests a very difficult month, gently acknowledge that and remind them the 🤍 crisis heart is always there if they need support beyond what bloom can offer.',
+  live_week: 'You are Bloom. One sentence only, max 20 words, warm and specific.',
+  default: 'You are Bloom, a warm and compassionate mental wellness companion. Keep responses brief, warm, and human. Never clinical. 1-4 sentences maximum.',
+};
+
+// Suffix appended to all system prompts for consistency
+const SYSTEM_SUFFIX = ' Never use first-person language like "I am here for you" or "I care about you" — you are a tool, not a person. Frame support as observations and affirmations, not as a relationship.';
+
+// ── Redis client for rate limiting ─────────────────────────
+let _redisClient = null;
+async function getRedis() {
+  if (_redisClient && _redisClient.isReady) return _redisClient;
+  if (_redisClient) { try { await _redisClient.disconnect(); } catch(e) {} }
+  _redisClient = createClient({ url: process.env.REDIS_URL, socket: { reconnectStrategy: (retries) => retries < 3 ? Math.min(retries * 200, 1000) : false } });
+  _redisClient.on('error', () => {});
+  await _redisClient.connect();
+  return _redisClient;
+}
+
+// ── Rate limiting (ported from vault.js) ───────────────────
+const RATE_LIMIT_MAX = 20;       // 20 requests per hour (generous for journaling)
+const RATE_LIMIT_WINDOW = 3600;  // 1 hour in seconds
+
+async function hashIP(ip) {
+  const encoded = new TextEncoder().encode(ip || 'unknown');
+  const hash = await crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function checkRateLimit(req) {
+  if (!process.env.REDIS_URL) return true; // fail open if no Redis
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+  const ipHash = await hashIP(ip);
+  const rlKey = `bloom_claude:rl:${ipHash}`;
+  try {
+    const client = await getRedis();
+    const count = await client.incr(rlKey);
+    if (count === 1) await client.expire(rlKey, RATE_LIMIT_WINDOW);
+    return count <= RATE_LIMIT_MAX;
+  } catch(e) { return true; } // fail open
+}
+
+// ── Main handler ───────────────────────────────────────────
 export default async function handler(req, res) {
+  const allowedOrigins = ['https://bloomselfcare.app', 'https://bloom-zeta-rouge.vercel.app', 'http://localhost:3000'];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
   // Health check
   if (req.method === 'GET' && req.query?.check === 'health') {
     const hasKey = !!process.env.ANTHROPIC_API_KEY;
@@ -14,6 +82,12 @@ export default async function handler(req, res) {
     return res.status(500).json({ text: null, error: 'API key not configured' });
   }
 
+  // Rate limiting
+  const allowed = await checkRateLimit(req);
+  if (!allowed) {
+    return res.status(429).json({ text: null, error: 'You\'ve used a lot of reflections recently. Take a breath and try again in a bit.' });
+  }
+
   let body;
   try {
     body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -21,10 +95,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
 
-  const { system, message, model } = body;
+  const { context, message, model, name } = body;
   if (!message) {
     return res.status(400).json({ error: 'Missing message' });
   }
+
+  // Resolve system prompt from allowlist (never from client)
+  const basePrompt = SYSTEM_PROMPTS[context] || SYSTEM_PROMPTS.default;
+  const nameContext = name ? ` The user's name is ${name} — use it occasionally but naturally, not in every sentence.` : '';
+  const systemPrompt = basePrompt + SYSTEM_SUFFIX + nameContext;
 
   // Allow client to request Sonnet for richer reflections; default to Haiku for cost efficiency
   const ALLOWED_MODELS = ['claude-haiku-4-5-20251001', 'claude-sonnet-4-20250514'];
@@ -41,7 +120,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: selectedModel,
         max_tokens: 1000,
-        system: system || 'You are a warm, helpful assistant.',
+        system: systemPrompt,
         messages: [{ role: 'user', content: message }],
       }),
     });

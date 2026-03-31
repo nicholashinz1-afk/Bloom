@@ -3070,14 +3070,14 @@ select:focus {
     <span class="crisis-option-icon" aria-hidden="true">📞</span>
     <span>
       <span class="crisis-option-title">Call or Text 988</span>
-      <span class="crisis-option-sub">Suicide & Crisis Lifeline — free, confidential, 24/7</span>
+      <span class="crisis-option-sub">Suicide & Crisis Lifeline — trained counselors, 24/7. Press 1 for Veterans.</span>
     </span>
   </button>
   <button class="crisis-option" onclick="window.open('sms:741741?body=HOME')" aria-label="Text HOME to 741741 for Crisis Text Line">
     <span class="crisis-option-icon" aria-hidden="true">💬</span>
     <span>
       <span class="crisis-option-title">Crisis Text Line</span>
-      <span class="crisis-option-sub">Text HOME to 741741</span>
+      <span class="crisis-option-sub">Text HOME to 741741 — text-only, no call needed. For any crisis, not just suicide.</span>
     </span>
   </button>
   <button class="crisis-option" onclick="window.open('https://988lifeline.org/chat/')" aria-label="Chat online at 988 Lifeline dot org">
@@ -5402,7 +5402,7 @@ async function saveOpenJournal() {
   } else {
     ai = await callClaude(
       `Someone is having a hard day and wrote: "${text}". Respond with just 1-2 sentences of warm, human presence. No advice. No silver linings. Just witness what they said and remind them they're not alone.`,
-      'You are Bloom. 1-2 sentences only. Warm presence, no toxic positivity, no advice. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis (e.g. wanting to die, wishing not to wake up, feeling everyone would be better off without them, wanting to end it all), you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care. Do NOT flag general sadness, frustration, or hopelessness as crisis. Venting is healthy.'
+      'hard_day'
     );
   }
 
@@ -5556,7 +5556,7 @@ async function showMonthlyReflectionPrompt() {
   trackFeature('monthly_reflection');
   const ai = await callClaude(
     `Write a warm monthly reflection for a wellness app user. Month: ${monthName}. Mood this month: ${avgMood !== null ? ['rough','low','okay','good','great'][Math.round(avgMood)] : 'not tracked'}. Journal entries: ${journalCount}. Write 3-4 sentences that feel like a caring friend reflecting on their month — personal, encouraging, honest. Never reference numbers or scores. Never shame.`,
-    'You are Bloom. 3-4 sentences. Warm, personal, never clinical. If mood data suggests a very difficult month, gently acknowledge that and remind them the 🤍 crisis heart is always there if they need support beyond what bloom can offer.',
+    'monthly',
     { model: 'claude-sonnet-4-20250514' }
   );
 
@@ -7927,18 +7927,18 @@ function getFallbackResponse(userInput) {
   return AI_FALLBACK_RESPONSE;
 }
 
-async function callClaude(prompt, systemPrompt, options) {
+async function callClaude(prompt, context, options) {
   // Track AI reflection usage for journey analysis
   const aiSource = prompt.includes('journal') ? 'journal' : prompt.includes('reflection') ? 'reflection' : prompt.includes('hard day') ? 'hard_day' : prompt.includes('weekly') || prompt.includes('week') ? 'weekly_insight' : prompt.includes('monthly') || prompt.includes('month') ? 'monthly_reflection' : 'other';
   trackAIJourney(aiSource, aiSource);
   trackFeature('ai_reflection');
   try {
     const name = state.prefs?.name;
-    const nameContext = name ? ` The user's name is ${name} — use it occasionally but naturally, not in every sentence.` : '';
     const body = {
-      system: (systemPrompt || 'You are Bloom, a warm and compassionate mental wellness companion. Keep responses brief, warm, and human. Never clinical. 1-4 sentences maximum.') + ' Never use first-person language like "I am here for you" or "I care about you" — you are a tool, not a person. Frame support as observations and affirmations, not as a relationship.' + nameContext,
+      context: context || 'default',
       message: prompt,
     };
+    if (name) body.name = name;
     if (options?.model) body.model = options.model;
     const res = await timedFetch('/api/claude', {
       method: 'POST',
@@ -9878,7 +9878,7 @@ async function saveJournal() {
   try {
     const ai = await callClaude(
       `The user wrote in their journal: "${text}". Write a warm, brief (2-3 sentence) response that acknowledges what they shared without offering unsolicited advice. Be human and compassionate.`,
-      'You are Bloom, a gentle wellness companion. Never clinical. Warm, brief, human. 2-3 sentences max. IMPORTANT: If the user expresses suicidal thoughts, self-harm, or acute crisis (e.g. wanting to die, wishing not to wake up, feeling everyone would be better off without them, wanting to end it all), you must gently encourage them to tap the 🤍 crisis heart for immediate support from real people who care. Do NOT flag general sadness, frustration, or hopelessness as crisis. Venting is healthy.'
+      'journal'
     );
 
     if (ai && entry) {
@@ -9980,7 +9980,7 @@ async function saveReflection(qi) {
   try {
     const ai = await callClaude(
       `The reflection question was: "${q}". The user answered: "${text}". Write a thoughtful 1-2 sentence response that acknowledges their reflection with warmth.`,
-      'You are Bloom. 1-2 sentences. Warm, not clinical. If the user expresses suicidal thoughts, self-harm, or acute crisis (e.g. wanting to die, wishing not to wake up, feeling everyone would be better off without them), gently point them to the 🤍 crisis heart for immediate support. Do NOT flag general sadness or frustration as crisis.'
+      'reflection'
     );
 
     if (ai) {
@@ -10037,7 +10037,7 @@ async function generateWeeklyInsight(e) {
       `Write a weekly insight for a mental wellness app user. This week: ${avgMood !== null ? `mood has been ${['rough','low','okay','good','great'][Math.round(avgMood)]} overall` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}. Small wins they logged: ${weekWins.length > 0 ? weekWins.slice(0,5).join(', ') : 'none this week'}.
 
 Write 3-4 sentences from an emotional lens — how they showed up for themselves this week. IMPORTANT: Never reference numbers, scores, or scales. Use natural emotional language only. If they logged small wins, reflect specific ones back to them as evidence of progress. If it was a hard week emotionally but they still did self-care, reflect that back as evidence of resilience. Celebrate specific acts of self-care as emotional wins. Never shame, never clinical. End with something genuinely encouraging about the week ahead.`,
-      'You are Bloom. Warm, personal, emotionally perceptive. 3-4 sentences only. If the week data suggests persistent struggle, gently remind them the 🤍 crisis heart is always there and that reaching out to a professional is a sign of strength.',
+      'weekly',
       { model: 'claude-sonnet-4-20250514' }
     );
 
@@ -11151,7 +11151,7 @@ async function generateRollingInsight() {
 
   const ai = await callClaude(
     `Write ONE short sentence (max 20 words) for a wellness app's live week view. It's day ${daysIn} of the week. ${avgMood ? `Mood so far: ${['rough','low','okay','good','great'][Math.round(parseFloat(avgMood))]}.` : ''} ${selfCare.length > 0 ? `Self-care done: ${selfCare.join(', ')}.` : ''} Be warm and specific to what's happened. Never reference numbers or scores. No filler phrases.`,
-    'You are Bloom. One sentence only, max 20 words, warm and specific.'
+    'live_week'
   );
   if (ai) {
     save(key, ai);
@@ -11575,6 +11575,16 @@ function renderSettingsTab() {
     <div class="toggle-row" style="border-bottom:none;margin-bottom:12px">
       <div><div class="toggle-label">Your name</div></div>
       <input type="text" id="settings-name" aria-label="Your name" value="${prefs.name || ''}" style="width:140px;padding:6px 10px;font-size:13px" onchange="saveSettingsName()">
+    </div>
+    <div class="toggle-row" style="border-bottom:none;margin-bottom:12px">
+      <div>
+        <div class="toggle-label">Age group</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${prefs.ageGroup === '13to15' ? 'Community features available at 16+' : 'Community features enabled'}</div>
+      </div>
+      <select id="settings-age-group" aria-label="Age group" onchange="saveSettingsAgeGroup()" style="padding:6px 10px;font-size:13px;background:var(--card-bg);color:var(--cream);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-md)">
+        <option value="13to15" ${prefs.ageGroup === '13to15' ? 'selected' : ''}>13 to 15</option>
+        <option value="16plus" ${prefs.ageGroup !== '13to15' ? 'selected' : ''}>16 or older</option>
+      </select>
     </div>
     <div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05)">
       <div style="font-size:32px">${level.emoji}</div>
@@ -12448,7 +12458,7 @@ function renderSettingsTab() {
         It is not therapy, counseling, or medical advice. If you are struggling, please reach out to a licensed therapist or counselor. Tap the 🤍 in the header any time for immediate crisis resources.
       </div>
       <div style="font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.6">
-        bloom is intended for users aged 16 and older.
+        bloom is intended for users aged 13 and older. Community features (buddy system, encouragement wall) require age 16+.
       </div>
     </div>
     <div style="background:rgba(var(--sage-rgb),0.06);border:1px solid rgba(var(--sage-rgb),0.12);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px">
@@ -12602,6 +12612,11 @@ function renderSettingsTab() {
       </div>
 
       <div style="background:rgba(176,120,120,0.08);border:1px solid rgba(176,120,120,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
+        <div style="font-weight:500;color:var(--rose-light);margin-bottom:4px">Credible threats of violence</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Messages containing credible threats of violence (threats of mass harm, specific targets, weapons) are blocked immediately and result in an instant ban. These messages are logged with available metadata (timestamp, IP address, message content) and may be reported to law enforcement if we believe the threat is credible and imminent. Bloom takes the safety of its community seriously.</div>
+      </div>
+
+      <div style="background:rgba(176,120,120,0.08);border:1px solid rgba(176,120,120,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
         <div style="font-weight:500;color:var(--rose-light);margin-bottom:4px">Automatic restrictions</div>
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Users who repeatedly post blocked content are automatically restricted from community features. This happens without admin intervention to protect the community in real time.</div>
       </div>
@@ -12635,10 +12650,10 @@ function renderSettingsTab() {
 
       <p style="margin-bottom:10px"><strong style="color:var(--cream)">What is sent to external services:</strong></p>
       <ul style="padding-left:18px;margin-bottom:10px">
-        <li style="margin-bottom:6px"><strong>AI reflections:</strong> When you use AI features (journal reflections, weekly insights, cognitive reframes), the text you write is sent to Anthropic's Claude API for processing. Anthropic does not use API inputs to train their models. Each reflection is a standalone request with no conversation history. Bloom does not store your journal text on any server. <em>Note: For very low mood entries and hard day mode, Bloom uses pre-written responses instead of AI.</em></li>
+        <li style="margin-bottom:6px"><strong>AI reflections:</strong> When you use AI features (journal reflections, weekly insights, monthly reflections), your prompt text is sent to Anthropic's Claude API to generate a response. Bloom does not store this data or link it to your identity. For how Anthropic handles API data, see <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener" style="color:var(--sage-light)">Anthropic's privacy policy</a>. <em>Note: For very low mood entries and hard day mode, Bloom uses pre-written responses instead of AI.</em></li>
         <li style="margin-bottom:6px"><strong>Bloom Buddy:</strong> If you use the buddy feature, your display name, mood (if sharing is on), days shown up, habit completion percentage, and messages are stored on our server (Redis/Vercel KV) to enable the pairing. Your journal entries, specific habits, and other private data are never shared.</li>
         <li style="margin-bottom:6px"><strong>Encouragement Wall:</strong> Posts you submit to the community wall are stored on our server without any identifying information attached.</li>
-        <li style="margin-bottom:6px"><strong>Push Notifications:</strong> If enabled, OneSignal processes a device identifier for delivery. No personal content is included.</li>
+        <li style="margin-bottom:6px"><strong>Push Notifications:</strong> If enabled, OneSignal processes a device identifier and notification content for delivery. Notifications may include your buddy's display name and activity updates. See OneSignal's privacy policy for their data practices.</li>
       </ul>
 
       <p style="margin-bottom:10px"><strong style="color:var(--cream)">Backups:</strong><br>
@@ -12668,14 +12683,21 @@ function renderSettingsTab() {
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Buddy system:</strong><br>
         Bloom Buddy connects you with other users for encouragement. All messages are screened for harmful content, grooming language, and contact exchange attempts. Crude and sexual content is blocked in buddy conversations. Users who repeatedly violate these rules are automatically restricted. Despite these protections, we cannot guarantee the behavior of other users. You can unpair at any time.</p>
 
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Threats of violence:</strong><br>
+        Bloom blocks and logs credible threats of violence made through community features (buddy messages, encouragement wall). Logged information may include message content, IP address, timestamp, and user identifiers. Bloom reserves the right to report credible, imminent threats to law enforcement and to cooperate with valid legal requests (subpoenas, court orders) for threat-related records. This applies only to credible violent threats, not to venting, emotional expression, or self-harm language.</p>
+
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Age requirement:</strong><br>
-        Bloom is intended for users aged 16 and older.</p>
+        Bloom is intended for users aged 13 and older. Community features (buddy system, encouragement wall) are available to users 16 and older. Users aged 13-15 have access to all solo features (journaling, mood tracking, habits, breathing exercises, crisis resources) but cannot use community features.</p>
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Data responsibility:</strong><br>
         Because your data is stored locally on your device, you are responsible for maintaining backups. Bloom is not liable for data loss due to browser clearing, device changes, or Safari's storage policies.</p>
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Community content:</strong><br>
         Bloom moderates community content (Bloom Buddy and Encouragement Wall) in good faith to maintain a safe environment. Despite these efforts, Bloom cannot guarantee that all harmful content will be caught or prevented. Bloom is not liable for content posted by other users.</p>
+
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Delete community data:</strong><br>
+        You can delete all your server-side community data (buddy profile, messages, pairs, moderation history) at any time. This unpairs all buddies and is irreversible. Threat logs are retained separately per our threat reporting policy.</p>
+        <button onclick="deleteCommunityData()" style="padding:8px 16px;background:rgba(176,120,120,0.15);color:var(--rose-light);border:1px solid rgba(176,120,120,0.3);border-radius:var(--r-md);font-size:12px;cursor:pointer;margin-top:4px">Delete my community data</button>
 
         <p style="margin-bottom:10px"><strong style="color:var(--cream)">Limitation of liability:</strong><br>
         Bloom is provided "as is" without warranty of any kind, express or implied. To the maximum extent permitted by law, Bloom and its creator shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of data, arising from your use of this service.</p>
@@ -12742,7 +12764,7 @@ function renderSettingsTab() {
             <span style="font-size:18px">📂</span>
             <div>
               <div style="font-weight:500">View source code</div>
-              <div style="font-size:11px;color:var(--text-muted)">Bloom is open source on GitHub</div>
+              <div style="font-size:11px;color:var(--text-muted)">Free and open source under AGPL-3.0</div>
             </div>
           </a>
         </div>
@@ -12774,7 +12796,10 @@ function renderSettingsTab() {
     </div>`;
   }
 
-  html += `<div style="text-align:center;padding:20px 0 8px;font-size:11px;color:var(--text-muted)">bloom v${VERSION} · made with care 🌿</div>`;
+  html += `<div style="text-align:center;padding:20px 0 4px;font-size:11px;color:var(--text-muted)">bloom v${VERSION} · made with care 🌿</div>`;
+  html += `<div style="text-align:center;padding:0 0 4px;font-size:10px;color:var(--text-muted);opacity:0.6">
+    Free and open source software · <a href="https://github.com/nicholashinz1-afk/Bloom/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--text-muted);text-decoration:underline">AGPL-3.0</a>
+  </div>`;
   html += `<div style="text-align:center;padding:0 0 16px">
     <a href="https://ko-fi.com/bloomselfcare" target="_blank" rel="noopener" style="font-size:13px;color:var(--text-secondary);text-decoration:none;font-family:Fraunces,serif;font-style:italic">
       help keep bloom free ☕
@@ -13321,6 +13346,24 @@ function setWaterGoal(amount) {
 function saveSettingsName() {
   const input = document.getElementById('settings-name');
   if (input) { state.prefs.name = input.value; save('bloom_prefs', state.prefs); }
+}
+
+function saveSettingsAgeGroup() {
+  const select = document.getElementById('settings-age-group');
+  if (!select) return;
+  const newGroup = select.value;
+  const oldGroup = state.prefs.ageGroup;
+  state.prefs.ageGroup = newGroup;
+
+  // Upgrading to 16+: require terms acceptance for community features
+  if (newGroup === '16plus' && oldGroup === '13to15') {
+    // Clear terms so they're prompted when they open community tab
+    delete state.prefs.termsAcceptedAt;
+    delete state.prefs.termsVersion;
+  }
+
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
 }
 
 function saveHabitTrigger(habitId) {
@@ -15347,7 +15390,7 @@ const SCIENCE_SECTIONS = {
     title: 'Breathing exercises',
     tip: 'The 4-7-8 technique activates your vagus nerve, shifting your body from stress mode to rest mode.',
     full: `<p>The <strong>4-7-8 breathing technique</strong> (inhale 4, hold 7, exhale 8) was developed by Dr. Andrew Weil based on pranayama breathing practices. The extended exhale activates the <strong>vagus nerve</strong>, which triggers the parasympathetic nervous system, your body's "rest and digest" mode.</p>
-    <p>A 2017 study in <em>Frontiers in Psychology</em> found that diaphragmatic breathing significantly reduced cortisol levels (the stress hormone) after just 8 weeks of practice. Research suggests that even a single session may help you feel calmer and more grounded. bloom offers this without any streak or pressure. It's here whenever you need it.</p>`,
+    <p>A 2017 study in <em>Frontiers in Psychology</em> found that diaphragmatic breathing was associated with lower cortisol levels (the stress hormone) after 8 weeks of practice. Research suggests that even a single session may help you feel calmer and more grounded. bloom offers this without any streak or pressure. It's here whenever you need it.</p>`,
     sources: [
       'Ma, X., et al. (2017). The effect of diaphragmatic breathing on attention, negative affect, and stress. <em>Frontiers in Psychology</em>, 8, 874.',
       'Gerritsen, R. J. S. & Band, G. P. H. (2018). Breath of life: The respiratory vagal stimulation model of contemplative activity. <em>Frontiers in Human Neuroscience</em>, 12, 397.',
@@ -15365,7 +15408,7 @@ const SCIENCE_SECTIONS = {
   },
   buddy: {
     title: 'Bloom buddy',
-    tip: 'Having even one person who checks in on you significantly improves follow-through and emotional wellbeing.',
+    tip: 'Having even one person who checks in on you is associated with better follow-through and emotional wellbeing.',
     full: `<p>Decades of research on <strong>social support and health</strong> show that perceived social support, simply knowing someone is aware of your efforts, is one of the strongest predictors of sustained behavior change. A landmark meta-analysis by Holt-Lunstad et al. found that strong social connections improved the odds of survival by <strong>50%</strong>, making loneliness a health risk comparable to smoking.</p>
     <p>bloom buddy applies this through <strong>mutual accountability</strong>: your buddy can see your streak and completion percentage (not your private data), and you can see theirs. This light-touch visibility leverages what behavioral scientists call the <strong>Köhler effect</strong>. People work harder when they know someone is counting on them. Research by Irwin et al. showed that partnered exercise adherence was significantly higher than solo exercise, even when partners never spoke.</p>
     <p>Critically, bloom buddy is designed as <strong>encouragement, not surveillance</strong>. Your buddy gets notified when you're having a hard day so they can send support, not so they can judge. This mirrors findings from self-determination theory (Deci & Ryan) showing that autonomy-supportive relationships foster intrinsic motivation, while controlling ones undermine it.</p>`,
@@ -15379,7 +15422,7 @@ const SCIENCE_SECTIONS = {
     title: 'Encouragement wall',
     tip: 'Giving kindness to strangers benefits you as much as receiving it. Anonymous generosity reduces stress and increases wellbeing.',
     full: `<p>Research on <strong>prosocial behavior</strong> consistently shows that helping others, even strangers, even anonymously, improves the helper's own mood, reduces stress, and increases a sense of meaning. A study by Dunn et al. published in <em>Science</em> demonstrated that spending money on others produced greater happiness than spending on oneself, regardless of income.</p>
-    <p>The encouragement wall applies the concept of <strong>anonymous prosocial action</strong>: writing a kind word for a stranger you'll never meet. This removes social performance anxiety while preserving the wellbeing benefits. Research by Lyubomirsky et al. found that performing acts of kindness, particularly varied ones, significantly increased happiness over a 10-week period.</p>
+    <p>The encouragement wall applies the concept of <strong>anonymous prosocial action</strong>: writing a kind word for a stranger you'll never meet. This removes social performance anxiety while preserving the wellbeing benefits. Research by Lyubomirsky et al. found that performing acts of kindness, particularly varied ones, was associated with increased happiness over a 10-week period.</p>
     <p>There's also a <strong>receiving</strong> benefit: reading kind words from anonymous strangers activates a sense of common humanity, a core component of Kristin Neff's model of <strong>self-compassion</strong>. Knowing that someone out there thought of you, without knowing you, can counter the isolation that often accompanies difficult mental health days.</p>`,
     sources: [
       'Dunn, E. W., et al. (2008). Spending money on others promotes happiness. <em>Science</em>, 319(5870), 1687–1688.',
@@ -15400,9 +15443,9 @@ const SCIENCE_SECTIONS = {
   },
   bodyscan: {
     title: 'Body scan',
-    tip: 'Noticing your body without trying to fix it builds interoceptive awareness, a skill linked to better emotional regulation.',
-    full: `<p>The <strong>body scan</strong> is a core component of Mindfulness-Based Stress Reduction (MBSR), developed by Jon Kabat-Zinn at UMass Medical School. It trains <strong>interoceptive awareness</strong>, the ability to sense internal body signals, which research has linked to improved emotional regulation, reduced anxiety, and greater self-awareness.</p>
-    <p>A 2015 study in <em>Frontiers in Psychology</em> found that three months of contemplative training significantly improved participants' interoceptive awareness, their ability to notice and understand signals from their own body. A broader review by Creswell (2017) confirmed that mindfulness interventions produce reliable benefits for stress, anxiety, and emotional regulation. The technique asks you to <strong>notice without fixing</strong>. This non-judgmental observation is itself therapeutic, teaching the brain that discomfort can be acknowledged without requiring an immediate response.</p>
+    tip: 'Noticing your body without trying to fix it builds interoceptive awareness, a skill research suggests may support emotional regulation.',
+    full: `<p>The <strong>body scan</strong> is a core component of Mindfulness-Based Stress Reduction (MBSR), developed by Jon Kabat-Zinn at UMass Medical School. It trains <strong>interoceptive awareness</strong>, the ability to sense internal body signals, which research suggests may support emotional regulation, reduce anxiety, and increase self-awareness.</p>
+    <p>A 2015 study in <em>Frontiers in Psychology</em> found that three months of contemplative training was associated with improved interoceptive awareness, participants' ability to notice and understand signals from their own body. A broader review by Creswell (2017) found that mindfulness interventions were associated with benefits for stress, anxiety, and emotional regulation. The technique asks you to <strong>notice without fixing</strong>. This non-judgmental observation is itself therapeutic, teaching the brain that discomfort can be acknowledged without requiring an immediate response.</p>
     <p>Bloom's body scan is intentionally brief (~3 minutes) to keep the barrier low. Research suggests that even short mindfulness practices produce measurable benefits when done consistently.</p>`,
     sources: [
       'Kabat-Zinn, J. (1990). Full catastrophe living: Using the wisdom of your body and mind to face stress, pain, and illness. <em>Delacorte Press</em>.',
@@ -16559,19 +16602,23 @@ function renderOBReady(body, footer) {
       <div style="display:flex;align-items:flex-start;gap:12px">
         <span style="font-size:22px;flex-shrink:0">🎂</span>
         <div>
-          <div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px">Age acknowledgment</div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px">How old are you?</div>
           <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:10px">
-            bloom is designed for users aged 16 and older.
+            This helps bloom give you the right experience. Community features (buddy system and encouragement wall) are available for users 16 and older.
           </div>
           <div id="ob-age-gate" style="display:flex;flex-direction:column;gap:8px">
             <div onclick="obSetAge('16plus')" id="ob-age-16" style="padding:10px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid ${obData.ageGroup === '16plus' ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};background:${obData.ageGroup === '16plus' ? 'rgba(var(--sage-rgb),0.08)' : 'transparent'};font-size:13px;color:var(--cream);transition:all 0.2s">
               I'm 16 or older
             </div>
-            <div onclick="obSetAge('under16')" id="ob-age-u16" style="padding:10px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid ${obData.ageGroup === 'under16' ? 'rgba(176,120,120,0.4)' : 'rgba(255,255,255,0.08)'};background:${obData.ageGroup === 'under16' ? 'rgba(176,120,120,0.08)' : 'transparent'};font-size:13px;color:var(--cream);transition:all 0.2s">
-              I'm under 16
+            <div onclick="obSetAge('13to15')" id="ob-age-13" style="padding:10px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid ${obData.ageGroup === '13to15' ? 'rgba(201,149,74,0.4)' : 'rgba(255,255,255,0.08)'};background:${obData.ageGroup === '13to15' ? 'rgba(201,149,74,0.08)' : 'transparent'};font-size:13px;color:var(--cream);transition:all 0.2s">
+              I'm 13 to 15
+            </div>
+            <div onclick="obSetAge('under13')" id="ob-age-u13" style="padding:10px 14px;border-radius:var(--r-md);cursor:pointer;border:2px solid ${obData.ageGroup === 'under13' ? 'rgba(176,120,120,0.4)' : 'rgba(255,255,255,0.08)'};background:${obData.ageGroup === 'under13' ? 'rgba(176,120,120,0.08)' : 'transparent'};font-size:13px;color:var(--cream);transition:all 0.2s">
+              I'm under 13
             </div>
           </div>
-          ${obData.ageGroup === 'under16' ? '<div style="font-size:12px;color:var(--rose-light);margin-top:8px;line-height:1.6">bloom is designed for users 16 and older, but you still deserve support. Here are resources made for people your age:</div><div style="margin-top:8px;font-size:12px;line-height:1.8"><div style="margin-bottom:4px"><strong style="color:var(--sky-light)">Crisis Text Line</strong> — Text HOME to 741741</div><div style="margin-bottom:4px"><strong style="color:var(--sky-light)">Teen Line</strong> — Call 1-800-852-8336 (6pm-10pm PT)</div><div style="margin-bottom:4px"><strong style="color:var(--sky-light)">findahelpline.com</strong> — International support in 40+ languages</div><div style="color:var(--text-muted);margin-top:6px">These are free, confidential, and staffed by people who care.</div></div>' : ''}
+          ${obData.ageGroup === '13to15' ? '<div style="font-size:12px;color:var(--amber-light);margin-top:8px;line-height:1.6">Welcome to bloom. You\'ll have access to journaling, mood tracking, breathing exercises, and crisis resources. Community features (buddy system and encouragement wall) will be available when you\'re 16.</div>' : ''}
+          ${obData.ageGroup === 'under13' ? '<div style="font-size:12px;color:var(--rose-light);margin-top:8px;line-height:1.6">bloom is designed for users 13 and older. But you still deserve support. Here are some resources that are available to you right now, no matter your age:</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:8px"><a href="sms:741741?body=HELLO" style="font-size:12px;color:var(--sage-light);text-decoration:underline">Crisis Text Line: text HELLO to 741741</a><a href="https://www.findahelpline.com/" target="_blank" rel="noopener" style="font-size:12px;color:var(--sage-light);text-decoration:underline">Find a helpline near you (40+ languages)</a><a href="tel:988" style="font-size:12px;color:var(--sage-light);text-decoration:underline">988 Suicide & Crisis Lifeline (call or text)</a></div><div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.5">If there\'s a trusted adult in your life, like a teacher, school counselor, coach, or family member, they can also help. But if that\'s not an option, the resources above are free, confidential, and available 24/7.</div>' : ''}
         </div>
       </div>
     </div>
@@ -16584,9 +16631,24 @@ function renderOBReady(body, footer) {
             Everything you write in bloom — your journal, your moods, your habits — lives only on this device. It's never uploaded, never shared, and never seen by anyone else. Not us, not anyone.
           </div>
           <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-top:8px">
-            The only exception is when you use the AI features — those prompts are sent to Claude to generate a response, but are never stored or linked to you.
+            The only exception is when you use the AI features — those prompts are sent to Anthropic's Claude API to generate a response. Bloom does not store them.
           </div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:8px">Full privacy policy and terms available in Settings.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:22px;flex-shrink:0">📋</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px">Terms of use</div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+            By using bloom, you agree to the <span onclick="obShowTerms()" style="color:var(--sage-light);text-decoration:underline;cursor:pointer">Terms of Use and Privacy Policy</span>.
+          </div>
+          <label style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;cursor:pointer">
+            <input type="checkbox" id="ob-terms-check" onchange="obTermsChanged()" style="margin-top:3px;min-width:16px;min-height:16px;accent-color:var(--sage)">
+            <span style="font-size:12px;color:var(--text-secondary);line-height:1.5">I've read and agree to the Terms of Use and Privacy Policy</span>
+          </label>
         </div>
       </div>
     </div>
@@ -16610,10 +16672,13 @@ function renderOBReady(body, footer) {
       <div id="ob-backup-url" style="display:none;margin-top:10px" class="backup-url-box"></div>
     </div>
   `;
-  const canFinish = obData.ageGroup === '16plus';
+  const termsAccepted = !!obData.termsAccepted;
+  const validAge = obData.ageGroup === '16plus' || obData.ageGroup === '13to15';
+  const canFinish = validAge && termsAccepted;
+  const btnLabel = !obData.ageGroup ? 'Select your age above' : obData.ageGroup === 'under13' ? 'bloom is for ages 13+' : !termsAccepted ? 'Accept terms to continue' : "I'm ready";
   footer.innerHTML = `
     <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
-    <button class="btn btn-primary" id="ob-btn-finish" style="flex:1;${canFinish ? '' : 'opacity:0.4;pointer-events:none'}">${canFinish ? "I'm ready" : "Select your age above"}</button>
+    <button class="btn btn-primary" id="ob-btn-finish" style="flex:1;${canFinish ? '' : 'opacity:0.4;pointer-events:none'}">${btnLabel}</button>
   `;
   document.getElementById('ob-btn-back').addEventListener('click', obBack);
   if (canFinish) document.getElementById('ob-btn-finish').addEventListener('click', completeOnboarding);
@@ -16622,6 +16687,39 @@ function renderOBReady(body, footer) {
 function obSetAge(group) {
   obData.ageGroup = group;
   renderOnboarding();
+}
+
+function obTermsChanged() {
+  const el = document.getElementById('ob-terms-check');
+  obData.termsAccepted = el?.checked || false;
+  renderOnboarding();
+}
+
+function obShowTerms() {
+  // Open the privacy/terms section in a simple alert-style view during onboarding
+  const sheet = document.createElement('div');
+  sheet.id = 'ob-terms-sheet';
+  sheet.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9999;overflow-y:auto;padding:20px;padding-bottom:80px';
+  sheet.innerHTML = `
+    <div style="max-width:500px;margin:0 auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-family:Fraunces,serif;font-size:18px;color:var(--cream)">Terms of Use & Privacy Policy</div>
+        <button onclick="document.getElementById('ob-terms-sheet').remove()" style="background:none;border:none;color:var(--text-muted);font-size:24px;cursor:pointer;padding:4px">&times;</button>
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Not medical advice:</strong><br>
+        Bloom is a self-care companion app. It is not therapy, counseling, medical advice, or crisis intervention. It is not a substitute for professional mental health care.</p>
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Your data:</strong><br>
+        Journal entries, mood logs, and habits stay on your device. AI features send prompts to Anthropic's Claude API. Bloom does not store them. Community features (buddy, wall) store display names and messages on our server.</p>
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Community features:</strong><br>
+        All messages are screened for harmful content, grooming language, and contact exchange attempts. Users who repeatedly violate rules are automatically restricted. Credible threats of violence are logged and may be reported to law enforcement.</p>
+        <p style="margin-bottom:10px"><strong style="color:var(--cream)">Age requirement:</strong><br>
+        Bloom is for users 13 and older. Community features are available at 16+.</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:16px">Full details available in Settings after onboarding.</p>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(sheet);
 }
 
 function obSetPace(gradual) {
@@ -16654,6 +16752,8 @@ function completeOnboarding() {
     ...obData,
     onboarded: true,
     onboardDate: today(),
+    termsAcceptedAt: Date.now(),
+    termsVersion: '2026-03',
     progressiveDisclosure: obData.progressiveDisclosure !== false, // default true (gradual)
   };
 
@@ -17704,6 +17804,7 @@ async function buddySendMessage(pairId) {
     if (data.flag === 'self-harm') openCrisisSheet();
   } else {
     const reasons = {
+      'threat': 'This message has been blocked. Bloom takes threats of violence seriously. Repeated violations will result in a permanent ban.',
       'rate-limit': 'Easy there! Try again in a bit.',
       'harmful': 'Let\u2019s keep things gentle. Try rephrasing?',
       'safety': 'For everyone\u2019s safety, personal info and contact details can\u2019t be shared here.',
@@ -18274,6 +18375,13 @@ function renderBuddyMessagesForPair(pairId) {
     const cls = isMine ? 'buddy-msg sent' : 'buddy-msg received';
     const nudgeCls = isNudge ? ' nudge' : '';
     html += `<div class="${cls}${nudgeCls}">${escapeHtml(msg.text)}</div>`;
+    // Show gentle crisis guidance to the receiving partner when a buddy sends a self-harm message
+    if (!isMine && msg.flag === 'self-harm') {
+      html += `<div style="background:rgba(201,149,74,0.1);border:1px solid rgba(201,149,74,0.2);border-radius:var(--r-md);padding:8px 12px;margin:4px 0 8px;font-size:11px;color:var(--text-secondary);line-height:1.5">
+        Your buddy may be going through a hard time. You don't need to be their therapist. Just being kind matters.
+        <span onclick="openCrisisSheet()" style="color:var(--amber-light);cursor:pointer;text-decoration:underline;margin-left:4px">Crisis resources</span>
+      </div>`;
+    }
   });
   container.innerHTML = html;
   container.scrollTop = container.scrollHeight;
@@ -18414,6 +18522,48 @@ function renderCommunityTab() {
   const scroll = document.getElementById('community-scroll');
   if (!scroll) return;
 
+  const prefs = load('bloom_prefs', {});
+
+  // Under-16 users: community features are not available
+  if (prefs.ageGroup === '13to15') {
+    scroll.innerHTML = `
+      <div style="text-align:center;padding:40px 20px">
+        <div style="font-size:32px;margin-bottom:12px">💛</div>
+        <div style="font-family:Fraunces,serif;font-size:18px;color:var(--cream);margin-bottom:12px">Community features</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;max-width:360px;margin-left:auto;margin-right:auto">
+          The buddy system and encouragement wall are available for users 16 and older. This is to keep community interactions safe for everyone.
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px;max-width:360px;margin-left:auto;margin-right:auto">
+          You still have access to everything else in bloom: journaling, mood tracking, breathing exercises, wellness tools, and crisis resources. Those are the heart of bloom, and they're all yours.
+        </div>
+        <div style="max-width:320px;margin:0 auto">
+          <button class="btn btn-secondary btn-block" onclick="openCrisisSheet()">Crisis resources</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:16px">You can update your age group in Settings when you turn 16.</div>
+      </div>
+    `;
+    return;
+  }
+
+  // Existing users who haven't accepted terms: show one-time consent prompt before community features
+  if (!prefs.termsAcceptedAt) {
+    scroll.innerHTML = `
+      <div style="text-align:center;padding:40px 20px">
+        <div style="font-size:32px;margin-bottom:12px">📋</div>
+        <div style="font-family:Fraunces,serif;font-size:18px;color:var(--cream);margin-bottom:12px">Updated terms</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;max-width:360px;margin-left:auto;margin-right:auto">
+          Before using community features, please review and accept the updated Terms of Use and Privacy Policy.
+          Community messages are screened for safety. Credible threats of violence are logged and may be reported to authorities.
+        </div>
+        <div style="max-width:320px;margin:0 auto">
+          <button class="btn btn-secondary btn-block" style="margin-bottom:10px" onclick="openSettingsSection('privacy')">Read full terms</button>
+          <button class="btn btn-primary btn-block" onclick="acceptTermsForCommunity()">I agree to the Terms of Use</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
   let html = '';
 
   // Wall header
@@ -18461,6 +18611,7 @@ function renderCommunityTab() {
     <div style="font-size:11px;color:var(--text-muted);line-height:1.7">
       This is a safe, moderated space. Messages are anonymous and screened automatically.
       <br>Some messages may appear blurred if flagged — you can choose to view them.
+      <br>Threats of violence are logged and may be reported to authorities.
       <br>Be kind. Be real. Be gentle with each other.
       <br><span style="opacity:0.6">Learn more in Settings → How moderation works</span>
     </div>
@@ -18554,6 +18705,34 @@ function updateWallCharCount() {
   if (input && count) count.textContent = `${input.value.length}/140`;
 }
 
+async function deleteCommunityData() {
+  if (!confirm('This will permanently delete all your community data: buddy profile, messages, pairs, and moderation history. This cannot be undone. Continue?')) return;
+  if (!confirm('Are you sure? All buddy connections will be lost.')) return;
+  const buddyId = load('bloom_buddy_id', null);
+  if (buddyId) {
+    try {
+      await timedFetch('/api/buddy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete-my-data', buddyId }),
+      });
+    } catch(e) {}
+  }
+  // Clear local buddy state
+  localStorage.removeItem('bloom_buddy_id');
+  localStorage.removeItem('bloom_wall_fp');
+  alert('Your community data has been deleted.');
+  if (typeof renderCommunityTab === 'function') renderCommunityTab();
+}
+
+function acceptTermsForCommunity() {
+  const prefs = load('bloom_prefs', {});
+  prefs.termsAcceptedAt = Date.now();
+  prefs.termsVersion = '2026-03';
+  save('bloom_prefs', prefs);
+  renderCommunityTab();
+}
+
 async function postToWall() {
   const input = document.getElementById('wall-input');
   const status = document.getElementById('wall-post-status');
@@ -18589,6 +18768,7 @@ async function postToWall() {
       if (data.flag === 'self-harm') setTimeout(() => openCrisisSheet(), 800);
     } else {
       const reasons = {
+        'threat': 'This message has been blocked. Bloom takes threats of violence seriously. Repeated violations will result in a permanent ban.',
         'length': 'Message should be 3-140 characters.',
         'harmful': 'Let\'s keep this space gentle and safe. Try rephrasing?',
         'safety': 'For everyone\'s safety, personal info and contact details can\'t be shared here.',

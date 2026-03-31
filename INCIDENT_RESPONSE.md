@@ -1,74 +1,150 @@
-# Incident Response Plan
+# Bloom Incident Response Plan
 
-## Contact
+## Purpose
 
-- **Primary contact:** bloomhabits@proton.me
-- **Admin dashboard:** bloomselfcare.app/admin.html (requires ADMIN_KEY)
+This document outlines what to do when Bloom's automated systems detect a credible threat of violence through community features (buddy messages, encouragement wall). It exists because Bloom is a mental health app used by young people, and while the platform blocks and logs these threats automatically, a human needs to assess whether further action is required.
 
-## 1. Crisis Content Escalation
+## How threats are detected
 
-When moderation detects serious threat language (directed harm, credible threats of violence):
+Bloom's moderation system has a dedicated `CREDIBLE_THREAT_PATTERNS` tier that catches specific, actionable threats of violence (mass harm, weapons + targets, named locations). When triggered:
 
-1. The message is automatically blocked and the user receives a strike
-2. After 3 strikes in 24 hours, the user is automatically banned from community features
-3. The incident is logged to the diagnostics system with full metadata (timestamp, fingerprint, content hash)
-4. Admin reviews flagged content via the admin dashboard
-5. For credible, imminent threats: contact local law enforcement if enough identifying information exists. Otherwise, ensure crisis resources are surfaced to the user
+1. The message is **blocked** (never posted or delivered)
+2. The user is **immediately banned** from all community features
+3. The full message, IP address, user agent, timestamp, and user identifier are **logged** to a dedicated Redis key (`bloom_mod:threat_log`) with 1-year retention
+4. An **admin alert** is sent via webhook (if `ALERT_WEBHOOK_URL` is configured) and/or push notification (if `ADMIN_ONESIGNAL_ID` is configured)
 
-**Self-harm language** is handled differently. These messages are flagged (not blocked) and crisis resources are gently surfaced to the user. On the public wall, self-harm flagged messages are held from public view to prevent contagion risk.
+## When you receive an alert
 
-## 2. Data Breach Procedure
+### Step 1: Review the threat (within minutes)
 
-Bloom stores community data (buddy messages, wall posts, user fingerprints) in Redis via Vercel KV. All personal data (journals, mood, habits) is stored locally on users' devices and is never transmitted to Bloom's servers.
+Open the admin dashboard (`/admin.html`) and check the Threat Log section. Read the full message and metadata.
 
-**If Redis is compromised:**
+Ask yourself:
+- Is this a **specific** threat? (named location, time, method)
+- Is this **credible**? (not obviously sarcastic, not song lyrics, not quoting something)
+- Is this **imminent**? (happening now or in the near future)
+- Does the user appear to have **means** or **access**? (mentions having weapons, being at a specific location)
 
-1. Assess scope: Determine what data was accessed (buddy messages, wall posts, fingerprints, display names)
-2. Contain: Rotate Redis credentials immediately via Vercel environment variables
-3. Notify: Update the app with a banner notifying users of the breach as soon as reasonably possible
-4. Communicate: Email any known affected users (if contact information is available through buddy display names)
-5. Document: Record the timeline, scope, and response actions taken
-6. Review: Assess whether additional protections (encryption at rest, access logging) should be implemented
+### Step 2: Assess severity
 
-**What could be exposed in a Redis breach:**
-- Buddy display names and messages
-- Wall posts (anonymous, but text content visible)
-- User fingerprints (random client-generated IDs, not personally identifiable)
-- Moderation strike history
+**LOW severity** (no further action needed):
+- Obvious trolling or testing the filters
+- Song lyrics, movie quotes, or hypothetical language
+- Vague frustration without specific targets ("I hate this place")
+- The auto-ban and logging are sufficient
 
-**What cannot be exposed (never stored server-side):**
-- Journal entries, mood logs, habit data, affirmations
-- Real names, email addresses, phone numbers (Bloom has no accounts)
+**MEDIUM severity** (document and monitor):
+- Somewhat specific but unclear intent
+- Could be interpreted as a threat but context suggests venting
+- Save screenshots of the threat log entry
+- Check if the same user ID has prior strikes (check Flagged Users section)
+- Monitor for repeat behavior over the next 24-48 hours
 
-## 3. Service Outage Communication
+**HIGH severity** (report to authorities):
+- Specific target (named school, church, workplace, person)
+- Specific method (shooting, bombing, stabbing)
+- Specific timeframe ("tomorrow", "Monday", "after school")
+- Evidence of means ("I have a gun", "I brought a knife")
+- Prior escalating behavior from the same user ID
 
-**If Vercel or Redis is down:**
+### Step 3: Report to authorities (HIGH severity only)
 
-1. The app continues to function for all local features (journaling, mood tracking, habits, breathing exercises). Only AI reflections and community features are affected.
-2. AI calls fail gracefully with a warm fallback message. No spinner gets stuck (try/finally ensures cleanup).
-3. If the outage is extended (>1 hour), post a status update to the Bloom GitHub repository.
-4. No user data is lost during outages. LocalStorage and IndexedDB maintain all personal data on-device.
+**For imminent threats (happening now or today):**
+- Call 911 and provide:
+  - The exact message text
+  - The IP address from the log
+  - The timestamp
+  - Any other metadata available
+  - That this came from an anonymous web-based mental health app
 
-## 4. Admin Key Compromise
+**For non-imminent but credible threats:**
+- Submit a tip to the FBI Internet Crime Complaint Center: https://tips.fbi.gov
+- Or call the FBI tip line: 1-800-CALL-FBI (1-800-225-5324)
+- Provide the same information as above
 
-If the ADMIN_KEY is suspected compromised:
+**For threats involving schools:**
+- Contact the FBI tip line (they coordinate with local agencies for school threats)
+- If you can identify the school from the message content, you can also contact the school district directly
 
-1. Immediately change the ADMIN_KEY in Vercel environment variables
-2. Redeploy the application
-3. Review admin dashboard access logs (diagnostics endpoint) for unauthorized actions
-4. Audit any moderation actions taken during the suspected compromise window
+### Step 4: Preserve evidence
 
-## 5. Dependency Vulnerability
+- **Do not delete** the threat log entry from Redis
+- Take screenshots of the admin dashboard showing the threat entry
+- Save the full metadata (timestamp, IP, user agent, message, user ID)
+- If law enforcement contacts you, you can export the threat log via the admin API:
+  ```
+  POST /api/wall
+  { "action": "threat-log", "adminKey": "[your-admin-key]" }
+  ```
 
-Bloom has minimal dependencies (only the `redis` npm package for serverless functions). If a vulnerability is disclosed:
+### Step 5: Document your response
 
-1. Check if the vulnerability affects Bloom's usage pattern
-2. Update the dependency promptly
-3. Redeploy
+Keep a simple record of what you did:
+- Date/time you became aware
+- What the threat said (summary)
+- Your severity assessment
+- What action you took (or why you took no action)
+- Any reference numbers from law enforcement
 
-## Review Schedule
+This protects you legally by showing you had a process and followed it.
 
-This document should be reviewed and updated:
-- After any incident
-- When new community features are added
-- At least annually
+## What Bloom can and cannot provide to law enforcement
+
+**Available:**
+- Full message text (up to 500 characters)
+- IP address (from Vercel's x-forwarded-for header, may be a VPN or proxy)
+- User agent string (browser/device info)
+- Timestamp (UTC milliseconds)
+- User identifier (client-generated fingerprint or buddy ID, not a real identity)
+- Moderation strike history for the same user ID
+
+**Not available:**
+- Real name, email, phone number, or physical address (Bloom has no accounts)
+- Message history beyond what was blocked (normal messages are not logged with IP)
+- Location data
+- Device identifiers beyond user agent
+
+**Important:** Bloom's user identifiers are client-generated random strings, not real identities. Law enforcement would need to subpoena Vercel (for server logs with IP-to-request mapping) or the user's ISP (for IP-to-identity resolution) to identify someone.
+
+## Legal basis
+
+Bloom's Terms of Use (visible in Settings and accepted during onboarding) disclose that:
+- Credible threats of violence are logged with metadata
+- Bloom reserves the right to report credible, imminent threats to law enforcement
+- Bloom will cooperate with valid legal requests (subpoenas, court orders)
+- This applies only to credible violent threats, not to venting, emotional expression, or self-harm language
+
+## Setup
+
+To receive real-time alerts, configure these environment variables in Vercel:
+
+### Email alerts (recommended)
+
+1. Sign up at [resend.com](https://resend.com) (free tier: 100 emails/day)
+2. Add and verify your domain (`bloomselfcare.app`) in Resend's dashboard. This involves adding a few DNS records (MX, SPF, DKIM) to your domain's DNS settings in Vercel or your registrar. Resend walks you through it.
+3. Create an API key in Resend's dashboard
+4. Set these env vars in Vercel:
+   - `RESEND_API_KEY`: Your Resend API key
+   - `ALERT_EMAIL_TO`: `bloomhabits@proton.me`
+   - `ALERT_EMAIL_FROM`: `Bloom Alerts <alerts@bloomselfcare.app>` (must use your verified domain)
+
+Threat alert emails include a formatted HTML view with the full message, metadata, and incident response steps.
+
+### Push notifications
+
+1. Open Bloom on your phone and enable push notifications
+2. Find your OneSignal subscription ID in the OneSignal dashboard (Audience > Subscriptions)
+3. Set in Vercel:
+   - `ADMIN_ONESIGNAL_ID`: Your OneSignal subscription ID
+
+### Webhook (optional, for Discord/Slack/etc.)
+
+- `ALERT_WEBHOOK_URL`: A webhook URL that receives POST requests with JSON `{ text, content }`. Works with Discord webhooks, Slack incoming webhooks, Zapier, Make, or any service that accepts webhook POSTs.
+
+## Review schedule
+
+Review this plan every 6 months or after any incident. Update contact information and procedures as needed.
+
+---
+
+*Last updated: March 2026*

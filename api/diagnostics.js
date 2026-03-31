@@ -320,7 +320,7 @@ export default async function handler(req, res) {
   // ── GET: Admin dashboard data ───────────────────────────
   if (req.method === 'GET') {
     const adminKey = process.env.ADMIN_KEY;
-    const provided = req.headers['x-admin-key'] || req.query?.key;
+    const provided = req.headers['x-admin-key'];
 
     if (!adminKey || provided !== adminKey) {
       return res.status(401).json({ error: 'Unauthorized' });

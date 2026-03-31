@@ -550,7 +550,7 @@ export default async function handler(req, res) {
 
   // Auth check
   const adminKey = process.env.ADMIN_KEY;
-  const provided = req.query?.key || req.headers['x-admin-key'];
+  const provided = req.headers['x-admin-key'];
   if (!adminKey || provided !== adminKey) {
     return res.status(401).json({ error: 'Unauthorized' });
   }

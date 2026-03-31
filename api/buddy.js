@@ -1,128 +1,10 @@
 // Vercel serverless function for bloom buddy
 // Uses Vercel KV (Upstash Redis) via REST API — same pattern as wall.js
 
-// ── Content moderation (shared with wall) ──────────────────
-// Philosophy: allow venting/self-expression, offer resources for self-harm,
-// block language that targets or harms *others*
-
-// Directed harm — messages intended to hurt another person
-const DIRECTED_HARM = [
-  /\bkill\s*your\s*self\b/i,
-  /\bkys\b/i,
-  /\bgo\s*die\b/i,
-  /\bend\s*it\s*all\b/i,
-  /\byou\s*should\s*(die|kill|hurt)\b/i,
-  /\bnobody\s*(loves|cares about|likes)\s*you\b/i,
-  /\byou\s*deserve\s*to\s*(die|suffer|hurt)\b/i,
-  /\bi('ll|m going to|m gonna)\s*(kill|hurt|find)\s*you\b/i,
-];
-
-// Slurs & targeted abuse — language used to dehumanize others
-const TARGETED_ABUSE = [
-  /\b(bitch|cunt|faggot|retard|tranny|n[i1]gg[ae3]r)\b/i,
-];
-
-// Grooming / predatory language — blocked unconditionally
-const GROOMING_PATTERNS = [
-  /\bhow\s*old\s*are\s*you\b/i,
-  /\bwhat\s*('s\s*your|is\s*your)\s*(age|grade)\b/i,
-  /\bwhere\s*(do\s*you|u)\s*(live|stay|go\s*to\s*school)\b/i,
-  /\bwhat\s*school\s*(do\s*you|u)\b/i,
-  /\bsend\s*(me\s*)?(a\s*)?(pic|photo|selfie|image)\b/i,
-  /\bdon'?t\s*tell\s*(anyone|your\s*(parents?|mom|dad|teacher))\b/i,
-  /\bkeep\s*this\s*(between\s*us|a\s*secret|our\s*secret)\b/i,
-  /\bjust\s*between\s*(us|you\s*and\s*me)\b/i,
-  /\b(meet|hang)\s*(up|out|me)\s*(in\s*person|irl|somewhere)\b/i,
-  /\bmeet\s*in\s*(real\s*life|person)\b/i,
-];
-
-// Contact exchange — blocked to prevent off-platform communication
-const CONTACT_EXCHANGE = [
-  /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/,                         // US phone numbers
-  /\b\+\d{1,3}[-.\s]?\d{6,14}\b/,                               // international phone numbers
-  /\b(snap(chat)?|insta(gram)?|discord|tiktok|telegram|whatsapp|signal|kik|wechat)\s*[:\-]?\s*@?\w/i,
-  /\b(add|hmu|hit\s*me\s*up|dm\s*me|message\s*me)\s*(on|at)\b/i,
-  /\bmy\s*(snap|insta|discord|tiktok|number|#)\s*(is|:)\b/i,
-  /\b(follow|add)\s*me\s*(on|@)\b/i,
-  /\bwhat'?s\s*your\s*(snap|insta|discord|number|ig|tiktok|username)\b/i,
-];
-
-// Crude / sexual content — blocked in buddy (1-on-1), soft-flagged on wall (public)
-const CRUDE_PATTERNS = [
-  /\b(hog|dong|wiener|schlong|pp|peen|johnson|boner)\b/i,
-  /\bcrank\b.*\b(hog|one|it)\b/i,
-  /\b(jerk|jack|wank|beat)\s*(off|it|ing)\b/i,
-  /\b(dick|cock|penis|balls|nuts|tits|boobs|ass|booty)\b/i,
-  /\b(horny|sexy|bang|hookup|hook up|smash|69)\b/i,
-  /\b(porn|onlyfans|nsfw|nude|naked)\b/i,
-  /\b(shit|fuck|damn|hell|crap|piss)\b/i,
-  /\b(stfu|gtfo|lmao.*ass|dumbass|badass|jackass)\b/i,
-];
-
-// Spam / link / injection prevention
-const SPAM_PATTERNS = [
-  /\b(http|www\.|\.\bcom\b|\.\borg\b|\.\bnet\b)\b/i,
-  /@|#|\$\$|[<>]/,
-];
-
-// Self-harm language — not blocked, but flagged so the client can offer resources.
-// Only flag language specifically about ending one's life or self-harm intent.
-// Do NOT flag general distress, hopelessness, or venting — Bloom exists for people
-// having a hard time, and they should never feel surveilled for expressing pain.
-const SELF_HARM_PATTERNS = [
-  /\b(kill myself|end my life|want to die|don'?t want to (be here|live|exist|be alive))\b/i,
-  /\b(suicide|suicidal|self[- ]?harm|cut myself|hurt myself)\b/i,
-  /\beveryone would be better off without me\b/i,
-  /\bwish I (didn'?t|wouldn'?t|won'?t) wake up\b/i,
-  /\bwant to end it all\b/i,
-];
-
-function moderateMessage(text, source = 'buddy') {
-  const lower = text.toLowerCase().trim();
-  if (lower.length < 1 || lower.length > 200) return { ok: false, reason: 'length' };
-
-  // Block directed harm toward others
-  for (const pat of DIRECTED_HARM) {
-    if (pat.test(lower)) return { ok: false, reason: 'harmful' };
-  }
-
-  // Block targeted slurs/abuse
-  for (const pat of TARGETED_ABUSE) {
-    if (pat.test(lower)) return { ok: false, reason: 'harmful' };
-  }
-
-  // Block grooming / predatory language
-  for (const pat of GROOMING_PATTERNS) {
-    if (pat.test(lower)) return { ok: false, reason: 'safety' };
-  }
-
-  // Block contact exchange attempts
-  for (const pat of CONTACT_EXCHANGE) {
-    if (pat.test(lower)) return { ok: false, reason: 'safety' };
-  }
-
-  // Crude/sexual content: hard-block in buddy (1-on-1), soft-flag on wall (public)
-  for (const pat of CRUDE_PATTERNS) {
-    if (pat.test(lower)) {
-      if (source === 'buddy') return { ok: false, reason: 'inappropriate' };
-      return { ok: true, flag: 'crude' };
-    }
-  }
-
-  // Block spam/links
-  for (const pat of SPAM_PATTERNS) {
-    if (pat.test(lower)) return { ok: false, reason: 'filtered' };
-  }
-
-  if (!/[a-zA-Z]/.test(text)) return { ok: false, reason: 'no-text' };
-
-  // Flag self-harm language — allow the message but signal the client to show resources
-  for (const pat of SELF_HARM_PATTERNS) {
-    if (pat.test(lower)) return { ok: true, flag: 'self-harm' };
-  }
-
-  return { ok: true };
-}
+// ── Content moderation (shared module) ─────────────────────
+// All patterns and the moderateMessage function live in moderation.js.
+// Update patterns there — both buddy.js and wall.js use the same source.
+import { moderateMessage } from './moderation.js';
 
 // ── Redis client helpers ────────────────────────────────────
 import { createClient } from 'redis';
@@ -144,21 +26,21 @@ async function kvGet(key) {
     const val = await client.get(key);
     if (val === null) return null;
     return JSON.parse(val);
-  } catch(e) { console.error('kvGet failed:', key, e.message); return null; }
+  } catch(e) { return null; }
 }
 
 async function kvSet(key, value) {
   try {
     const client = await getRedis();
     await client.set(key, JSON.stringify(value));
-  } catch(e) { console.error('kvSet failed:', key, e.message); }
+  } catch(e) {}
 }
 
 async function kvDel(key) {
   try {
     const client = await getRedis();
     await client.del(key);
-  } catch(e) { console.error('kvDel failed:', key, e.message); }
+  } catch(e) {}
 }
 
 // Log moderation events to diagnostics
@@ -183,6 +65,114 @@ async function logModeration(source, result) {
     dayStats[counterKey] = (dayStats[counterKey] || 0) + 1;
     await client.set(dayKey, JSON.stringify(dayStats), { EX: 90 * 86400 });
   } catch(e) {}
+}
+
+// ── Threat compliance logging ──────────────────────────────
+// Credible violent threats are logged with full metadata (message, IP, timestamp,
+// user identifier) to a separate, long-retention Redis key. This exists solely
+// so that if law enforcement requests records, we have something to produce.
+// These logs are never displayed to users and are only accessible by admin.
+const THREAT_LOG_KEY = 'bloom_mod:threat_log';
+
+async function logThreat(source, userId, messageText, req) {
+  const ip = req?.headers?.['x-forwarded-for']?.split(',')[0]?.trim()
+    || req?.headers?.['x-real-ip']
+    || req?.socket?.remoteAddress
+    || 'unknown';
+  const entry = {
+    ts: Date.now(),
+    source,
+    userId: userId || 'unknown',
+    ip,
+    userAgent: (req?.headers?.['user-agent'] || '').slice(0, 200),
+    message: (messageText || '').slice(0, 500),
+  };
+  try {
+    const client = await getRedis();
+    const raw = await client.get(THREAT_LOG_KEY);
+    const logs = raw ? JSON.parse(raw) : [];
+    logs.push(entry);
+    // Keep up to 1000 threat logs, 1 year retention
+    if (logs.length > 1000) logs.splice(0, logs.length - 1000);
+    await client.set(THREAT_LOG_KEY, JSON.stringify(logs), { EX: 365 * 86400 });
+  } catch(e) {}
+  // Send admin alert (non-blocking, fire and forget)
+  alertAdmin(entry).catch(() => {});
+}
+
+// ── Admin alert for credible threats ───────────────────────
+// Sends up to 3 notifications when a credible threat is detected:
+// 1. Email via Resend (RESEND_API_KEY + ALERT_EMAIL_TO)
+// 2. Push notification via OneSignal (ADMIN_ONESIGNAL_ID)
+// 3. Webhook POST (ALERT_WEBHOOK_URL) for Discord/Slack/etc.
+async function alertAdmin(entry) {
+  const timestamp = new Date(entry.ts).toISOString();
+  const summary = `CREDIBLE THREAT DETECTED\n\nSource: ${entry.source}\nTime: ${timestamp}\nUser: ${entry.userId}\nIP: ${entry.ip}\nMessage: ${entry.message}\n\nINCIDENT RESPONSE:\n1. Review the full threat log in the admin dashboard\n2. Assess whether the threat is specific, credible, and imminent\n3. If credible: contact local law enforcement or submit an FBI tip at tips.fbi.gov\n4. The user has been auto-banned from all community features\n5. Preserve all evidence (do not delete the threat log entry)`;
+
+  const promises = [];
+
+  // Email alert via Resend
+  const resendKey = process.env.RESEND_API_KEY;
+  const alertEmail = process.env.ALERT_EMAIL_TO;
+  if (resendKey && alertEmail) {
+    promises.push(
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${resendKey}`,
+        },
+        body: JSON.stringify({
+          from: process.env.ALERT_EMAIL_FROM || 'Bloom Alerts <alerts@bloomselfcare.app>',
+          to: [alertEmail],
+          subject: `[BLOOM] Credible threat detected via ${entry.source}`,
+          text: summary,
+          html: `<div style="font-family:monospace;white-space:pre-wrap;background:#1a1a1a;color:#e0e0e0;padding:20px;border-radius:8px">
+<h2 style="color:#b07878;margin-top:0">CREDIBLE THREAT DETECTED</h2>
+<p><strong>Source:</strong> ${entry.source}<br>
+<strong>Time:</strong> ${timestamp}<br>
+<strong>User ID:</strong> ${entry.userId}<br>
+<strong>IP:</strong> ${entry.ip}<br>
+<strong>User Agent:</strong> ${(entry.userAgent || '').slice(0, 100)}</p>
+<div style="background:#2a1a1a;padding:12px;border-radius:4px;border:1px solid #b07878;margin:12px 0">
+<strong>Message:</strong><br>${entry.message}
+</div>
+<h3 style="color:#c9954a">Incident Response Steps</h3>
+<ol>
+<li>Review the full threat log in the <a href="https://bloomselfcare.app/admin.html" style="color:#8fbc8f">admin dashboard</a></li>
+<li>Assess whether the threat is specific, credible, and imminent</li>
+<li>If credible: contact local law enforcement or submit an FBI tip at <a href="https://tips.fbi.gov" style="color:#8fbc8f">tips.fbi.gov</a></li>
+<li>The user has been auto-banned from all community features</li>
+<li>Preserve all evidence (do not delete the threat log entry)</li>
+</ol>
+<p style="color:#888;font-size:12px">See INCIDENT_RESPONSE.md for the full playbook.</p>
+</div>`,
+        }),
+      }).catch(() => {})
+    );
+  }
+
+  // Push notification via OneSignal
+  const adminPushId = process.env.ADMIN_ONESIGNAL_ID;
+  if (adminPushId) {
+    promises.push(
+      sendPush(adminPushId, 'BLOOM: Credible threat detected', `Threat logged from ${entry.source}. Check admin dashboard immediately.`)
+    );
+  }
+
+  // Webhook (Discord, Slack, etc.)
+  const webhookUrl = process.env.ALERT_WEBHOOK_URL;
+  if (webhookUrl) {
+    promises.push(
+      fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: summary, content: summary }),
+      }).catch(() => {})
+    );
+  }
+
+  await Promise.allSettled(promises);
 }
 
 // ── User moderation strikes (shared store with wall.js) ─────
@@ -214,9 +204,11 @@ async function recordStrike(userId, reason, source, messageText) {
   if (!strikes[userId].banned) {
     const oneDayAgo = Date.now() - 86400000;
     const recentBlocked = strikes[userId].incidents.filter(
-      i => i.ts > oneDayAgo && (i.reason === 'harmful' || i.reason === 'safety' || i.reason === 'inappropriate')
+      i => i.ts > oneDayAgo && (i.reason === 'threat' || i.reason === 'harmful' || i.reason === 'safety' || i.reason === 'inappropriate')
     );
-    if (recentBlocked.length >= 3) {
+    // Immediate ban for credible threats, otherwise 3-strike rule
+    const hasThreat = recentBlocked.some(i => i.reason === 'threat');
+    if (hasThreat || recentBlocked.length >= 3) {
       strikes[userId].banned = true;
       strikes[userId].autoBannedAt = Date.now();
     }
@@ -762,6 +754,9 @@ export default async function handler(req, res) {
     await logModeration('buddy_message', check);
     if (!check.ok) {
       await recordStrike(buddyId, check.reason, 'buddy', text);
+      if (check.reason === 'threat') {
+        await logThreat('buddy', buddyId, text, req);
+      }
       return res.json({ ok: false, reason: check.reason });
     }
 
@@ -785,6 +780,8 @@ export default async function handler(req, res) {
       ts: Date.now(),
       type: 'msg',
     };
+    // Store self-harm flag on the message so the receiving partner also sees crisis guidance
+    if (check.flag === 'self-harm') msg.flag = 'self-harm';
     messages.push(msg);
     const trimmed = messages.slice(-50);
     await kvSet(`bloom_buddy_msgs:${targetPair.pairId}`, trimmed);
@@ -793,7 +790,7 @@ export default async function handler(req, res) {
     const partner = await kvGet(`bloom_buddy:${targetPair.partnerId}`);
     const myProfile = await kvGet(`bloom_buddy:${buddyId}`);
     if (partner?.oneSignalId) {
-      await sendPush(partner.oneSignalId, 'bloom buddy', `${myProfile?.name || 'Your buddy'}: ${text.slice(0, 80)}`);
+      await sendPush(partner.oneSignalId, 'bloom buddy', `${myProfile?.name || 'Your bloom buddy'} sent you a message`);
     }
 
     const resp = { ok: true, message: msg };
@@ -899,6 +896,48 @@ export default async function handler(req, res) {
         partner.blocked = true;
         await kvSet(`bloom_buddy:${targetPair.partnerId}`, partner);
       }
+    }
+
+    return res.json({ ok: true });
+  }
+
+  // ── DELETE MY DATA: GDPR right to erasure ──────────────
+  if (action === 'delete-my-data') {
+    if (!buddyId) return res.status(400).json({ error: 'Missing buddyId' });
+
+    const lookup = await getLookup(buddyId);
+
+    // Remove messages from all pair threads and update partner lookups
+    for (const pair of lookup.pairs) {
+      // Delete message thread
+      await kvDel(`bloom_buddy_msgs:${pair.pairId}`);
+      // Delete pair record
+      await kvDel(`bloom_buddy_pair:${pair.pairId}`);
+      // Remove this pair from partner's lookup
+      if (pair.partnerId) {
+        await removePairFromLookup(pair.partnerId, pair.pairId);
+      }
+    }
+
+    // Delete profile and lookup
+    await kvDel(`bloom_buddy:${buddyId}`);
+    await kvDel(`bloom_buddy_lookup:${buddyId}`);
+
+    // Remove from matchmaking queue if present
+    try {
+      const client = await getRedis();
+      const queue = await kvGet('bloom_buddy_queue') || [];
+      const filtered = queue.filter(q => q.buddyId !== buddyId);
+      if (filtered.length !== queue.length) {
+        await kvSet('bloom_buddy_queue', filtered);
+      }
+    } catch(e) {}
+
+    // Remove moderation strikes (but NOT threat logs, which have legitimate retention)
+    const strikes = await getStrikes();
+    if (strikes[buddyId]) {
+      delete strikes[buddyId];
+      await saveStrikes(strikes);
     }
 
     return res.json({ ok: true });

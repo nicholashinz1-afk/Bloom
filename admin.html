@@ -384,7 +384,7 @@
       <div class="card" style="border-left:3px solid var(--text-muted)">
         <div>
           <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 4: Reach</div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">School outreach (DePauw, Interlochen — emailed), employer/parent company wellness (pitched), internationalization, crisis org partnerships</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">School outreach (DePauw — emailed, Interlochen — discovery call April 6), employer/parent company wellness (pitched), internationalization, crisis org partnerships</div>
         </div>
       </div>
       <div class="card" style="border-left:3px solid var(--text-muted)">
@@ -556,6 +556,19 @@
         <div class="loading">Click "Refresh" to load flagged users.</div>
       </div>
     </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h2>Threat Log</h2>
+        <button onclick="loadThreatLog()" style="padding:6px 14px;background:#b07878;color:#fff;border:none;border-radius:var(--r-md);font-size:12px;font-weight:600;cursor:pointer">Refresh</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+        Credible threats of violence logged with full metadata for compliance. These records are retained for 1 year and may be shared with law enforcement if needed.
+      </div>
+      <div id="threat-log-list">
+        <div class="loading">Click "Refresh" to load threat log.</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -564,9 +577,10 @@ let adminKey = '';
 let dashboardData = null;
 let refreshInterval = null;
 
-function adminFetch(url, opts = {}) {
-  opts.headers = { ...opts.headers, 'X-Admin-Key': adminKey };
-  return fetch(url, opts);
+// Helper for authenticated requests — sends key via header, not URL
+function adminFetch(url, options = {}) {
+  const headers = { ...options.headers, 'X-Admin-Key': adminKey };
+  return fetch(url, { ...options, headers });
 }
 
 function authenticate() {
@@ -1316,6 +1330,49 @@ async function toggleBanUser(fp, ban) {
   }
 }
 
+// ── Threat Log ──────────────────────────────────────────────
+async function loadThreatLog() {
+  const container = document.getElementById('threat-log-list');
+  container.innerHTML = '<div class="loading">Loading threat log...</div>';
+  try {
+    const res = await fetch('/api/wall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'threat-log', adminKey }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      renderThreatLog(data.threats || []);
+    } else {
+      container.innerHTML = '<div class="loading">Failed to load threat log</div>';
+    }
+  } catch(e) {
+    container.innerHTML = '<div class="loading">Error: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+function renderThreatLog(threats) {
+  const container = document.getElementById('threat-log-list');
+  if (threats.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:16px;text-align:center">No threat logs recorded. This is a good thing.</div>';
+    return;
+  }
+  container.innerHTML = threats.map(t => `
+    <div style="background:rgba(176,120,120,0.08);border:1px solid rgba(176,120,120,0.15);border-radius:var(--r-md);padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span class="wall-badge admin">${escapeHtml(t.source || 'unknown')}</span>
+        <span style="font-size:11px;color:var(--text-muted)">${new Date(t.ts).toLocaleString()}</span>
+      </div>
+      <div style="font-size:13px;color:var(--cream);margin-bottom:8px;word-break:break-word">${escapeHtml(t.message || '')}</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.6">
+        <div>User ID: <code>${escapeHtml(t.userId || 'unknown')}</code></div>
+        <div>IP: <code>${escapeHtml(t.ip || 'unknown')}</code></div>
+        <div>User Agent: <code>${escapeHtml((t.userAgent || 'unknown').slice(0, 100))}</code></div>
+      </div>
+    </div>
+  `).join('');
+}
+
 // ── Level Analytics ──────────────────────────────────────────
 let levelData = null;
 
@@ -1526,11 +1583,8 @@ function renderLevelAnalytics() {
 const _keyInput = document.getElementById('admin-key-input');
 if (_keyInput) _keyInput.focus();
 
-// Check for key in URL hash for bookmarkability
-if (location.hash.startsWith('#key=')) {
-  document.getElementById('admin-key-input').value = location.hash.slice(5);
-  authenticate();
-}
+// Admin key should be entered manually, not stored in URLs
+// (previously used URL hash for bookmarkability, removed for security)
 </script>
 </body>
 </html>
