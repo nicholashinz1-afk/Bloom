@@ -4391,6 +4391,19 @@ function getLevelIndex(level) {
   return getScaledLevels().findIndex(l => l.name === level.name);
 }
 
+function getThemeSVGColors() {
+  const themeKey = state.prefs?.theme || 'forest';
+  const t = THEMES[themeKey] || THEMES.forest;
+  return {
+    stem: t.primaryDim || '#5a8a5e',
+    leaf: t.primary || '#7a9e7e',
+    leafLight: t.primaryLight || '#a8c5ab',
+    petal: t.primaryLight || '#a8c5ab',
+    petalDark: t.primary || '#7a9e7e',
+    glow: t.seasonal || '#a8c5ab',
+  };
+}
+
 function buildFlowerSVG(levelIdx, animated = false) {
   const i = Math.min(levelIdx, 9);
   const stageNames = ['Seedling','Sprout','Blooming','Thriving','Radiant','Glowing','Flourishing','Rooted','Evergreen','Full Bloom'];
@@ -4398,9 +4411,10 @@ function buildFlowerSVG(levelIdx, animated = false) {
   const potColor = '#6b5a4a';
   const potLight = '#8a7560';
   const soilColor = '#4a3d30';
-  const stemColor = '#5a8a5e';
-  const leafColor = '#7a9e7e';
-  const leafLight = '#a8c5ab';
+  const tc = getThemeSVGColors();
+  const stemColor = tc.stem;
+  const leafColor = tc.leaf;
+  const leafLight = tc.leafLight;
 
   // Height of stem grows with level
   const stemH = [15, 35, 55, 65, 70, 75, 78, 82, 85, 90][i];
@@ -4428,11 +4442,11 @@ function buildFlowerSVG(levelIdx, animated = false) {
       <line x1="100" y1="160" x2="100" y2="${stemTop + 15}" stroke="${stemColor}" stroke-width="4" stroke-linecap="round"/>
       <ellipse cx="85" cy="${stemTop + 35}" rx="14" ry="7" fill="${leafColor}" transform="rotate(-35 85 ${stemTop + 35})"/>
       <ellipse cx="115" cy="${stemTop + 28}" rx="14" ry="7" fill="${leafLight}" transform="rotate(35 115 ${stemTop + 28})"/>
-      <circle cx="100" cy="${stemTop + 12}" r="14" fill="#d4a8a8" opacity="0.7"/>
-      <circle cx="92" cy="${stemTop + 8}" r="8" fill="#b07878" opacity="0.8"/>
-      <circle cx="108" cy="${stemTop + 8}" r="8" fill="#c49090" opacity="0.8"/>
-      <circle cx="100" cy="${stemTop + 16}" r="8" fill="#b07878" opacity="0.7"/>
-      <circle cx="100" cy="${stemTop + 10}" r="5" fill="#e0b87a" opacity="0.9"/>
+      <circle cx="100" cy="${stemTop + 12}" r="14" fill="${tc.petal}" opacity="0.7"/>
+      <circle cx="92" cy="${stemTop + 8}" r="8" fill="${tc.petalDark}" opacity="0.8"/>
+      <circle cx="108" cy="${stemTop + 8}" r="8" fill="${tc.petal}" opacity="0.8"/>
+      <circle cx="100" cy="${stemTop + 16}" r="8" fill="${tc.petalDark}" opacity="0.7"/>
+      <circle cx="100" cy="${stemTop + 10}" r="5" fill="${tc.glow}" opacity="0.9"/>
     </g>`;
   } else if (i === 3) {
     // Thriving — full sunflower
@@ -4442,10 +4456,10 @@ function buildFlowerSVG(levelIdx, animated = false) {
       <ellipse cx="118" cy="${stemTop + 35}" rx="16" ry="7" fill="${leafLight}" transform="rotate(35 118 ${stemTop + 35})"/>
       <ellipse cx="82" cy="${stemTop + 55}" rx="13" ry="6" fill="${leafLight}" transform="rotate(-45 82 ${stemTop + 55})"/>
       ${[0,45,90,135,180,225,270,315].map(a =>
-        `<ellipse cx="100" cy="${stemTop + 5}" rx="5" ry="12" fill="#e0b87a" opacity="0.8" transform="rotate(${a} 100 ${stemTop + 14})"/>`
+        `<ellipse cx="100" cy="${stemTop + 5}" rx="5" ry="12" fill="${tc.petal}" opacity="0.8" transform="rotate(${a} 100 ${stemTop + 14})"/>`
       ).join('')}
-      <circle cx="100" cy="${stemTop + 14}" r="10" fill="#c9954a"/>
-      <circle cx="100" cy="${stemTop + 14}" r="6" fill="#8a6530"/>
+      <circle cx="100" cy="${stemTop + 14}" r="10" fill="${tc.petalDark}"/>
+      <circle cx="100" cy="${stemTop + 14}" r="6" fill="${tc.stem}"/>
     </g>`;
   } else if (i === 4) {
     // Radiant — glowing bloom with sparkles
@@ -4455,10 +4469,10 @@ function buildFlowerSVG(levelIdx, animated = false) {
       <ellipse cx="122" cy="${stemTop + 35}" rx="18" ry="8" fill="${leafLight}" transform="rotate(30 122 ${stemTop + 35})"/>
       <ellipse cx="80" cy="${stemTop + 58}" rx="14" ry="6" fill="${leafLight}" transform="rotate(-45 80 ${stemTop + 58})"/>
       ${[0,36,72,108,144,180,216,252,288,324].map(a =>
-        `<ellipse cx="100" cy="${stemTop + 2}" rx="6" ry="14" fill="#9ec4d8" opacity="0.7" transform="rotate(${a} 100 ${stemTop + 14})"/>`
+        `<ellipse cx="100" cy="${stemTop + 2}" rx="6" ry="14" fill="${tc.petal}" opacity="0.7" transform="rotate(${a} 100 ${stemTop + 14})"/>`
       ).join('')}
-      <circle cx="100" cy="${stemTop + 14}" r="11" fill="#6a9ab0" opacity="0.9"/>
-      <circle cx="100" cy="${stemTop + 14}" r="6" fill="#e8f4f8"/>
+      <circle cx="100" cy="${stemTop + 14}" r="11" fill="${tc.petalDark}" opacity="0.9"/>
+      <circle cx="100" cy="${stemTop + 14}" r="6" fill="${tc.glow}"/>
       <circle cx="78" cy="${stemTop}" r="2" fill="#fff" opacity="0.7" class="sparkle"/>
       <circle cx="124" cy="${stemTop + 6}" r="1.5" fill="#fff" opacity="0.6" class="sparkle" style="animation-delay:0.5s"/>
       <circle cx="100" cy="${stemTop - 8}" r="2" fill="#fff" opacity="0.8" class="sparkle" style="animation-delay:1s"/>
@@ -4471,12 +4485,12 @@ function buildFlowerSVG(levelIdx, animated = false) {
       <ellipse cx="125" cy="${stemTop + 38}" rx="20" ry="8" fill="${leafLight}" transform="rotate(30 125 ${stemTop + 38})"/>
       <ellipse cx="78" cy="${stemTop + 60}" rx="16" ry="7" fill="${leafLight}" transform="rotate(-45 78 ${stemTop + 60})"/>
       <ellipse cx="120" cy="${stemTop + 55}" rx="14" ry="6" fill="${leafColor}" transform="rotate(40 120 ${stemTop + 55})"/>
-      <circle cx="100" cy="${stemTop + 14}" r="22" fill="#e0b87a" opacity="0.2" class="glow-pulse"/>
+      <circle cx="100" cy="${stemTop + 14}" r="22" fill="${tc.glow}" opacity="0.2" class="glow-pulse"/>
       ${[0,30,60,90,120,150,180,210,240,270,300,330].map(a =>
-        `<ellipse cx="100" cy="${stemTop}" rx="5" ry="14" fill="#e0b87a" opacity="0.8" transform="rotate(${a} 100 ${stemTop + 14})"/>`
+        `<ellipse cx="100" cy="${stemTop}" rx="5" ry="14" fill="${tc.petal}" opacity="0.8" transform="rotate(${a} 100 ${stemTop + 14})"/>`
       ).join('')}
-      <circle cx="100" cy="${stemTop + 14}" r="12" fill="#c9954a"/>
-      <circle cx="100" cy="${stemTop + 14}" r="7" fill="#e0b87a"/>
+      <circle cx="100" cy="${stemTop + 14}" r="12" fill="${tc.petalDark}"/>
+      <circle cx="100" cy="${stemTop + 14}" r="7" fill="${tc.petal}"/>
       ${[0,1,2,3,4].map(j => {
         const ax = 70 + j * 15 + (j % 2) * 5;
         const ay = stemTop - 5 + (j % 3) * 8;
@@ -4494,18 +4508,18 @@ function buildFlowerSVG(levelIdx, animated = false) {
       <ellipse cx="75" cy="${stemTop + 65}" rx="16" ry="7" fill="${leafLight}" transform="rotate(-45 75 ${stemTop + 65})"/>
       <ellipse cx="125" cy="${stemTop + 60}" rx="14" ry="6" fill="${leafColor}" transform="rotate(40 125 ${stemTop + 60})"/>
       ${[0,60,120,180,240,300].map(a =>
-        `<ellipse cx="100" cy="${stemTop + 2}" rx="6" ry="13" fill="#c97a8a" opacity="0.75" transform="rotate(${a} 100 ${stemTop + 14})"/>`
+        `<ellipse cx="100" cy="${stemTop + 2}" rx="6" ry="13" fill="${tc.petal}" opacity="0.75" transform="rotate(${a} 100 ${stemTop + 14})"/>`
       ).join('')}
-      <circle cx="100" cy="${stemTop + 14}" r="9" fill="#d4a0a8"/>
-      <circle cx="100" cy="${stemTop + 14}" r="5" fill="#e8c0c8"/>
+      <circle cx="100" cy="${stemTop + 14}" r="9" fill="${tc.petalDark}"/>
+      <circle cx="100" cy="${stemTop + 14}" r="5" fill="${tc.glow}"/>
       ${[0,72,144,216,288].map(a =>
-        `<ellipse cx="78" cy="${stemTop + 14}" rx="4" ry="9" fill="#d4a8a8" opacity="0.7" transform="rotate(${a} 78 ${stemTop + 24})"/>`
+        `<ellipse cx="78" cy="${stemTop + 14}" rx="4" ry="9" fill="${tc.petal}" opacity="0.7" transform="rotate(${a} 78 ${stemTop + 24})"/>`
       ).join('')}
-      <circle cx="78" cy="${stemTop + 24}" r="6" fill="#c49090"/>
+      <circle cx="78" cy="${stemTop + 24}" r="6" fill="${tc.petalDark}"/>
       ${[0,72,144,216,288].map(a =>
-        `<ellipse cx="122" cy="${stemTop + 11}" rx="4" ry="9" fill="#d4a8a8" opacity="0.7" transform="rotate(${a} 122 ${stemTop + 21})"/>`
+        `<ellipse cx="122" cy="${stemTop + 11}" rx="4" ry="9" fill="${tc.petal}" opacity="0.7" transform="rotate(${a} 122 ${stemTop + 21})"/>`
       ).join('')}
-      <circle cx="122" cy="${stemTop + 21}" r="6" fill="#c49090"/>
+      <circle cx="122" cy="${stemTop + 21}" r="6" fill="${tc.petalDark}"/>
       ${[0,1,2,3].map(j => {
         const ax = 68 + j * 20;
         const ay = stemTop - 2 + (j % 2) * 6;
@@ -4828,10 +4842,11 @@ function buildStreakTreeSVG(streak) {
   const treeStageName = streak >= 100 ? 'Ancient tree' : streak >= 60 ? 'Grand tree' : streak >= 30 ? 'Full tree' : streak >= 14 ? 'Young tree' : streak >= 7 ? 'Sapling' : 'Sprout';
   const trunk = '#6b5a4a';
   const trunkLight = '#8a7560';
-  const green1 = '#5a8a5e';
-  const green2 = '#7a9e7e';
-  const green3 = '#a8c5ab';
-  const ground = '#3a5a3e';
+  const tc = getThemeSVGColors();
+  const green1 = tc.stem;
+  const green2 = tc.leaf;
+  const green3 = tc.leafLight;
+  const ground = tc.stem;
 
   let tree = '';
   if (streak <= 3) {
