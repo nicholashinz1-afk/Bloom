@@ -45,13 +45,48 @@ const KEYS = {
 const NINETY_DAYS = 90 * 24 * 60 * 60;
 const MAX_LIST_SIZE = 5000;
 
-// Helper to append to a capped list in Redis
+// Atomically append to a capped list in Redis using WATCH/MULTI/EXEC
 async function appendToList(key, item, maxSize = MAX_LIST_SIZE) {
-  const list = await kvGet(key) || [];
-  list.push(item);
-  // Trim oldest if over max
-  const trimmed = list.length > maxSize ? list.slice(-maxSize) : list;
-  await kvSet(key, trimmed, NINETY_DAYS);
+  const client = await getRedis();
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      await client.watch(key);
+      const raw = await client.get(key);
+      const list = raw ? JSON.parse(raw) : [];
+      list.push(item);
+      const trimmed = list.length > maxSize ? list.slice(-maxSize) : list;
+      const multi = client.multi();
+      multi.set(key, JSON.stringify(trimmed), { EX: NINETY_DAYS });
+      const results = await multi.exec();
+      if (results !== null) return;
+    } catch (e) {
+      console.error('appendToList transaction failed:', key, e.message);
+      try { await client.unwatch(); } catch (_) {}
+      if (attempt === 4) throw e;
+    }
+  }
+}
+
+// Atomically add to a set stored as a JSON array using WATCH/MULTI/EXEC
+async function addToSet(key, value) {
+  const client = await getRedis();
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      await client.watch(key);
+      const raw = await client.get(key);
+      const arr = raw ? JSON.parse(raw) : [];
+      const s = new Set(arr);
+      s.add(value);
+      const multi = client.multi();
+      multi.set(key, JSON.stringify([...s]), { EX: NINETY_DAYS });
+      const results = await multi.exec();
+      if (results !== null) return;
+    } catch (e) {
+      console.error('addToSet transaction failed:', key, e.message);
+      try { await client.unwatch(); } catch (_) {}
+      if (attempt === 4) throw e;
+    }
+  }
 }
 
 // Get today's date key
@@ -257,10 +292,7 @@ export default async function handler(req, res) {
           lastSeen: ts,
         }, NINETY_DAYS);
         // Track uid in the level user index so we can enumerate them
-        const idx = await kvGet('bloom_level_user_index') || [];
-        const idxSet = new Set(idx);
-        idxSet.add(uid.slice(0, 20));
-        await kvSet('bloom_level_user_index', [...idxSet], NINETY_DAYS);
+        await addToSet('bloom_level_user_index', uid.slice(0, 20));
         // Track level-up timestamps per user for progression analytics
         const progressKey = `bloom_level_progress:${uid.slice(0, 20)}`;
         const progress = await kvGet(progressKey) || {};
