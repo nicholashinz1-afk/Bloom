@@ -443,6 +443,37 @@ export default async function handler(req, res) {
       return res.json({ ok: true, banned: strikes[targetFp].banned });
     }
 
+    // ── COMMUNITY PROMPT: record anonymous response count ──
+    if (action === 'prompt-respond') {
+      const { fp } = body;
+      if (!fp) return res.status(400).json({ error: 'Missing fp' });
+
+      if (await isUserBanned(fp)) {
+        return res.json({ ok: false, reason: 'banned' });
+      }
+
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const key = `bloom_wall_prompt:${todayStr}`;
+      const data = await kvGet(key) || { count: 0, respondents: [] };
+
+      if (data.respondents.includes(fp)) {
+        return res.json({ ok: true, alreadyAnswered: true, count: data.count });
+      }
+
+      data.respondents.push(fp);
+      data.count++;
+      const client = await getRedis();
+      await client.set(key, JSON.stringify(data), { EX: 7 * 86400 }); // 7-day TTL
+      return res.json({ ok: true, count: data.count });
+    }
+
+    if (action === 'prompt-count') {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const key = `bloom_wall_prompt:${todayStr}`;
+      const data = await kvGet(key) || { count: 0 };
+      return res.json({ ok: true, count: data.count });
+    }
+
     return res.status(400).json({ error: 'Unknown action' });
   }
 

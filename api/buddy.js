@@ -398,11 +398,38 @@ export default async function handler(req, res) {
 
     await kvSet(`bloom_buddy:${buddyId}`, profile);
 
-    // Check if paired → trigger notifications for all partners
+    // Check if paired → trigger notifications and shared milestones for all partners
     const lookup = await getLookup(buddyId);
+    const todayStr = new Date().toISOString().slice(0, 10);
     for (const pair of lookup.pairs) {
       const partner = await kvGet(`bloom_buddy:${pair.partnerId}`);
-      if (!partner?.oneSignalId) continue;
+      if (!partner) continue;
+
+      // ── Shared milestones: count days both showed up (cumulative, never resets)
+      const partnerActiveToday = partner.lastActive && new Date(partner.lastActive).toISOString().slice(0, 10) === todayStr;
+      if (partnerActiveToday) {
+        const pairData = await kvGet(`bloom_buddy_pair:${pair.pairId}`);
+        if (pairData && pairData.sharedDaysLastDate !== todayStr) {
+          pairData.sharedDays = (pairData.sharedDays || 0) + 1;
+          pairData.sharedDaysLastDate = todayStr;
+          await kvSet(`bloom_buddy_pair:${pair.pairId}`, pairData);
+
+          // Shared milestone notifications
+          const SHARED_MILESTONES = [5, 10, 25, 50, 100];
+          if (SHARED_MILESTONES.includes(pairData.sharedDays)) {
+            if (partner.oneSignalId) {
+              await sendPush(partner.oneSignalId, 'bloom buddy',
+                `You and ${profile.name || 'your buddy'} have both shown up ${pairData.sharedDays} times!`);
+            }
+            if (profile.oneSignalId) {
+              await sendPush(profile.oneSignalId, 'bloom buddy',
+                `You and ${partner.name || 'your buddy'} have both shown up ${pairData.sharedDays} times!`);
+            }
+          }
+        }
+      }
+
+      if (!partner.oneSignalId) continue;
 
       // 1. Low/rough mood notification (rate-limited to 1 per 12h)
       if (mood !== undefined && mood >= 0 && mood <= 1) {
@@ -697,6 +724,7 @@ export default async function handler(req, res) {
     for (const pair of lookup.pairs) {
       const partner = await kvGet(`bloom_buddy:${pair.partnerId}`);
       if (!partner) continue;
+      const pairData = await kvGet(`bloom_buddy_pair:${pair.pairId}`);
       buddies.push({
         pairId: pair.pairId,
         partnerId: pair.partnerId,
@@ -708,6 +736,7 @@ export default async function handler(req, res) {
         lastActive: partner.lastActive,
         level: partner.level || null,
         levelEmoji: partner.levelEmoji || null,
+        sharedDays: pairData?.sharedDays || 0,
       });
     }
 

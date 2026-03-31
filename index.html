@@ -3400,7 +3400,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '3.4.0';
+const VERSION = '3.5.0';
 const LEGACY_DOMAINS = ['bloom-zeta-rouge.vercel.app'];
 const PRODUCTION_DOMAIN = 'bloomselfcare.app';
 
@@ -3448,10 +3448,11 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: '<strong>Journal fix</strong> — prompts were sometimes changing or showing old ones after you started writing. That\'s fixed now. Your entries always save correctly.', spotlight: null },
-  { text: '<strong>Custom habits</strong> — build your own daily habits in Settings. Track whatever matters to you, not just the defaults.', spotlight: null, tab: 'settings' },
-  { text: '<strong>Afternoon time slot</strong> — habits can now be tracked for morning, afternoon, and evening separately. Set it up per habit in Settings.', spotlight: null, tab: 'settings' },
-  { text: '<strong>Your data is yours</strong> — Bloom no longer silently trims old history. Every check-in you\'ve ever logged is kept, always.', spotlight: null },
+  { text: '<strong>Choose your voice</strong> — bloom now speaks in two tones: <em>Direct</em> (short, honest, no fluff) and <em>Reflective</em> (warm, grounded, gentle). Your choice shapes prompts, celebrations, and your morning greeting. Pick yours in Settings under Voice.', spotlight: null, tab: 'settings' },
+  { text: '<strong>Daily community prompt</strong> — a new question appears at the top of the Community tab each day. Your answer saves to your journal, and others can see that people answered, but never what anyone wrote. Private reflection with a sense of connection.', spotlight: null, tab: 'community' },
+  { text: '<strong>Quick thoughts</strong> — after logging your mood, a small text field appears so you can jot one thought and move on. It saves as a journal entry. No pressure to write more.', spotlight: null },
+  { text: '<strong>Shared milestones</strong> — if you have a buddy, you\'ll now see how many days you\'ve both shown up. It never goes down, just like your own days count.', spotlight: null, tab: 'community' },
+  { text: '<strong>Your colors, everywhere</strong> — the flower and streak tree now match your chosen theme. Pick a theme in Settings and watch your growth visuals change.', spotlight: null, tab: 'settings' },
 ];
 
 // ============================================================
@@ -3628,6 +3629,59 @@ const JOURNAL_PROMPTS_REAL_LOW = [
   "What's one thing you keep pushing through that you shouldn't have to?",
   "It's okay to be done for today. What would rest look like?",
 ];
+
+// Community prompts — daily rotating, shown at top of community tab
+// Response saves locally as journal entry; only an anonymous count goes to the server
+const COMMUNITY_PROMPTS = [
+  "What's one thing that went okay today?",
+  "What are you grateful for right now, even something small?",
+  "What's something kind you did for yourself today?",
+  "What's a small win from this week?",
+  "What would you tell someone having the day you had?",
+  "What's something you're looking forward to?",
+  "What made you feel something today?",
+  "What's a thought you want to let go of before tomorrow?",
+  "What's one thing you'd tell yourself a year ago?",
+  "What's something you noticed today that you usually miss?",
+  "What's one thing that took courage today, even quietly?",
+  "What's something that felt different about today?",
+  "What's one thing you want to carry into tomorrow?",
+  "What's something you're learning about yourself lately?",
+  "What's the kindest thing someone did for you recently?",
+  "What would make tomorrow a good day?",
+  "What's one thing you're proud of this week?",
+  "What's something that surprised you about today?",
+  "What's a feeling you had today that you didn't expect?",
+  "What's something you want to say but haven't?",
+];
+const COMMUNITY_PROMPTS_REAL = [
+  "What actually went right today?",
+  "One good thing. Go.",
+  "What's something you did today that you'd do again?",
+  "What didn't totally suck today?",
+  "What would you tell someone having your kind of day?",
+  "What are you looking forward to, even a little?",
+  "What hit different today?",
+  "What do you want to leave in today and not bring into tomorrow?",
+  "What would you tell yourself a year ago?",
+  "What's something you noticed today that you usually don't?",
+  "What took guts today, even if nobody saw?",
+  "What felt different about today?",
+  "What's one thing worth keeping from today?",
+  "What are you figuring out about yourself?",
+  "What's the nicest thing someone did for you lately?",
+  "What would make tomorrow not suck?",
+  "What are you proud of this week?",
+  "What surprised you today?",
+  "Name a feeling from today you didn't see coming.",
+  "What's something you want to say but haven't yet?",
+];
+
+function getTodayCommunityPrompt() {
+  const pool = state.prefs?.voice === 'real' ? COMMUNITY_PROMPTS_REAL : COMMUNITY_PROMPTS;
+  const dayIdx = getDayIndex();
+  return pool[dayIdx % pool.length];
+}
 
 function getJournalPrompt() {
   const mood = state.todayData?.mood;
@@ -8262,7 +8316,7 @@ function switchTab(tab) {
   if (tab === 'weekly') renderWeeklyTab();
   if (tab === 'wellness') renderWellnessTab();
   if (tab === 'progress') { renderProgressTab(); setTimeout(() => generateRollingInsight(), 800); }
-  if (tab === 'community') { renderCommunityTab(); trackFeature('buddy'); fetchBuddyData(); if (buddyState.status === 'paired') { buddyCachedBuddies.forEach(b => fetchBuddyMessages(b.pairId)); } }
+  if (tab === 'community') { renderCommunityTab(); trackFeature('buddy'); fetchBuddyData(); if (buddyState.status === 'paired') { buddyCachedBuddies.forEach(b => fetchBuddyMessages(b.pairId)); } if (load('bloom_prompt_answered_date', null) === today()) fetchPromptCount(); }
   if (tab === 'settings') renderSettingsTab();
   // Stop buddy polling when leaving community tab
   if (tab !== 'community') stopBuddyPolling();
@@ -18657,6 +18711,7 @@ function renderBuddyCard(b, index) {
         <div class="buddy-stats">
           <div class="buddy-stat"><span>${moodDisplay}</span></div>
           <div class="buddy-stat">🌿 <span class="buddy-stat-value">${b.streak || 0}</span> days shown up</div>
+          ${b.sharedDays > 0 ? `<div class="buddy-stat">🤝 <span class="buddy-stat-value">${b.sharedDays}</span> ${state.prefs?.voice === 'real' ? 'days you both showed up' : 'days both showed up'}</div>` : ''}
           ${levelHtml ? `<div class="buddy-stat">${levelHtml}</div>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -18919,6 +18974,23 @@ function renderCommunityTab() {
     <div style="font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6">Anonymous words of kindness from the bloom community.<br>Leave something gentle for someone who needs it.</div>
   </div>`;
 
+  // Community prompt — daily rotating, response saves locally as journal entry
+  const promptText = getTodayCommunityPrompt();
+  const promptAnswered = load('bloom_prompt_answered_date', null) === today();
+  html += `<div class="card" style="border-left:3px solid var(--sage);margin-bottom:12px">
+    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Today's prompt</div>
+    <div style="font-size:15px;color:var(--cream);font-family:Fraunces,serif;font-style:italic;line-height:1.6;margin-bottom:12px">"${promptText}"</div>
+    ${promptAnswered ? `<div id="prompt-presence" style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:12px;color:var(--sage-light)">✓ You answered</span>
+      <span id="prompt-presence-dots" style="font-size:12px;color:var(--text-muted)"></span>
+    </div>` : `<div style="display:flex;gap:8px;align-items:flex-end">
+      <input type="text" id="community-prompt-input" placeholder="Your answer (stays on your device)..." maxlength="140" aria-label="Community prompt response"
+        style="flex:1;padding:8px 12px;font-size:13px" onkeydown="if(event.key==='Enter'){event.preventDefault();submitPromptResponse()}">
+      <button class="btn btn-primary btn-sm" onclick="submitPromptResponse()" style="white-space:nowrap">Answer</button>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Your response saves to your journal. Only a count is shared.</div>`}
+  </div>`;
+
   // Post form
   html += `<div class="card" id="wall-post-card">
     <div style="display:flex;gap:8px;align-items:flex-end">
@@ -19077,6 +19149,74 @@ function acceptTermsForCommunity() {
   prefs.termsVersion = '2026-03';
   save('bloom_prefs', prefs);
   renderCommunityTab();
+}
+
+async function submitPromptResponse() {
+  const input = document.getElementById('community-prompt-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  const t = today();
+  const promptText = getTodayCommunityPrompt();
+
+  // Save locally as journal entry
+  if (!state.wellnessData.journal) state.wellnessData.journal = {};
+  if (!state.wellnessData.journal[t]) state.wellnessData.journal[t] = [];
+  state.wellnessData.journal[t].push({
+    text,
+    prompt: promptText,
+    ts: Date.now(),
+    source: 'community',
+  });
+
+  save('bloom_prompt_answered_date', t);
+  saveState();
+  archiveToday();
+  addXP(15, null);
+  trackFeature('community_prompt');
+
+  const celebType = state.prefs?.voice === 'real'
+    ? { title: 'Answered.', sub: 'Saved to your journal. Others are here too.' }
+    : { title: 'Prompt answered.', sub: 'Your words are yours. The community felt your presence.' };
+  showToast(celebType.title, celebType.sub);
+
+  // Ping server with anonymous count (no text sent)
+  try {
+    const resp = await fetch('/api/wall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'prompt-respond', fp: wallFingerprint }),
+    });
+    const data = await resp.json();
+    if (data.count) updatePromptPresence(data.count);
+  } catch(e) { /* journal entry saved locally regardless */ }
+
+  renderCommunityTab();
+}
+
+function updatePromptPresence(count) {
+  const el = document.getElementById('prompt-presence-dots');
+  if (!el) return;
+  if (count >= 10) {
+    el.textContent = `· ${count} others answered today`;
+  } else if (count > 1) {
+    el.textContent = '· others answered today';
+  } else {
+    el.textContent = '';
+  }
+}
+
+async function fetchPromptCount() {
+  try {
+    const resp = await fetch('/api/wall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'prompt-count' }),
+    });
+    const data = await resp.json();
+    if (data.count) updatePromptPresence(data.count);
+  } catch(e) {}
 }
 
 async function postToWall() {
