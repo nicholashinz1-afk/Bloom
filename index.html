@@ -17910,7 +17910,6 @@ let buddyLoading = false;
 let buddyPollTimer = null;
 let buddySyncDebounce = null;
 let communitySubTab = 'wall'; // 'wall' | 'buddy'
-let communityScrollPositions = { wall: 0, buddy: 0 };
 
 function switchCommunitySubTab(sub) {
   const scroll = document.getElementById('community-scroll');
@@ -17919,15 +17918,17 @@ function switchCommunitySubTab(sub) {
   const wallBtn = document.getElementById('community-sub-wall');
   const buddyBtn = document.getElementById('community-sub-buddy');
   if (!wallPane || !buddyPane || !scroll) return;
-  // Save current scroll position
-  communityScrollPositions[communitySubTab] = scroll.scrollTop;
   communitySubTab = sub;
+  // Encouragement: show wall + buddy below. Buddy: hide wall, show only buddy.
   wallPane.style.display = sub === 'wall' ? 'block' : 'none';
-  buddyPane.style.display = sub === 'buddy' ? 'block' : 'none';
   if (wallBtn) wallBtn.classList.toggle('active', sub === 'wall');
   if (buddyBtn) buddyBtn.classList.toggle('active', sub === 'buddy');
-  // Restore scroll position for the new pane
-  requestAnimationFrame(() => { scroll.scrollTop = communityScrollPositions[sub]; });
+  if (sub === 'buddy') {
+    // Scroll buddy section to top
+    requestAnimationFrame(() => { scroll.scrollTop = 0; });
+  } else {
+    requestAnimationFrame(() => { scroll.scrollTop = 0; });
+  }
   updateBuddySubBadge();
   haptic('light');
 }
@@ -18739,6 +18740,14 @@ function renderBuddyCard(b, index) {
   const unreadBadge = unreadCount > 0
     ? `<span class="buddy-unread-badge">${unreadCount} new</span>`
     : '';
+  // Activity hints for collapsed cards
+  const activityHints = [];
+  if (moodFresh) activityHints.push(moodDisplay);
+  if (justLeveledUp) activityHints.push('leveled up');
+  if (buddyActiveToday && !moodFresh) activityHints.push('active today');
+  const activitySummary = activityHints.length > 0
+    ? `<span style="font-size:11px;color:var(--sage-light);opacity:0.8;margin-left:4px">${activityHints.join(' · ')}</span>`
+    : '';
 
   // Detect buddy level-up: compare against last known level for this buddy
   const prevLevelKey = `bloom_buddy_level_${pid}`;
@@ -18761,14 +18770,14 @@ function renderBuddyCard(b, index) {
 
   return `
     <div class="buddy-card" style="margin-bottom:12px">
-      <div class="buddy-card-header" onclick="${multipleCards ? `toggleBuddyCard('${pid}')` : ''}" style="${multipleCards ? 'cursor:pointer' : ''}">
+      <div class="buddy-card-header" onclick="toggleBuddyCard('${pid}')" style="cursor:pointer">
         <div style="display:flex;align-items:center;gap:8px;flex:1">
           <div class="buddy-name">${escapeHtml(b.name || 'Buddy')}'s day${unreadBadge}</div>
-          <span style="font-size:12px;color:var(--text-muted)">${moodDisplay}</span>
+          ${activitySummary}
         </div>
-        ${multipleCards ? `<span id="buddy-chevron-${pid}" style="font-size:14px;color:var(--text-muted);transition:transform 0.2s">${isFirst ? '▾' : '▸'}</span>` : ''}
+        <span id="buddy-chevron-${pid}" style="font-size:14px;color:var(--text-muted);transition:transform 0.2s">▸</span>
       </div>
-      <div id="buddy-body-${pid}" style="display:${isFirst || !multipleCards ? 'block' : 'none'}">
+      <div id="buddy-body-${pid}" style="display:none">
         <div class="buddy-stats">
           <div class="buddy-stat"><span>${moodDisplay}</span></div>
           <div class="buddy-stat">🌿 <span class="buddy-stat-value">${b.streak || 0}</span> days shown up</div>
@@ -19034,7 +19043,7 @@ function renderCommunityTab() {
   html += `<div style="display:flex;justify-content:center;padding:8px 0 12px">
     <div class="community-sub-toggle">
       <button id="community-sub-wall" class="community-toggle-btn${communitySubTab === 'wall' ? ' active' : ''}" onclick="switchCommunitySubTab('wall')">💛 Encouragement</button>
-      <button id="community-sub-buddy" class="community-toggle-btn${communitySubTab === 'buddy' ? ' active' : ''}" onclick="switchCommunitySubTab('buddy')">🌱 Buddy<span id="buddy-sub-badge"></span></button>
+      <button id="community-sub-buddy" class="community-toggle-btn${communitySubTab === 'buddy' ? ' active' : ''}" onclick="switchCommunitySubTab('buddy')">${buddyIcon(16)} Buddy<span id="buddy-sub-badge"></span></button>
     </div>
   </div>`;
 
@@ -19114,8 +19123,8 @@ function renderCommunityTab() {
   // Close wall pane
   html += `</div>`;
 
-  // Buddy pane
-  html += `<div id="community-buddy-pane" style="display:${communitySubTab === 'buddy' ? 'block' : 'none'}">
+  // Buddy section (always in DOM, visible on both sub-tabs)
+  html += `<div id="community-buddy-pane" style="border-top:1px solid rgba(255,255,255,0.06);padding-top:16px;margin-top:8px">
     <div id="buddy-section"></div>
   </div>`;
 
