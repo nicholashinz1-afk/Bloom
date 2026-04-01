@@ -19200,13 +19200,17 @@ async function submitPromptResponse() {
       body: JSON.stringify({ action: 'prompt-respond', fp: wallFingerprint }),
     });
     const data = await resp.json();
-    updatePromptPresence(data.count || 0);
-  } catch(e) { updatePromptPresence(0); /* journal entry saved locally regardless */ }
+    updatePromptPresence(typeof data.count === 'number' ? data.count : null);
+  } catch(e) { updatePromptPresence(null); /* journal entry saved locally regardless */ }
 }
 
 function updatePromptPresence(count) {
   const el = document.getElementById('prompt-presence-dots');
   if (!el) return;
+  if (count === null) {
+    el.innerHTML = '';
+    return;
+  }
   const dots = '<span style="display:inline-flex;gap:3px;margin:0 6px;vertical-align:middle">' +
     [4, 3, 5, 3, 4].map((s, i) => `<span style="width:${s}px;height:${s}px;border-radius:50%;background:var(--sage);opacity:${0.3 + i * 0.1}"></span>`).join('') +
     '</span>';
@@ -19227,8 +19231,8 @@ async function fetchPromptCount() {
       body: JSON.stringify({ action: 'prompt-count' }),
     });
     const data = await resp.json();
-    updatePromptPresence(data.count || 0);
-  } catch(e) { updatePromptPresence(0); }
+    updatePromptPresence(typeof data.count === 'number' ? data.count : null);
+  } catch(e) { updatePromptPresence(null); }
 }
 
 async function postToWall() {
