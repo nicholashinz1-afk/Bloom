@@ -3885,26 +3885,34 @@ function initDB() {
 
 async function dbSet(key, value) {
   if (!db) return;
-  return new Promise((resolve) => {
-    try {
-      const tx = db.transaction('kv', 'readwrite');
-      tx.objectStore('kv').put({ k: key, v: value });
-      tx.oncomplete = resolve;
-      tx.onerror = resolve;
-    } catch(e) { resolve(); }
-  });
+  const IDB_TIMEOUT = 5000;
+  return Promise.race([
+    new Promise((resolve) => {
+      try {
+        const tx = db.transaction('kv', 'readwrite');
+        tx.objectStore('kv').put({ k: key, v: value });
+        tx.oncomplete = resolve;
+        tx.onerror = resolve;
+      } catch(e) { resolve(); }
+    }),
+    new Promise((resolve) => setTimeout(resolve, IDB_TIMEOUT))
+  ]);
 }
 
 async function dbGet(key) {
   if (!db) return null;
-  return new Promise((resolve) => {
-    try {
-      const tx = db.transaction('kv', 'readonly');
-      const req = tx.objectStore('kv').get(key);
-      req.onsuccess = () => resolve(req.result ? req.result.v : null);
-      req.onerror = () => resolve(null);
-    } catch(e) { resolve(null); }
-  });
+  const IDB_TIMEOUT = 5000;
+  return Promise.race([
+    new Promise((resolve) => {
+      try {
+        const tx = db.transaction('kv', 'readonly');
+        const req = tx.objectStore('kv').get(key);
+        req.onsuccess = () => resolve(req.result ? req.result.v : null);
+        req.onerror = () => resolve(null);
+      } catch(e) { resolve(null); }
+    }),
+    new Promise((resolve) => setTimeout(() => resolve(null), IDB_TIMEOUT))
+  ]);
 }
 
 async function dbGetAll() {
@@ -4105,6 +4113,7 @@ function getNextLevel(xp) {
 }
 
 function showXPFloat(amount, el) {
+  if (!el) return;
   const rect = el.getBoundingClientRect();
   const div = document.createElement('div');
   div.className = 'xp-float';
@@ -15618,6 +15627,8 @@ function closeAllSheets(force) {
     renderWeeklyTab();
   }
 }
+// Alias for stale caches that may reference the old function name
+const closeSheet = closeAllSheets;
 
 // Android back button / back gesture closes sheets instead of leaving app
 window.addEventListener('popstate', () => {
@@ -16006,6 +16017,7 @@ function showTourSpotlight(el, text, total, onNext) {
   document.getElementById('tour-spotlight')?.remove();
 
   const appEl = document.getElementById('app');
+  if (!appEl || !el) return;
   const appRect = appEl.getBoundingClientRect();
   const elRect = el.getBoundingClientRect();
   const pad = 8;
@@ -18750,6 +18762,7 @@ function isBuddyDataFromToday(ts) {
 const _buddyPrevLevels = {};
 
 function renderBuddyCard(b, index) {
+  if (!b) return '';
   const moods = ['\ud83d\ude14 Low', '\ud83d\ude15 Rough', '\ud83d\ude10 Okay', '\ud83d\ude42 Good', '\ud83d\ude0a Great'];
   const buddyActiveToday = isBuddyDataFromToday(b.lastActive);
   const moodFresh = isBuddyDataFromToday(b.moodTs);
