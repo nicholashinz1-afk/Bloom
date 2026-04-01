@@ -19207,20 +19207,13 @@ async function submitPromptResponse() {
 function updatePromptPresence(count) {
   const el = document.getElementById('prompt-presence-dots');
   if (!el) return;
-  const others = count > 1 ? count - 1 : 0;
+  const dots = '<span style="display:inline-flex;gap:3px;margin:0 6px;vertical-align:middle">' +
+    [4, 3, 5, 3, 4].map((s, i) => `<span style="width:${s}px;height:${s}px;border-radius:50%;background:var(--sage);opacity:${0.3 + i * 0.1}"></span>`).join('') +
+    '</span>';
   if (count >= 10) {
-    const dots = '<span style="display:inline-flex;gap:3px;margin:0 6px;vertical-align:middle">' +
-      [4, 3, 5, 3, 4].map((s, i) => `<span style="width:${s}px;height:${s}px;border-radius:50%;background:var(--sage);opacity:${0.3 + i * 0.1}"></span>`).join('') +
-      '</span>';
-    el.innerHTML = `· ${dots} ${others} others reflected too`;
-  } else if (others > 0) {
-    const sizes = [4, 3, 5, 3, 4, 5, 3, 4, 3];
-    const dots = '<span style="display:inline-flex;gap:3px;margin:0 4px;vertical-align:middle">' +
-      Array.from({length: others}, (_, i) => `<span style="width:${sizes[i % sizes.length]}px;height:${sizes[i % sizes.length]}px;border-radius:50%;background:var(--sage);opacity:${0.4 + (i % 5) * 0.1}"></span>`).join('') +
-      '</span>';
-    el.innerHTML = `·${dots}${others === 1 ? '1 other reflected too' : others + ' others reflected too'}`;
+    el.innerHTML = `· ${dots} ${count - 1} others reflected too`;
   } else {
-    el.innerHTML = '';
+    el.innerHTML = `· ${dots} others answered too`;
   }
 }
 
