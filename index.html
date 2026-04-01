@@ -9729,7 +9729,6 @@ function tapWater(i) {
   } else {
     state.todayData.water = Math.max(cur, i + 1);
     haptic('light');
-    animateWaterBottle(i);
     // Play rising tone per bottle — 1=low, 2=mid, 3=high+chord
     const bottleSounds = ['water_1', 'water_2', 'water_3'];
     playSound(bottleSounds[i] || 'water');
@@ -9750,6 +9749,10 @@ function tapWater(i) {
   saveState();
   archiveToday();
   renderTodayTab();
+  // Animate after re-render so the new DOM elements get the animation
+  if (i + 1 !== cur) {
+    animateWaterBottle(i);
+  }
 }
 
 function tapFood(id) {
