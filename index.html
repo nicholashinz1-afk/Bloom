@@ -18762,6 +18762,11 @@ function renderBuddyCard(b, index) {
   const unreadBadge = unreadCount > 0
     ? `<span class="buddy-unread-badge">${unreadCount} new</span>`
     : '';
+  // Detect buddy level-up: compare against last known level for this buddy
+  const prevLevelKey = `bloom_buddy_level_${pid}`;
+  const prevKnownLevel = _buddyPrevLevels[pid] || load(prevLevelKey, null);
+  const justLeveledUp = b.level && prevKnownLevel && b.level !== prevKnownLevel;
+
   // Activity hints for collapsed cards
   const activityHints = [];
   const unreadMsgs = (buddyCachedMessages[pid] || []).filter(m => m.from !== bloomBuddyId && (m.ts || 0) > getBuddyLastSeen(pid));
@@ -18773,11 +18778,6 @@ function renderBuddyCard(b, index) {
   const activitySummary = activityHints.length > 0
     ? `<span style="font-size:11px;color:var(--sage-light);opacity:0.8;margin-left:4px">${activityHints.join(' · ')}</span>`
     : '';
-
-  // Detect buddy level-up: compare against last known level for this buddy
-  const prevLevelKey = `bloom_buddy_level_${pid}`;
-  const prevKnownLevel = _buddyPrevLevels[pid] || load(prevLevelKey, null);
-  const justLeveledUp = b.level && prevKnownLevel && b.level !== prevKnownLevel;
   if (b.level) {
     _buddyPrevLevels[pid] = b.level;
     save(prevLevelKey, b.level);
