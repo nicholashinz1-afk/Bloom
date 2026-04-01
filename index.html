@@ -2188,22 +2188,31 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   max-width: 300px;
   border: 1px solid rgba(255,255,255,0.06);
 }
+.community-sub-toggle {
+  display: inline-flex;
+  background: rgba(255,255,255,0.06);
+  border-radius: 99px;
+  padding: 3px;
+  gap: 2px;
+}
 .community-toggle-btn {
-  flex: 1;
-  padding: 8px 12px;
+  padding: 7px 16px;
   border: none;
-  border-radius: var(--r-full);
+  border-radius: 99px;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   font-family: 'Instrument Sans', sans-serif;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 .community-toggle-btn.active {
-  background: var(--sage);
-  color: var(--bg);
+  background: rgba(255,255,255,0.09);
+  color: var(--cream);
 }
 .buddy-card {
   background: var(--bg-card);
@@ -17900,6 +17909,42 @@ let buddyCachedMessages = {}; // keyed by pairId
 let buddyLoading = false;
 let buddyPollTimer = null;
 let buddySyncDebounce = null;
+let communitySubTab = 'wall'; // 'wall' | 'buddy'
+let communityScrollPositions = { wall: 0, buddy: 0 };
+
+function switchCommunitySubTab(sub) {
+  const scroll = document.getElementById('community-scroll');
+  const wallPane = document.getElementById('community-wall-pane');
+  const buddyPane = document.getElementById('community-buddy-pane');
+  const wallBtn = document.getElementById('community-sub-wall');
+  const buddyBtn = document.getElementById('community-sub-buddy');
+  if (!wallPane || !buddyPane || !scroll) return;
+  // Save current scroll position
+  communityScrollPositions[communitySubTab] = scroll.scrollTop;
+  communitySubTab = sub;
+  wallPane.style.display = sub === 'wall' ? 'block' : 'none';
+  buddyPane.style.display = sub === 'buddy' ? 'block' : 'none';
+  if (wallBtn) wallBtn.classList.toggle('active', sub === 'wall');
+  if (buddyBtn) buddyBtn.classList.toggle('active', sub === 'buddy');
+  // Restore scroll position for the new pane
+  requestAnimationFrame(() => { scroll.scrollTop = communityScrollPositions[sub]; });
+  updateBuddySubBadge();
+  haptic('light');
+}
+
+function updateBuddySubBadge() {
+  const badge = document.getElementById('buddy-sub-badge');
+  if (!badge) return;
+  let total = 0;
+  buddyCachedBuddies.forEach(b => { total += getBuddyUnreadCount(b.pairId); });
+  if (total > 0 && communitySubTab !== 'buddy') {
+    badge.style.cssText = 'min-width:16px;height:16px;background:var(--sage);color:var(--bg);font-size:10px;font-weight:600;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;margin-left:2px';
+    badge.textContent = total;
+  } else {
+    badge.style.display = 'none';
+    badge.textContent = '';
+  }
+}
 
 function ensureBuddyId() {
   if (!bloomBuddyId) {
@@ -18021,6 +18066,7 @@ function updateBuddyNavBadge() {
     navBtn.style.position = 'relative';
     navBtn.appendChild(badge);
   }
+  updateBuddySubBadge();
 }
 
 function startBuddyPolling() {
@@ -18982,6 +19028,17 @@ function renderCommunityTab() {
 
   let html = '';
 
+  // Sub-tab toggle
+  html += `<div style="display:flex;justify-content:center;padding:8px 0 12px">
+    <div class="community-sub-toggle">
+      <button id="community-sub-wall" class="community-toggle-btn${communitySubTab === 'wall' ? ' active' : ''}" onclick="switchCommunitySubTab('wall')">💛 Encouragement</button>
+      <button id="community-sub-buddy" class="community-toggle-btn${communitySubTab === 'buddy' ? ' active' : ''}" onclick="switchCommunitySubTab('buddy')">🌱 Buddy<span id="buddy-sub-badge"></span></button>
+    </div>
+  </div>`;
+
+  // Wall pane
+  html += `<div id="community-wall-pane" style="display:${communitySubTab === 'wall' ? 'block' : 'none'}">`;
+
   // Wall header
   html += `<div style="text-align:center;padding:8px 0 16px">
     <div style="font-size:32px;margin-bottom:8px">💛</div>
@@ -19050,8 +19107,11 @@ function renderCommunityTab() {
     </div>
   </div>`;
 
-  // bloom buddy section (below wall)
-  html += `<div style="margin-top:24px;border-top:1px solid rgba(255,255,255,0.06);padding-top:20px">
+  // Close wall pane
+  html += `</div>`;
+
+  // Buddy pane
+  html += `<div id="community-buddy-pane" style="display:${communitySubTab === 'buddy' ? 'block' : 'none'}">
     <div id="buddy-section"></div>
   </div>`;
 
@@ -19065,6 +19125,7 @@ function renderCommunityTab() {
 
   // Render buddy section
   renderBuddyContent();
+  updateBuddySubBadge();
 }
 
 // Track which moderated messages the user has chosen to reveal this session
