@@ -19200,8 +19200,8 @@ async function submitPromptResponse() {
       body: JSON.stringify({ action: 'prompt-respond', fp: wallFingerprint }),
     });
     const data = await resp.json();
-    if (data.count) updatePromptPresence(data.count);
-  } catch(e) { /* journal entry saved locally regardless */ }
+    updatePromptPresence(data.count || 0);
+  } catch(e) { updatePromptPresence(0); /* journal entry saved locally regardless */ }
 }
 
 function updatePromptPresence(count) {
@@ -19227,8 +19227,8 @@ async function fetchPromptCount() {
       body: JSON.stringify({ action: 'prompt-count' }),
     });
     const data = await resp.json();
-    if (data.count) updatePromptPresence(data.count);
-  } catch(e) {}
+    updatePromptPresence(data.count || 0);
+  } catch(e) { updatePromptPresence(0); }
 }
 
 async function postToWall() {
