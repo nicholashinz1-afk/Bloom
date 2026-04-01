@@ -18933,6 +18933,8 @@ function renderBuddyMatchForm() {
 let wallMessages = [];
 let wallLoading = false;
 let wallPosting = false;
+const WALL_PAGE_SIZE = 5;
+let wallVisibleCount = WALL_PAGE_SIZE;
 let wallHearted = load('bloom_wall_hearted', {});
 let wallFingerprint = load('bloom_wall_fp', null);
 if (!wallFingerprint) {
@@ -19090,9 +19092,11 @@ function renderCommunityTab() {
       <div style="font-size:13px;color:var(--text-muted);margin-top:6px">Be the first to share something kind.</div>
     </div>`;
   } else {
-    wallMessages.forEach(msg => {
+    const visible = wallMessages.slice(0, wallVisibleCount);
+    visible.forEach(msg => {
       html += renderWallMessageCard(msg);
     });
+    html += renderWallPaginationButtons();
   }
   html += `</div>`;
 
@@ -19186,11 +19190,41 @@ function renderWallMessages() {
       <div style="font-size:13px;color:var(--text-muted);margin-top:6px">Be the first to share something kind.</div>
     </div>`;
   } else {
-    wallMessages.forEach(msg => {
+    const visible = wallMessages.slice(0, wallVisibleCount);
+    visible.forEach(msg => {
       html += renderWallMessageCard(msg);
     });
+    html += renderWallPaginationButtons();
   }
   container.innerHTML = html;
+}
+
+function renderWallPaginationButtons() {
+  const total = wallMessages.length;
+  if (total <= WALL_PAGE_SIZE) return '';
+  let html = '<div style="display:flex;gap:8px;justify-content:center;padding:12px 0">';
+  if (wallVisibleCount < total) {
+    const remaining = total - wallVisibleCount;
+    html += `<button class="btn btn-secondary btn-sm" onclick="wallShowMore()">Show more (${remaining})</button>`;
+  }
+  if (wallVisibleCount > WALL_PAGE_SIZE) {
+    html += `<button class="btn btn-secondary btn-sm" onclick="wallShowLess()">Show less</button>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function wallShowMore() {
+  wallVisibleCount = Math.min(wallVisibleCount + WALL_PAGE_SIZE, wallMessages.length);
+  renderWallMessages();
+}
+
+function wallShowLess() {
+  wallVisibleCount = WALL_PAGE_SIZE;
+  renderWallMessages();
+  // Scroll back to top of wall messages
+  const container = document.getElementById('wall-messages');
+  if (container) container.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function updateWallCharCount() {
