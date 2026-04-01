@@ -3746,7 +3746,7 @@ function getJournalPrompt() {
 function getTodayJournalPrompt() {
   const t = today();
   // If there are saved entries today, use the first entry's prompt
-  const entries = getJournalEntries(t);
+  const entries = getJournalEntries(t).filter(e => e.source !== 'community');
   if (entries.length > 0 && entries[0].prompt) {
     return entries[0].prompt;
   }
@@ -9878,9 +9878,10 @@ function renderWellnessTab() {
   html += `<div style="font-family:Fraunces,serif;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.12em;padding:4px 4px 10px;display:flex;align-items:center;gap:8px"><span>Today</span><div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div></div>`;
 
   // --- JOURNAL ---
-  const journalEntries = getJournalEntries(t);
+  const allJournalEntries = getJournalEntries(t);
+  const journalEntries = allJournalEntries.map((e, i) => ({ ...e, _origIdx: i })).filter(e => e.source !== 'community');
   const journalPrompt = getTodayJournalPrompt();
-  const totalJournalDays = Object.keys(state.wellnessData?.journal || {}).filter(d => getJournalEntries(d).length > 0).length;
+  const totalJournalDays = Object.keys(state.wellnessData?.journal || {}).filter(d => getJournalEntries(d).some(e => e.source !== 'community')).length;
 
   html += `<div class="card" id="journal-card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -9920,7 +9921,7 @@ function renderWellnessTab() {
           <div style="font-size:12px;color:var(--sky);font-style:italic">bloom is reading what you wrote...</div>
         </div>`;
       }
-      html += `<button class="btn btn-ghost btn-sm" style="margin-top:8px;font-size:11px" onclick="editJournalEntry(${i})">Edit</button>`;
+      html += `<button class="btn btn-ghost btn-sm" style="margin-top:8px;font-size:11px" onclick="editJournalEntry(${entry._origIdx})">Edit</button>`;
       html += `</div>`;
     });
     // Entry count transparency
@@ -9957,6 +9958,22 @@ function renderWellnessTab() {
       <div style="font-family:Fraunces,serif;font-style:italic;font-size:13px;color:var(--text-muted);line-height:1.7">Your journal is here whenever you need it. No rules — just a space to be honest with yourself.</div>
     </div>`;
   }
+
+  // --- COMMUNITY PROMPT ---
+  const communityPromptText = getTodayCommunityPrompt();
+  const communityPromptAnswered = load('bloom_prompt_answered_date', null) === today();
+  html += `<div class="card" style="border-left:3px solid var(--sage)">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px"><span style="text-transform:uppercase;letter-spacing:0.06em">Community prompt</span> <span style="opacity:0.7">· your answer stays private</span></div>
+    <div style="font-size:15px;color:var(--cream);font-family:Fraunces,serif;font-style:italic;line-height:1.5;margin-bottom:10px">"${communityPromptText}"</div>
+    ${communityPromptAnswered ? `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:12px;color:var(--sage-light)">✓ You answered</span>
+    </div>` : `<div style="display:flex;gap:8px;align-items:flex-end">
+      <input type="text" id="wellness-community-prompt-input" placeholder="Your answer (stays on your device)..." maxlength="140" aria-label="Community prompt response"
+        style="flex:1;padding:8px 12px;font-size:13px" onkeydown="if(event.key==='Enter'){event.preventDefault();submitPromptResponse('wellness-community-prompt-input')}">
+      <button class="btn btn-primary btn-sm" onclick="submitPromptResponse('wellness-community-prompt-input')" style="white-space:nowrap">Answer</button>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Your response saves to your journal. Only a count is shared.</div>`}
+  </div>`;
 
   // --- SMALL WINS ---
   const wins = state.wellnessData?.wins?.[t] || [];
@@ -11862,7 +11879,7 @@ function openJournalHistory() {
   const journalDates = new Set();
   const wellnessJournal = state.wellnessData?.journal || {};
   Object.keys(wellnessJournal).forEach(d => {
-    if (getJournalEntries(d).length > 0) journalDates.add(d);
+    if (getJournalEntries(d).some(e => e.source !== 'community')) journalDates.add(d);
   });
   Object.keys(state.historyData || {}).forEach(d => {
     const entry = state.historyData[d];
@@ -11890,7 +11907,7 @@ function openJournalHistory() {
       }
 
       // Get entries from wellnessData first, fall back to historyData
-      let entries = getJournalEntries(d);
+      let entries = getJournalEntries(d).filter(e => e.source !== 'community');
       let preview = '';
       let count = entries.length;
       if (count > 0) {
@@ -19308,8 +19325,8 @@ function acceptTermsForCommunity() {
   renderCommunityTab();
 }
 
-async function submitPromptResponse() {
-  const input = document.getElementById('community-prompt-input');
+async function submitPromptResponse(inputId) {
+  const input = document.getElementById(inputId || 'community-prompt-input');
   if (!input) return;
   const text = input.value.trim();
   if (!text) return;
@@ -19335,6 +19352,7 @@ async function submitPromptResponse() {
 
   // Ping server with anonymous count (no text sent)
   renderCommunityTab();
+  renderWellnessTab();
   try {
     const resp = await fetch('/api/wall', {
       method: 'POST',
