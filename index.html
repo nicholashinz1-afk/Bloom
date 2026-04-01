@@ -3253,8 +3253,9 @@ select:focus {
 </div>
 
 <!-- Vault setup sheet -->
-<div class="bottom-sheet" id="vault-setup-sheet">
+<div class="bottom-sheet" id="vault-setup-sheet" data-sticky>
   <div class="sheet-handle"></div>
+  <div style="display:flex;justify-content:flex-end;padding:8px 12px 0"><button onclick="closeAllSheets(true)" style="background:none;border:none;color:var(--text-secondary);font-size:13px;cursor:pointer;padding:4px 8px">Cancel</button></div>
   <div style="padding:0 20px 20px" id="vault-setup-body">
     <h2 class="sheet-title">Protect your data, no account needed</h2>
     <p class="text-sm text-muted" style="line-height:1.7;margin-bottom:16px">This creates an encrypted safety net in the cloud. Your data is scrambled on your device before it ever leaves. We never see it, and no one else can read it. Not even us.</p>
@@ -8369,7 +8370,7 @@ document.addEventListener('keydown', (e) => {
   // Escape to close sheets
   if (e.key === 'Escape') {
     const openSheet = document.querySelector('.bottom-sheet.open');
-    if (openSheet) { e.preventDefault(); closeAllSheets(); }
+    if (openSheet && !_sheetDismissLocked && !openSheet.hasAttribute('data-sticky')) { e.preventDefault(); closeAllSheets(); }
   }
 });
 
@@ -14439,9 +14440,11 @@ async function handleVaultSetup() {
   const btn = document.getElementById('vault-setup-btn');
   btn.textContent = 'Creating vault...';
   btn.disabled = true;
+  _sheetDismissLocked = true;
 
   try {
     const code = await setupVault(p1);
+    _sheetDismissLocked = false;
     // Show recovery code
     document.getElementById('vault-setup-body').innerHTML = `
       <h2 class="sheet-title">Your recovery code</h2>
@@ -14452,8 +14455,9 @@ async function handleVaultSetup() {
       <div style="background:rgba(255,180,80,0.08);border:1px solid rgba(255,180,80,0.15);border-radius:var(--r-lg);padding:12px 14px;margin:16px 0;font-size:12px;color:var(--amber-light);line-height:1.7">
         <strong>Write this down and keep it somewhere safe.</strong> Without this code and your passphrase, your data cannot be recovered. We don't store either one.
       </div>
-      <button class="btn btn-primary btn-block" onclick="closeAllSheets();showToast('Cloud vault active')">Done</button>`;
+      <button class="btn btn-primary btn-block" onclick="closeAllSheets(true);showToast('Cloud vault active')">Done</button>`;
   } catch(e) {
+    _sheetDismissLocked = false;
     btn.textContent = 'Create cloud vault';
     btn.disabled = false;
     err.textContent = 'Could not create vault. Check your connection and try again.';
@@ -15557,6 +15561,7 @@ function showInstallPrompt() {
 // ============================================================
 // Track which element opened the sheet so we can restore focus when it closes
 let _sheetTriggerElement = null;
+let _sheetDismissLocked = false;
 
 function openSheet(id) {
   _sheetTriggerElement = document.activeElement;
@@ -15578,7 +15583,9 @@ function openSheet(id) {
   }, 100);
 }
 
-function closeAllSheets() {
+function closeAllSheets(force) {
+  if (!force && _sheetDismissLocked) return;
+  if (!force && document.querySelector('.bottom-sheet.open[data-sticky]')) return;
   const wasOpen = document.querySelector('.bottom-sheet.open');
   document.querySelectorAll('.bottom-sheet.open').forEach(s => { releaseFocusTrap(s); s.style.zIndex = ''; });
   const backdrop = document.getElementById('sheet-backdrop');
@@ -15607,6 +15614,11 @@ function closeAllSheets() {
 window.addEventListener('popstate', () => {
   const openSheetEl = document.querySelector('.bottom-sheet.open');
   if (openSheetEl) {
+    // Sticky/locked sheets block back-button dismissal; re-push history so back keeps working
+    if (_sheetDismissLocked || openSheetEl.hasAttribute('data-sticky')) {
+      history.pushState({ sheetOpen: true }, '');
+      return;
+    }
     // If we're viewing a history detail that came from journal history, go back to the list
     if (openSheetEl.id === 'history-sheet' && state._cameFromJournalHistory) {
       state._cameFromJournalHistory = false;
@@ -15645,6 +15657,7 @@ window.addEventListener('popstate', () => {
 
   document.addEventListener('touchmove', (e) => {
     if (!currentSheet) return;
+    if (_sheetDismissLocked || currentSheet.hasAttribute('data-sticky')) return;
     const dy = e.touches[0].clientY - startY;
     const dx = Math.abs(e.touches[0].clientX - startX);
     // Only track vertical swipe down when sheet is scrolled to top
@@ -15660,7 +15673,7 @@ window.addEventListener('popstate', () => {
     const dy = e.changedTouches[0].clientY - startY;
     currentSheet.style.transition = '';
     currentSheet.style.transform = '';
-    if (dy > 80 && sheetStartScroll <= 0) {
+    if (dy > 80 && sheetStartScroll <= 0 && !_sheetDismissLocked && !currentSheet.hasAttribute('data-sticky')) {
       closeAllSheets();
     }
     currentSheet = null;
