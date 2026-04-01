@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d1610">
+<title>Bloom — Safety & Privacy</title>
+<meta name="description" content="How Bloom keeps people safe. Age protection, content moderation, privacy by design, and crisis resources for a free mental health self-care app.">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://bloomselfcare.app/safety">
+<meta property="og:title" content="Bloom — Safety & Privacy">
+<meta property="og:description" content="How Bloom keeps people safe. Age protection, content moderation, privacy by design, and always-accessible crisis resources.">
+<meta property="og:image" content="https://bloomselfcare.app/og-image.png">
+<meta property="og:site_name" content="Bloom">
+
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1610;
+    --bg-card: #162019;
+    --bg-elevated: #1c2a1f;
+    --sage: #7a9e7e;
+    --sage-light: #a8c5ab;
+    --rose: #b07878;
+    --rose-light: #d4a8a8;
+    --sky: #6a9ab0;
+    --sky-light: #9ec4d8;
+    --amber: #c9954a;
+    --amber-light: #e0b87a;
+    --cream: #e8e0d0;
+    --text-secondary: #a3b5a5;
+    --text-muted: #8a9e8c;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Instrument Sans', -apple-system, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--sage);
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 32px;
+  }
+
+  .back-link:hover { text-decoration: underline; }
+
+  header {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+
+  header h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  header .tagline {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+  }
+
+  h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--sage-light);
+    margin-bottom: 16px;
+    margin-top: 48px;
+  }
+
+  h2:first-of-type { margin-top: 0; }
+
+  p, li {
+    color: var(--cream);
+    margin-bottom: 12px;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  ul li::before {
+    content: "·";
+    color: var(--sage);
+    font-weight: 600;
+    margin-right: 8px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .card h3 {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--sage-light);
+    margin-bottom: 8px;
+  }
+
+  .card p, .card li {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .card p:last-child, .card li:last-child {
+    margin-bottom: 0;
+  }
+
+  .age-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .age-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .age-card .age-range {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .age-card .age-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+
+  .tier-label {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+
+  .tier-blocked {
+    background: rgba(176, 120, 120, 0.15);
+    color: var(--rose-light);
+  }
+
+  .tier-flagged {
+    background: rgba(201, 149, 74, 0.15);
+    color: var(--amber-light);
+  }
+
+  .tier-allowed {
+    background: rgba(122, 158, 126, 0.15);
+    color: var(--sage-light);
+  }
+
+  .crisis-box {
+    background: var(--bg-card);
+    border-left: 3px solid var(--rose);
+    border-radius: 0 14px 14px 0;
+    padding: 24px;
+    margin-top: 16px;
+  }
+
+  .crisis-box h3 {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--rose-light);
+    margin-bottom: 12px;
+  }
+
+  .crisis-box p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .crisis-box p:last-child {
+    margin-bottom: 0;
+  }
+
+  a { color: var(--sage-light); }
+  a:hover { color: var(--sage); }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--bg-elevated);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  footer a {
+    color: var(--sage);
+    text-decoration: none;
+  }
+
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 2rem; }
+    .container { padding: 32px 16px 64px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a href="/" class="back-link">&larr; Back to Bloom</a>
+
+  <header>
+    <img src="/bloom-logo-512.png" alt="Bloom logo" style="width: 80px; height: 80px; border-radius: 18px; margin-bottom: 16px;">
+    <h1>How Bloom Keeps People Safe</h1>
+    <p class="tagline">Built for young people. Designed with that responsibility in mind.</p>
+  </header>
+
+  <!-- Our approach -->
+  <h2>Our Approach</h2>
+  <p>
+    Bloom is a mental health self-care app. People use it on hard days, when they're anxious, when they need
+    somewhere to be honest about how they're feeling. That means safety can't be an afterthought.
+  </p>
+  <p>
+    Every message sent through Bloom's community features is automatically screened before it reaches anyone else.
+    Venting is always allowed. Difficult emotions are always allowed. Language that targets or harms other people is not.
+  </p>
+  <p>
+    All of this is open source. You can read every moderation rule, every pattern, every line of code.
+    Nothing is hidden behind a policy document you can't verify.
+  </p>
+
+  <!-- Age protection -->
+  <h2>Age Protection</h2>
+  <p>Bloom uses a three-tier age gate during onboarding. No account is created, but community access depends on the age group selected.</p>
+  <div class="age-grid">
+    <div class="age-card">
+      <div class="age-range" style="color: var(--rose);">Under 13</div>
+      <div class="age-label">Cannot use Bloom. Shown crisis resources and directed to a trusted adult.</div>
+    </div>
+    <div class="age-card">
+      <div class="age-range" style="color: var(--amber);">13 to 15</div>
+      <div class="age-label">Solo mode only. Journaling, habits, breathing exercises, and crisis resources. No community features.</div>
+    </div>
+    <div class="age-card">
+      <div class="age-range" style="color: var(--sage-light);">16+</div>
+      <div class="age-label">Full access including anonymous buddy system and community encouragement wall.</div>
+    </div>
+  </div>
+
+  <!-- Content moderation -->
+  <h2>Content Moderation</h2>
+  <p>
+    Every message in the buddy system and encouragement wall is checked against a shared moderation module
+    before it's delivered. Here's what happens at each tier.
+  </p>
+
+  <div class="card">
+    <span class="tier-label tier-blocked">Blocked</span>
+    <h3>Credible Threats of Violence</h3>
+    <p>
+      Messages describing specific, actionable threats (mass violence, named targets, weapons combined with intent)
+      are blocked immediately. These are logged with full metadata for compliance and trigger real-time admin alerts
+      via email and push notification.
+    </p>
+  </div>
+
+  <div class="card">
+    <span class="tier-label tier-blocked">Blocked</span>
+    <h3>Directed Harm</h3>
+    <p>
+      Messages intended to hurt another person, including telling someone to harm themselves, death threats,
+      or targeted cruelty. Blocked in both buddy and wall.
+    </p>
+  </div>
+
+  <div class="card">
+    <span class="tier-label tier-blocked">Blocked</span>
+    <h3>Grooming and Predatory Language</h3>
+    <p>
+      Questions about age, grade, location, or school. Requests for photos or selfies. Secrecy language
+      ("don't tell anyone," "keep this between us"). Requests to meet in person. All blocked unconditionally.
+    </p>
+  </div>
+
+  <div class="card">
+    <span class="tier-label tier-blocked">Blocked</span>
+    <h3>Contact Exchange</h3>
+    <p>
+      Phone numbers, social media handles, and any attempt to move communication off-platform.
+      Blocked on both buddy and wall. The client also warns users before they send personal information,
+      with a two-step confirmation.
+    </p>
+  </div>
+
+  <div class="card">
+    <span class="tier-label tier-blocked">Blocked</span>
+    <h3>Targeted Abuse</h3>
+    <p>Slurs and language used to dehumanize others. Blocked everywhere.</p>
+  </div>
+
+  <div class="card">
+    <span class="tier-label tier-blocked">Blocked in buddy / Flagged on wall</span>
+    <h3>Crude and Sexual Content</h3>
+    <p>
+      Hard-blocked in the buddy system (1-on-1 messages between users). On the public encouragement wall,
+      this content is allowed but shown with a content warning so others can choose whether to view it.
+    </p>
+  </div>
+
+  <div class="card">
+    <span class="tier-label tier-blocked">Blocked</span>
+    <h3>Spam and Links</h3>
+    <p>URLs, special characters used for injection, and spam patterns are blocked to prevent abuse.</p>
+  </div>
+
+  <div class="card">
+    <span class="tier-label tier-allowed">Allowed, with resources</span>
+    <h3>Self-Harm Language</h3>
+    <p>
+      This is never blocked. If someone is expressing suicidal thoughts or self-harm, their message goes through.
+      Bloom surfaces crisis resources (988 Suicide and Crisis Lifeline, Crisis Text Line, international helplines)
+      alongside the message. Better to show help to someone who doesn't need it than to miss someone who does.
+    </p>
+  </div>
+
+  <!-- Automatic enforcement -->
+  <h2>Automatic Enforcement</h2>
+  <div class="card">
+    <h3>Auto-Ban</h3>
+    <p>
+      Three or more blocked messages within 24 hours triggers an automatic ban from all community features.
+      No admin intervention needed. Credible violent threats result in an immediate ban on the first offense.
+    </p>
+  </div>
+
+  <!-- Threat response -->
+  <h2>Threat Response</h2>
+  <div class="card">
+    <h3>Compliance Logging and Admin Alerts</h3>
+    <p>
+      When a credible threat of violence is detected, Bloom logs the full incident (timestamp, message content,
+      IP address, user agent, and user identifier) and immediately notifies administrators through three channels:
+      email alert via Resend, push notification, and the admin console.
+    </p>
+    <p>
+      Bloom maintains a documented incident response plan with severity tiers. For credible, imminent threats,
+      the plan includes cooperation with law enforcement. This is disclosed in Bloom's Terms of Use.
+    </p>
+  </div>
+
+  <!-- Privacy by design -->
+  <h2>Privacy by Design</h2>
+  <div class="card">
+    <h3>Your Data Stays on Your Device</h3>
+    <p>
+      Journals, mood logs, habit data, and settings are stored in your browser's local storage and IndexedDB.
+      Nothing is sent to a server. There are no user accounts and no sign-up process.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>AI Reflections</h3>
+    <p>
+      When you use AI-powered journal reflections, your entry is sent to the Anthropic Claude API for processing.
+      Bloom does not store your journal entries on any server. Anthropic's data retention policies apply to API calls.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Community Data</h3>
+    <p>
+      If you opt into community features (buddy system, encouragement wall), messages are stored on the server
+      with no identifying information beyond the display name you choose. Community data can be deleted at any time
+      from Settings.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>No Tracking</h3>
+    <p>
+      No analytics platforms. No tracking pixels. No advertising. No third-party data sharing.
+      Bloom uses batched, anonymous telemetry for basic operational metrics (page loads, feature usage counts)
+      with no personally identifiable information.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Client-Side Personal Info Warnings</h3>
+    <p>
+      Before sending any community message, Bloom scans for phone numbers, email addresses, social security numbers,
+      physical addresses, and social media handles. If detected, you see a warning and must confirm before the message
+      is sent. The server blocks personal information regardless of client-side confirmation.
+    </p>
+  </div>
+
+  <!-- Technical safeguards -->
+  <h2>Technical Safeguards</h2>
+  <ul>
+    <li>Content Security Policy (CSP) restricting script and resource origins</li>
+    <li>X-Frame-Options: DENY (prevents embedding in iframes)</li>
+    <li>Strict-Transport-Security with preload (HTTPS only)</li>
+    <li>X-Content-Type-Options: nosniff</li>
+    <li>Referrer-Policy: strict-origin-when-cross-origin</li>
+    <li>CORS locked to bloomselfcare.app, the Vercel preview domain, and localhost for development</li>
+  </ul>
+
+  <!-- Data deletion -->
+  <h2>Data Deletion</h2>
+  <div class="card">
+    <p>
+      <strong>Local data</strong> (journals, moods, habits): Clear your browser storage at any time. Bloom provides
+      a one-tap reset option in Settings.
+    </p>
+    <p>
+      <strong>Community data</strong> (buddy messages, wall posts): Deletable from Settings at any time.
+    </p>
+    <p>
+      <strong>International users:</strong> Contact <a href="mailto:bloomhabits@proton.me">bloomhabits@proton.me</a>
+      for any data removal requests.
+    </p>
+  </div>
+
+  <!-- Crisis resources -->
+  <h2>Crisis Resources</h2>
+  <div class="crisis-box">
+    <h3>Always One Tap Away</h3>
+    <p>
+      The white heart button in Bloom's header opens crisis resources at any time, from any screen.
+      No navigation, no login, no barriers.
+    </p>
+    <p><strong>988 Suicide and Crisis Lifeline</strong> (call or text 988, US)</p>
+    <p><strong>Crisis Text Line</strong> (text 741741, US/Canada/UK/Ireland)</p>
+    <p><strong>findahelpline.com</strong> (international, 40+ languages)</p>
+    <p>
+      Crisis resources are also automatically surfaced when self-harm language is detected in community messages,
+      and when a user logs a low mood.
+    </p>
+  </div>
+
+  <!-- Open source -->
+  <h2>Verify Everything</h2>
+  <p>
+    Bloom is open source under AGPL-3.0. Every moderation pattern, every privacy decision, every safety feature
+    described on this page can be verified in the
+    <a href="https://github.com/nicholashinz1-afk/bloom" target="_blank" rel="noopener">source code</a>.
+    If you find something that should be better, open an issue or email
+    <a href="mailto:bloomhabits@proton.me">bloomhabits@proton.me</a>.
+  </p>
+
+  <footer>
+    <p>
+      <a href="/">Use Bloom</a> · <a href="/press">Press Kit</a> · <a href="https://github.com/nicholashinz1-afk/bloom">GitHub</a> · <a href="mailto:bloomhabits@proton.me">Contact</a>
+    </p>
+    <p style="margin-top: 8px;">Bloom is free and open source. Always will be.</p>
+  </footer>
+
+</div>
+</body>
+</html>
