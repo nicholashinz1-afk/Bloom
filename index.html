@@ -5557,6 +5557,7 @@ async function saveOpenJournal() {
   if (ai && state.wellnessData.journal[t][entryIndex]) {
     state.wellnessData.journal[t][entryIndex].ai = ai;
     saveState();
+    syncToVault();
     archiveToday();
     if (aiEl) {
       aiEl.innerHTML = renderAIResponseHTML(ai, 'journal-' + t);
@@ -6180,6 +6181,8 @@ function showSessionRefreshIndicator() {
 }
 
 document.addEventListener('visibilitychange', handleVisibilityChange);
+// Best-effort vault sync when page is being discarded (OS kill, tab close, navigation away)
+window.addEventListener('pagehide', () => syncToVault());
 window.addEventListener('pageshow', (e) => {
   if (e.persisted) checkForUpdate();
 });
@@ -10239,6 +10242,7 @@ async function saveJournal() {
     if (ai && entry) {
       entry.ai = ai;
       saveState();
+      syncToVault();
       archiveToday();
     }
   } finally {
@@ -10341,6 +10345,7 @@ async function saveReflection(qi) {
     if (ai) {
       state.wellnessData.reflections[ws][qi].ai = ai;
       saveState();
+      syncToVault();
     }
   } finally {
     state.loadingReflectionAI[qi] = false;
@@ -10408,6 +10413,7 @@ Write 3-4 sentences from an emotional lens — how they showed up for themselves
     if (state.wellnessData.insights.length > 8) state.wellnessData.insights.shift();
 
     saveState();
+    syncToVault();
     celebrate('insight', document.querySelector('.tab-scroll'));
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Generate insight'; }
@@ -14373,8 +14379,8 @@ async function syncToVault() {
   const vaultState = load('bloom_vault_state');
   if (!vaultState || !vaultState.codeHash || !vaultState.passphrase) return;
 
-  // Debounce: max once per hour
-  if (vaultState.lastSync && Date.now() - vaultState.lastSync < 3600000) return;
+  // Debounce: max once per 5 minutes
+  if (vaultState.lastSync && Date.now() - vaultState.lastSync < 300000) return;
 
   try {
     const data = gatherFullBackupData();
