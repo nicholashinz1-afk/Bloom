@@ -2225,7 +2225,21 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 0;
+}
+.buddy-collapsed-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
   margin-bottom: 14px;
+}
+.buddy-collapsed-stat {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
 .buddy-name {
   font-family: 'Fraunces', serif;
@@ -18823,6 +18837,12 @@ function renderBuddyCard(b, index) {
     }
   }
 
+  // Collapsed stats row (always visible)
+  const collapsedStats = [];
+  collapsedStats.push(`<span class="buddy-collapsed-stat">🌿 ${b.streak || 0}</span>`);
+  if (b.sharedDays > 0) collapsedStats.push(`<span class="buddy-collapsed-stat">🤝 ${b.sharedDays}</span>`);
+  if (b.level) collapsedStats.push(`<span class="buddy-collapsed-stat">${b.levelEmoji || '🌱'} ${escapeHtml(b.level)}</span>`);
+
   return `
     <div class="buddy-card" style="margin-bottom:12px">
       <div class="buddy-card-header" onclick="toggleBuddyCard('${pid}')" style="cursor:pointer">
@@ -18831,6 +18851,9 @@ function renderBuddyCard(b, index) {
           ${activitySummary}
         </div>
         <span id="buddy-chevron-${pid}" style="font-size:14px;color:var(--text-muted);transition:transform 0.2s">▸</span>
+      </div>
+      <div class="buddy-collapsed-stats" onclick="toggleBuddyCard('${pid}')" style="cursor:pointer">
+        ${collapsedStats.join('')}
       </div>
       <div id="buddy-body-${pid}" style="display:none">
         <div class="buddy-stats">
