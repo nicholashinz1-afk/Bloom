@@ -19211,11 +19211,9 @@ function updatePromptPresence(count) {
     [4, 3, 5, 3, 4].map((s, i) => `<span style="width:${s}px;height:${s}px;border-radius:50%;background:var(--sage);opacity:${0.3 + i * 0.1}"></span>`).join('') +
     '</span>';
   if (count >= 10) {
-    el.innerHTML = `· ${dots} you and ${count - 1} others`;
-  } else if (count > 1) {
-    el.innerHTML = `· ${dots} others answered too`;
+    el.innerHTML = `· ${dots} ${count - 1} others reflected too`;
   } else {
-    el.innerHTML = `· ${dots}`;
+    el.innerHTML = `· ${dots} others answered too`;
   }
 }
 
