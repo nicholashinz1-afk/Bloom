@@ -18742,9 +18742,12 @@ function renderBuddyCard(b, index) {
     : '';
   // Activity hints for collapsed cards
   const activityHints = [];
+  const unreadMsgs = (buddyCachedMessages[pid] || []).filter(m => m.from !== bloomBuddyId && (m.ts || 0) > getBuddyLastSeen(pid));
+  const unreadNudges = unreadMsgs.filter(m => m.type === 'nudge').length;
+  if (unreadNudges > 0) activityHints.push('sent a nudge 💭');
   if (moodFresh) activityHints.push(moodDisplay);
   if (justLeveledUp) activityHints.push('leveled up');
-  if (buddyActiveToday && !moodFresh) activityHints.push('active today');
+  if (buddyActiveToday && !moodFresh && !unreadNudges) activityHints.push('active today');
   const activitySummary = activityHints.length > 0
     ? `<span style="font-size:11px;color:var(--sage-light);opacity:0.8;margin-left:4px">${activityHints.join(' · ')}</span>`
     : '';
