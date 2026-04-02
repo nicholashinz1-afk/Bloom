@@ -3670,6 +3670,18 @@ select:focus {
 <!-- Tutorial overlay -->
 <div id="tutorial-overlay"></div>
 
+<!-- Decoy mask (quick exit overlay - looks like frozen/loading app) -->
+<div id="decoy-mask" aria-hidden="true">
+  <div id="decoy-spinner"></div>
+  <span class="decoy-text">Loading...</span>
+</div>
+
+<!-- Lock screen -->
+<div id="lock-screen" role="dialog" aria-label="App locked">
+  <button class="lock-heart-btn" id="lock-crisis-heart" title="Mental health resources" aria-label="Mental health crisis resources"><span aria-hidden="true">🤍</span></button>
+  <div id="lock-content"></div>
+</div>
+
 <script>
 // ── Bloom icon SVG (small inline version for UI use) ─────────
 function bloomIcon(size = 24) {
@@ -16744,15 +16756,19 @@ function deactivateDecoyMask() {
   document.getElementById('decoy-mask').classList.remove('active');
 }
 
-// Long-press on decoy spinner to unmask (3 seconds)
+// Long-press on decoy mask to unmask (3 seconds)
 // Deferred: #decoy-mask is in the HTML after the script tag, so we init on DOMContentLoaded
 function initDecoyMask() {
   const mask = document.getElementById('decoy-mask');
   if (!mask) return;
 
+  let startX = 0, startY = 0;
+
   function startUnmask(e) {
     if (e.cancelable) e.preventDefault();
+    if (e.touches) { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
     _decoyLongPressTimer = setTimeout(() => {
+      _decoyLongPressTimer = null;
       if (navigator.vibrate) navigator.vibrate(50);
       deactivateDecoyMask();
     }, 3000);
@@ -16760,19 +16776,23 @@ function initDecoyMask() {
   function cancelUnmask() {
     if (_decoyLongPressTimer) { clearTimeout(_decoyLongPressTimer); _decoyLongPressTimer = null; }
   }
+  function moveCheck(e) {
+    // Only cancel if finger moved more than 20px (ignore slight jitter)
+    if (e.touches) {
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (Math.abs(dx) > 20 || Math.abs(dy) > 20) cancelUnmask();
+    }
+  }
 
   mask.addEventListener('touchstart', startUnmask, { passive: false });
   mask.addEventListener('touchend', cancelUnmask);
-  mask.addEventListener('touchmove', cancelUnmask);
+  mask.addEventListener('touchmove', moveCheck, { passive: true });
   mask.addEventListener('mousedown', startUnmask);
   mask.addEventListener('mouseup', cancelUnmask);
   mask.addEventListener('mouseleave', cancelUnmask);
 }
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initDecoyMask);
-} else {
-  initDecoyMask();
-}
+initDecoyMask();
 
 // ── Crisis Heart Long-Press Handler ─────────────────────────
 // Short tap = crisis sheet, long-press (2s) = safety sheet
@@ -16810,12 +16830,7 @@ function attachHeartLongPress(el) {
 }
 
 attachHeartLongPress(document.getElementById('crisis-heart'));
-// #lock-crisis-heart is in the HTML after the script tag, so defer
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => attachHeartLongPress(document.getElementById('lock-crisis-heart')));
-} else {
-  attachHeartLongPress(document.getElementById('lock-crisis-heart'));
-}
+attachHeartLongPress(document.getElementById('lock-crisis-heart'));
 
 // ============================================================
 //  SCIENCE / INFO TOOLTIPS
@@ -21905,17 +21920,5 @@ async function main() {
 // Boot
 main();
 </script>
-
-<!-- Decoy mask (quick exit overlay - looks like frozen/loading app) -->
-<div id="decoy-mask" aria-hidden="true">
-  <div id="decoy-spinner"></div>
-  <span class="decoy-text">Loading...</span>
-</div>
-
-<!-- Lock screen -->
-<div id="lock-screen" role="dialog" aria-label="App locked">
-  <button class="lock-heart-btn" id="lock-crisis-heart" title="Mental health resources" aria-label="Mental health crisis resources"><span aria-hidden="true">🤍</span></button>
-  <div id="lock-content"></div>
-</div>
 </body>
 </html>
