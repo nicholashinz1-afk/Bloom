@@ -4598,21 +4598,21 @@ function saveState() {
 //  XP SYSTEM
 // ============================================================
 const LEVELS = [
-  { name: 'Seedling',     min: 0,     emoji: '🌱' },   // Day 0
-  { name: 'Sprout',       min: 200,   emoji: '🌿' },   // ~1-2 days
-  { name: 'Blooming',     min: 600,   emoji: '🌸' },   // ~4 days
-  { name: 'Thriving',     min: 1500,  emoji: '🌻' },   // ~10 days
-  { name: 'Radiant',      min: 3500,  emoji: '✨' },   // ~3 weeks
-  { name: 'Glowing',      min: 7000,  emoji: '🌟' },   // ~6 weeks
-  { name: 'Flourishing',  min: 12000, emoji: '🌺' },   // ~3 months
-  { name: 'Rooted',       min: 20000, emoji: '🌳' },   // ~4-5 months
-  { name: 'Evergreen',    min: 32000, emoji: '🍃' },   // ~7 months
-  { name: 'Full Bloom',   min: 50000, emoji: '🌷' },   // ~11 months
+  { name: 'Seed',         min: 0,     emoji: '🌰' },   // Day 0 — just planted
+  { name: 'Seedling',     min: 175,   emoji: '🌱' },   // ~1 day — first tiny shoot
+  { name: 'Sprout',       min: 525,   emoji: '🌿' },   // ~3 days — growing leaves
+  { name: 'Budding',      min: 1200,  emoji: '🌷' },   // ~1 week — forming buds
+  { name: 'Blooming',     min: 2600,  emoji: '🌸' },   // ~2 weeks — flowers opening
+  { name: 'Flowering',    min: 5000,  emoji: '🌼' },   // ~4 weeks — in full flower
+  { name: 'Flourishing',  min: 9000,  emoji: '🌻' },   // ~7-8 weeks — strong and vibrant
+  { name: 'Rooted',       min: 15000, emoji: '🌳' },   // ~3 months — deeply established
+  { name: 'Evergreen',    min: 25000, emoji: '🍃' },   // ~5 months — enduring
+  { name: 'Full Bloom',   min: 40000, emoji: '🌺' },   // ~8 months — peak growth
 ];
 
 // Baseline daily XP potential the LEVELS thresholds were designed around.
-// Roughly: 6 habits × 1 slot × 15 XP + medication × 20 + mood/journal/reflection/water/food ≈ 150
-const BASELINE_DAILY_XP = 150;
+// Roughly: 6 habits × 15 + medication × 20 + mood/sleep/journal/reflection/water/food/breathing ≈ 175
+const BASELINE_DAILY_XP = 175;
 
 function getDailyXPPotential() {
   const prefs = state.prefs || {};
@@ -4672,9 +4672,9 @@ function getDailyXPPotential() {
     potential += 20;
   });
 
-  // Non-habit daily XP (mood, journal, reflection, water, food, wins, affirmation)
+  // Non-habit daily XP (mood, sleep, journal, reflection, water, food, wins, affirmation, breathing)
   // These are roughly fixed regardless of habit config
-  potential += 70;
+  potential += 95;
 
   return Math.max(potential, BASELINE_DAILY_XP);
 }
@@ -5067,7 +5067,7 @@ function getThemeSVGColors() {
 
 function buildFlowerSVG(levelIdx, animated = false) {
   const i = Math.min(levelIdx, 9);
-  const stageNames = ['Seedling','Sprout','Blooming','Thriving','Radiant','Glowing','Flourishing','Rooted','Evergreen','Full Bloom'];
+  const stageNames = ['Seed','Seedling','Sprout','Budding','Blooming','Flowering','Flourishing','Rooted','Evergreen','Full Bloom'];
   const stageName = stageNames[i];
   const potColor = '#6b5a4a';
   const potLight = '#8a7560';
@@ -5084,13 +5084,13 @@ function buildFlowerSVG(levelIdx, animated = false) {
 
   let plant = '';
   if (i === 0) {
-    // Seedling — tiny sprout with one unfurling leaf
+    // Seed — tiny sprout with one unfurling leaf
     plant = `<g ${anim}>
       <line x1="100" y1="160" x2="100" y2="${stemTop}" stroke="${stemColor}" stroke-width="3" stroke-linecap="round"/>
       <ellipse cx="95" cy="${stemTop + 2}" rx="8" ry="5" fill="${leafColor}" transform="rotate(-30 95 ${stemTop + 2})"/>
     </g>`;
   } else if (i === 1) {
-    // Sprout — taller stem with two leaves
+    // Seedling — taller stem with two leaves
     plant = `<g ${anim}>
       <line x1="100" y1="160" x2="100" y2="${stemTop}" stroke="${stemColor}" stroke-width="3.5" stroke-linecap="round"/>
       <ellipse cx="88" cy="${stemTop + 20}" rx="12" ry="6" fill="${leafColor}" transform="rotate(-40 88 ${stemTop + 20})"/>
@@ -5098,7 +5098,7 @@ function buildFlowerSVG(levelIdx, animated = false) {
       <ellipse cx="96" cy="${stemTop + 2}" rx="6" ry="10" fill="${leafColor}" transform="rotate(-10 96 ${stemTop + 2})"/>
     </g>`;
   } else if (i === 2) {
-    // Blooming — flower bud opening
+    // Sprout — stem with emerging leaves
     plant = `<g ${anim}>
       <line x1="100" y1="160" x2="100" y2="${stemTop + 15}" stroke="${stemColor}" stroke-width="4" stroke-linecap="round"/>
       <ellipse cx="85" cy="${stemTop + 35}" rx="14" ry="7" fill="${leafColor}" transform="rotate(-35 85 ${stemTop + 35})"/>
@@ -5110,7 +5110,7 @@ function buildFlowerSVG(levelIdx, animated = false) {
       <circle cx="100" cy="${stemTop + 10}" r="5" fill="${tc.glow}" opacity="0.9"/>
     </g>`;
   } else if (i === 3) {
-    // Thriving — full sunflower
+    // Budding — first buds forming
     plant = `<g ${anim}>
       <line x1="100" y1="160" x2="100" y2="${stemTop + 18}" stroke="${stemColor}" stroke-width="4.5" stroke-linecap="round"/>
       <ellipse cx="82" cy="${stemTop + 42}" rx="16" ry="7" fill="${leafColor}" transform="rotate(-35 82 ${stemTop + 42})"/>
@@ -5123,7 +5123,7 @@ function buildFlowerSVG(levelIdx, animated = false) {
       <circle cx="100" cy="${stemTop + 14}" r="6" fill="${tc.stem}"/>
     </g>`;
   } else if (i === 4) {
-    // Radiant — glowing bloom with sparkles
+    // Blooming — flowers opening with sparkles
     plant = `<g ${anim}>
       <line x1="100" y1="160" x2="100" y2="${stemTop + 18}" stroke="${stemColor}" stroke-width="5" stroke-linecap="round"/>
       <ellipse cx="78" cy="${stemTop + 42}" rx="18" ry="8" fill="${leafColor}" transform="rotate(-30 78 ${stemTop + 42})"/>
@@ -5139,7 +5139,7 @@ function buildFlowerSVG(levelIdx, animated = false) {
       <circle cx="100" cy="${stemTop - 8}" r="2" fill="#fff" opacity="0.8" class="sparkle" style="animation-delay:1s"/>
     </g>`;
   } else if (i === 5) {
-    // Glowing — magnificent full bloom with golden glow
+    // Flowering — magnificent full bloom with golden glow
     plant = `<g ${anim}>
       <line x1="100" y1="160" x2="100" y2="${stemTop + 18}" stroke="${stemColor}" stroke-width="5" stroke-linecap="round"/>
       <ellipse cx="75" cy="${stemTop + 45}" rx="20" ry="8" fill="${leafColor}" transform="rotate(-30 75 ${stemTop + 45})"/>
@@ -5315,11 +5315,27 @@ function showLevelUp(oldLevel, newLevel) {
 // ── Enhanced addXP with level-up check ──────────────────────
 function addXP(amount, sourceEl) {
   const oldXP = state.xpData.total || 0;
-  state.xpData.total = oldXP + amount;
+  // Showing up on a hard day is harder — reward it more
+  const hardDayActive = state.hardDayMode || state.todayData?.gentleMode;
+  const earned = hardDayActive ? Math.round(amount * 1.5) : amount;
+  state.xpData.total = oldXP + earned;
   saveState();
-  if (sourceEl) showXPFloat(amount, sourceEl);
+  if (sourceEl) showXPFloat(earned, sourceEl);
   checkLevelUp(oldXP, state.xpData.total);
   updateProgressTab();
+}
+
+// ── Diminishing returns for repeatable activities ────────────
+// First session of each type per day earns full XP.
+// Every additional session still earns 5 XP — never zero, always recognized.
+function addActivityXP(type, fullAmount, sourceEl) {
+  const key = `_${type}XPFirst`;
+  if (!state.todayData[key]) {
+    state.todayData[key] = true;
+    addXP(fullAmount, sourceEl);
+  } else {
+    addXP(5, sourceEl);
+  }
 }
 
 // ── Water fill animation ─────────────────────────────────────
@@ -5482,6 +5498,13 @@ function updateStreak() {
       // Keep legacy streak field in sync for buddy display
       xp.streak = xp.currentRun;
       xp.lastStreakDate = t;
+
+      // Consistency bonus — steady showing up earns extra sunlight
+      const run = xp.currentRun;
+      const streakBonus = run >= 30 ? 50 : run >= 14 ? 30 : run >= 7 ? 15 : 0;
+      if (streakBonus > 0) {
+        state.xpData.total = (state.xpData.total || 0) + streakBonus;
+      }
 
       // Check milestones on cumulative days
       checkStreakMilestone(xp.daysShowedUp);
@@ -6192,7 +6215,7 @@ async function saveOpenJournal() {
 
   if (!state.todayData.journalXPGiven) {
     state.todayData.journalXPGiven = true;
-    addXP(10, null);
+    addXP(20, null);
     saveState();
     checkMilestones();
   }
@@ -8469,6 +8492,9 @@ function celebrate(type, sourceEl) {
 // - Medication & inner care (journal, reflection) are highest — these are core therapeutic actions
 // - Basic self-care (hygiene, nourishment, hydration) are equal — every one matters on hard days
 // - Physical activity is valued but not disproportionately above self-care
+// - Skill-building (breathing, grounding, body scan, reframe) earns 15-20 XP first session/day, 5 XP repeats
+// - Hard days earn 1.5x XP — showing up when it's hard is the bravest thing
+// - Every action is always recognized, never zero
 const XP_VALUES = {
   m_teeth: 15, e_teeth: 15, w_shower: 20, w_exercise: 20,
   w_outside: 20, w_therapy: 25, water_goal: 15, food: 15, journal: 20,
@@ -9645,6 +9671,7 @@ function renderInlineBreathPhase() {
     if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
     state.wellnessData.breathSessions++;
     state.todayData.breathCount = (state.todayData.breathCount || 0) + 1;
+    addActivityXP('breath', 15, null);
     saveState();
     archiveToday();
     celebrate('breath', document.getElementById('inline-breath-zone'));
@@ -9700,6 +9727,7 @@ function stopInlineBreathing() {
   if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
   state.wellnessData.breathSessions++;
   state.todayData.breathCount = (state.todayData.breathCount || 0) + 1;
+  addActivityXP('breath', 15, null);
   saveState();
   archiveToday();
   playSound('breath_done');
@@ -10621,6 +10649,11 @@ function logMood(val) {
   if (val >= 0 && val <= 1 && !wasLow) {
     state.todayData.gentleMode = true;
   }
+  // Checking in with yourself matters
+  if (!state.todayData.moodXPGiven) {
+    state.todayData.moodXPGiven = true;
+    addXP(10, null);
+  }
   saveState();
   archiveToday();
   haptic('light');
@@ -10645,6 +10678,11 @@ function logMood(val) {
 
 function logSleep(val) {
   state.todayData.sleep = val;
+  // Noticing your rest matters
+  if (!state.todayData.sleepXPGiven) {
+    state.todayData.sleepXPGiven = true;
+    addXP(5, null);
+  }
   saveState();
   archiveToday();
   haptic('light');
@@ -11178,7 +11216,7 @@ async function saveJournal() {
 
   if (!state.todayData.journalXPGiven) {
     state.todayData.journalXPGiven = true;
-    addXP(10, null);
+    addXP(20, null);
     celebrate('journal', document.getElementById('journal-card'));
     archiveToday();
     checkMilestones();
@@ -11389,7 +11427,7 @@ function addWin() {
   state.wellnessData.wins[t].push(input.value.trim());
   if (!state.todayData.winsXPGiven) {
     state.todayData.winsXPGiven = true;
-    addXP(5, null);
+    addXP(10, null);
   }
   saveState();
   checkFirstTaskStreak();
@@ -11415,7 +11453,7 @@ function addAffirmation() {
   updateWordTree(text, true);
   if (!state.todayData.affirmXPGiven) {
     state.todayData.affirmXPGiven = true;
-    addXP(5, null);
+    addXP(10, null);
   }
   saveState();
   checkFirstTaskStreak();
@@ -11711,7 +11749,7 @@ function shuffleSelfCareAct() {
 function completeSelfCareAct() {
   if (!state.todayData.selfCareAct) return;
   state.todayData.selfCareAct.done = true;
-  addXP(5, 'self_care_act');
+  addXP(10, 'self_care_act');
   saveState();
   renderWellnessTab();
   celebrate('self_care', document.querySelector('.skill-grid'));
@@ -11758,6 +11796,7 @@ function renderBreathPhase() {
     if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
     state.wellnessData.breathSessions++;
     state.todayData.breathCount = (state.todayData.breathCount || 0) + 1;
+    addActivityXP('breath', 15, null);
     saveState();
     archiveToday();
     celebrate('breath', document.getElementById('breath-card'));
@@ -11812,6 +11851,7 @@ function stopBreathing() {
   if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
   state.wellnessData.breathSessions++;
   state.todayData.breathCount = (state.todayData.breathCount || 0) + 1;
+  addActivityXP('breath', 15, null);
   saveState();
   archiveToday();
   playSound('breath_done');
@@ -11854,6 +11894,7 @@ function renderGroundingStep() {
   if (groundingStep >= GROUNDING_STEPS.length) {
     if (!state.wellnessData.groundingSessions) state.wellnessData.groundingSessions = 0;
     state.wellnessData.groundingSessions++;
+    addActivityXP('grounding', 15, null);
     saveState();
     ui.innerHTML = `
       <div style="text-align:center;padding:8px 0">
@@ -11883,6 +11924,7 @@ function renderGroundingStep() {
 function stopGrounding() {
   if (!state.wellnessData.groundingSessions) state.wellnessData.groundingSessions = 0;
   state.wellnessData.groundingSessions++;
+  addActivityXP('grounding', 15, null);
   saveState();
   const ui = document.getElementById('grounding-ui');
   if (ui) ui.innerHTML = `
@@ -11920,6 +11962,7 @@ function renderBodyScanStep() {
   if (bodyScanStep >= BODY_SCAN_REGIONS.length) {
     if (!state.wellnessData.bodyScanSessions) state.wellnessData.bodyScanSessions = 0;
     state.wellnessData.bodyScanSessions++;
+    addActivityXP('bodyscan', 15, null);
     saveState();
     ui.innerHTML = `
       <div style="text-align:center;padding:8px 0">
@@ -11966,6 +12009,7 @@ function stopBodyScan() {
   if (bodyScanTimer) clearInterval(bodyScanTimer);
   if (!state.wellnessData.bodyScanSessions) state.wellnessData.bodyScanSessions = 0;
   state.wellnessData.bodyScanSessions++;
+  addActivityXP('bodyscan', 15, null);
   saveState();
   const ui = document.getElementById('bodyscan-ui');
   if (ui) ui.innerHTML = `
@@ -12030,6 +12074,7 @@ Give a gentle cognitive reframe in 2-3 sentences. Validate their feeling first, 
 
     if (!state.wellnessData.reframeSessions) state.wellnessData.reframeSessions = 0;
     state.wellnessData.reframeSessions++;
+    addActivityXP('reframe', 20, null);
     // Save to reframe history
     if (!state.wellnessData.reframeHistory) state.wellnessData.reframeHistory = [];
     state.wellnessData.reframeHistory.push({ thought, reframe, savedAt: new Date().toISOString() });
