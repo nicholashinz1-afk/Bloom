@@ -26,6 +26,8 @@ It runs in any browser, no download required. No account, no sign-up. Open the l
 | **Bloom Buddy** | Anonymous peer encouragement. Someone who checks in, not someone who judges. |
 | **Small wins** | Notice what went right today. Counteracts the brain's negativity bias. |
 | **Weekly reflection** | A gentle look back on weekends. What went well, what was hard, what to carry forward. |
+| **Privacy Lock** | Lock the app with a PIN or device biometrics. Keeps journals and medications private. |
+| **Safety resources** | Discreet access to DV, abuse, and danger hotlines via web chat. No call or text history. |
 | **Crisis resources** | 988, Crisis Text Line, and international helplines. Always one tap away. |
 
 Every feature is grounded in peer-reviewed research. Full citations are available in the app under Settings > Science behind Bloom.
@@ -35,6 +37,7 @@ Every feature is grounded in peer-reviewed research. Full citations are availabl
 ## Privacy
 
 - **All personal data stays on the user's device.** Never uploaded, never shared.
+- **Privacy Lock** lets users protect the app with a PIN or device biometrics (fingerprint, Face ID)
 - No accounts, no sign-ups, no tracking, no analytics, no ads
 - AI reflections (optional) send only the prompt text for a response. Nothing is stored or linked to identity.
 - Community features store only display names and messages. No personal data attached.
@@ -91,6 +94,7 @@ Bloom can complement existing mental health services:
 - **No data liability.** All data stays on the student's device. No PHI, no FERPA concerns.
 - **Youth safety protections.** Automated moderation blocks grooming, contact exchange, and inappropriate content in all community features. Repeat offenders are auto-restricted.
 - **Crisis integration.** 988, Crisis Text Line, and international resources always one tap away.
+- **Personal safety features.** Privacy Lock protects journals and mood data. Discreet safety resources are available for students in unsafe home or relationship situations, accessible via a hidden gesture that won't be found by someone going through the phone.
 - **Open source.** Full source code is public and auditable.
 
 ### How it gets used

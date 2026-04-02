@@ -914,6 +914,184 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
 .btn-sm { padding: 6px 14px; font-size: 12px; }
 
 /* ============================================================
+   DECOY MASK (Quick Exit overlay)
+   ============================================================ */
+#decoy-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #1a1a1a;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#decoy-mask.active { display: flex; }
+#decoy-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: rgba(255,255,255,0.4);
+  border-radius: 50%;
+  animation: decoy-spin 1s linear infinite;
+}
+#decoy-mask .decoy-text {
+  font-size: 13px;
+  color: rgba(255,255,255,0.3);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@keyframes decoy-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   LOCK SCREEN
+   ============================================================ */
+#lock-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: var(--bg-main, #0d1610);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+#lock-screen.active { display: flex; }
+#lock-screen .lock-icon {
+  font-size: 40px;
+  opacity: 0.6;
+}
+#lock-screen .lock-title {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  color: var(--text-primary, #e8e4df);
+  font-weight: 400;
+}
+#lock-screen .lock-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary, rgba(232,228,223,0.55));
+  margin-top: -12px;
+}
+.pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 72px);
+  gap: 12px;
+  margin-top: 8px;
+}
+.pin-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-primary, #e8e4df);
+  font-size: 24px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+.pin-btn:active { background: rgba(255,255,255,0.1); transform: scale(0.95); }
+.pin-btn.pin-backspace { font-size: 18px; }
+.pin-dots {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.pin-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.3);
+  background: transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+.pin-dot.filled {
+  background: var(--sage-light, #8fbc8f);
+  border-color: var(--sage-light, #8fbc8f);
+}
+.pin-dot.error {
+  background: #d94040;
+  border-color: #d94040;
+  animation: pin-shake 0.4s ease;
+}
+@keyframes pin-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+.lock-heart-btn {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 17px;
+  padding: 10px;
+  opacity: 0.35;
+  transition: opacity 0.2s;
+  min-width: 44px;
+  min-height: 44px;
+}
+.lock-biometric-btn {
+  background: none;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  padding: 14px 28px;
+  color: var(--text-primary, #e8e4df);
+  font-size: 15px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+  min-width: 44px;
+  min-height: 44px;
+}
+.lock-biometric-btn:active { background: rgba(255,255,255,0.06); }
+
+/* Quick exit button */
+.quick-exit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: calc(100% - 40px);
+  margin: 0 20px 8px;
+  padding: 12px;
+  border: 1.5px solid rgba(255,80,80,0.3);
+  border-radius: var(--r-lg, 12px);
+  background: rgba(255,80,80,0.08);
+  color: #ff8080;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background 0.15s;
+}
+.quick-exit-btn:active { background: rgba(255,80,80,0.15); }
+
+/* Safety section divider */
+.safety-section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  padding: 16px 20px 6px;
+  opacity: 0.7;
+}
+
+/* ============================================================
    BOTTOM SHEETS
    ============================================================ */
 .sheet-backdrop {
@@ -3127,6 +3305,96 @@ select:focus {
   </div>
 </div>
 
+<!-- Safety resources sheet (discreet - accessed via long-press on crisis heart) -->
+<div class="bottom-sheet" id="safety-sheet" role="dialog" aria-label="Safety resources">
+  <div class="sheet-handle"></div>
+  <div style="padding:0 20px 4px">
+    <button class="quick-exit-btn" onclick="activateDecoyMask()" aria-label="Quick exit - hide this screen immediately">
+      <span aria-hidden="true">⚡</span> Quick Exit
+    </button>
+  </div>
+  <div style="padding:0 20px 8px">
+    <h2 class="sheet-title">You deserve to be safe</h2>
+    <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;padding:0 0 8px">These resources are private. Chats happen in your browser, not in your call or text history.</p>
+  </div>
+  <div class="safety-section-label">Live Chat (no call needed)</div>
+  <button class="crisis-option" onclick="window.open('https://www.thehotline.org/get-help/')" aria-label="Chat with the National Domestic Violence Hotline">
+    <span class="crisis-option-icon" aria-hidden="true">💬</span>
+    <span>
+      <span class="crisis-option-title">National DV Hotline</span>
+      <span class="crisis-option-sub">thehotline.org — live chat, 24/7. Domestic violence, dating abuse, stalking.</span>
+    </span>
+  </button>
+  <button class="crisis-option" onclick="window.open('https://hotline.rainn.org/online')" aria-label="Chat with RAINN online">
+    <span class="crisis-option-icon" aria-hidden="true">💬</span>
+    <span>
+      <span class="crisis-option-title">RAINN</span>
+      <span class="crisis-option-sub">online.rainn.org — live chat, 24/7. Sexual assault support.</span>
+    </span>
+  </button>
+  <button class="crisis-option" onclick="window.open('https://www.loveisrespect.org/get-relationship-help/')" aria-label="Chat with Love Is Respect">
+    <span class="crisis-option-icon" aria-hidden="true">💬</span>
+    <span>
+      <span class="crisis-option-title">Love Is Respect</span>
+      <span class="crisis-option-sub">loveisrespect.org — live chat. Teen and young adult dating abuse.</span>
+    </span>
+  </button>
+  <button class="crisis-option" onclick="window.open('https://connect.crisistextline.org/chat')" aria-label="Chat with Crisis Text Line online">
+    <span class="crisis-option-icon" aria-hidden="true">💬</span>
+    <span>
+      <span class="crisis-option-title">Crisis Text Line</span>
+      <span class="crisis-option-sub">crisistextline.org — web chat for any crisis.</span>
+    </span>
+  </button>
+  <button class="crisis-option" onclick="window.open('https://findahelpline.com/')" aria-label="Find international helplines">
+    <span class="crisis-option-icon" aria-hidden="true">🌍</span>
+    <span>
+      <span class="crisis-option-title">International Resources</span>
+      <span class="crisis-option-sub">findahelpline.com — helplines in 40+ languages worldwide.</span>
+    </span>
+  </button>
+  <div class="safety-section-label">If you're in a safe place to call</div>
+  <button class="crisis-option" onclick="window.location='tel:18007997233'" aria-label="Call National Domestic Violence Hotline">
+    <span class="crisis-option-icon" aria-hidden="true">📞</span>
+    <span>
+      <span class="crisis-option-title">DV Hotline</span>
+      <span class="crisis-option-sub">1-800-799-7233 — 24/7 phone support</span>
+    </span>
+  </button>
+  <button class="crisis-option" onclick="window.location='tel:18006564673'" aria-label="Call RAINN">
+    <span class="crisis-option-icon" aria-hidden="true">📞</span>
+    <span>
+      <span class="crisis-option-title">RAINN</span>
+      <span class="crisis-option-sub">1-800-656-4673 — sexual assault hotline</span>
+    </span>
+  </button>
+  <button class="crisis-option" onclick="window.location='tel:18004224453'" aria-label="Call Childhelp National Child Abuse Hotline">
+    <span class="crisis-option-icon" aria-hidden="true">📞</span>
+    <span>
+      <span class="crisis-option-title">Childhelp</span>
+      <span class="crisis-option-sub">1-800-422-4453 — child abuse hotline, 24/7</span>
+    </span>
+  </button>
+  <button class="crisis-option" onclick="window.location='tel:18663319474'" aria-label="Call Love Is Respect">
+    <span class="crisis-option-icon" aria-hidden="true">📞</span>
+    <span>
+      <span class="crisis-option-title">Love Is Respect</span>
+      <span class="crisis-option-sub">1-866-331-9474 — teen dating violence</span>
+    </span>
+  </button>
+  <div style="padding:16px 20px 0">
+    <div class="banner" style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);">
+      <div class="banner-body">
+        <div class="banner-text" style="font-size:12px;line-height:1.5">If someone monitors your devices, consider using a trusted friend's phone or a library computer to reach out. Tap Quick Exit to hide this screen fast. Long-press the spinner to come back.</div>
+      </div>
+    </div>
+    <button class="btn btn-secondary btn-block" onclick="closeAllSheets()">Close</button>
+  </div>
+</div>
+
+<!-- Privacy Lock PIN setup sheet -->
+<div class="bottom-sheet" id="privacy-lock-setup" data-sticky role="dialog" aria-label="Set up Privacy Lock PIN"></div>
+
 <!-- History detail sheet -->
 <div class="bottom-sheet" id="history-sheet">
   <div class="sheet-handle"></div>
@@ -3430,7 +3698,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '3.6.0';
+const VERSION = '3.7.0';
 const LEGACY_DOMAINS = ['bloom-zeta-rouge.vercel.app'];
 const PRODUCTION_DOMAIN = 'bloomselfcare.app';
 
@@ -3478,6 +3746,9 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
+  { text: '<strong>Privacy Lock</strong> — protect your journals, mood data, and medications. Set up a PIN or use your device\'s biometrics (fingerprint, Face ID) to lock the app. Find it in Settings under Privacy Lock.', spotlight: null, tab: 'settings', tourIcon: '🛡️', tourTitle: 'Privacy Lock', tourText: 'Go to Settings and open Privacy Lock. You can set up a PIN or use your device\'s biometrics. The app will lock when you leave and require authentication to reopen. Your crisis resources stay accessible even while locked.', tourAction: 'settings' },
+  { text: '<strong>Safety resources</strong> — if you or someone you know is in an unsafe situation, bloom now has discreet access to domestic violence, abuse, and safety hotlines with live web chat options that don\'t leave a trace in your call or text history.', spotlight: null, tab: null, tourIcon: '🤍', tourTitle: 'Discreet safety resources', tourText: 'Long-press the white heart in the header for 3 seconds to open safety resources. These include live web chats (no call or text history) for the National DV Hotline, RAINN, Love Is Respect, and more. There\'s also a Quick Exit button that instantly hides everything behind a loading screen.', tourAction: null },
+  { text: '<strong>Quick Exit</strong> — the safety resources screen has a Quick Exit button that instantly covers everything with a neutral loading screen. Long-press the spinner to come back. Your conversation stays alive underneath.', spotlight: null, tab: null, tourIcon: '⚡', tourTitle: 'Quick Exit', tourText: 'If you ever need to hide what\'s on screen fast, tap Quick Exit in the safety resources. It covers everything with a "loading" screen. Nobody would look twice. Long-press the spinner for 3 seconds to come back. Nothing is lost.' },
   { text: '<strong>Name your medications</strong> — you can now list each medication individually in Settings. Choose <em>Simple</em> (one check per time slot) or <em>Detailed</em> (track each med separately with a "Take all" option).', spotlight: null, tab: 'settings', tourIcon: '💊', tourTitle: 'Name your medications', tourText: 'Head to Settings and scroll to the Medication section under Daily Habits. You can add each medication by name, pick when you take it, and add notes like dosage or "take with food."', tourAction: 'settings' },
   { text: '<strong>Medication reference card</strong> — your medication list in Settings doubles as a quick reference. Copy it to your clipboard or tap "Show to doctor" for a clean, full-screen view you can hand to a nurse.', spotlight: null, tab: 'settings', tourIcon: '🩺', tourTitle: 'Show to your doctor', tourText: 'Your medication list has a "Show to doctor" button that opens a full-screen card with large, readable text. No app chrome, just your medications. Hand your phone over at an appointment. There\'s also a "Copy to clipboard" button for patient portals.', tourAction: 'settings' },
   { text: '<strong>As-needed medications</strong> — medications you only take sometimes show up as a quiet log button instead of a daily checkbox. No pressure, no guilt, just a record for yourself.', spotlight: null, tab: null, tourIcon: '📝', tourTitle: 'As-needed logging', tourText: 'Set a medication\'s time to "As needed" and it shows as a soft log button on your Daily tab instead of a checkbox. No XP, no guilt for skipping. Just a personal record.', tourAction: 'today' },
@@ -6182,6 +6453,11 @@ function handleVisibilityChange() {
     // Pause buddy polling while tab is hidden to conserve Vercel invocations
     stopBuddyPolling();
   } else {
+    // Privacy Lock: check if we should lock on return from background
+    if (shouldLockOnReturn() && !_appLocked) {
+      showLockScreen();
+      return; // don't resume app activity while locked
+    }
     // Resume buddy polling when tab becomes visible again
     if (buddyState.status === 'paired' || buddyState.status === 'searching') {
       startBuddyPolling();
@@ -13036,6 +13312,39 @@ function renderSettingsTab() {
 
   html += settingsSection('notifications', '🔔 Notifications & sound', notifHtml);
 
+  // ── PRIVACY LOCK ──────────────────────────────────────────────
+  const _plConfig = getPrivacyLockConfig();
+  const _plEnabled = _plConfig?.enabled === true;
+  let _plBody = `<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:14px">
+    Require authentication to open bloom. Keeps journals, medications, and mood data private if someone else picks up your device.
+  </div>`;
+  if (_plEnabled) {
+    const _plMethod = _plConfig.method === 'biometric' ? 'Biometrics' : 'PIN';
+    const _plTimeout = _plConfig.timeout || 0;
+    _plBody += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div style="font-size:13px;color:var(--text-primary);font-weight:500">Enabled (${_plMethod})</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Lock activates ${_plTimeout === 0 ? 'immediately' : 'after ' + (_plTimeout / 60000) + ' min'}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="disablePrivacyLock()">Disable</button>
+    </div>`;
+    _plBody += `<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Lock timeout</div>
+    <select onchange="setLockTimeout(Number(this.value));reRenderSettingsPreservingScroll()" style="width:100%;padding:10px 12px;background:var(--bg-elevated);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r-md);color:var(--text-primary);font-size:13px;font-family:inherit;margin-bottom:10px">
+      <option value="0" ${_plTimeout===0?'selected':''}>Immediately</option>
+      <option value="60000" ${_plTimeout===60000?'selected':''}>After 1 minute</option>
+      <option value="300000" ${_plTimeout===300000?'selected':''}>After 5 minutes</option>
+    </select>`;
+    if (_plConfig.method === 'pin') {
+      _plBody += `<button class="btn btn-secondary btn-block btn-sm" onclick="showPINSetupSheet()" style="margin-top:4px">Change PIN</button>`;
+    }
+  } else {
+    _plBody += `<div id="privacy-lock-options" style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-secondary btn-block" onclick="enablePrivacyLockPIN()">Set up with PIN</button>
+      <button class="btn btn-secondary btn-block" id="pl-bio-btn" style="display:none" onclick="enablePrivacyLockBiometric()">Set up with biometrics (+ PIN backup)</button>
+    </div>`;
+  }
+  html += settingsSection('privacylock', '🛡️ Privacy Lock', _plBody);
+
   // ── DATA & PRIVACY ────────────────────────────────────────────
   html += settingsSection('data', '🔒 Data & privacy', `
     <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px">
@@ -13392,6 +13701,11 @@ function renderSettingsTab() {
       </div>
 
       <div style="margin-bottom:14px">
+        <div style="font-weight:500;color:var(--cream);margin-bottom:2px">Does Bloom have safety features?</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Yes. You can lock the app with a PIN or biometrics in Settings under Privacy Lock. The white heart also has more resources if you hold it.</div>
+      </div>
+
+      <div style="margin-bottom:14px">
         <div style="font-weight:500;color:var(--cream);margin-bottom:2px">Will I lose my data if I clear my browser?</div>
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6">Yes. Clearing browser data or cookies will erase your Bloom data. Safari may also delete data after 7 days of inactivity. Save a backup regularly in Data & Privacy to protect your information.</div>
       </div>
@@ -13471,6 +13785,12 @@ function renderSettingsTab() {
   </div>`;
 
   scroll.innerHTML = html;
+
+  // Post-render: check biometric availability for Privacy Lock
+  const plBioBtn = document.getElementById('pl-bio-btn');
+  if (plBioBtn) {
+    isBiometricAvailable().then(ok => { if (ok) plBioBtn.style.display = ''; });
+  }
 }
 
 function settingsSection(id, title, bodyHtml) {
@@ -14610,6 +14930,338 @@ function loadQRLib() {
     s.onerror = () => reject(new Error('Failed to load QR library'));
     document.head.appendChild(s);
   });
+}
+
+// ── Privacy Lock (App Lock) ────────────────────────────────
+let _appLocked = false;
+
+async function hashPIN(pin) {
+  const encoded = new TextEncoder().encode(pin);
+  const hash = await crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function getPrivacyLockConfig() {
+  const prefs = load('bloom_prefs');
+  return prefs?.privacyLock || null;
+}
+
+function isPrivacyLockEnabled() {
+  const config = getPrivacyLockConfig();
+  return config?.enabled === true;
+}
+
+function getLockTimeout() {
+  const config = getPrivacyLockConfig();
+  if (!config) return 0;
+  return config.timeout || 0; // 0 = immediate, ms otherwise
+}
+
+function shouldLockOnReturn() {
+  if (!isPrivacyLockEnabled()) return false;
+  const timeout = getLockTimeout();
+  if (timeout === 0) return true; // immediate
+  const lastActive = load('bloom_last_active', null);
+  if (!lastActive) return true;
+  return (Date.now() - lastActive) >= timeout;
+}
+
+function showLockScreen() {
+  _appLocked = true;
+  const lockEl = document.getElementById('lock-screen');
+  const contentEl = document.getElementById('lock-content');
+  const config = getPrivacyLockConfig();
+
+  if (config?.method === 'biometric') {
+    const hasPinBackup = !!config.pinHash;
+    contentEl.innerHTML = `
+      <div class="lock-icon" aria-hidden="true">🔒</div>
+      <div class="lock-title">Bloom is locked</div>
+      <div class="lock-subtitle">Tap to unlock with biometrics</div>
+      <button class="lock-biometric-btn" onclick="attemptBiometricUnlock()" aria-label="Unlock with biometrics">Unlock</button>
+      ${hasPinBackup ? '<button class="lock-biometric-btn" style="margin-top:8px;font-size:13px;opacity:0.7" onclick="switchLockToPIN()" aria-label="Use PIN instead">Use PIN instead</button>' : ''}
+    `;
+  } else {
+    contentEl.innerHTML = `
+      <div class="lock-icon" aria-hidden="true">🔒</div>
+      <div class="lock-title">Bloom is locked</div>
+      <div id="pin-error" style="font-size:13px;color:#d94040;min-height:20px;margin-top:-8px" role="alert"></div>
+      <div class="pin-dots" id="pin-dots" aria-label="PIN entry">
+        <div class="pin-dot"></div><div class="pin-dot"></div>
+        <div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="pin-pad">
+        <button class="pin-btn" onclick="pinInput('1')">1</button>
+        <button class="pin-btn" onclick="pinInput('2')">2</button>
+        <button class="pin-btn" onclick="pinInput('3')">3</button>
+        <button class="pin-btn" onclick="pinInput('4')">4</button>
+        <button class="pin-btn" onclick="pinInput('5')">5</button>
+        <button class="pin-btn" onclick="pinInput('6')">6</button>
+        <button class="pin-btn" onclick="pinInput('7')">7</button>
+        <button class="pin-btn" onclick="pinInput('8')">8</button>
+        <button class="pin-btn" onclick="pinInput('9')">9</button>
+        <button class="pin-btn" style="visibility:hidden"></button>
+        <button class="pin-btn" onclick="pinInput('0')">0</button>
+        <button class="pin-btn pin-backspace" onclick="pinBackspace()" aria-label="Backspace">&#9003;</button>
+      </div>
+    `;
+  }
+
+  lockEl.classList.add('active');
+  // Hide app content to prevent data leaking
+  const appEl = document.getElementById('app');
+  if (appEl) appEl.style.visibility = 'hidden';
+
+  // Auto-trigger biometric on show
+  if (config?.method === 'biometric') {
+    setTimeout(() => attemptBiometricUnlock(), 300);
+  }
+}
+
+function hideLockScreen() {
+  _appLocked = false;
+  document.getElementById('lock-screen').classList.remove('active');
+  const appEl = document.getElementById('app');
+  if (appEl) appEl.style.visibility = 'visible';
+}
+
+// ── PIN Input ───────────────────────────────────────────────
+let _pinBuffer = '';
+
+function pinInput(digit) {
+  const config = getPrivacyLockConfig();
+  const pinLen = config?.pinLength || 4;
+  if (_pinBuffer.length >= pinLen) return;
+  _pinBuffer += digit;
+  updatePinDots();
+  if (_pinBuffer.length === pinLen) {
+    setTimeout(() => verifyPIN(), 100);
+  }
+}
+
+function pinBackspace() {
+  _pinBuffer = _pinBuffer.slice(0, -1);
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function updatePinDots() {
+  const dots = document.querySelectorAll('#pin-dots .pin-dot');
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('filled', i < _pinBuffer.length);
+    dot.classList.remove('error');
+  });
+}
+
+async function verifyPIN() {
+  const config = getPrivacyLockConfig();
+  const hash = await hashPIN(_pinBuffer);
+  if (hash === config.pinHash) {
+    _pinBuffer = '';
+    hideLockScreen();
+  } else {
+    // Wrong PIN
+    _pinBuffer = '';
+    const dots = document.querySelectorAll('#pin-dots .pin-dot');
+    dots.forEach(d => { d.classList.remove('filled'); d.classList.add('error'); });
+    document.getElementById('pin-error').textContent = 'Wrong PIN';
+    setTimeout(() => {
+      dots.forEach(d => d.classList.remove('error'));
+      document.getElementById('pin-error').textContent = '';
+    }, 1500);
+  }
+}
+
+// ── Biometric (WebAuthn) ────────────────────────────────────
+async function isBiometricAvailable() {
+  try {
+    if (!window.PublicKeyCredential) return false;
+    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  } catch { return false; }
+}
+
+async function registerBiometric() {
+  try {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const userId = crypto.getRandomValues(new Uint8Array(16));
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge,
+        rp: { name: 'Bloom', id: location.hostname },
+        user: { id: userId, name: 'bloom-user', displayName: 'Bloom User' },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          userVerification: 'required',
+          residentKey: 'discouraged',
+        },
+        timeout: 60000,
+      },
+    });
+    return credential ? btoa(String.fromCharCode(...new Uint8Array(credential.rawId))) : null;
+  } catch { return null; }
+}
+
+async function attemptBiometricUnlock() {
+  const config = getPrivacyLockConfig();
+  if (!config?.credentialId) return;
+  try {
+    const rawId = Uint8Array.from(atob(config.credentialId), c => c.charCodeAt(0));
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        allowCredentials: [{ type: 'public-key', id: rawId, transports: ['internal'] }],
+        userVerification: 'required',
+        timeout: 60000,
+      },
+    });
+    if (assertion) hideLockScreen();
+  } catch {
+    // User cancelled or biometric failed. Stay locked.
+  }
+}
+
+// ── Privacy Lock Setup (called from Settings) ───────────────
+let _pendingBiometricCredentialId = null;
+
+async function enablePrivacyLockBiometric() {
+  const credentialId = await registerBiometric();
+  if (credentialId) {
+    _pendingBiometricCredentialId = credentialId;
+    // Now set up PIN as fallback
+    showPINSetupSheet(true); // true = biometric mode, will save both
+  } else {
+    showToast('Biometric setup was cancelled or failed');
+  }
+}
+
+function enablePrivacyLockPIN() {
+  showPINSetupSheet();
+}
+
+function showPINSetupSheet(isBiometricFallback) {
+  _setupIsBiometricFallback = !!isBiometricFallback;
+  // Create an inline PIN setup in a bottom sheet
+  const el = document.getElementById('privacy-lock-setup');
+  if (!el) return;
+  const subtitle = isBiometricFallback
+    ? 'Set a backup PIN in case biometrics aren\'t available. If you forget it, you\'ll need to reset the app.'
+    : 'Choose a 4-digit PIN to lock your app. If you forget it, you\'ll need to reset the app. Use Vault backup to protect your data.';
+  el.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div style="padding:0 20px 20px">
+      <h2 class="sheet-title">${isBiometricFallback ? 'Set a backup PIN' : 'Set a PIN'}</h2>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.5;margin-bottom:16px">${subtitle}</p>
+      <div id="pin-setup-step" style="text-align:center">
+        <div style="font-size:14px;color:var(--text-secondary);margin-bottom:12px" id="pin-setup-label">Enter a 4-digit PIN</div>
+        <div class="pin-dots" id="setup-pin-dots" style="justify-content:center">
+          <div class="pin-dot"></div><div class="pin-dot"></div>
+          <div class="pin-dot"></div><div class="pin-dot"></div>
+        </div>
+        <div class="pin-pad" style="margin:16px auto 0">
+          <button class="pin-btn" onclick="setupPinInput('1')">1</button>
+          <button class="pin-btn" onclick="setupPinInput('2')">2</button>
+          <button class="pin-btn" onclick="setupPinInput('3')">3</button>
+          <button class="pin-btn" onclick="setupPinInput('4')">4</button>
+          <button class="pin-btn" onclick="setupPinInput('5')">5</button>
+          <button class="pin-btn" onclick="setupPinInput('6')">6</button>
+          <button class="pin-btn" onclick="setupPinInput('7')">7</button>
+          <button class="pin-btn" onclick="setupPinInput('8')">8</button>
+          <button class="pin-btn" onclick="setupPinInput('9')">9</button>
+          <button class="pin-btn" style="visibility:hidden"></button>
+          <button class="pin-btn" onclick="setupPinInput('0')">0</button>
+          <button class="pin-btn pin-backspace" onclick="setupPinBackspace()" aria-label="Backspace">&#9003;</button>
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-block" style="margin-top:16px" onclick="closeAllSheets()">Cancel</button>
+    </div>
+  `;
+  openSheet('privacy-lock-setup');
+}
+
+let _setupPinBuffer = '';
+let _setupPinFirst = '';
+let _setupPinStep = 1; // 1 = enter, 2 = confirm
+let _setupIsBiometricFallback = false;
+
+function setupPinInput(digit) {
+  if (_setupPinBuffer.length >= 4) return;
+  _setupPinBuffer += digit;
+  updateSetupPinDots();
+  if (_setupPinBuffer.length === 4) {
+    setTimeout(() => handleSetupPinComplete(), 200);
+  }
+}
+
+function setupPinBackspace() {
+  _setupPinBuffer = _setupPinBuffer.slice(0, -1);
+  updateSetupPinDots();
+}
+
+function updateSetupPinDots() {
+  const dots = document.querySelectorAll('#setup-pin-dots .pin-dot');
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('filled', i < _setupPinBuffer.length);
+    dot.classList.remove('error');
+  });
+}
+
+async function handleSetupPinComplete() {
+  if (_setupPinStep === 1) {
+    _setupPinFirst = _setupPinBuffer;
+    _setupPinBuffer = '';
+    _setupPinStep = 2;
+    document.getElementById('pin-setup-label').textContent = 'Confirm your PIN';
+    updateSetupPinDots();
+  } else {
+    if (_setupPinBuffer === _setupPinFirst) {
+      // PINs match - save
+      const hash = await hashPIN(_setupPinBuffer);
+      const prefs = load('bloom_prefs') || {};
+      if (_setupIsBiometricFallback && _pendingBiometricCredentialId) {
+        prefs.privacyLock = { enabled: true, method: 'biometric', credentialId: _pendingBiometricCredentialId, pinHash: hash, pinLength: 4, timeout: 0 };
+        _pendingBiometricCredentialId = null;
+      } else {
+        prefs.privacyLock = { enabled: true, method: 'pin', pinHash: hash, pinLength: 4, timeout: 0 };
+      }
+      save('bloom_prefs', prefs);
+      const wasBiometric = _setupIsBiometricFallback;
+      _setupPinBuffer = '';
+      _setupPinFirst = '';
+      _setupPinStep = 1;
+      _setupIsBiometricFallback = false;
+      closeAllSheets();
+      showToast(wasBiometric ? 'Privacy Lock enabled with biometrics + PIN backup' : 'Privacy Lock enabled with PIN');
+      reRenderSettingsPreservingScroll();
+    } else {
+      // PINs don't match
+      const dots = document.querySelectorAll('#setup-pin-dots .pin-dot');
+      dots.forEach(d => { d.classList.remove('filled'); d.classList.add('error'); });
+      _setupPinBuffer = '';
+      _setupPinStep = 1;
+      _setupPinFirst = '';
+      setTimeout(() => {
+        dots.forEach(d => d.classList.remove('error'));
+        document.getElementById('pin-setup-label').textContent = 'PINs didn\'t match. Try again.';
+      }, 800);
+    }
+  }
+}
+
+function disablePrivacyLock() {
+  const prefs = load('bloom_prefs') || {};
+  prefs.privacyLock = { enabled: false };
+  save('bloom_prefs', prefs);
+  showToast('Privacy Lock disabled');
+  reRenderSettingsPreservingScroll();
+}
+
+function setLockTimeout(ms) {
+  const prefs = load('bloom_prefs') || {};
+  if (!prefs.privacyLock) return;
+  prefs.privacyLock.timeout = ms;
+  save('bloom_prefs', prefs);
 }
 
 // ── Backup encryption helpers (AES-GCM via Web Crypto) ────
@@ -15897,10 +16549,16 @@ let _sheetDismissLocked = false;
 
 function openSheet(id) {
   _sheetTriggerElement = document.activeElement;
-  document.getElementById('sheet-backdrop').classList.add('open');
+  const backdrop = document.getElementById('sheet-backdrop');
+  backdrop.classList.add('open');
   const sheet = document.getElementById(id);
   if (!sheet) return;
   sheet.classList.add('open');
+  // Boost z-index when app is locked so sheets appear above the lock screen
+  if (_appLocked) {
+    backdrop.style.zIndex = '99990';
+    sheet.style.zIndex = '99991';
+  }
   // Push history state so Android back gesture closes the sheet instead of leaving the app
   if (!history.state?.sheetOpen) {
     history.pushState({ sheetOpen: true }, '');
@@ -16015,6 +16673,98 @@ window.addEventListener('popstate', () => {
 })();
 
 function openCrisisSheet() { openSheet('crisis-sheet'); trackFeature('crisis'); trackEvent('crisis_opened'); }
+
+// ============================================================
+//  SAFETY RESOURCES (discreet access via long-press crisis heart)
+// ============================================================
+function openSafetySheet() {
+  openSheet('safety-sheet');
+  trackFeature('safety');
+  trackEvent('safety_opened');
+  // First-time discovery toast
+  const seen = load('bloom_safety_seen', false);
+  if (!seen) {
+    save('bloom_safety_seen', true);
+    showToast('You found the safety resources');
+  }
+}
+
+// ── Decoy Mask (Quick Exit) ─────────────────────────────────
+let _decoyActive = false;
+let _decoyLongPressTimer = null;
+
+function activateDecoyMask() {
+  _decoyActive = true;
+  document.getElementById('decoy-mask').classList.add('active');
+  trackEvent('decoy_activated');
+}
+
+function deactivateDecoyMask() {
+  _decoyActive = false;
+  document.getElementById('decoy-mask').classList.remove('active');
+}
+
+// Long-press on decoy spinner to unmask (3 seconds)
+(function initDecoyMask() {
+  const mask = document.getElementById('decoy-mask');
+  if (!mask) return;
+
+  function startUnmask(e) {
+    if (e.cancelable) e.preventDefault();
+    _decoyLongPressTimer = setTimeout(() => {
+      if (navigator.vibrate) navigator.vibrate(50);
+      deactivateDecoyMask();
+    }, 3000);
+  }
+  function cancelUnmask() {
+    if (_decoyLongPressTimer) { clearTimeout(_decoyLongPressTimer); _decoyLongPressTimer = null; }
+  }
+
+  mask.addEventListener('touchstart', startUnmask, { passive: false });
+  mask.addEventListener('touchend', cancelUnmask);
+  mask.addEventListener('touchmove', cancelUnmask);
+  mask.addEventListener('mousedown', startUnmask);
+  mask.addEventListener('mouseup', cancelUnmask);
+  mask.addEventListener('mouseleave', cancelUnmask);
+})();
+
+// ── Crisis Heart Long-Press Handler ─────────────────────────
+// Short tap = crisis sheet, long-press (3s) = safety sheet
+// Applied to both the main header heart and the lock screen heart
+function attachHeartLongPress(el) {
+  if (!el) return;
+  let timer = null;
+  let triggered = false;
+
+  function down() {
+    triggered = false;
+    timer = setTimeout(() => {
+      triggered = true;
+      if (navigator.vibrate) navigator.vibrate(50);
+      openSafetySheet();
+    }, 3000);
+  }
+  function up(e) {
+    if (timer) { clearTimeout(timer); timer = null; }
+    if (!triggered) openCrisisSheet();
+    triggered = false;
+  }
+  function cancel() {
+    if (timer) { clearTimeout(timer); timer = null; }
+    triggered = false;
+  }
+
+  el.removeAttribute('onclick');
+  el.addEventListener('touchstart', down, { passive: true });
+  el.addEventListener('touchend', (e) => { e.preventDefault(); up(e); });
+  el.addEventListener('touchmove', cancel);
+  el.addEventListener('mousedown', down);
+  el.addEventListener('mouseup', up);
+  el.addEventListener('mouseleave', cancel);
+}
+
+attachHeartLongPress(document.getElementById('crisis-heart'));
+attachHeartLongPress(document.getElementById('lock-crisis-heart'));
 
 // ============================================================
 //  SCIENCE / INFO TOOLTIPS
@@ -21091,6 +21841,11 @@ async function main() {
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     initApp();
+
+    // Privacy Lock: show lock screen on app boot if enabled
+    if (isPrivacyLockEnabled()) {
+      showLockScreen();
+    }
   }
 
   registerServiceWorker();
@@ -21099,5 +21854,17 @@ async function main() {
 // Boot
 main();
 </script>
+
+<!-- Decoy mask (quick exit overlay - looks like frozen/loading app) -->
+<div id="decoy-mask" aria-hidden="true">
+  <div id="decoy-spinner"></div>
+  <span class="decoy-text">Loading...</span>
+</div>
+
+<!-- Lock screen -->
+<div id="lock-screen" role="dialog" aria-label="App locked">
+  <button class="lock-heart-btn" id="lock-crisis-heart" title="Mental health resources" aria-label="Mental health crisis resources"><span aria-hidden="true">🤍</span></button>
+  <div id="lock-content"></div>
+</div>
 </body>
 </html>

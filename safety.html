@@ -427,6 +427,75 @@
     </p>
   </div>
 
+  <!-- Personal safety -->
+  <h2>Personal Safety Features</h2>
+  <p>
+    Not everyone using Bloom is in a safe environment. These features are designed for people who need to protect
+    their privacy from someone in their life, or who need help but can't openly look for it.
+  </p>
+
+  <div class="card">
+    <h3>Privacy Lock</h3>
+    <p>
+      Users can lock the app behind a PIN or their device's biometrics (fingerprint, Face ID, device PIN).
+      The lock activates when the app is opened and when returning from the background, with a configurable timeout.
+    </p>
+    <p>
+      The lock screen is minimal and doesn't display any personal data. Crisis resources (the white heart button)
+      remain accessible on the lock screen, including the discreet safety resources via long-press.
+    </p>
+    <p>
+      PIN is hashed with SHA-256 and stored locally. The threat model is casual snooping, not forensic analysis.
+      If a user chooses biometrics, a backup PIN is also required in case biometrics aren't available.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Discreet Safety Resources</h3>
+    <p>
+      Long-pressing the white heart button in the header for three seconds opens a separate set of resources for people
+      in unsafe situations. These are distinct from the standard crisis resources (which focus on self-harm and suicide).
+    </p>
+    <p>The safety resources include:</p>
+    <ul>
+      <li><strong>National Domestic Violence Hotline</strong> (thehotline.org, live chat 24/7)</li>
+      <li><strong>RAINN</strong> (online.rainn.org, sexual assault support chat 24/7)</li>
+      <li><strong>Love Is Respect</strong> (loveisrespect.org, teen and young adult dating abuse chat)</li>
+      <li><strong>Childhelp National Child Abuse Hotline</strong> (1-800-422-4453)</li>
+      <li><strong>Crisis Text Line</strong> (web chat option)</li>
+      <li><strong>International resources</strong> via findahelpline.com</li>
+    </ul>
+    <p>
+      Web chat links are listed first because they don't appear in call or text history. Phone numbers are available
+      but clearly labeled "if you're in a safe place to call."
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Quick Exit (Decoy Screen)</h3>
+    <p>
+      The safety resources screen includes a Quick Exit button that instantly covers the entire app with a neutral
+      "loading" overlay. It looks like the app froze. No one looking at the screen would suspect anything.
+    </p>
+    <p>
+      To return, the user long-presses the loading spinner for three seconds. The session stays alive underneath.
+      If the user was in the middle of a chat with a hotline, that conversation is preserved.
+    </p>
+    <p>
+      This pattern is adapted from domestic violence resource websites, which commonly include a "quick escape" button.
+      The decoy approach is better for a PWA because navigating away would kill any active chat session.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Discoverability</h3>
+    <p>
+      The long-press trigger is intentionally hidden so that someone going through a user's phone won't find these
+      resources. Users learn about it through the What's New tour on version update, or through a subtle hint in the
+      FAQ section of Settings: "The white heart also has more resources if you hold it."
+    </p>
+  </div>
+
   <!-- Technical safeguards -->
   <h2>Technical Safeguards</h2>
   <ul>
@@ -460,7 +529,7 @@
     <h3>Always One Tap Away</h3>
     <p>
       The white heart button in Bloom's header opens crisis resources at any time, from any screen.
-      No navigation, no login, no barriers.
+      No navigation, no login, no barriers. These resources are accessible even when the app is locked.
     </p>
     <p><strong>988 Suicide and Crisis Lifeline</strong> (call or text 988, US)</p>
     <p><strong>Crisis Text Line</strong> (text 741741, US/Canada/UK/Ireland)</p>
@@ -468,6 +537,10 @@
     <p>
       Crisis resources are also automatically surfaced when self-harm language is detected in community messages,
       and when a user logs a low mood.
+    </p>
+    <p>
+      Long-pressing the heart for three seconds opens a separate set of discreet safety resources for people in
+      unsafe environments (see Personal Safety Features above).
     </p>
   </div>
 
