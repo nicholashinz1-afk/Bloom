@@ -6,7 +6,7 @@ Mental health self-care PWA. Compassionate, no-shame, no-pressure design philoso
 
 ## Architecture
 
-- **Single-page app** — entire frontend lives in `index.html` (~11K lines)
+- **Single-page app** — entire frontend lives in `index.html` (~24K lines)
 - **Deployed on Vercel** — static hosting + serverless API functions
 - **Storage:** localStorage (primary) with IndexedDB backup mirror. No user accounts/auth.
 - **Data stays local** unless user explicitly uses community features (buddy, wall)
@@ -173,6 +173,25 @@ AGPL-3.0-only. Anyone can use, modify, and share Bloom, but derivatives must rem
 - **Telemetry:** Batched client-side (queue + flush every 30s or on page hide/unload via sendBeacon). Reduces Vercel invocations by ~50-70%.
 - **Free tier limits:** Vercel 100K invocations/month, Upstash 10K commands/day, OneSignal unlimited web push.
 - **Estimated capacity:** ~400 DAU on current setup. See `SCALABILITY_PROPOSAL.md` for full analysis.
+
+## Performance Patterns
+
+Established during the v3.8.1 performance audit. Follow these patterns in new code.
+
+- **Listener cleanup on re-init:** When a function adds event listeners and may be called again (e.g. after a re-render), use an `AbortController` stored on the element to abort previous listeners before adding new ones. See `initHabitDragReorder()` for the pattern.
+- **Guard repeated enhancement:** When a MutationObserver triggers a function that enhances DOM elements, mark processed elements with a `data-enhanced` attribute and skip them on re-runs. See `enhanceToggles()`.
+- **RAF-based debounce for renders:** Functions called from many onclick handlers (like `reRenderSettingsPreservingScroll`) should coalesce via `requestAnimationFrame` to avoid redundant work.
+- **GPU-accelerated animations:** Use `transform` and `opacity` for transitions and keyframes. Avoid animating `width`, `height`, `top`, `left`, `box-shadow`, or `background-position`. Use `transform: scaleX()` / `scaleY()` / `translateX()` instead.
+- **Specific transition properties:** Never use `transition: all` in CSS class definitions. Specify exact properties (e.g. `transition: background-color 0.2s, transform 0.2s`). Inline styles in JS templates are lower priority but should follow this when touched.
+- **Batch DOM insertions:** Use `DocumentFragment` when adding multiple elements (see `launchConfetti`). Use a single cleanup timer instead of per-element timers.
+- **IndexedDB writes are batched:** The `save()` function writes to localStorage immediately (synchronous, no data loss risk) but batches IndexedDB backup writes with a 500ms debounce. Pending writes flush on `visibilitychange` and `pagehide`.
+
+### Known remaining performance items
+
+- ~50 inline `transition: all` instances in JS template strings. Low priority. Clean up incrementally as those templates are touched for other reasons.
+- No custom service worker. The app relies on OneSignal's SW. Adding a dedicated SW with cache-first for static assets and network-first for API calls would be the biggest remaining win (1-2s faster repeat visits, offline support).
+- `reRenderSettingsPreservingScroll` still rebuilds entire Settings + Today tab HTML on every change. It's debounced now (1 frame), but the long-term fix is surgical DOM updates instead of full innerHTML rebuilds.
+- The `mood-chart-bar` CSS class uses `transition: height` (layout-triggering) but couldn't be verified in use during the audit. Convert to `transform: scaleY()` if the usage is confirmed.
 
 ## Sustainability
 
