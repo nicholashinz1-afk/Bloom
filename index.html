@@ -16713,42 +16713,41 @@ function deactivateDecoyMask() {
 
 // ── Crisis Heart Long-Press Handler ─────────────────────────
 // Short tap = crisis sheet, long-press (3s) = safety sheet
-(function initCrisisHeartLongPress() {
-  const heart = document.getElementById('crisis-heart');
-  if (!heart) return;
+// Applied to both the main header heart and the lock screen heart
+function attachHeartLongPress(el) {
+  if (!el) return;
+  let timer = null;
+  let triggered = false;
 
-  let _heartTimer = null;
-  let _heartTriggered = false;
-
-  function heartDown(e) {
-    _heartTriggered = false;
-    _heartTimer = setTimeout(() => {
-      _heartTriggered = true;
+  function down() {
+    triggered = false;
+    timer = setTimeout(() => {
+      triggered = true;
       if (navigator.vibrate) navigator.vibrate(50);
       openSafetySheet();
     }, 3000);
   }
-  function heartUp(e) {
-    if (_heartTimer) { clearTimeout(_heartTimer); _heartTimer = null; }
-    if (!_heartTriggered) {
-      openCrisisSheet();
-    }
-    _heartTriggered = false;
+  function up(e) {
+    if (timer) { clearTimeout(timer); timer = null; }
+    if (!triggered) openCrisisSheet();
+    triggered = false;
   }
-  function heartCancel() {
-    if (_heartTimer) { clearTimeout(_heartTimer); _heartTimer = null; }
-    _heartTriggered = false;
+  function cancel() {
+    if (timer) { clearTimeout(timer); timer = null; }
+    triggered = false;
   }
 
-  // Remove the onclick handler since we're using touch/mouse events
-  heart.removeAttribute('onclick');
-  heart.addEventListener('touchstart', heartDown, { passive: true });
-  heart.addEventListener('touchend', (e) => { e.preventDefault(); heartUp(e); });
-  heart.addEventListener('touchmove', heartCancel);
-  heart.addEventListener('mousedown', heartDown);
-  heart.addEventListener('mouseup', heartUp);
-  heart.addEventListener('mouseleave', heartCancel);
-})();
+  el.removeAttribute('onclick');
+  el.addEventListener('touchstart', down, { passive: true });
+  el.addEventListener('touchend', (e) => { e.preventDefault(); up(e); });
+  el.addEventListener('touchmove', cancel);
+  el.addEventListener('mousedown', down);
+  el.addEventListener('mouseup', up);
+  el.addEventListener('mouseleave', cancel);
+}
+
+attachHeartLongPress(document.getElementById('crisis-heart'));
+attachHeartLongPress(document.getElementById('lock-crisis-heart'));
 
 // ============================================================
 //  SCIENCE / INFO TOOLTIPS
@@ -21787,7 +21786,7 @@ main();
 
 <!-- Lock screen -->
 <div id="lock-screen" role="dialog" aria-label="App locked">
-  <button class="lock-heart-btn" onclick="openCrisisSheet()" title="Mental health resources" aria-label="Mental health crisis resources"><span aria-hidden="true">🤍</span></button>
+  <button class="lock-heart-btn" id="lock-crisis-heart" title="Mental health resources" aria-label="Mental health crisis resources"><span aria-hidden="true">🤍</span></button>
   <div id="lock-content"></div>
 </div>
 </body>
