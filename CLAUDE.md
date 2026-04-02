@@ -69,7 +69,7 @@ For users in unsafe environments (domestic violence, abuse, controlling relation
 - No PIN recovery. User must clear app data if forgotten. Vault backup recommended.
 
 ### Discreet Safety Resources
-- **Trigger:** Long-press white heart button for 3 seconds (works on both main header and lock screen)
+- **Trigger:** Long-press white heart button for 2 seconds (works on both main header and lock screen)
 - **`#safety-sheet`** bottom sheet with web chat primary, phone/text secondary
 - Web chat resources (no call/text history): National DV Hotline (thehotline.org), RAINN (online.rainn.org), Love Is Respect (loveisrespect.org), Crisis Text Line (web chat), findahelpline.com
 - Phone resources labeled "if you're in a safe place to call": DV Hotline, RAINN, Childhelp, Love Is Respect
