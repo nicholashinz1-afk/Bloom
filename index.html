@@ -12375,6 +12375,15 @@ function renderSettingsTab() {
   dailyHtml += `</div>`;
 
   if (medMode !== 'off') {
+    // Collapsible details toggle
+    const medExpanded = state._medSettingsExpanded !== false;
+    dailyHtml += `<div onclick="state._medSettingsExpanded = !state._medSettingsExpanded; reRenderSettingsPreservingScroll()" style="
+      display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:6px 0;margin-bottom:8px">
+      <div style="font-size:11px;color:var(--sky-light)">${medList.length} medication${medList.length !== 1 ? 's' : ''}${medList.length > 0 ? ' configured' : ''}</div>
+      <div style="font-size:11px;color:var(--text-muted)">${medExpanded ? 'Hide details ▴' : 'Show details ▾'}</div>
+    </div>`;
+
+    if (medExpanded) {
     // Medication list editor
     dailyHtml += `<div style="margin-bottom:12px">
       <div style="font-size:11px;color:var(--sky-light);margin-bottom:8px">Your medications</div>`;
@@ -12497,12 +12506,18 @@ function renderSettingsTab() {
           ${m.note ? `<span style="color:var(--text-muted);font-size:11px">· ${m.note}</span>` : ''}
         </div>`;
       });
-      dailyHtml += `<div style="margin-top:10px;border-top:1px solid rgba(158,196,216,0.1);padding-top:8px">
+      dailyHtml += `<div style="margin-top:10px;border-top:1px solid rgba(158,196,216,0.1);padding-top:8px;display:flex;gap:8px;flex-wrap:wrap">
         <div onclick="copyMedList()" id="copy-med-list-btn" style="
           display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:99px;cursor:pointer;
           background:rgba(106,154,176,0.1);border:1px solid rgba(106,154,176,0.2);
           font-size:12px;color:var(--sky-light);min-height:44px" role="button" aria-label="Copy medication list to clipboard">
           Copy to clipboard
+        </div>
+        <div onclick="showMedCardFullscreen()" style="
+          display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:99px;cursor:pointer;
+          background:rgba(106,154,176,0.1);border:1px solid rgba(106,154,176,0.2);
+          font-size:12px;color:var(--sky-light);min-height:44px" role="button" aria-label="Show medication list fullscreen">
+          🩺 Show to doctor
         </div>
       </div></div>`;
     }
@@ -12533,6 +12548,7 @@ function renderSettingsTab() {
       </div>
       <div style="font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.4">${_remindLabels[_medRemindMode]}</div>
     </div>`;
+    } // end medExpanded
   }
   dailyHtml += `</div>`;
 
@@ -20353,6 +20369,60 @@ function copyMedList() {
       }
     });
   }
+}
+
+// Full-screen medication card for showing to a doctor
+function showMedCardFullscreen() {
+  const meds = getMedications();
+  if (meds.length === 0) return;
+  const timeLabels = { am: 'Morning', afternoon: 'Afternoon', pm: 'Evening', any: 'Daily', prn: 'As needed', not_daily: 'Periodic' };
+  function _tl(t) {
+    if (typeof t === 'string') return timeLabels[t] || t;
+    const p = [];
+    if (t & 1) p.push('Morning');
+    if (t & 2) p.push('Afternoon');
+    if (t & 4) p.push('Evening');
+    return p.join(', ') || 'Daily';
+  }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'med-fullscreen-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:800;background:#0a1a0b;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px';
+
+  let html = `
+    <div style="width:100%;max-width:400px;text-align:center">
+      <div style="font-size:14px;color:var(--sky-light);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:20px">My Medications</div>
+      <div style="text-align:left">`;
+
+  meds.forEach(m => {
+    html += `<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <div style="font-size:18px;color:var(--cream);font-weight:500">${m.name}</div>
+      <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+        <span style="font-size:14px;color:var(--sky-light)">${_tl(m.time)}</span>
+        ${m.note ? `<span style="font-size:14px;color:var(--text-secondary)">· ${m.note}</span>` : ''}
+      </div>
+    </div>`;
+  });
+
+  html += `</div>
+      <div style="margin-top:24px;display:flex;gap:10px;justify-content:center">
+        <div onclick="copyMedList()" style="
+          padding:10px 20px;border-radius:99px;cursor:pointer;font-size:14px;
+          background:rgba(106,154,176,0.15);border:1px solid rgba(106,154,176,0.3);
+          color:var(--sky-light);min-height:44px;display:flex;align-items:center;gap:6px" role="button">
+          📋 Copy
+        </div>
+        <div onclick="document.getElementById('med-fullscreen-overlay')?.remove()" style="
+          padding:10px 20px;border-radius:99px;cursor:pointer;font-size:14px;
+          background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+          color:var(--text-secondary);min-height:44px;display:flex;align-items:center" role="button">
+          Done
+        </div>
+      </div>
+    </div>`;
+
+  overlay.innerHTML = html;
+  document.body.appendChild(overlay);
 }
 
 // Parse a pasted medication list into structured entries
