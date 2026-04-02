@@ -1,7 +1,8 @@
 // Vercel serverless function for Claude AI reflections
 // Proxies to Anthropic API with server-side system prompt control and rate limiting
 
-import { createClient } from 'redis';
+// ── Redis client helpers (shared module) ────────────────────
+import { getRedis } from './_redis.js';
 
 // ── Server-side system prompt allowlist ────────────────────
 // The client sends a context key, NOT a raw system prompt.
@@ -21,18 +22,7 @@ const SYSTEM_PROMPTS = {
 // Suffix appended to all system prompts for consistency
 const SYSTEM_SUFFIX = ' Never use first-person language like "I am here for you" or "I care about you" — you are a tool, not a person. Frame support as observations and affirmations, not as a relationship.';
 
-// ── Redis client for rate limiting ─────────────────────────
-let _redisClient = null;
-async function getRedis() {
-  if (_redisClient && _redisClient.isReady) return _redisClient;
-  if (_redisClient) { try { await _redisClient.disconnect(); } catch(e) {} }
-  _redisClient = createClient({ url: process.env.REDIS_URL, socket: { reconnectStrategy: (retries) => retries < 3 ? Math.min(retries * 200, 1000) : false } });
-  _redisClient.on('error', () => {});
-  await _redisClient.connect();
-  return _redisClient;
-}
-
-// ── Rate limiting (ported from vault.js) ───────────────────
+// ── Rate limiting ─────────────────────────────────────────
 const RATE_LIMIT_MAX = 20;       // 20 requests per hour (generous for journaling)
 const RATE_LIMIT_WINDOW = 3600;  // 1 hour in seconds
 

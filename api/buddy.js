@@ -6,66 +6,8 @@
 // Update patterns there — both buddy.js and wall.js use the same source.
 import { moderateMessage } from './moderation.js';
 
-// ── Redis client helpers ────────────────────────────────────
-import { createClient } from 'redis';
-
-let _redisClient = null;
-async function getRedis() {
-  if (_redisClient && _redisClient.isReady) return _redisClient;
-  // Clean up stale client
-  if (_redisClient) { try { await _redisClient.disconnect(); } catch(e) {} }
-  _redisClient = createClient({ url: process.env.REDIS_URL, socket: { reconnectStrategy: (retries) => retries < 3 ? Math.min(retries * 200, 1000) : false } });
-  _redisClient.on('error', () => {});
-  await _redisClient.connect();
-  return _redisClient;
-}
-
-async function kvGet(key) {
-  try {
-    const client = await getRedis();
-    const val = await client.get(key);
-    if (val === null) return null;
-    return JSON.parse(val);
-  } catch(e) { return null; }
-}
-
-async function kvSet(key, value) {
-  try {
-    const client = await getRedis();
-    await client.set(key, JSON.stringify(value));
-  } catch(e) {}
-}
-
-async function kvDel(key) {
-  try {
-    const client = await getRedis();
-    await client.del(key);
-  } catch(e) {}
-}
-
-// Log moderation events to diagnostics
-async function logModeration(source, result) {
-  try {
-    const key = 'bloom_diag:events';
-    const client = await getRedis();
-    const raw = await client.get(key);
-    const events = raw ? JSON.parse(raw) : [];
-    events.push({
-      event: 'moderation',
-      meta: JSON.stringify({ source, ok: result.ok, reason: result.reason || null, flag: result.flag || null }),
-      ts: Date.now(),
-    });
-    if (events.length > 5000) events.splice(0, events.length - 5000);
-    await client.set(key, JSON.stringify(events), { EX: 90 * 86400 });
-    // Also increment daily counter
-    const dayKey = `bloom_diag:daily:${new Date().toISOString().slice(0, 10)}`;
-    const dayRaw = await client.get(dayKey);
-    const dayStats = dayRaw ? JSON.parse(dayRaw) : {};
-    const counterKey = result.ok ? (result.flag ? 'mod_flagged' : 'mod_allowed') : 'mod_blocked';
-    dayStats[counterKey] = (dayStats[counterKey] || 0) + 1;
-    await client.set(dayKey, JSON.stringify(dayStats), { EX: 90 * 86400 });
-  } catch(e) {}
-}
+// ── Redis client helpers (shared module) ────────────────────
+import { getRedis, kvGet, kvSet, kvDel, logModeration } from './_redis.js';
 
 // ── Threat compliance logging ──────────────────────────────
 // Credible violent threats are logged with full metadata (message, IP, timestamp,
@@ -401,8 +343,13 @@ export default async function handler(req, res) {
     // Check if paired → trigger notifications and shared milestones for all partners
     const lookup = await getLookup(buddyId);
     const todayStr = new Date().toISOString().slice(0, 10);
-    for (const pair of lookup.pairs) {
-      const partner = await kvGet(`bloom_buddy:${pair.partnerId}`);
+    // Prefetch all partner profiles in parallel
+    const partnerProfiles = await Promise.all(
+      lookup.pairs.map(pair => kvGet(`bloom_buddy:${pair.partnerId}`))
+    );
+    for (let _pi = 0; _pi < lookup.pairs.length; _pi++) {
+      const pair = lookup.pairs[_pi];
+      const partner = partnerProfiles[_pi];
       if (!partner) continue;
 
       // ── Shared milestones: count days both showed up (cumulative, never resets)

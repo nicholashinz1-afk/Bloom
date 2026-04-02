@@ -2,37 +2,8 @@
 // Collects anonymous operational telemetry — no PII, no journal content
 // Admin dashboard protected by ADMIN_KEY env var
 
-import { createClient } from 'redis';
-
-let _redisClient = null;
-async function getRedis() {
-  if (_redisClient && _redisClient.isReady) return _redisClient;
-  if (_redisClient) { try { await _redisClient.disconnect(); } catch(e) {} }
-  _redisClient = createClient({ url: process.env.REDIS_URL, socket: { reconnectStrategy: (retries) => retries < 3 ? Math.min(retries * 200, 1000) : false } });
-  _redisClient.on('error', () => {});
-  await _redisClient.connect();
-  return _redisClient;
-}
-
-async function kvGet(key) {
-  try {
-    const client = await getRedis();
-    const val = await client.get(key);
-    if (val === null) return null;
-    return JSON.parse(val);
-  } catch(e) { console.error('kvGet failed:', key, e.message); return null; }
-}
-
-async function kvSet(key, value, ttlSeconds) {
-  try {
-    const client = await getRedis();
-    if (ttlSeconds) {
-      await client.set(key, JSON.stringify(value), { EX: ttlSeconds });
-    } else {
-      await client.set(key, JSON.stringify(value));
-    }
-  } catch(e) { console.error('kvSet failed:', key, e.message); }
-}
+// ── Redis client helpers (shared module) ────────────────────
+import { getRedis, kvGet, kvSet } from './_redis.js';
 
 // ── Keys ──────────────────────────────────────────────────
 const KEYS = {
