@@ -7095,6 +7095,9 @@ function handleVisibilityChange() {
       showLockScreen();
       return; // don't resume app activity while locked
     }
+    // Close any sheets that were open when the app was backgrounded —
+    // Safari PWA can restore frozen DOM state with sheets blocking interaction
+    closeAllSheets(true);
     // Resume buddy polling when tab becomes visible again
     if (buddyState.status === 'paired' || buddyState.status === 'searching') {
       startBuddyPolling();
@@ -7153,7 +7156,11 @@ document.addEventListener('visibilitychange', handleVisibilityChange);
 // Best-effort vault sync when page is being discarded (OS kill, tab close, navigation away)
 window.addEventListener('pagehide', () => syncToVault());
 window.addEventListener('pageshow', (e) => {
-  if (e.persisted) checkForUpdate();
+  if (e.persisted) {
+    checkForUpdate();
+    // Safari PWA may restore frozen DOM with sheets still open — close them
+    closeAllSheets(true);
+  }
 });
 // ── Local notification helper ────────────────────────────────
 const _localNotifCount = { count: 0, resetTs: 0 };
@@ -16007,6 +16014,9 @@ function markBackupDone() {
 }
 
 function silentBackupDownload() {
+  // Skip auto-download on Safari/iOS — it confuses users with an unexpected .json file
+  // and iOS Safari doesn't handle programmatic downloads well in PWA mode
+  if (isSafariBrowser()) return;
   try {
     const data = gatherFullBackupData();
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
@@ -20253,20 +20263,15 @@ function checkSafariDataWarning() {
   const warned = load('bloom_safari_warned', false);
   if (warned) return;
 
+  save('bloom_safari_warned', true);
+
   setTimeout(() => {
     const isPWA = isSafariPWA();
     const msg = isPWA
-      ? 'Important: Safari on iOS may delete app data after 7 days of inactivity. Since you\'re using Bloom as an installed app, we strongly recommend saving a backup link now to protect your data.'
-      : 'Important: Safari may delete website data after 7 days of inactivity. We strongly recommend saving a backup link to protect your journal entries, mood history, and habits.';
+      ? 'Safari on iOS may delete app data after 7 days of inactivity. We recommend saving a backup link to protect your data.'
+      : 'Safari may delete website data after 7 days of inactivity. Save a backup link to protect your journal entries and habits.';
 
-    if (confirm(msg + '\n\nWant to save a backup link now?')) {
-      switchTab('settings');
-      setTimeout(() => {
-        toggleSettingsSection('data');
-        showBackupSheet();
-      }, 400);
-    }
-    save('bloom_safari_warned', true);
+    showBackupNudge(msg, true);
   }, 3000);
 }
 
@@ -20324,7 +20329,8 @@ function showBackupNudge(message, isFirst) {
 
   banner.querySelector('#backup-nudge-dismiss').addEventListener('click', () => {
     banner.remove();
-    save('bloom_backup_date', Date.now());
+    // Only set backup date for recurring reminders, not the first Safari warning
+    if (!isFirst) save('bloom_backup_date', Date.now());
   });
   banner.querySelector('#backup-nudge-go').addEventListener('click', () => {
     banner.remove();
