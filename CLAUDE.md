@@ -178,6 +178,18 @@ Custom task add inputs (daily habits, weekly tasks, self-care, nourishment, sect
 - `getOrderedDailyHabits()` normalizes `name` to `label` for custom habits and skips promoted items.
 - `toggleWeeklyHabitDay` / `setWeeklyHabitDay` work with promoted IDs like `pw_brush_teeth`. If these functions are ever refactored to validate against `WEEKLY_HABITS`, promoted items would break.
 - Emoji picker popover opens upward. Works because add inputs are always at the bottom of their sections. Would clip if inputs moved to the top of a panel.
+## Living Feedback (Phase 4B)
+
+Bloom needs more subtle ambient feedback throughout the app. The buddy level-up badge glow (`.buddy-levelup-badge` at ~line 2760 in index.html, using the `buddyLevelPulse` keyframe) is the reference pattern. Copy that approach (CSS `box-shadow` with `rgba(var(--sage-rgb), ...)`, `transform: scale()` + `opacity` only, 1-3s duration, `ease-in-out`) for all new living feedback.
+
+**Candidates (see SCALABILITY_PROPOSAL.md Phase 4B for full list):** habit completion glow, mood check-in breathing glow, journal saved shimmer, XP earned pulse, growth stage badge glow on Progress tab, streak milestone glow, water/food goal completion glow, all-done celebration ambient glow, breathing exercise afterglow, community wall post sent glow.
+
+**Rules:**
+- All living feedback must respect `prefers-reduced-motion` (disable when set).
+- Animations must be GPU-accelerated (`transform` + `opacity` only, never `width`/`height`/`box-shadow` transitions on their own).
+- Purely decorative. Never block interaction or shift layout.
+- Keep it organic (like light through leaves), not gamified (no slot machine energy).
+
 ## Known Issues / Fixes Needed
 
 - **Detailed medication mode doesn't bridge to completion system.** `checkAllDone()` and `getCompletionRate()` (around line ~7880-7950) use the simple medication system's keys (`medication_am`, `medication_pm`, etc. from `MEDICATION_HABIT`). In detailed mode, individual meds use slot-qualified keys (`medId:slot`). Completing all individual meds in detailed mode does not set the simple keys, so the "all done" celebration and completion percentage don't account for detailed medication progress. Fix: when all meds in a slot are checked off in detailed mode, also set `td.medication_<slot>` = true so the completion system picks it up.
