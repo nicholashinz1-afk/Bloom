@@ -361,7 +361,11 @@ export default async function handler(req, res) {
     }
 
     if (view === 'level_analytics') {
-      const LEVEL_NAMES = ['Seedling','Sprout','Blooming','Thriving','Radiant','Glowing','Flourishing','Rooted','Evergreen','Full Bloom'];
+      const LEVEL_NAMES = ['Seed','Seedling','Sprout','Budding','Blooming','Flowering','Flourishing','Rooted','Evergreen','Full Bloom'];
+      // Map old level names to current ones (levels were renamed)
+      const LEVEL_MIGRATION = {
+        'Thriving': 'Blooming', 'Radiant': 'Flowering', 'Glowing': 'Flourishing',
+      };
       const idx = await kvGet('bloom_level_user_index') || [];
       const now = Date.now();
       const SEVEN_DAYS = 7 * 86400000;
@@ -371,7 +375,11 @@ export default async function handler(req, res) {
       const users = [];
       for (const uid of idx) {
         const data = await kvGet(`bloom_level_user:${uid}`);
-        if (data) users.push({ uid, ...data });
+        if (data) {
+          // Migrate old level names to current ones
+          if (data.level && LEVEL_MIGRATION[data.level]) data.level = LEVEL_MIGRATION[data.level];
+          users.push({ uid, ...data });
+        }
       }
 
       const totalUsers = users.length;
