@@ -5857,6 +5857,7 @@ function addSpecialDate() {
   const id = 'sd_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   state.prefs.specialDates.push({ id, name: '', month: null, day: null, year: null, type: 'celebration', isDefault: false });
   save('bloom_prefs', state.prefs);
+  trackFeature('special_dates_set');
   renderSettingsTab();
   reopenSpecialDates();
 }
@@ -6418,6 +6419,7 @@ function openWindDown() {
   winddownStep = 0;
   renderWindDownStep();
   openSheet('winddown-sheet');
+  trackFeature('winddown_started');
   trackEvent('winddown_started');
 }
 
@@ -10756,6 +10758,7 @@ function tapWater(i) {
       celebrate('water', wEl);
     }, 200);
   }
+  trackFeature('water_tracked');
   saveState();
   archiveToday();
   renderTodayTab();
@@ -11493,6 +11496,7 @@ function addAffirmation() {
     state.todayData.affirmXPGiven = true;
     addXP(10, null);
   }
+  trackFeature('affirmation_engaged');
   saveState();
   checkFirstTaskStreak();
   celebrate('affirmation', input);
@@ -14057,7 +14061,7 @@ function renderSettingsTab() {
         <div class="toggle-label">Share mood with buddy</div>
         <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Let your buddy see your current mood and get notified on rough days</div>
       </div>
-      <div class="toggle${buddyShareMoodOn ? ' on' : ''}" onclick="state.prefs.buddyShareMood=!${buddyShareMoodOn};saveState();renderSettingsTab()"></div>
+      <div class="toggle${buddyShareMoodOn ? ' on' : ''}" onclick="state.prefs.buddyShareMood=!${buddyShareMoodOn};trackFeature('buddy_mood_share_toggled');saveState();renderSettingsTab()"></div>
     </div>
     <div class="toggle-row" style="padding:12px 0">
       <div>
@@ -14847,6 +14851,7 @@ function toggleSelfCareTask(id) {
     state.prefs.selfCareTasks.push(id);
   }
   save('bloom_prefs', state.prefs);
+  trackFeature('selfcare_toggled');
   reRenderSettingsPreservingScroll();
 }
 
@@ -14861,6 +14866,7 @@ function toggleHabitPref(id) {
   if (!state.prefs.habits) state.prefs.habits = {};
   state.prefs.habits[id] = state.prefs.habits[id] === false ? true : false;
   save('bloom_prefs', state.prefs);
+  trackFeature('schedule_customized');
   reRenderSettingsPreservingScroll();
 }
 
@@ -15104,6 +15110,7 @@ function setHabitTime(id, time) {
   }
 
   save('bloom_prefs', state.prefs);
+  trackFeature('schedule_customized');
   reRenderSettingsPreservingScroll();
 }
 
@@ -15231,6 +15238,7 @@ function saveSettingsVoice() {
   if (!select) return;
   state.prefs.voice = select.value;
   save('bloom_prefs', state.prefs);
+  trackFeature('voice_preference_changed');
 }
 
 function saveHabitTrigger(habitId) {
@@ -15356,6 +15364,7 @@ function toggleHighContrast() {
   state.prefs.highContrast = !state.prefs.highContrast;
   save('bloom_prefs', state.prefs);
   document.body.classList.toggle('high-contrast', state.prefs.highContrast);
+  trackFeature('high_contrast_toggled');
   reRenderSettingsPreservingScroll();
 }
 
@@ -15364,6 +15373,7 @@ function toggleLargeText() {
   state.prefs.largeText = !state.prefs.largeText;
   save('bloom_prefs', state.prefs);
   document.body.classList.toggle('text-large', state.prefs.largeText);
+  trackFeature('high_contrast_toggled');
   reRenderSettingsPreservingScroll();
 }
 
@@ -18370,7 +18380,7 @@ const FEATURE_HIGHLIGHTS = [
   },
   {
     id: 'mood_patterns',
-    trackKeys: ['mood_pattern_viewed'],
+    trackKeys: ['progress'],
     tier: 4, minWeek: 4, minDays: 14,
     contextCheck: () => {
       const history = load('bloom_history', {});
@@ -22242,6 +22252,7 @@ function addCustomCheckin() {
 
   state.prefs.customCheckins.push({ id, name, type });
   save('bloom_prefs', state.prefs);
+  trackFeature('checkin_frequency_changed');
   nameInput.value = '';
   reRenderSettingsPreservingScroll();
   renderTodayTab();
@@ -22491,6 +22502,7 @@ function setMedicationMode(mode) {
     syncMedHabitTimes();
   }
   save('bloom_prefs', state.prefs);
+  if (mode === 'detailed') trackFeature('medication_detailed_mode');
   reRenderSettingsPreservingScroll();
   renderTodayTab();
 }
@@ -22689,6 +22701,7 @@ function openPrnSheet() {
 function copyMedList() {
   const meds = getMedications();
   if (meds.length === 0) return;
+  trackFeature('doctor_reference_card');
   const timeLabels = { am: 'Morning', afternoon: 'Afternoon', pm: 'Evening', any: 'Daily', prn: 'As needed', not_daily: 'Periodic' };
   function _copyTimeLabel(t) {
     if (typeof t === 'string') return timeLabels[t] || t;
