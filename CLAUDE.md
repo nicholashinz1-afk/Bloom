@@ -53,7 +53,46 @@ Crisis sheet (in index.html, id `crisis-sheet`) includes:
 - 988lifeline.org chat
 - findahelpline.com (international, 40+ languages)
 
-Always accessible via the white heart button in the header.
+Always accessible via the white heart button in the header. Tap = crisis sheet. Long-press (3s) = discreet safety resources (see below).
+
+## Personal Safety Features
+
+For users in unsafe environments (domestic violence, abuse, controlling relationships).
+
+### Privacy Lock
+- Opt-in in Settings > Privacy Lock
+- **Biometric + PIN backup:** Uses WebAuthn (`navigator.credentials`) for device fingerprint/Face ID/PIN, with a 4-digit PIN as fallback
+- **PIN only:** SHA-256 hashed, stored in `bloom_prefs.privacyLock`
+- Locks on app boot (`main()`) and return from background (`handleVisibilityChange()`)
+- Configurable timeout: immediate, 1 min, or 5 min
+- Lock screen is minimal, shows no personal data. Crisis heart accessible on lock screen (both tap and long-press).
+- No PIN recovery. User must clear app data if forgotten. Vault backup recommended.
+
+### Discreet Safety Resources
+- **Trigger:** Long-press white heart button for 3 seconds (works on both main header and lock screen)
+- **`#safety-sheet`** bottom sheet with web chat primary, phone/text secondary
+- Web chat resources (no call/text history): National DV Hotline (thehotline.org), RAINN (online.rainn.org), Love Is Respect (loveisrespect.org), Crisis Text Line (web chat), findahelpline.com
+- Phone resources labeled "if you're in a safe place to call": DV Hotline, RAINN, Childhelp, Love Is Respect
+- Long-press handler: `attachHeartLongPress()` applied to both `#crisis-heart` and `#lock-crisis-heart`
+
+### Quick Exit (Decoy Mask)
+- Button at top of safety sheet activates `#decoy-mask` overlay (z-index: 9999)
+- Looks like a frozen app: dark screen, CSS spinner, "Loading..." text
+- Long-press spinner for 3 seconds to unmask and return to safety sheet
+- Session/chat stays alive underneath. Nothing is lost.
+- Decoy mask sits above everything including lock screen
+
+### Discoverability
+- What's New tour card (v3.7.0) walks users through all three features
+- FAQ hint in Settings: "The white heart also has more resources if you hold it."
+- First-time discovery toast on long-press
+
+### Design principles for safety features
+- Don't make the discreet trigger easier to find. The hidden gesture is intentional.
+- Don't add visible labels, icons, or menu items that reference domestic violence, abuse, or "safety mode."
+- The decoy mask must look boring and unremarkable. Don't add Bloom branding to it.
+- Crisis heart must always be accessible, even on the lock screen, even behind the decoy mask.
+- Web chat links are prioritized over phone/text because they leave no trace in call or SMS history.
 
 ## Accessibility
 
