@@ -4691,7 +4691,11 @@ const LEVELS = [
   { name: 'Flourishing',  min: 9000,  emoji: '🌻' },   // ~7-8 weeks — strong and vibrant
   { name: 'Rooted',       min: 15000, emoji: '🌳' },   // ~3 months — deeply established
   { name: 'Evergreen',    min: 25000, emoji: '🍃' },   // ~5 months — enduring
-  { name: 'Full Bloom',   min: 40000, emoji: '🌺' },   // ~8 months — peak growth
+  { name: 'Full Bloom',   min: 40000,  emoji: '🌺' },   // ~8 months — peak growth
+  { name: 'Perennial',   min: 60000,  emoji: '🌾' },   // ~11 months — comes back every season
+  { name: 'Grove',       min: 85000,  emoji: '🌲' },   // ~16 months — one plant became many
+  { name: 'Canopy',      min: 115000, emoji: '🏕️' },   // ~22 months — sheltering, established
+  { name: 'Ecosystem',   min: 150000, emoji: '🌍' },   // ~28 months — you sustain others now
 ];
 
 // Baseline daily XP potential the LEVELS thresholds were designed around.
@@ -5171,8 +5175,8 @@ function getThemeSVGColors() {
 }
 
 function buildFlowerSVG(levelIdx, animated = false) {
-  const i = Math.min(levelIdx, 9);
-  const stageNames = ['Seed','Seedling','Sprout','Budding','Blooming','Flowering','Flourishing','Rooted','Evergreen','Full Bloom'];
+  const i = Math.min(levelIdx, 13);
+  const stageNames = ['Seed','Seedling','Sprout','Budding','Blooming','Flowering','Flourishing','Rooted','Evergreen','Full Bloom','Perennial','Grove','Canopy','Ecosystem'];
   const stageName = stageNames[i];
   const potColor = '#6b5a4a';
   const potLight = '#8a7560';
@@ -5335,7 +5339,7 @@ function buildFlowerSVG(levelIdx, animated = false) {
         return `<circle cx="${ax}" cy="${ay}" r="${1 + (j % 3) * 0.5}" fill="${j % 2 ? '#fff' : accentGold}" opacity="${0.4 + j * 0.07}" class="sparkle" style="animation-delay:${j * 0.3}s"/>`;
       }).join('')}
     </g>`;
-  } else {
+  } else if (i === 9) {
     // Full Bloom — magnificent garden with multiple flowers, golden aura, and abundant life
     const trunkColor = '#5a4538';
     const canopyMid = '#5a8a5e';
@@ -5370,6 +5374,144 @@ function buildFlowerSVG(levelIdx, animated = false) {
         const ax = 64 + j * 10;
         const ay = stemTop - 8 + (j % 4) * 5;
         return `<circle cx="${ax}" cy="${ay}" r="${1.2 + (j % 3) * 0.5}" fill="${j % 3 === 0 ? gold : '#fff'}" opacity="${0.4 + j * 0.06}" class="sparkle" style="animation-delay:${j * 0.25}s"/>`;
+      }).join('')}
+    </g>`;
+  } else if (i === 10) {
+    // Perennial — weathered tree with seasonal wildflowers returning at its base
+    const trunkColor = '#5a4538';
+    const canopyDark = '#3a6a4a';
+    const canopyMid = '#5a8a5e';
+    const canopyLight = '#7aaa7e';
+    const wheat = '#d4b870';
+    const lavender = '#b8a0d0';
+    const poppy = '#d48a6a';
+    plant = `<g ${anim}>
+      <path d="M96 160 Q91 128 90 ${stemTop + 28} L96 ${stemTop + 15} L100 ${stemTop + 10} L104 ${stemTop + 15} L110 ${stemTop + 28} Q109 128 104 160 Z" fill="${trunkColor}"/>
+      <line x1="88" y1="163" x2="70" y2="173" stroke="${trunkColor}" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+      <line x1="112" y1="163" x2="130" y2="173" stroke="${trunkColor}" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+      <line x1="94" y1="164" x2="82" y2="170" stroke="${trunkColor}" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+      <circle cx="100" cy="${stemTop + 12}" r="32" fill="${wheat}" opacity="0.1" class="glow-pulse"/>
+      <ellipse cx="100" cy="${stemTop + 20}" rx="36" ry="24" fill="${canopyDark}"/>
+      <ellipse cx="86" cy="${stemTop + 14}" rx="24" ry="20" fill="${canopyMid}"/>
+      <ellipse cx="114" cy="${stemTop + 16}" rx="22" ry="18" fill="${canopyMid}"/>
+      <ellipse cx="100" cy="${stemTop + 8}" rx="20" ry="16" fill="${canopyLight}"/>
+      <ellipse cx="74" cy="155" rx="6" ry="4" fill="${canopyMid}" opacity="0.6" transform="rotate(-20 74 155)"/>
+      <ellipse cx="126" cy="153" rx="5" ry="3" fill="${canopyMid}" opacity="0.5" transform="rotate(15 126 153)"/>
+      ${[0,1,2,3,4].map(j => {
+        const fx = 68 + j * 16;
+        const fy = 152 + (j % 2) * 4;
+        const colors = [lavender, poppy, wheat, lavender, poppy];
+        return `<circle cx="${fx}" cy="${fy}" r="3" fill="${colors[j]}" opacity="0.8"/>
+          <circle cx="${fx}" cy="${fy}" r="1.5" fill="#fff" opacity="0.5"/>`;
+      }).join('')}
+      ${[0,1,2,3,4,5,6,7,8].map(j => {
+        const ax = 62 + j * 9;
+        const ay = stemTop - 6 + (j % 4) * 5;
+        return `<circle cx="${ax}" cy="${ay}" r="${1 + (j % 3) * 0.5}" fill="${j % 3 === 0 ? wheat : '#fff'}" opacity="${0.35 + j * 0.06}" class="sparkle" style="animation-delay:${j * 0.2}s"/>`;
+      }).join('')}
+    </g>`;
+  } else if (i === 11) {
+    // Grove — cluster of trees growing together, shared root system
+    const trunkColor = '#5a4538';
+    const trunkLight = '#6b5a4a';
+    const canopyDark = '#3a6a4a';
+    const canopyMid = '#5a8a5e';
+    const canopyLight = '#7aaa7e';
+    const gold = '#d4c480';
+    plant = `<g ${anim}>
+      <path d="M88 160 Q86 135 85 ${stemTop + 35} L90 ${stemTop + 22} L92 ${stemTop + 18} L94 ${stemTop + 22} L97 ${stemTop + 35} Q96 135 94 160 Z" fill="${trunkColor}"/>
+      <path d="M106 160 Q104 132 103 ${stemTop + 32} L107 ${stemTop + 20} L110 ${stemTop + 15} L113 ${stemTop + 20} L117 ${stemTop + 32} Q116 132 114 160 Z" fill="${trunkLight}"/>
+      <path d="M70 160 Q70 145 72 ${stemTop + 40} L75 ${stemTop + 30} L77 ${stemTop + 26} L79 ${stemTop + 30} L81 ${stemTop + 40} Q82 145 82 160 Z" fill="${trunkColor}" opacity="0.8"/>
+      <line x1="80" y1="163" x2="68" y2="172" stroke="${trunkColor}" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+      <line x1="120" y1="163" x2="132" y2="172" stroke="${trunkLight}" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+      <path d="M82 162 Q90 158 100 162 Q110 158 118 162" stroke="${trunkColor}" stroke-width="2" fill="none" opacity="0.3"/>
+      <circle cx="100" cy="${stemTop + 10}" r="38" fill="${gold}" opacity="0.08" class="glow-pulse"/>
+      <ellipse cx="77" cy="${stemTop + 24}" rx="20" ry="18" fill="${canopyDark}"/>
+      <ellipse cx="92" cy="${stemTop + 16}" rx="24" ry="22" fill="${canopyDark}"/>
+      <ellipse cx="110" cy="${stemTop + 14}" rx="26" ry="24" fill="${canopyDark}"/>
+      <ellipse cx="85" cy="${stemTop + 10}" rx="18" ry="16" fill="${canopyMid}"/>
+      <ellipse cx="105" cy="${stemTop + 8}" rx="20" ry="18" fill="${canopyMid}"/>
+      <ellipse cx="75" cy="${stemTop + 18}" rx="14" ry="12" fill="${canopyMid}"/>
+      <ellipse cx="95" cy="${stemTop + 4}" rx="14" ry="12" fill="${canopyLight}"/>
+      <ellipse cx="112" cy="${stemTop + 6}" rx="12" ry="10" fill="${canopyLight}"/>
+      ${[0,1,2,3,4,5,6,7,8,9].map(j => {
+        const ax = 60 + j * 9;
+        const ay = stemTop - 8 + (j % 4) * 5;
+        return `<circle cx="${ax}" cy="${ay}" r="${1 + (j % 3) * 0.4}" fill="${j % 4 === 0 ? gold : '#fff'}" opacity="${0.3 + j * 0.05}" class="sparkle" style="animation-delay:${j * 0.2}s"/>`;
+      }).join('')}
+    </g>`;
+  } else if (i === 12) {
+    // Canopy — towering sheltering tree with light filtering through, birds nesting
+    const trunkColor = '#4a3a2e';
+    const canopyDark = '#2a5a3a';
+    const canopyMid = '#4a7a4e';
+    const canopyLight = '#6a9a6e';
+    const dappled = '#a8d8a0';
+    const gold = '#e0c870';
+    plant = `<g ${anim}>
+      <path d="M94 160 Q88 125 87 ${stemTop + 25} L94 ${stemTop + 12} L100 ${stemTop + 6} L106 ${stemTop + 12} L113 ${stemTop + 25} Q112 125 106 160 Z" fill="${trunkColor}"/>
+      <line x1="86" y1="164" x2="68" y2="175" stroke="${trunkColor}" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+      <line x1="114" y1="164" x2="132" y2="175" stroke="${trunkColor}" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+      <line x1="92" y1="165" x2="78" y2="172" stroke="${trunkColor}" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+      <line x1="108" y1="165" x2="122" y2="172" stroke="${trunkColor}" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+      <circle cx="100" cy="${stemTop + 6}" r="42" fill="${gold}" opacity="0.08" class="glow-pulse"/>
+      <circle cx="100" cy="${stemTop + 6}" r="34" fill="${gold}" opacity="0.05" class="glow-pulse" style="animation-delay:0.6s"/>
+      <ellipse cx="100" cy="${stemTop + 16}" rx="42" ry="28" fill="${canopyDark}"/>
+      <ellipse cx="82" cy="${stemTop + 10}" rx="28" ry="24" fill="${canopyMid}"/>
+      <ellipse cx="118" cy="${stemTop + 12}" rx="26" ry="22" fill="${canopyMid}"/>
+      <ellipse cx="100" cy="${stemTop + 4}" rx="24" ry="20" fill="${canopyLight}"/>
+      <ellipse cx="90" cy="${stemTop}" rx="10" ry="8" fill="${dappled}" opacity="0.3"/>
+      <ellipse cx="112" cy="${stemTop + 2}" rx="8" ry="6" fill="${dappled}" opacity="0.25"/>
+      <path d="M82 ${stemTop + 2} Q84 ${stemTop - 4} 88 ${stemTop}" stroke="${trunkColor}" stroke-width="1.5" fill="none" opacity="0.5"/>
+      <ellipse cx="85" cy="${stemTop - 2}" rx="4" ry="3" fill="${canopyMid}" opacity="0.7"/>
+      ${[0,1,2,3,4,5,6,7,8,9,10].map(j => {
+        const ax = 58 + j * 8.5;
+        const ay = stemTop - 10 + (j % 5) * 4;
+        return `<circle cx="${ax}" cy="${ay}" r="${0.8 + (j % 3) * 0.5}" fill="${j % 4 === 0 ? gold : j % 4 === 1 ? dappled : '#fff'}" opacity="${0.3 + j * 0.05}" class="sparkle" style="animation-delay:${j * 0.18}s"/>`;
+      }).join('')}
+    </g>`;
+  } else {
+    // Ecosystem — lush interconnected landscape with tree, flowers, water, and life everywhere
+    const trunkColor = '#4a3a2e';
+    const canopyDark = '#2a5a3a';
+    const canopyMid = '#4a7a4e';
+    const canopyLight = '#6a9a6e';
+    const gold = '#e0c870';
+    const water = '#7ab8d0';
+    const roseA = '#c97a8a';
+    const lavender = '#b8a0d0';
+    const earthWarm = '#d4a870';
+    plant = `<g ${anim}>
+      <path d="M94 160 Q87 122 86 ${stemTop + 22} L93 ${stemTop + 10} L100 ${stemTop + 4} L107 ${stemTop + 10} L114 ${stemTop + 22} Q113 122 106 160 Z" fill="${trunkColor}"/>
+      <line x1="84" y1="164" x2="64" y2="176" stroke="${trunkColor}" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+      <line x1="116" y1="164" x2="136" y2="176" stroke="${trunkColor}" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+      <line x1="90" y1="166" x2="74" y2="174" stroke="${trunkColor}" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+      <line x1="110" y1="166" x2="126" y2="174" stroke="${trunkColor}" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+      <circle cx="100" cy="${stemTop + 4}" r="46" fill="${gold}" opacity="0.1" class="glow-pulse"/>
+      <circle cx="100" cy="${stemTop + 4}" r="38" fill="${gold}" opacity="0.06" class="glow-pulse" style="animation-delay:0.5s"/>
+      <circle cx="100" cy="${stemTop + 4}" r="30" fill="${gold}" opacity="0.04" class="glow-pulse" style="animation-delay:1s"/>
+      <ellipse cx="100" cy="${stemTop + 14}" rx="44" ry="30" fill="${canopyDark}"/>
+      <ellipse cx="80" cy="${stemTop + 8}" rx="30" ry="26" fill="${canopyMid}"/>
+      <ellipse cx="120" cy="${stemTop + 10}" rx="28" ry="24" fill="${canopyMid}"/>
+      <ellipse cx="100" cy="${stemTop + 2}" rx="26" ry="22" fill="${canopyLight}"/>
+      <ellipse cx="66" cy="152" rx="10" ry="4" fill="${water}" opacity="0.4"/>
+      <ellipse cx="66" cy="152" rx="6" ry="2.5" fill="${water}" opacity="0.25"/>
+      ${[0,1,2,3,4,5].map(j => {
+        const fx = 60 + j * 16;
+        const fy = 150 + (j % 3) * 3;
+        const colors = [roseA, lavender, gold, roseA, lavender, earthWarm];
+        return `<circle cx="${fx}" cy="${fy}" r="${2.5 + (j % 2)}" fill="${colors[j]}" opacity="0.75"/>
+          <circle cx="${fx}" cy="${fy}" r="${1.2 + (j % 2) * 0.5}" fill="#fff" opacity="0.4"/>`;
+      }).join('')}
+      ${[0,60,120,180,240,300].map(a =>
+        `<ellipse cx="100" cy="${stemTop - 4}" rx="4" ry="10" fill="${gold}" opacity="0.6" transform="rotate(${a} 100 ${stemTop + 6})"/>`
+      ).join('')}
+      <circle cx="100" cy="${stemTop + 6}" r="7" fill="${gold}"/>
+      <circle cx="100" cy="${stemTop + 6}" r="4" fill="#fff" opacity="0.5"/>
+      ${[0,1,2,3,4,5,6,7,8,9,10,11].map(j => {
+        const ax = 55 + j * 8;
+        const ay = stemTop - 12 + (j % 5) * 5;
+        return `<circle cx="${ax}" cy="${ay}" r="${0.8 + (j % 3) * 0.5}" fill="${j % 5 === 0 ? gold : j % 5 === 1 ? water : j % 5 === 2 ? roseA : '#fff'}" opacity="${0.3 + j * 0.04}" class="sparkle" style="animation-delay:${j * 0.15}s"/>`;
       }).join('')}
     </g>`;
   }
@@ -18518,6 +18660,25 @@ const FEATURE_HIGHLIGHTS = [
       real: 'Settings > Data & Privacy. Backup link, QR code, JSON export. Multiple options.'
     },
     action: { tab: 'settings', section: 'data', label: 'View options' }
+  },
+  {
+    id: 'extended_levels',
+    trackKeys: ['extended_levels'],
+    tier: 3, minWeek: 12, minDays: 60,
+    contextCheck: () => {
+      const xp = (window.state?.xpData?.total) || 0;
+      return xp >= 30000; // Show when approaching Full Bloom
+    },
+    icon: '🌍',
+    title: {
+      gentle: 'The journey keeps going',
+      real: 'New growth stages added'
+    },
+    body: {
+      gentle: 'Four new stages beyond Full Bloom. Perennial, Grove, Canopy, and Ecosystem. Your growth has no ceiling here.',
+      real: 'Full Bloom isn\'t the end anymore. Four new levels go out to ~28 months. Keep showing up.'
+    },
+    action: { tab: 'progress', label: 'See progress' }
   }
 ];
 

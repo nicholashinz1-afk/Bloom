@@ -118,9 +118,9 @@ The system exists to recognize showing up, not to gamify progress. It should nev
 
 ### Growth Stages (botanically accurate)
 
-Seed (0) → Seedling (175) → Sprout (525) → Budding (1,200) → Blooming (2,600) → Flowering (5,000) → Flourishing (9,000) → Rooted (15,000) → Evergreen (25,000) → Full Bloom (40,000)
+Seed (0) → Seedling (175) → Sprout (525) → Budding (1,200) → Blooming (2,600) → Flowering (5,000) → Flourishing (9,000) → Rooted (15,000) → Evergreen (25,000) → Full Bloom (40,000) → Perennial (60,000) → Grove (85,000) → Canopy (115,000) → Ecosystem (150,000)
 
-Names follow how a plant actually grows. Don't rename stages to anything that implies arrival before the journey warrants it. Gaps between stages grow gently so no level ever feels like a wall.
+Names follow how a plant actually grows, then expand into broader natural systems. Don't rename stages to anything that implies arrival before the journey warrants it. Gaps between stages grow gently so no level ever feels like a wall. A high-water mark (`peakLevelIdx` in xpData) prevents users from ever being demoted when habit scaling adjusts thresholds upward.
 
 ### XP values
 

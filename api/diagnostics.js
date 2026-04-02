@@ -361,7 +361,7 @@ export default async function handler(req, res) {
     }
 
     if (view === 'level_analytics') {
-      const LEVEL_NAMES = ['Seed','Seedling','Sprout','Budding','Blooming','Flowering','Flourishing','Rooted','Evergreen','Full Bloom'];
+      const LEVEL_NAMES = ['Seed','Seedling','Sprout','Budding','Blooming','Flowering','Flourishing','Rooted','Evergreen','Full Bloom','Perennial','Grove','Canopy','Ecosystem'];
       // Map old level names to current ones (levels were renamed)
       const LEVEL_MIGRATION = {
         'Thriving': 'Blooming', 'Radiant': 'Flowering', 'Glowing': 'Flourishing',
