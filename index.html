@@ -35,7 +35,8 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 
 <!-- PWA Manifest — static, required for Android home screen install -->
 <link rel="manifest" href="/manifest.json">
@@ -3783,6 +3784,12 @@ select:focus {
   <div style="padding:0 20px 20px" id="hard-day-content"></div>
 </div>
 
+<!-- Special date AI reflection sheet -->
+<div class="bottom-sheet" id="special-date-ai-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding:0 20px 20px" id="special-date-ai-content"></div>
+</div>
+
 <!-- Evening wind-down sheet -->
 <div class="bottom-sheet" id="winddown-sheet">
   <div class="sheet-handle"></div>
@@ -6010,6 +6017,7 @@ function respondToSpecialDate(dateId, response) {
       renderTodayTop();
       renderTodayTab();
     }, 1500);
+    setTimeout(() => renderSpecialDateReflection(dateId, 'hard'), 1800);
   } else if (response === 'okay') {
     // Warm pulse — they're doing good
     saveState();
@@ -6025,6 +6033,7 @@ function respondToSpecialDate(dateId, response) {
       banner.classList.add('special-date-warm-glow');
     }
     setTimeout(() => renderTodayTop(), 2000);
+    setTimeout(() => renderSpecialDateReflection(dateId, 'okay'), 1200);
   } else if (response === 'celebrate') {
     // Full celebration!
     saveState();
@@ -6036,6 +6045,7 @@ function respondToSpecialDate(dateId, response) {
       }, 300);
     }
     renderTodayTop();
+    setTimeout(() => renderSpecialDateReflection(dateId, 'celebrate'), 800);
   } else if (response === 'complicated') {
     // Gentle acknowledgment — no hard mode, just warmth
     saveState();
@@ -6050,7 +6060,61 @@ function respondToSpecialDate(dateId, response) {
         </div>`;
       banner.classList.add('special-date-warm-glow');
     }
-    setTimeout(() => renderTodayTop(), 4000);
+    setTimeout(() => renderSpecialDateReflection(dateId, 'complicated'), 1200);
+  }
+}
+
+function getSpecialDateFraming(voice, response) {
+  const map = {
+    real:       { hard: "Rough day. Here's something for you.", okay: "Glad you're doing alright.", celebrate: "Your day. Here's something.", complicated: "Yeah. It's a lot." },
+    reflective: { hard: "We're holding space for today.", okay: "A quiet moment for you.", celebrate: "Something to carry with you today.", complicated: "Some days hold more than one feeling." }
+  };
+  return (map[voice] || map.reflective)[response] || map.reflective[response];
+}
+
+async function renderSpecialDateReflection(dateId, response) {
+  const sd = (state._specialDateMatches || []).find(d => d.id === dateId);
+  if (!sd) return;
+
+  const voice = state.prefs?.voice || 'reflective';
+  const framingText = getSpecialDateFraming(voice, response);
+  const container = document.getElementById('special-date-ai-content');
+  if (!container) return;
+
+  const emoji = (response === 'hard') ? '🫂' : (response === 'celebrate') ? '✨' : '💚';
+
+  container.innerHTML = `
+    <div style="text-align:center;padding:8px 0 20px">
+      <div style="font-size:36px;margin-bottom:12px">${emoji}</div>
+      <div style="font-family:Fraunces,serif;font-size:18px;font-weight:300;color:var(--cream);margin-bottom:16px">${framingText}</div>
+      <div id="special-date-ai-response" style="font-size:14px;color:var(--text-secondary);line-height:1.8;font-style:italic">
+        holding space...
+      </div>
+    </div>
+    ${response === 'complicated' ? '<div style="margin-top:16px;text-align:center"><button class="btn btn-ghost btn-sm" onclick="closeAllSheets();openOpenJournal()" style="font-size:12px">Want to write about it?</button></div>' : ''}
+    <button class="btn btn-ghost btn-block" style="margin-top:16px" onclick="closeAllSheets()">Close</button>
+  `;
+
+  openSheet('special-date-ai-sheet');
+
+  // Build prompt with full context so Claude can engage meaningfully
+  const dateType = sd.type === 'celebration' ? 'celebration' : 'difficult day';
+  const yearsContext = sd._years ? ` It has been ${sd._years} year${sd._years !== 1 ? 's' : ''}.` : '';
+  const responseMap = {
+    hard: 'They said they could use some support.',
+    okay: 'They said they are doing okay.',
+    celebrate: 'They are feeling good and want to celebrate.',
+    complicated: 'They said it feels complicated.'
+  };
+
+  const prompt = `Today is a ${dateType} for this person: "${sd.name}".${yearsContext} ${responseMap[response]} Write a warm 2-3 sentence reflection. Engage with the emotional meaning of what this day holds. Do not just echo the name back as a label. Speak to what they are feeling.`;
+
+  const aiText = await callClaude(prompt, 'special_date');
+
+  const aiEl = document.getElementById('special-date-ai-response');
+  if (aiEl) {
+    aiEl.style.fontStyle = 'normal';
+    aiEl.innerHTML = renderAIResponseHTML(aiText, 'special_date_' + response);
   }
 }
 
@@ -9351,7 +9415,7 @@ function getFallbackResponse(userInput) {
 
 async function callClaude(prompt, context, options) {
   // Track AI reflection usage for journey analysis
-  const aiSource = prompt.includes('journal') ? 'journal' : prompt.includes('reflection') ? 'reflection' : prompt.includes('hard day') ? 'hard_day' : prompt.includes('weekly') || prompt.includes('week') ? 'weekly_insight' : prompt.includes('monthly') || prompt.includes('month') ? 'monthly_reflection' : 'other';
+  const aiSource = prompt.includes('journal') ? 'journal' : prompt.includes('reflection') ? 'reflection' : prompt.includes('hard day') ? 'hard_day' : prompt.includes('weekly') || prompt.includes('week') ? 'weekly_insight' : prompt.includes('monthly') || prompt.includes('month') ? 'monthly_reflection' : context === 'special_date' ? 'special_date' : 'other';
   trackAIJourney(aiSource, aiSource);
   trackFeature('ai_reflection');
   try {
@@ -10133,6 +10197,23 @@ function renderTodayTab() {
     <div class="toggle${isGentleMode ? ' on' : ''}" style="pointer-events:none;transform:scale(0.8)"></div>
   </div>`;
 
+  // On first render, paint above-the-fold immediately and defer the rest
+  if (!renderTodayTab._initialized) {
+    renderTodayTab._initialized = true;
+    html += '<div id="today-deferred"></div>';
+    scroll.innerHTML = html;
+    renderTodayTop();
+    requestAnimationFrame(() => { renderTodayTabRest(scroll, prefs, td, t, userWeek); });
+    return;
+  }
+
+  // Subsequent renders: build everything inline (user is already on page)
+  renderTodayTabRest(scroll, prefs, td, t, userWeek, html);
+}
+
+function renderTodayTabRest(scroll, prefs, td, t, userWeek, aboveFoldHtml) {
+  let html = '';
+
   // --- FOUNDATIONS: Water + Food (compact combined card) ---
   const waterCount = td.water || 0;
   const wGoal = state.prefs?.waterGoal || 3;
@@ -10657,7 +10738,14 @@ function renderTodayTab() {
     </div>
   </div>`;
 
-  scroll.innerHTML = html;
+  // First render: inject into placeholder. Re-renders: full innerHTML swap.
+  const deferred = document.getElementById('today-deferred');
+  if (deferred) {
+    deferred.outerHTML = html;
+  } else {
+    scroll.innerHTML = (aboveFoldHtml || '') + html;
+    renderTodayTop();
+  }
 
   // Apply completion animation only to the just-tapped item
   if (_justCompletedKey) {
@@ -10673,7 +10761,6 @@ function renderTodayTab() {
     }, 10);
   }
 
-  renderTodayTop();
   checkAllDone();
 
   // Low mood AI trigger
@@ -23916,18 +24003,23 @@ function initApp() {
     if (banner) banner.remove();
   });
 
-  renderDailyQuote();
-  applySeasonalTheme();
+  // Critical path: these set state that renderTodayTab reads
   checkNewWeek();
-  checkMonthlyReflection();
-  checkDailyAffirmation();
-  checkAutoGenerateInsight();
-  checkStorageQuota();
   checkWelcomeBack();
   checkSpecialDates();
-  renderTodayTab();
   updateStreak();
-  checkMilestones();
+  renderTodayTab();
+
+  // Deferred: visual extras and modals that don't affect first paint
+  requestAnimationFrame(() => {
+    renderDailyQuote();
+    applySeasonalTheme();
+    checkMonthlyReflection();
+    checkDailyAffirmation();
+    checkAutoGenerateInsight();
+    checkStorageQuota();
+    checkMilestones();
+  });
   // One-time service worker cleanup for existing users with broken registrations.
   // Waits for cleanup to finish before initializing OneSignal to avoid race conditions.
   const swRepairKey = 'bloom_sw_repair_v3';
@@ -23968,11 +24060,11 @@ function initApp() {
         }
       });
     }
+    // Deferred nudges and reminders — none affect first paint
     checkBackupReminder();
     checkVaultNudge();
     checkSafariDataWarning();
     checkShowTutorial();
-    // Local fallback reminders — only fire if push notifications aren't active
     if (!pushNotificationsActive()) {
       checkScheduledReminders();
       checkWaterReminders();
@@ -23980,8 +24072,8 @@ function initApp() {
       checkEveningNudge();
     }
     checkNudgeCredit();
+    checkWeeklySummaryNotification();
   }, 2000);
-  checkWeeklySummaryNotification();
   // Schedule real push notifications via OneSignal (delayed to let SDK init)
   setTimeout(() => scheduleAllPushNotifications(), 8000);
   const headerIcon = document.getElementById('header-bloom-icon');
