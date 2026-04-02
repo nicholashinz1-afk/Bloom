@@ -35,7 +35,8 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 
 <!-- PWA Manifest — static, required for Android home screen install -->
 <link rel="manifest" href="/manifest.json">
@@ -10133,6 +10134,23 @@ function renderTodayTab() {
     <div class="toggle${isGentleMode ? ' on' : ''}" style="pointer-events:none;transform:scale(0.8)"></div>
   </div>`;
 
+  // On first render, paint above-the-fold immediately and defer the rest
+  if (!renderTodayTab._initialized) {
+    renderTodayTab._initialized = true;
+    html += '<div id="today-deferred"></div>';
+    scroll.innerHTML = html;
+    renderTodayTop();
+    requestAnimationFrame(() => { renderTodayTabRest(scroll, prefs, td, t, userWeek); });
+    return;
+  }
+
+  // Subsequent renders: build everything inline (user is already on page)
+  renderTodayTabRest(scroll, prefs, td, t, userWeek, html);
+}
+
+function renderTodayTabRest(scroll, prefs, td, t, userWeek, aboveFoldHtml) {
+  let html = '';
+
   // --- FOUNDATIONS: Water + Food (compact combined card) ---
   const waterCount = td.water || 0;
   const wGoal = state.prefs?.waterGoal || 3;
@@ -10657,7 +10675,14 @@ function renderTodayTab() {
     </div>
   </div>`;
 
-  scroll.innerHTML = html;
+  // First render: inject into placeholder. Re-renders: full innerHTML swap.
+  const deferred = document.getElementById('today-deferred');
+  if (deferred) {
+    deferred.outerHTML = html;
+  } else {
+    scroll.innerHTML = (aboveFoldHtml || '') + html;
+    renderTodayTop();
+  }
 
   // Apply completion animation only to the just-tapped item
   if (_justCompletedKey) {
@@ -10673,7 +10698,6 @@ function renderTodayTab() {
     }, 10);
   }
 
-  renderTodayTop();
   checkAllDone();
 
   // Low mood AI trigger
@@ -23916,18 +23940,23 @@ function initApp() {
     if (banner) banner.remove();
   });
 
-  renderDailyQuote();
-  applySeasonalTheme();
+  // Critical path: these set state that renderTodayTab reads
   checkNewWeek();
-  checkMonthlyReflection();
-  checkDailyAffirmation();
-  checkAutoGenerateInsight();
-  checkStorageQuota();
   checkWelcomeBack();
   checkSpecialDates();
-  renderTodayTab();
   updateStreak();
-  checkMilestones();
+  renderTodayTab();
+
+  // Deferred: visual extras and modals that don't affect first paint
+  requestAnimationFrame(() => {
+    renderDailyQuote();
+    applySeasonalTheme();
+    checkMonthlyReflection();
+    checkDailyAffirmation();
+    checkAutoGenerateInsight();
+    checkStorageQuota();
+    checkMilestones();
+  });
   // One-time service worker cleanup for existing users with broken registrations.
   // Waits for cleanup to finish before initializing OneSignal to avoid race conditions.
   const swRepairKey = 'bloom_sw_repair_v3';
@@ -23968,11 +23997,11 @@ function initApp() {
         }
       });
     }
+    // Deferred nudges and reminders — none affect first paint
     checkBackupReminder();
     checkVaultNudge();
     checkSafariDataWarning();
     checkShowTutorial();
-    // Local fallback reminders — only fire if push notifications aren't active
     if (!pushNotificationsActive()) {
       checkScheduledReminders();
       checkWaterReminders();
@@ -23980,8 +24009,8 @@ function initApp() {
       checkEveningNudge();
     }
     checkNudgeCredit();
+    checkWeeklySummaryNotification();
   }, 2000);
-  checkWeeklySummaryNotification();
   // Schedule real push notifications via OneSignal (delayed to let SDK init)
   setTimeout(() => scheduleAllPushNotifications(), 8000);
   const headerIcon = document.getElementById('header-bloom-icon');
