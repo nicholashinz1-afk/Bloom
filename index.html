@@ -1488,12 +1488,21 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 .sb-item {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 6px 0;
   min-height: 48px;
   border-bottom: 1px solid rgba(255,255,255,0.03);
   position: relative;
   transition: opacity 0.15s, transform 0.15s;
+}
+.sb-schedule-row {
+  width: 100%;
+  display: flex;
+  gap: 4px;
+  padding: 4px 0 2px 44px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 .sb-item:last-child { border-bottom: none; }
 .sb-item.disabled { opacity: 0.4; }
@@ -7462,11 +7471,18 @@ function getOrderedDailyHabits() {
   if (!order || !order.length) return DAILY_HABITS;
   const habitMap = {};
   DAILY_HABITS.forEach(h => { habitMap[h.id] = h; });
-  (state.prefs?.customDailyHabits || []).forEach(h => { habitMap[h.id] = h; });
+  // Add custom daily habits (exclude promoted/moved items — they're managed in Section Builder)
+  (state.prefs?.customDailyHabits || []).forEach(h => {
+    if (h.originalId) return; // skip promoted items
+    habitMap[h.id] = { ...h, label: h.label || h.name, defaultTime: h.time || 'any' };
+  });
   const ordered = order.map(id => habitMap[id]).filter(Boolean);
   const inOrder = new Set(order);
   DAILY_HABITS.forEach(h => { if (!inOrder.has(h.id)) ordered.push(h); });
-  (state.prefs?.customDailyHabits || []).forEach(h => { if (!inOrder.has(h.id)) ordered.push(h); });
+  (state.prefs?.customDailyHabits || []).forEach(h => {
+    if (h.originalId) return;
+    if (!inOrder.has(h.id)) ordered.push({ ...h, label: h.label || h.name, defaultTime: h.time || 'any' });
+  });
   return ordered;
 }
 
@@ -13128,6 +13144,45 @@ function renderSettingsTab() {
     dailyHtml += `</div>`;
   }
 
+  // Show items moved INTO daily from other sections
+  const movedToDaily = (state.prefs?.customDailyHabits || []).filter(h => h.originalId);
+  if (movedToDaily.length > 0) {
+    dailyHtml += `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(var(--sage-rgb),0.15)">
+      <div style="font-size:11px;color:var(--sage);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Moved here</div>`;
+    movedToDaily.forEach(h => {
+      const origSec = getOriginalSection(h.originalId);
+      const fromLabel = origSec === 'weekly' ? 'Weekly' : origSec === 'selfcare' ? 'Self-Care' : 'Daily';
+      const curTime = h.time || 'any';
+      const isAny = curTime === 'any' || typeof curTime !== 'number';
+      dailyHtml += `<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:16px">${h.icon}</span>
+          <div style="flex:1">
+            <div class="toggle-label">${h.name}</div>
+            <div style="font-size:10px;color:var(--text-muted);font-style:italic">from ${fromLabel}</div>
+          </div>
+          <div onclick="resetItemSection('${h.originalId}');reRenderSettingsPreservingScroll();renderTodayTab()" style="font-size:11px;color:var(--sky-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(106,154,176,0.08)">Reset</div>
+        </div>
+        <div style="display:flex;gap:4px;margin-left:24px">
+          ${[{bit:1,label:'☀️ AM'},{bit:2,label:'🌤️ Mid'},{bit:4,label:'🌙 PM'}].map(c => {
+            const sel = !isAny && (curTime & c.bit) !== 0;
+            return `<div onclick="setCustomDailyHabitTime('${h.id}',${c.bit});reRenderSettingsPreservingScroll()" style="
+              padding:4px 10px;border-radius:99px;cursor:pointer;font-size:11px;
+              background:${sel ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${sel ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+              color:${sel ? 'var(--sage-light)' : 'var(--text-muted)'}">${c.label}</div>`;
+          }).join('')}
+          <div onclick="setCustomDailyHabitTime('${h.id}','any');reRenderSettingsPreservingScroll()" style="
+            padding:4px 10px;border-radius:99px;cursor:pointer;font-size:11px;
+            background:${isAny ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+            border:1px solid ${isAny ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+            color:${isAny ? 'var(--sage-light)' : 'var(--text-muted)'}">✦ Any</div>
+        </div>
+      </div>`;
+    });
+    dailyHtml += `</div>`;
+  }
+
   // Medication — visually separated, multi-medication support
   const medMode = prefs.medicationMode || 'off';
   const medList = prefs.medications || [];
@@ -13397,8 +13452,8 @@ function renderSettingsTab() {
     </div>`;
   }
 
-  // Custom daily habits
-  const customDH = getCustomDailyHabits();
+  // Custom daily habits (exclude promoted/moved items)
+  const customDH = getCustomDailyHabits().filter(ch => !ch.originalId);
   dailyHtml += `<div class="divider"></div>
     <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;font-weight:500">🌸 Your custom habits</div>`;
     customDH.forEach(ch => {
@@ -13592,6 +13647,45 @@ function renderSettingsTab() {
     weeklyHtml += `</div>`;
   }
 
+  // Show items moved INTO weekly from other sections
+  const movedToWeekly = (state.prefs?.promotedWeeklyHabits || []);
+  if (movedToWeekly.length > 0) {
+    weeklyHtml += `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(106,154,176,0.15)">
+      <div style="font-size:11px;color:var(--sky-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Moved here</div>`;
+    movedToWeekly.forEach(h => {
+      const origSec = getOriginalSection(h.originalId);
+      const fromLabel = origSec === 'daily' ? 'Daily' : origSec === 'selfcare' ? 'Self-Care' : 'Weekly';
+      const dayMask = (prefs.weeklyHabitDays || {})[h.id] || 'any';
+      const isAnyDay = dayMask === 'any' || typeof dayMask !== 'number';
+      weeklyHtml += `<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);flex-wrap:wrap;display:flex;align-items:center;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <span style="font-size:16px">${h.icon}</span>
+          <div>
+            <div class="toggle-label">${h.label}</div>
+            <div style="font-size:10px;color:var(--text-muted);font-style:italic">from ${fromLabel}</div>
+          </div>
+        </div>
+        <div onclick="resetItemSection('${h.originalId}');reRenderSettingsPreservingScroll();renderTodayTab()" style="font-size:11px;color:var(--sky-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(106,154,176,0.08)">Reset</div>
+        <div style="display:flex;gap:3px;width:100%;margin-top:4px;margin-left:24px">
+          ${DAY_LABELS.map((lbl, i) => {
+            const sel = !isAnyDay && (dayMask & DAY_BITS[i]) !== 0;
+            return `<div onclick="toggleWeeklyHabitDay('${h.id}',${DAY_BITS[i]});reRenderSettingsPreservingScroll()" style="
+              width:30px;text-align:center;padding:4px 0;border-radius:99px;cursor:pointer;font-size:10px;
+              background:${sel ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${sel ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};
+              color:${sel ? 'var(--sky-light)' : 'var(--text-muted)'}">${lbl.substring(0,1)}</div>`;
+          }).join('')}
+          <div onclick="setWeeklyHabitDay('${h.id}','any');reRenderSettingsPreservingScroll()" style="
+            padding:4px 8px;border-radius:99px;cursor:pointer;font-size:10px;
+            background:${isAnyDay ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};
+            border:1px solid ${isAnyDay ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};
+            color:${isAnyDay ? 'var(--sky-light)' : 'var(--text-muted)'}">Any</div>
+        </div>
+      </div>`;
+    });
+    weeklyHtml += `</div>`;
+  }
+
   html += settingsSection('goals', '📅 Weekly habits & tasks', weeklyHtml);
 
   // ── SELF-CARE TASKS ──────────────────────────────────────────
@@ -13632,8 +13726,8 @@ function renderSettingsTab() {
     </div>`;
   });
 
-  // Custom self-care items
-  const customSC = getCustomSelfCare();
+  // Custom self-care items (exclude promoted/moved items)
+  const customSC = getCustomSelfCare().filter(sc => !sc.originalId);
   scHtml += `<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)">
     <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;font-weight:500">✨ Your additions</div>`;
   if (customSC.length > 0) {
@@ -13684,6 +13778,40 @@ function renderSettingsTab() {
         <span style="font-size:14px">${t.icon}</span>
         <div style="flex:1;font-size:12px;color:var(--text-muted)">${t.label} <span style="font-style:italic">(moved to ${dest})</span></div>
         <div onclick="resetItemSection('${t.id}');reRenderSettingsPreservingScroll();renderTodayTab()" style="font-size:11px;color:var(--sky-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(106,154,176,0.08)">Reset</div>
+      </div>`;
+    });
+    scHtml += `</div>`;
+  }
+
+  // Show items moved INTO self-care from other sections
+  const movedToSC = (state.prefs?.customSelfCare || []).filter(s => s.originalId);
+  if (movedToSC.length > 0) {
+    scHtml += `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(200,170,120,0.15)">
+      <div style="font-size:11px;color:rgba(200,170,120,0.9);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Moved here</div>`;
+    movedToSC.forEach(sc => {
+      const origSec = getOriginalSection(sc.originalId);
+      const fromLabel = origSec === 'daily' ? 'Daily' : origSec === 'weekly' ? 'Weekly' : 'Self-Care';
+      const routine = sc.routine || 'anytime';
+      scHtml += `<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:16px">${sc.icon}</span>
+          <div style="flex:1">
+            <div class="toggle-label">${sc.name}</div>
+            <div style="font-size:10px;color:var(--text-muted);font-style:italic">from ${fromLabel}</div>
+          </div>
+          <div onclick="resetItemSection('${sc.originalId}');reRenderSettingsPreservingScroll();renderTodayTab()" style="font-size:11px;color:var(--sky-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(106,154,176,0.08)">Reset</div>
+        </div>
+        <div style="display:flex;gap:4px;margin-left:24px">
+          ${['morning','evening','anytime'].map(opt => {
+            const sel = routine === opt;
+            const labels = {morning:'☀️ AM', evening:'🌙 PM', anytime:'Any'};
+            return `<div onclick="setCustomSelfCareRoutine('${sc.id}','${opt}');reRenderSettingsPreservingScroll()" style="
+              padding:3px 8px;border-radius:99px;cursor:pointer;font-size:10px;
+              background:${sel ? 'rgba(200,170,120,0.2)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${sel ? 'rgba(200,170,120,0.4)' : 'rgba(255,255,255,0.08)'};
+              color:${sel ? 'rgba(200,170,120,0.9)' : 'var(--text-muted)'}">${labels[opt]}</div>`;
+          }).join('')}
+        </div>
       </div>`;
     });
     scHtml += `</div>`;
@@ -22353,19 +22481,11 @@ function renderSectionBuilder(containerId, context) {
   if (activeSection.items.length === 0) {
     html += `<div class="sb-empty">
       <div class="sb-empty-icon">${activeSection.icon}</div>
-      <div class="sb-empty-text">Nothing here yet<br>Tap ⋮ on an item to move it to ${activeSection.label}</div>
+      <div class="sb-empty-text">Nothing here yet<br>Tap "Move" on an item to move it to ${activeSection.label}</div>
     </div>`;
   } else {
-    // Sort: enabled items first, then disabled
-    const sorted = [...activeSection.items].sort((a, b) => {
-      const aOn = a.enabled || !!overrides[a.id];
-      const bOn = b.enabled || !!overrides[b.id];
-      if (aOn && !bOn) return -1;
-      if (!aOn && bOn) return 1;
-      return 0;
-    });
-
-    sorted.forEach(item => {
+    // Keep items in their natural order (no sorting — toggling shouldn't move items)
+    activeSection.items.forEach(item => {
       const isOverridden = !!overrides[item.id];
       const isEnabled = item.enabled || isOverridden;
       const isMoved = item.currentSection !== item.originalSection;
@@ -22413,6 +22533,73 @@ function renderSectionBuilder(containerId, context) {
             <div class="sb-popover-pill reset" onclick="resetItemSection('${item.id}');_sbOpenMenu=null;_sbActiveTab='${item.originalSection}';renderSectionBuilder('${containerId}','${context}');renderTodayTab()">↩ Reset to ${origLabel}</div>
           </div>` : ''}
         </div>`;
+      }
+
+      // Inline scheduling controls for moved items
+      if (isMoved && isEnabled) {
+        const targetSec = item.currentSection;
+        if (targetSec === 'daily') {
+          // Time slot chips for items moved to Daily
+          const promoted = (state.prefs?.customDailyHabits || []).find(h => h.originalId === item.id);
+          const curTime = promoted?.time || 'any';
+          const isAny = curTime === 'any' || typeof curTime !== 'number';
+          const promotedId = promoted?.id || ('prm_' + item.id);
+          html += `<div class="sb-schedule-row">
+            <span style="font-size:10px;color:var(--text-muted);margin-right:4px">When:</span>
+            ${[{bit:1,label:'☀️ AM'},{bit:2,label:'🌤️ Mid'},{bit:4,label:'🌙 PM'}].map(c => {
+              const sel = !isAny && (curTime & c.bit) !== 0;
+              return `<div onclick="setCustomDailyHabitTime('${promotedId}',${c.bit});renderSectionBuilder('${containerId}','${context}')" style="
+                padding:3px 8px;border-radius:99px;cursor:pointer;font-size:10px;
+                background:${sel ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+                border:1px solid ${sel ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+                color:${sel ? 'var(--sage-light)' : 'var(--text-muted)'}">${c.label}</div>`;
+            }).join('')}
+            <div onclick="setCustomDailyHabitTime('${promotedId}','any');renderSectionBuilder('${containerId}','${context}')" style="
+              padding:3px 8px;border-radius:99px;cursor:pointer;font-size:10px;
+              background:${isAny ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${isAny ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+              color:${isAny ? 'var(--sage-light)' : 'var(--text-muted)'}">✦ Any</div>
+          </div>`;
+        } else if (targetSec === 'weekly') {
+          // Day-of-week chips for items moved to Weekly
+          const promoted = (state.prefs?.promotedWeeklyHabits || []).find(h => h.originalId === item.id);
+          const promotedId = promoted?.id || ('pw_' + item.id);
+          const dayMask = (state.prefs?.weeklyHabitDays || {})[promotedId] || 'any';
+          const isAnyDay = dayMask === 'any' || typeof dayMask !== 'number';
+          html += `<div class="sb-schedule-row">
+            <span style="font-size:10px;color:var(--text-muted);margin-right:4px">Days:</span>
+            ${DAY_LABELS.map((lbl, i) => {
+              const sel = !isAnyDay && (dayMask & DAY_BITS[i]) !== 0;
+              return `<div onclick="toggleWeeklyHabitDay('${promotedId}',${DAY_BITS[i]});renderSectionBuilder('${containerId}','${context}')" style="
+                width:26px;text-align:center;padding:3px 0;border-radius:99px;cursor:pointer;font-size:9px;
+                background:${sel ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};
+                border:1px solid ${sel ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};
+                color:${sel ? 'var(--sky-light)' : 'var(--text-muted)'}">${lbl.substring(0,1)}</div>`;
+            }).join('')}
+            <div onclick="setWeeklyHabitDay('${promotedId}','any');renderSectionBuilder('${containerId}','${context}')" style="
+              padding:3px 6px;border-radius:99px;cursor:pointer;font-size:9px;
+              background:${isAnyDay ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${isAnyDay ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};
+              color:${isAnyDay ? 'var(--sky-light)' : 'var(--text-muted)'}">Any</div>
+          </div>`;
+        } else if (targetSec === 'selfcare') {
+          // Routine chips for items moved to Self-Care
+          const promoted = (state.prefs?.customSelfCare || []).find(s => s.originalId === item.id);
+          const promotedId = promoted?.id || ('prm_' + item.id);
+          const routine = promoted?.routine || 'anytime';
+          html += `<div class="sb-schedule-row">
+            <span style="font-size:10px;color:var(--text-muted);margin-right:4px">When:</span>
+            ${['morning','evening','anytime'].map(opt => {
+              const sel = routine === opt;
+              const labels = {morning:'☀️ AM', evening:'🌙 PM', anytime:'Any'};
+              return `<div onclick="setCustomSelfCareRoutine('${promotedId}','${opt}');renderSectionBuilder('${containerId}','${context}')" style="
+                padding:3px 8px;border-radius:99px;cursor:pointer;font-size:10px;
+                background:${sel ? 'rgba(200,170,120,0.2)' : 'rgba(255,255,255,0.04)'};
+                border:1px solid ${sel ? 'rgba(200,170,120,0.4)' : 'rgba(255,255,255,0.08)'};
+                color:${sel ? 'rgba(200,170,120,0.9)' : 'var(--text-muted)'}">${labels[opt]}</div>`;
+            }).join('')}
+          </div>`;
+        }
       }
 
       html += '</div>'; // close sb-item
