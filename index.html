@@ -12510,14 +12510,14 @@ function renderProgressTab() {
   const habitStops = thirtyDays.map((day, i) => {
     const pct = (i / 29 * 100).toFixed(1);
     if (day.habitPct === 0) return `${noDataColor} ${pct}%`;
-    const opacity = 0.25 + day.habitPct * 0.75;
-    return `rgba(122,158,126,${opacity.toFixed(2)}) ${pct}%`;
+    const opacity = 0.45 + day.habitPct * 0.55;
+    return `rgba(140,190,130,${opacity.toFixed(2)}) ${pct}%`;
   }).join(', ');
 
   const flowRows = [
     { label: 'Mood', gradient: moodStops, swatch: (THEMES[state.prefs?.theme] || THEMES.forest).primary },
     { label: 'Sleep', gradient: sleepStops, swatch: '#6a9ab0' },
-    { label: 'Habits', gradient: habitStops, swatch: '#7a9e7e' },
+    { label: 'Habits', gradient: habitStops, swatch: '#8cbe82' },
   ];
 
   html += `<div class="card">
