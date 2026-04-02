@@ -4658,6 +4658,16 @@ function loadState() {
     backupDate:  load('bloom_backup_date', null),
     buddyData:   load('bloom_buddy_state', { status: 'none' }),
   };
+  // Seed peakLevelIdx for existing users: use unscaled LEVELS so scaling
+  // can never retroactively demote someone on first load after this change.
+  if (state.xpData.peakLevelIdx === undefined) {
+    const xp = state.xpData.total || 0;
+    let idx = 0;
+    for (let i = 0; i < LEVELS.length; i++) {
+      if (xp >= LEVELS[i].min) idx = i; else break;
+    }
+    state.xpData.peakLevelIdx = idx;
+  }
 }
 
 function saveState() {
@@ -4762,15 +4772,28 @@ function getScaledLevels() {
 function getLevel(xp) {
   const scaled = getScaledLevels();
   let lv = scaled[0];
-  for (const l of scaled) { if (xp >= l.min) lv = l; else break; }
+  let idx = 0;
+  for (let i = 0; i < scaled.length; i++) {
+    if (xp >= scaled[i].min) { lv = scaled[i]; idx = i; } else break;
+  }
+  // High-water mark: never drop below the highest level achieved.
+  // Adding more habits scales thresholds up, which shouldn't demote anyone.
+  const peak = state?.xpData?.peakLevelIdx || 0;
+  if (idx < peak && peak < scaled.length) {
+    lv = scaled[peak];
+    idx = peak;
+  }
+  if (state?.xpData && idx > (state.xpData.peakLevelIdx || 0)) {
+    state.xpData.peakLevelIdx = idx;
+  }
   return lv;
 }
 
 function getNextLevel(xp) {
   const scaled = getScaledLevels();
-  for (let i = 0; i < scaled.length - 1; i++) {
-    if (xp < scaled[i+1].min) return scaled[i+1];
-  }
+  const currentLevel = getLevel(xp);
+  const currentIdx = scaled.findIndex(l => l.name === currentLevel.name);
+  if (currentIdx >= 0 && currentIdx < scaled.length - 1) return scaled[currentIdx + 1];
   return null;
 }
 
