@@ -1252,7 +1252,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   transition: max-height 0.3s ease, padding 0.3s ease;
 }
 .settings-body.open {
-  max-height: 2000px;
+  max-height: 8000px;
   padding: 12px 16px 16px;
   overflow: visible;
 }
@@ -9135,10 +9135,10 @@ function renderTodayTab() {
   const medMode = prefs?.medicationMode || (medEnabled ? 'simple' : 'off');
   const medDetailed = medMode === 'detailed';
   const medMeds = (prefs?.medications || []);
-  const medMedsAm = medMeds.filter(m => m.time === 'am');
-  const medMedsAfternoon = medMeds.filter(m => m.time === 'afternoon');
-  const medMedsPm = medMeds.filter(m => m.time === 'pm');
-  const medMedsAny = medMeds.filter(m => m.time === 'any');
+  const medMedsAm = medMeds.filter(m => medHasSlot(m, 'am'));
+  const medMedsAfternoon = medMeds.filter(m => medHasSlot(m, 'afternoon'));
+  const medMedsPm = medMeds.filter(m => medHasSlot(m, 'pm'));
+  const medMedsAny = medMeds.filter(m => medHasSlot(m, 'any'));
   const medHasDetailedAm = medDetailed && medMedsAm.length > 0;
   const medHasDetailedAfternoon = medDetailed && medMedsAfternoon.length > 0;
   const medHasDetailedPm = medDetailed && medMedsPm.length > 0;
@@ -12398,8 +12398,16 @@ function renderSettingsTab() {
         </div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">
           ${_timeOptions.map(t => {
-            const sel2 = med.time === t.id;
-            return `<div onclick="editMedication('${med.id}','time','${t.id}');reRenderSettingsPreservingScroll()" style="
+            const _slotBits = { am: 1, afternoon: 2, pm: 4 };
+            let sel2 = false;
+            if (t.id === 'any' || t.id === 'prn' || t.id === 'not_daily') {
+              sel2 = med.time === t.id;
+            } else if (typeof med.time === 'number') {
+              sel2 = !!(med.time & (_slotBits[t.id] || 0));
+            } else {
+              sel2 = med.time === t.id;
+            }
+            return `<div onclick="toggleMedTimeSlot('${med.id}','${t.id}')" style="
               padding:3px 8px;border-radius:99px;cursor:pointer;font-size:11px;
               background:${sel2 ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};
               border:1px solid ${sel2 ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};
@@ -12455,12 +12463,20 @@ function renderSettingsTab() {
     // Reference card — for doctor visits
     if (medList.length > 0) {
       const _timeLabels = { am: 'Morning', afternoon: 'Afternoon', pm: 'Evening', any: 'Daily', prn: 'As needed', not_daily: 'Periodic' };
+      function _medTimeLabel(t) {
+        if (typeof t === 'string') return _timeLabels[t] || t;
+        const parts = [];
+        if (t & 1) parts.push('Morning');
+        if (t & 2) parts.push('Afternoon');
+        if (t & 4) parts.push('Evening');
+        return parts.join(', ') || 'Daily';
+      }
       dailyHtml += `<div style="background:rgba(158,196,216,0.06);border:1px solid rgba(158,196,216,0.15);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:12px">
         <div style="font-size:11px;color:var(--sky-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">My Medications</div>`;
       medList.forEach(m => {
         dailyHtml += `<div style="display:flex;align-items:baseline;gap:6px;padding:3px 0;font-size:13px">
           <span style="color:var(--text-primary)">${m.name}</span>
-          <span style="color:var(--text-muted);font-size:11px">${_timeLabels[m.time] || m.time}</span>
+          <span style="color:var(--text-muted);font-size:11px">${_medTimeLabel(m.time)}</span>
           ${m.note ? `<span style="color:var(--text-muted);font-size:11px">· ${m.note}</span>` : ''}
         </div>`;
       });
@@ -20038,17 +20054,77 @@ function getMedications() {
   return state.prefs?.medications || [];
 }
 
+// Check if a medication belongs to a given time slot
+// Supports: string ('am','afternoon','pm','any','prn','not_daily') or bitmask (1=AM,2=Afternoon,4=PM)
+function medHasSlot(med, slot) {
+  const t = med.time;
+  if (t === 'prn' || t === 'not_daily') return false;
+  if (t === 'any') return slot === 'any';
+  if (typeof t === 'number') {
+    const slotBit = { am: TIME_AM, afternoon: TIME_AFTERNOON, pm: TIME_PM };
+    return slot !== 'any' && !!(t & (slotBit[slot] || 0));
+  }
+  // Legacy string format
+  return t === slot;
+}
+
 function getMedsForSlot(slot) {
-  return getMedications().filter(m => m.time === slot);
+  return getMedications().filter(m => medHasSlot(m, slot));
 }
 
 function getDailyMedSlots() {
   const meds = getMedications();
   const slots = new Set();
   meds.forEach(m => {
-    if (m.time !== 'prn' && m.time !== 'not_daily') slots.add(m.time);
+    if (m.time === 'prn' || m.time === 'not_daily') return;
+    if (m.time === 'any') { slots.add('any'); return; }
+    if (typeof m.time === 'number') {
+      if (m.time & TIME_AM) slots.add('am');
+      if (m.time & TIME_AFTERNOON) slots.add('afternoon');
+      if (m.time & TIME_PM) slots.add('pm');
+      return;
+    }
+    // Legacy string
+    slots.add(m.time);
   });
   return Array.from(slots);
+}
+
+// Toggle a time slot for a medication (multi-select for AM/Afternoon/PM)
+function toggleMedTimeSlot(medId, slotId) {
+  const med = (state.prefs.medications || []).find(m => m.id === medId);
+  if (!med) return;
+
+  // Special single-select options
+  if (slotId === 'any' || slotId === 'prn' || slotId === 'not_daily') {
+    med.time = med.time === slotId ? 'any' : slotId;
+    save('bloom_prefs', state.prefs);
+    syncMedHabitTimes();
+    reRenderSettingsPreservingScroll();
+    renderTodayTab();
+    return;
+  }
+
+  const slotBit = { am: TIME_AM, afternoon: TIME_AFTERNOON, pm: TIME_PM };
+  const bit = slotBit[slotId];
+  if (!bit) return;
+
+  // Convert current time to bitmask if it's a string
+  let current = med.time;
+  if (current === 'any' || current === 'prn' || current === 'not_daily') {
+    current = 0;
+  } else if (typeof current === 'string') {
+    current = slotBit[current] || 0;
+  }
+
+  // Toggle the bit
+  const newTime = current ^ bit;
+  med.time = newTime === 0 ? 'any' : newTime;
+
+  save('bloom_prefs', state.prefs);
+  syncMedHabitTimes();
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
 }
 
 function addMedication(name, time, note) {
@@ -20119,6 +20195,7 @@ function syncMedHabitTimes() {
   let hasAny = false;
   meds.forEach(m => {
     if (m.time === 'any') hasAny = true;
+    else if (typeof m.time === 'number') mask |= m.time;
     else if (slotToBit[m.time]) mask |= slotToBit[m.time];
   });
   if (hasAny || mask === 0) state.prefs.habitTimes.medication = 'any';
@@ -20235,9 +20312,17 @@ function copyMedList() {
   const meds = getMedications();
   if (meds.length === 0) return;
   const timeLabels = { am: 'Morning', afternoon: 'Afternoon', pm: 'Evening', any: 'Daily', prn: 'As needed', not_daily: 'Periodic' };
+  function _copyTimeLabel(t) {
+    if (typeof t === 'string') return timeLabels[t] || t;
+    const parts = [];
+    if (t & 1) parts.push('Morning');
+    if (t & 2) parts.push('Afternoon');
+    if (t & 4) parts.push('Evening');
+    return parts.join(', ') || 'Daily';
+  }
   const lines = meds.map(m => {
     let line = m.name;
-    if (m.time) line += ' - ' + (timeLabels[m.time] || m.time);
+    if (m.time) line += ' - ' + _copyTimeLabel(m.time);
     if (m.note) line += ' - ' + m.note;
     return line;
   });
