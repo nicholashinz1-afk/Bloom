@@ -17876,6 +17876,24 @@ function migrateHabitTimesToBitmask() {
   save('bloom_prefs', p);
 }
 
+// Migrate existing medication toggle to new multi-medication system
+function migrateMedicationList() {
+  if (!state.prefs) return;
+  const p = state.prefs;
+  if (p._migratedMedicationList) return;
+
+  if (!p.medications) p.medications = [];
+  if (!p.medicationMode) {
+    if (p.dailyHabits?.medication) {
+      p.medicationMode = 'simple';
+    } else {
+      p.medicationMode = 'off';
+    }
+  }
+  p._migratedMedicationList = true;
+  save('bloom_prefs', p);
+}
+
 // Retroactively award +10 XP for each past self-care completion
 // (bumped from 10→20 XP per completion)
 // Migrate legacy track_meals toggle to new nourishment selection
@@ -19924,6 +19942,7 @@ function initApp() {
   migrateSelfCareToHabits();
   migrateSelfCareXP();
   migrateNourishmentPrefs();
+  migrateMedicationList();
   migrateWordTree();
   migrateSpecialDates();
   initTheme();
