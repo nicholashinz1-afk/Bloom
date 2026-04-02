@@ -5325,6 +5325,19 @@ function addXP(amount, sourceEl) {
   updateProgressTab();
 }
 
+// ── Diminishing returns for repeatable activities ────────────
+// First session of each type per day earns full XP.
+// Every additional session still earns 5 XP — never zero, always recognized.
+function addActivityXP(type, fullAmount, sourceEl) {
+  const key = `_${type}XPFirst`;
+  if (!state.todayData[key]) {
+    state.todayData[key] = true;
+    addXP(fullAmount, sourceEl);
+  } else {
+    addXP(5, sourceEl);
+  }
+}
+
 // ── Water fill animation ─────────────────────────────────────
 function animateWaterBottle(index) {
   const bottles = document.querySelectorAll('.water-bottle');
@@ -8479,8 +8492,9 @@ function celebrate(type, sourceEl) {
 // - Medication & inner care (journal, reflection) are highest — these are core therapeutic actions
 // - Basic self-care (hygiene, nourishment, hydration) are equal — every one matters on hard days
 // - Physical activity is valued but not disproportionately above self-care
-// - Skill-building (breathing, grounding, body scan, reframe) earns 15-20 XP per session
+// - Skill-building (breathing, grounding, body scan, reframe) earns 15-20 XP first session/day, 5 XP repeats
 // - Hard days earn 1.5x XP — showing up when it's hard is the bravest thing
+// - Every action is always recognized, never zero
 const XP_VALUES = {
   m_teeth: 15, e_teeth: 15, w_shower: 20, w_exercise: 20,
   w_outside: 20, w_therapy: 25, water_goal: 15, food: 15, journal: 20,
@@ -9657,7 +9671,7 @@ function renderInlineBreathPhase() {
     if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
     state.wellnessData.breathSessions++;
     state.todayData.breathCount = (state.todayData.breathCount || 0) + 1;
-    addXP(15, null);
+    addActivityXP('breath', 15, null);
     saveState();
     archiveToday();
     celebrate('breath', document.getElementById('inline-breath-zone'));
@@ -9713,7 +9727,7 @@ function stopInlineBreathing() {
   if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
   state.wellnessData.breathSessions++;
   state.todayData.breathCount = (state.todayData.breathCount || 0) + 1;
-  addXP(15, null);
+  addActivityXP('breath', 15, null);
   saveState();
   archiveToday();
   playSound('breath_done');
@@ -11782,7 +11796,7 @@ function renderBreathPhase() {
     if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
     state.wellnessData.breathSessions++;
     state.todayData.breathCount = (state.todayData.breathCount || 0) + 1;
-    addXP(15, null);
+    addActivityXP('breath', 15, null);
     saveState();
     archiveToday();
     celebrate('breath', document.getElementById('breath-card'));
@@ -11837,7 +11851,7 @@ function stopBreathing() {
   if (!state.wellnessData.breathSessions) state.wellnessData.breathSessions = 0;
   state.wellnessData.breathSessions++;
   state.todayData.breathCount = (state.todayData.breathCount || 0) + 1;
-  addXP(15, null);
+  addActivityXP('breath', 15, null);
   saveState();
   archiveToday();
   playSound('breath_done');
@@ -11880,7 +11894,7 @@ function renderGroundingStep() {
   if (groundingStep >= GROUNDING_STEPS.length) {
     if (!state.wellnessData.groundingSessions) state.wellnessData.groundingSessions = 0;
     state.wellnessData.groundingSessions++;
-    addXP(15, null);
+    addActivityXP('grounding', 15, null);
     saveState();
     ui.innerHTML = `
       <div style="text-align:center;padding:8px 0">
@@ -11910,7 +11924,7 @@ function renderGroundingStep() {
 function stopGrounding() {
   if (!state.wellnessData.groundingSessions) state.wellnessData.groundingSessions = 0;
   state.wellnessData.groundingSessions++;
-  addXP(15, null);
+  addActivityXP('grounding', 15, null);
   saveState();
   const ui = document.getElementById('grounding-ui');
   if (ui) ui.innerHTML = `
@@ -11948,7 +11962,7 @@ function renderBodyScanStep() {
   if (bodyScanStep >= BODY_SCAN_REGIONS.length) {
     if (!state.wellnessData.bodyScanSessions) state.wellnessData.bodyScanSessions = 0;
     state.wellnessData.bodyScanSessions++;
-    addXP(15, null);
+    addActivityXP('bodyscan', 15, null);
     saveState();
     ui.innerHTML = `
       <div style="text-align:center;padding:8px 0">
@@ -11995,7 +12009,7 @@ function stopBodyScan() {
   if (bodyScanTimer) clearInterval(bodyScanTimer);
   if (!state.wellnessData.bodyScanSessions) state.wellnessData.bodyScanSessions = 0;
   state.wellnessData.bodyScanSessions++;
-  addXP(15, null);
+  addActivityXP('bodyscan', 15, null);
   saveState();
   const ui = document.getElementById('bodyscan-ui');
   if (ui) ui.innerHTML = `
@@ -12060,7 +12074,7 @@ Give a gentle cognitive reframe in 2-3 sentences. Validate their feeling first, 
 
     if (!state.wellnessData.reframeSessions) state.wellnessData.reframeSessions = 0;
     state.wellnessData.reframeSessions++;
-    addXP(20, null);
+    addActivityXP('reframe', 20, null);
     // Save to reframe history
     if (!state.wellnessData.reframeHistory) state.wellnessData.reframeHistory = [];
     state.wellnessData.reframeHistory.push({ thought, reframe, savedAt: new Date().toISOString() });
