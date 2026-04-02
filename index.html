@@ -1435,6 +1435,207 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   overflow: visible;
 }
 
+/* ============================================================
+   SECTION BUILDER — Advanced habit customization
+   ============================================================ */
+.sb-tab-bar {
+  display: flex;
+  background: var(--bg-elevated);
+  border-radius: var(--r-md);
+  padding: 3px;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+.sb-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px;
+  min-height: 44px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.sb-tab:active { transform: scale(0.97); }
+.sb-tab.active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.sb-tab-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.06);
+  padding: 1px 5px;
+  border-radius: var(--r-full);
+  transition: all 0.2s;
+}
+.sb-tab.active .sb-tab-count {
+  background: rgba(var(--sage-rgb),0.15);
+  color: var(--sage-light);
+}
+.sb-panel {
+  min-height: 120px;
+}
+.sb-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  min-height: 48px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  position: relative;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.sb-item:last-child { border-bottom: none; }
+.sb-item.disabled { opacity: 0.4; }
+.sb-item.moved {
+  border-left: 2px solid var(--sb-accent, rgba(106,154,176,0.4));
+  padding-left: 8px;
+}
+.sb-item-icon { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
+.sb-item-info { flex: 1; min-width: 0; }
+.sb-item-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sb-item-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+.sb-toggle {
+  width: 36px;
+  height: 20px;
+  background: var(--bg-elevated);
+  border-radius: var(--r-full);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.sb-toggle.on { background: var(--sage); border-color: var(--sage); }
+.sb-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+.sb-toggle.on::after { transform: translateX(16px); }
+.sb-menu-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 16px;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  border-radius: var(--r-sm);
+  transition: background 0.15s;
+}
+.sb-menu-btn:active { background: rgba(255,255,255,0.06); }
+.sb-popover {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  box-shadow: var(--shadow-lg);
+  z-index: 20;
+  animation: sbPopIn 0.15s ease;
+  min-width: 220px;
+}
+@keyframes sbPopIn {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.sb-popover-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.sb-popover-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.sb-popover-pill {
+  padding: 6px 12px;
+  border-radius: var(--r-full);
+  font-size: 11px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+.sb-popover-pill:active { transform: scale(0.95); }
+.sb-popover-pill.current {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.sb-popover-pill.reset {
+  background: rgba(176,120,120,0.08);
+  border-color: rgba(176,120,120,0.2);
+  color: var(--rose-light);
+  font-size: 11px;
+}
+.sb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  text-align: center;
+  gap: 6px;
+}
+.sb-empty-icon { font-size: 28px; opacity: 0.5; }
+.sb-empty-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.sb-add-row {
+  display: flex;
+  gap: 8px;
+  padding: 8px 0;
+  margin-top: 4px;
+  border-top: 1px dashed rgba(255,255,255,0.06);
+}
+@keyframes sbItemOut {
+  to { opacity: 0; transform: translateX(var(--sb-move-dir, 30px)) scale(0.95); height: 0; padding: 0; margin: 0; overflow: hidden; }
+}
+@keyframes sbItemIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.sb-item-entering { animation: sbItemIn 0.25s ease both; }
 
 /* ============================================================
    ONBOARDING
@@ -7359,6 +7560,204 @@ const SELF_CARE_CATEGORIES = [
 
 const SELF_CARE_TASKS = SELF_CARE_CATEGORIES.flatMap(c => c.tasks);
 
+// ============================================================
+//  SECTION BUILDER — Advanced habit customization helpers
+// ============================================================
+
+// Returns the effective section for an item, accounting for overrides
+function getEffectiveSection(itemId) {
+  const overrides = state.prefs?.sectionOverrides || {};
+  if (overrides[itemId]) return overrides[itemId];
+  if (DAILY_HABITS.some(h => h.id === itemId) || itemId === 'medication') return 'daily';
+  if (WEEKLY_HABITS.some(h => h.id === itemId)) return 'weekly';
+  if (SELF_CARE_TASKS.some(t => t.id === itemId)) return 'selfcare';
+  return null;
+}
+
+// Returns the original (built-in) section for an item
+function getOriginalSection(itemId) {
+  if (DAILY_HABITS.some(h => h.id === itemId) || itemId === 'medication') return 'daily';
+  if (WEEKLY_HABITS.some(h => h.id === itemId)) return 'weekly';
+  if (SELF_CARE_TASKS.some(t => t.id === itemId)) return 'selfcare';
+  return null;
+}
+
+// Master catalog of all built-in items with current section and enabled state
+function getItemCatalog() {
+  const overrides = state.prefs?.sectionOverrides || {};
+  const dh = state.prefs?.dailyHabits || {};
+  const items = [];
+
+  // Daily habits
+  DAILY_HABITS.forEach(h => {
+    items.push({
+      id: h.id, icon: h.icon, label: h.label, xp: h.xp,
+      originalSection: 'daily',
+      currentSection: overrides[h.id] || 'daily',
+      enabled: !!dh[h.id],
+    });
+  });
+
+  // Weekly habits
+  WEEKLY_HABITS.forEach(h => {
+    items.push({
+      id: h.id, icon: h.icon, label: h.label, xp: h.xp,
+      originalSection: 'weekly',
+      currentSection: overrides[h.id] || 'weekly',
+      enabled: state.prefs?.habits?.[h.id] !== false,
+    });
+  });
+
+  // Self-care tasks
+  const selectedSC = state.prefs?.selfCareTasks || [];
+  SELF_CARE_TASKS.forEach(t => {
+    items.push({
+      id: t.id, icon: t.icon, label: t.label, xp: 20,
+      originalSection: 'selfcare',
+      currentSection: overrides[t.id] || 'selfcare',
+      enabled: selectedSC.includes(t.id),
+    });
+  });
+
+  return items;
+}
+
+// Move an item to a new section
+function moveItemToSection(itemId, targetSection) {
+  if (!state.prefs.sectionOverrides) state.prefs.sectionOverrides = {};
+  const origSection = getOriginalSection(itemId);
+  if (!origSection || targetSection === origSection) {
+    // If moving back to original, just reset
+    resetItemSection(itemId);
+    return;
+  }
+
+  // Find item info from catalog
+  const catalog = getItemCatalog();
+  const item = catalog.find(i => i.id === itemId);
+  if (!item) return;
+
+  // Record override
+  state.prefs.sectionOverrides[itemId] = targetSection;
+
+  // Disable in original section
+  if (origSection === 'daily') {
+    if (!state.prefs.dailyHabits) state.prefs.dailyHabits = {};
+    state.prefs.dailyHabits[itemId] = false;
+  } else if (origSection === 'weekly') {
+    if (!state.prefs.habits) state.prefs.habits = {};
+    state.prefs.habits[itemId] = false;
+  } else if (origSection === 'selfcare') {
+    if (state.prefs.selfCareTasks) {
+      state.prefs.selfCareTasks = state.prefs.selfCareTasks.filter(id => id !== itemId);
+    }
+  }
+
+  // Create entry in target section
+  const promotedId = 'prm_' + itemId;
+
+  if (targetSection === 'daily') {
+    if (!state.prefs.customDailyHabits) state.prefs.customDailyHabits = [];
+    // Remove existing promoted entry if any
+    state.prefs.customDailyHabits = state.prefs.customDailyHabits.filter(h => h.originalId !== itemId);
+    state.prefs.customDailyHabits.push({
+      id: promotedId, originalId: itemId, name: item.label, icon: item.icon, time: 'any', xp: 15,
+    });
+    // Add to habit order
+    const order = (state.prefs.habitOrder || []).slice();
+    if (!order.includes(promotedId)) order.push(promotedId);
+    state.prefs.habitOrder = order;
+  } else if (targetSection === 'weekly') {
+    if (!state.prefs.promotedWeeklyHabits) state.prefs.promotedWeeklyHabits = [];
+    state.prefs.promotedWeeklyHabits = state.prefs.promotedWeeklyHabits.filter(h => h.originalId !== itemId);
+    state.prefs.promotedWeeklyHabits.push({
+      id: 'pw_' + itemId, originalId: itemId, icon: item.icon, label: item.label, xp: 20, defaultGoal: 3,
+    });
+  } else if (targetSection === 'selfcare') {
+    if (!state.prefs.customSelfCare) state.prefs.customSelfCare = [];
+    state.prefs.customSelfCare = state.prefs.customSelfCare.filter(s => s.originalId !== itemId);
+    state.prefs.customSelfCare.push({
+      id: promotedId, originalId: itemId, name: item.label, icon: item.icon, routine: 'anytime',
+    });
+  }
+
+  save('bloom_prefs', state.prefs);
+  haptic('light');
+}
+
+// Reset an item back to its original section
+function resetItemSection(itemId) {
+  if (!state.prefs.sectionOverrides) return;
+  const origSection = getOriginalSection(itemId);
+  if (!origSection) return;
+
+  delete state.prefs.sectionOverrides[itemId];
+
+  // Re-enable in original section
+  if (origSection === 'daily') {
+    if (!state.prefs.dailyHabits) state.prefs.dailyHabits = {};
+    state.prefs.dailyHabits[itemId] = true;
+  } else if (origSection === 'weekly') {
+    if (!state.prefs.habits) state.prefs.habits = {};
+    delete state.prefs.habits[itemId]; // remove false override
+  } else if (origSection === 'selfcare') {
+    if (!state.prefs.selfCareTasks) state.prefs.selfCareTasks = [];
+    if (!state.prefs.selfCareTasks.includes(itemId)) {
+      state.prefs.selfCareTasks.push(itemId);
+    }
+  }
+
+  // Remove promoted entries from all target sections
+  const promotedId = 'prm_' + itemId;
+  const weeklyId = 'pw_' + itemId;
+  if (state.prefs.customDailyHabits) {
+    state.prefs.customDailyHabits = state.prefs.customDailyHabits.filter(h => h.originalId !== itemId);
+  }
+  if (state.prefs.promotedWeeklyHabits) {
+    state.prefs.promotedWeeklyHabits = state.prefs.promotedWeeklyHabits.filter(h => h.originalId !== itemId);
+  }
+  if (state.prefs.customSelfCare) {
+    state.prefs.customSelfCare = state.prefs.customSelfCare.filter(s => s.originalId !== itemId);
+  }
+  // Remove from habit order
+  if (state.prefs.habitOrder) {
+    state.prefs.habitOrder = state.prefs.habitOrder.filter(id => id !== promotedId);
+  }
+
+  save('bloom_prefs', state.prefs);
+  haptic('light');
+}
+
+// Toggle an item on/off within its current effective section
+function sbToggleItem(itemId) {
+  const orig = getOriginalSection(itemId);
+  const eff = getEffectiveSection(itemId);
+
+  if (eff === 'daily' && orig === 'daily') {
+    if (!state.prefs.dailyHabits) state.prefs.dailyHabits = {};
+    state.prefs.dailyHabits[itemId] = !state.prefs.dailyHabits[itemId];
+  } else if (eff === 'weekly' && orig === 'weekly') {
+    if (!state.prefs.habits) state.prefs.habits = {};
+    if (state.prefs.habits[itemId] === false) {
+      delete state.prefs.habits[itemId];
+    } else {
+      state.prefs.habits[itemId] = false;
+    }
+  } else if (eff === 'selfcare' && orig === 'selfcare') {
+    if (!state.prefs.selfCareTasks) state.prefs.selfCareTasks = [];
+    const idx = state.prefs.selfCareTasks.indexOf(itemId);
+    if (idx >= 0) {
+      state.prefs.selfCareTasks.splice(idx, 1);
+    } else {
+      state.prefs.selfCareTasks.push(itemId);
+    }
+  }
+  // For promoted items, the toggle is handled by the promoted entry existing/not existing
+  // We don't toggle promoted items off — use Reset instead
+
+  save('bloom_prefs', state.prefs);
+}
+
 const CELEBRATIONS = {
   m_teeth: {
     emoji: '🦷', xp: 15,
@@ -9424,7 +9823,8 @@ function renderTodayTab() {
   // --- DAILY HABITS (grouped by time: AM / PM / Any) ---
   const dhPrefs = prefs?.dailyHabits || {};
   const htPrefs = prefs?.habitTimes || {};
-  let allDailyHabits = getOrderedDailyHabits().filter(h => dhPrefs[h.id]);
+  const _sbOverrides = state.prefs?.sectionOverrides || {};
+  let allDailyHabits = getOrderedDailyHabits().filter(h => dhPrefs[h.id]).filter(h => !_sbOverrides[h.id] || _sbOverrides[h.id] === 'daily');
   const medEnabled = !!dhPrefs.medication;
   const medMode = prefs?.medicationMode || (medEnabled ? 'simple' : 'off');
   const medDetailed = medMode === 'detailed';
@@ -9581,15 +9981,21 @@ function renderTodayTab() {
   }
 
   // --- ANYTIME SECTION (daily habits + weekly habits + household + self-care) ---
-  const selectedSCTasks = (state.prefs?.selfCareTasks || []).filter(id => !id.startsWith('sc_medication'));
+  const selectedSCTasks = (state.prefs?.selfCareTasks || []).filter(id => !id.startsWith('sc_medication')).filter(id => !_sbOverrides[id] || _sbOverrides[id] === 'selfcare');
   const scEnabled = selectedSCTasks.length > 0 && (userWeek >= 2 || state.prefs?.progressiveDisclosureDisabled);
 
   // Weekly habits scheduled for today
   const weeklyHabitDays = state.prefs?.weeklyHabitDays || {};
   const todayWeeklyHabits = WEEKLY_HABITS.filter(h => {
+    if (_sbOverrides[h.id] && _sbOverrides[h.id] !== 'weekly') return false;
     if (state.prefs?.habits?.[h.id] === false) return false;
     return isTodayScheduled(weeklyHabitDays[h.id] || 'any');
   });
+
+  // Promoted weekly habits (items moved to weekly from other sections)
+  const promotedWeeklyHabits = (state.prefs?.promotedWeeklyHabits || []).filter(h =>
+    isTodayScheduled(weeklyHabitDays[h.id] || 'any')
+  );
 
   // Household tasks — filter by scheduled day
   const allHouseholdTasks = state.prefs?.householdTasks || [];
@@ -9600,7 +10006,7 @@ function renderTodayTab() {
 
   const customSCForAnytime = getCustomSelfCare();
   const hasPrnMeds = medMeds.some(m => m.time === 'prn');
-  const hasAnytime = anyHabits.length > 0 || medInAny || medHasDetailedAny || customAny.length > 0 || todayWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled || customSCForAnytime.length > 0;
+  const hasAnytime = anyHabits.length > 0 || medInAny || medHasDetailedAny || customAny.length > 0 || todayWeeklyHabits.length > 0 || promotedWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled || customSCForAnytime.length > 0;
 
   if (hasAnytime) {
     html += `<div class="section-label"><span style="color:#f0c040">☀️</span> Anytime today</div><div class="card mb-0">`;
@@ -9630,11 +10036,27 @@ function renderTodayTab() {
           ${!done ? `<div class="habit-xp">+${h.xp}</div>` : ''}
         </div>`;
       });
+      // Promoted weekly habits (moved from other sections)
+      promotedWeeklyHabits.forEach(h => {
+        const done = td[h.id];
+        const goal = state.prefs?.goals?.[h.id] || h.defaultGoal || 3;
+        const weekCount = getWeeklyHabitCount(h.id);
+        const weeklyMuted = isReducedDay;
+        const wMutedStyle = weeklyMuted && !done ? 'opacity:0.45;' : '';
+        html += `<div class="habit-row" style="${wMutedStyle}" onclick="tapPromotedWeeklyHabit('${h.id}', this)">
+          <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : h.icon}</div>
+          <div class="habit-info">
+            <div class="habit-name">${h.label}</div>
+            <div style="font-size:11px;color:${weekCount >= goal ? 'var(--sage)' : 'var(--text-muted)'};margin-top:1px">${weekCount}/${goal} this week${weekCount >= goal ? ' ✓' : ''}</div>
+          </div>
+          ${!done ? `<div class="habit-xp">+${h.xp}</div>` : ''}
+        </div>`;
+      });
     }
 
     // Household tasks
     if (householdTasks.length > 0) {
-      const hasItemsAbove2 = anyHabits.length > 0 || medInAny || todayWeeklyHabits.length > 0;
+      const hasItemsAbove2 = anyHabits.length > 0 || medInAny || todayWeeklyHabits.length > 0 || promotedWeeklyHabits.length > 0;
       if (hasItemsAbove2) {
         html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0"></div>`;
       }
@@ -9917,6 +10339,34 @@ function tapWeeklyHabitToday(id, el) {
     const goal = state.prefs?.goals?.[id] || habit?.defaultGoal || 3;
     const weekCount = getWeeklyHabitCount(id);
     celebrate(weekCount >= goal ? 'weekly_goal' : id, el);
+  } else {
+    if (state.weekData[id] > 0) state.weekData[id]--;
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
+    haptic('light');
+    saveState();
+    updateProgressTab();
+  }
+
+  saveState();
+  archiveToday();
+  renderTodayTab();
+}
+
+function tapPromotedWeeklyHabit(id, el) {
+  const wasDone = state.todayData[id];
+  if (!wasDone) _justCompletedKey = id;
+  state.todayData[id] = !wasDone;
+  const habit = (state.prefs?.promotedWeeklyHabits || []).find(h => h.id === id);
+  const xpVal = habit?.xp || 20;
+
+  if (!wasDone) {
+    if (!state.weekData[id]) state.weekData[id] = 0;
+    state.weekData[id]++;
+    addXP(xpVal, el);
+    checkFirstTaskStreak();
+    const goal = state.prefs?.goals?.[id] || habit?.defaultGoal || 3;
+    const weekCount = getWeeklyHabitCount(id);
+    celebrate(weekCount >= goal ? 'weekly_goal' : 'w_exercise', el);
   } else {
     if (state.weekData[id] > 0) state.weekData[id]--;
     state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
@@ -11653,6 +12103,11 @@ function renderProgressTab() {
     { key: 'w_therapy',  icon: '🛋️', label: 'Go to therapy', daily: false },
   ].filter(h => state.prefs?.habits?.[h.key] !== false).forEach(h => habitRows.push(h));
 
+  // Promoted weekly habits
+  (state.prefs?.promotedWeeklyHabits || []).forEach(h => {
+    habitRows.push({ key: h.id, icon: h.icon, label: h.label, daily: false });
+  });
+
   habitRows.forEach(h => {
     if (h.daily) {
       // Daily — show dot per day
@@ -12655,6 +13110,22 @@ function renderSettingsTab() {
   dailyHtml += orderedHabits.map((h, i) => dailyHabitSettingsRow(h, i, orderedHabits.length)).join('');
   dailyHtml += `</div>`;
 
+  // Show items moved away from daily
+  const _dailyOverrides = state.prefs?.sectionOverrides || {};
+  const movedFromDaily = DAILY_HABITS.filter(h => _dailyOverrides[h.id] && _dailyOverrides[h.id] !== 'daily');
+  if (movedFromDaily.length > 0) {
+    dailyHtml += `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.06)">`;
+    movedFromDaily.forEach(h => {
+      const dest = _dailyOverrides[h.id] === 'weekly' ? 'Weekly' : 'Self-Care';
+      dailyHtml += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;opacity:0.45">
+        <span style="font-size:14px">${h.icon}</span>
+        <div style="flex:1;font-size:12px;color:var(--text-muted)">${h.label} <span style="font-style:italic">(moved to ${dest})</span></div>
+        <div onclick="resetItemSection('${h.id}');reRenderSettingsPreservingScroll();renderTodayTab()" style="font-size:11px;color:var(--sky-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(106,154,176,0.08)">Reset</div>
+      </div>`;
+    });
+    dailyHtml += `</div>`;
+  }
+
   // Medication — visually separated, multi-medication support
   const medMode = prefs.medicationMode || 'off';
   const medList = prefs.medications || [];
@@ -13104,6 +13575,21 @@ function renderSettingsTab() {
     <button class="btn btn-primary btn-sm" onclick="addCustomTask()">Add</button>
   </div>`;
 
+  // Show items moved away from weekly
+  const movedFromWeekly = WEEKLY_HABITS.filter(h => _dailyOverrides[h.id] && _dailyOverrides[h.id] !== 'weekly');
+  if (movedFromWeekly.length > 0) {
+    weeklyHtml += `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.06)">`;
+    movedFromWeekly.forEach(h => {
+      const dest = _dailyOverrides[h.id] === 'daily' ? 'Daily' : 'Self-Care';
+      weeklyHtml += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;opacity:0.45">
+        <span style="font-size:14px">${h.icon}</span>
+        <div style="flex:1;font-size:12px;color:var(--text-muted)">${h.label} <span style="font-style:italic">(moved to ${dest})</span></div>
+        <div onclick="resetItemSection('${h.id}');reRenderSettingsPreservingScroll();renderTodayTab()" style="font-size:11px;color:var(--sky-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(106,154,176,0.08)">Reset</div>
+      </div>`;
+    });
+    weeklyHtml += `</div>`;
+  }
+
   html += settingsSection('goals', '📅 Weekly habits & tasks', weeklyHtml);
 
   // ── SELF-CARE TASKS ──────────────────────────────────────────
@@ -13186,7 +13672,44 @@ function renderSettingsTab() {
     This is entirely yours. Add, remove, or change anything, any time.
   </div>`;
 
+  // Show self-care items moved away
+  const movedFromSC = SELF_CARE_TASKS.filter(t => _dailyOverrides[t.id] && _dailyOverrides[t.id] !== 'selfcare');
+  if (movedFromSC.length > 0) {
+    scHtml += `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.06)">`;
+    movedFromSC.forEach(t => {
+      const dest = _dailyOverrides[t.id] === 'daily' ? 'Daily' : 'Weekly';
+      scHtml += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;opacity:0.45">
+        <span style="font-size:14px">${t.icon}</span>
+        <div style="flex:1;font-size:12px;color:var(--text-muted)">${t.label} <span style="font-style:italic">(moved to ${dest})</span></div>
+        <div onclick="resetItemSection('${t.id}');reRenderSettingsPreservingScroll();renderTodayTab()" style="font-size:11px;color:var(--sky-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(106,154,176,0.08)">Reset</div>
+      </div>`;
+    });
+    scHtml += `</div>`;
+  }
+
   html += settingsSection('selfcare', '💚 Daily self-care', scHtml);
+
+  // ── SECTION BUILDER (Advanced customization) ────────────────────
+  const sbUserWeek = (prefs?.progressiveDisclosure === false) ? 99 : getUserWeekNumber();
+  const showSectionBuilder = prefs?.readiness !== 'gentle'
+    || sbUserWeek >= 2
+    || prefs?.advancedCustomizationEnabled;
+  const movedCount = Object.keys(prefs?.sectionOverrides || {}).length;
+
+  if (showSectionBuilder) {
+    const sbSubtitle = movedCount > 0 ? ` <span style="font-size:11px;color:var(--sage);font-weight:400">${movedCount} moved</span>` : '';
+    let sbHtml = `<div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:14px">
+      Move items between Daily, Weekly, and Self-Care. Items behave like their new section.
+    </div>
+    <div id="sb-settings-container"></div>`;
+    html += settingsSection('customize', '⚙️ Customize your sections' + sbSubtitle, sbHtml);
+  } else if (prefs?.readiness === 'gentle' && sbUserWeek < 2) {
+    // Progressive disclosure teaser
+    html += `<div style="background:rgba(var(--sage-rgb),0.06);border:1px dashed rgba(var(--sage-rgb),0.2);border-radius:var(--r-lg);padding:14px;text-align:center;margin-bottom:8px">
+      <div style="font-size:12px;color:var(--sage-light)">⚙️ Section customization unlocks next week</div>
+      <div onclick="state.prefs.advancedCustomizationEnabled=true;save('bloom_prefs',state.prefs);reRenderSettingsPreservingScroll()" style="font-size:11px;color:var(--text-secondary);cursor:pointer;margin-top:4px;text-decoration:underline">Show me everything now</div>
+    </div>`;
+  }
 
   // ── CUSTOM CHECK-INS ──────────────────────────────────────────
   const ccs = getCustomCheckins();
@@ -13837,6 +14360,10 @@ function toggleSettingsSection(id) {
     header.classList.add('open');
     header.setAttribute('aria-expanded', 'true');
     body.classList.add('open');
+    // Render section builder when its section opens
+    if (id === 'customize') {
+      setTimeout(() => renderSectionBuilder('sb-settings-container', 'settings'), 50);
+    }
   }
 }
 
@@ -17226,6 +17753,8 @@ function getOBPath() {
     return ['welcome', 'readiness', 'voice', 'install', 'ready'];
   } else if (obData.readiness === 'exploring') {
     return ['welcome', 'readiness', 'voice', 'customize', 'install', 'ready'];
+  } else if (obData.readiness === 'custom') {
+    return ['welcome', 'readiness', 'voice', 'section_builder', 'customize', 'install', 'ready'];
   }
   // Before readiness is chosen
   return ['welcome', 'readiness'];
@@ -17249,6 +17778,7 @@ function renderOnboarding() {
     case 'voice':      renderOBVoice(body, footer); break;
     case 'routine':    renderOBRoutine(body, footer); break;
     case 'customize':  renderOBCustomize(body, footer); break;
+    case 'section_builder': renderOBSectionBuilder(body, footer); break;
     case 'install':    renderOBInstall(body, footer); break;
     case 'ready':      renderOBReady(body, footer); break;
   }
@@ -21721,6 +22251,189 @@ function tapCustomSelfCare(id, el) {
   archiveToday();
   renderTodayTab();
 }
+
+
+// ============================================================
+//  SECTION BUILDER — Tabbed UI component
+// ============================================================
+
+let _sbActiveTab = 'daily';
+let _sbOpenMenu = null; // item ID whose popover is open
+
+function renderSectionBuilder(containerId, context) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const catalog = getItemCatalog();
+  const overrides = state.prefs?.sectionOverrides || {};
+
+  // Count enabled items per section (including promoted)
+  const dailyItems = catalog.filter(i => i.currentSection === 'daily');
+  const weeklyItems = catalog.filter(i => i.currentSection === 'weekly');
+  const selfcareItems = catalog.filter(i => i.currentSection === 'selfcare');
+
+  const dailyEnabled = dailyItems.filter(i => i.enabled || overrides[i.id] === 'daily').length;
+  const weeklyEnabled = weeklyItems.filter(i => i.enabled || overrides[i.id] === 'weekly').length;
+  const selfcareEnabled = selfcareItems.filter(i => i.enabled || overrides[i.id] === 'selfcare').length;
+
+  const sections = [
+    { id: 'daily', icon: '☀️', label: 'Daily', count: dailyEnabled, items: dailyItems },
+    { id: 'weekly', icon: '📅', label: 'Weekly', count: weeklyEnabled, items: weeklyItems },
+    { id: 'selfcare', icon: '💚', label: 'Self-Care', count: selfcareEnabled, items: selfcareItems },
+  ];
+
+  let html = '';
+
+  // Tab bar
+  html += '<div class="sb-tab-bar">';
+  sections.forEach(s => {
+    const active = _sbActiveTab === s.id;
+    html += `<button class="sb-tab${active ? ' active' : ''}" onclick="_sbActiveTab='${s.id}';_sbOpenMenu=null;renderSectionBuilder('${containerId}','${context}')" aria-selected="${active}" role="tab">
+      <span>${s.icon}</span><span>${s.label}</span><span class="sb-tab-count">${s.count}</span>
+    </button>`;
+  });
+  html += '</div>';
+
+  // Active panel
+  const activeSection = sections.find(s => s.id === _sbActiveTab);
+  html += '<div class="sb-panel">';
+
+  if (activeSection.items.length === 0) {
+    html += `<div class="sb-empty">
+      <div class="sb-empty-icon">${activeSection.icon}</div>
+      <div class="sb-empty-text">Nothing here yet<br>Tap ⋮ on an item to move it to ${activeSection.label}</div>
+    </div>`;
+  } else {
+    // Sort: enabled items first, then disabled
+    const sorted = [...activeSection.items].sort((a, b) => {
+      const aOn = a.enabled || !!overrides[a.id];
+      const bOn = b.enabled || !!overrides[b.id];
+      if (aOn && !bOn) return -1;
+      if (!aOn && bOn) return 1;
+      return 0;
+    });
+
+    sorted.forEach(item => {
+      const isOverridden = !!overrides[item.id];
+      const isEnabled = item.enabled || isOverridden;
+      const isMoved = item.currentSection !== item.originalSection;
+      const origLabel = item.originalSection === 'daily' ? 'Daily' : item.originalSection === 'weekly' ? 'Weekly' : 'Self-Care';
+      const accentColors = { daily: 'rgba(var(--sage-rgb),0.4)', weekly: 'rgba(106,154,176,0.4)', selfcare: 'rgba(200,170,120,0.4)' };
+
+      let classes = 'sb-item';
+      if (!isEnabled) classes += ' disabled';
+      if (isMoved) classes += ' moved';
+      const movedStyle = isMoved ? `--sb-accent:${accentColors[item.originalSection]}` : '';
+
+      const menuOpen = _sbOpenMenu === item.id;
+
+      html += `<div class="${classes}" style="${movedStyle}">`;
+
+      // Toggle (only for items in their original section)
+      if (!isMoved) {
+        html += `<div class="sb-toggle${isEnabled ? ' on' : ''}" onclick="sbToggleItem('${item.id}');renderSectionBuilder('${containerId}','${context}');renderTodayTab()" role="switch" aria-checked="${isEnabled}" aria-label="Toggle ${item.label}"></div>`;
+      } else {
+        html += `<div style="width:36px;flex-shrink:0"></div>`; // spacer
+      }
+
+      // Icon + info
+      html += `<div class="sb-item-icon">${item.icon}</div>`;
+      html += `<div class="sb-item-info">
+        <div class="sb-item-name">${item.label}</div>
+        ${isMoved ? `<div class="sb-item-meta">from ${origLabel}</div>` : ''}
+      </div>`;
+
+      // Menu button (exclude medication)
+      if (item.id !== 'medication') {
+        html += `<button class="sb-menu-btn" onclick="event.stopPropagation();_sbOpenMenu=_sbOpenMenu==='${item.id}'?null:'${item.id}';renderSectionBuilder('${containerId}','${context}')" aria-label="Move ${item.label}" aria-expanded="${menuOpen}">⋮</button>`;
+      }
+
+      // Popover menu
+      if (menuOpen) {
+        html += `<div class="sb-popover" onclick="event.stopPropagation()">
+          <div class="sb-popover-label">Move to</div>
+          <div class="sb-popover-options">
+            <div class="sb-popover-pill${_sbActiveTab === 'daily' ? ' current' : ''}" onclick="moveItemToSection('${item.id}','daily');_sbOpenMenu=null;_sbActiveTab='daily';renderSectionBuilder('${containerId}','${context}');renderTodayTab()">☀️ Daily</div>
+            <div class="sb-popover-pill${_sbActiveTab === 'weekly' ? ' current' : ''}" onclick="moveItemToSection('${item.id}','weekly');_sbOpenMenu=null;_sbActiveTab='weekly';renderSectionBuilder('${containerId}','${context}');renderTodayTab()">📅 Weekly</div>
+            <div class="sb-popover-pill${_sbActiveTab === 'selfcare' ? ' current' : ''}" onclick="moveItemToSection('${item.id}','selfcare');_sbOpenMenu=null;_sbActiveTab='selfcare';renderSectionBuilder('${containerId}','${context}');renderTodayTab()">💚 Self-Care</div>
+          </div>
+          ${isMoved ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
+            <div class="sb-popover-pill reset" onclick="resetItemSection('${item.id}');_sbOpenMenu=null;_sbActiveTab='${item.originalSection}';renderSectionBuilder('${containerId}','${context}');renderTodayTab()">↩ Reset to ${origLabel}</div>
+          </div>` : ''}
+        </div>`;
+      }
+
+      html += '</div>'; // close sb-item
+    });
+  }
+
+  // Add custom input at bottom (for daily and selfcare)
+  if (_sbActiveTab === 'daily') {
+    const customCount = (state.prefs?.customDailyHabits || []).filter(h => !h.originalId).length;
+    if (customCount < 10) {
+      html += `<div class="sb-add-row">
+        <input type="text" id="sb-add-daily" placeholder="Add custom daily habit..." aria-label="Add custom daily habit" style="flex:1;font-size:13px;padding:8px 12px;min-height:40px">
+        <button class="btn btn-primary btn-sm" onclick="sbAddCustomDaily('${containerId}','${context}')">Add</button>
+      </div>`;
+    }
+  } else if (_sbActiveTab === 'selfcare') {
+    const customCount = (state.prefs?.customSelfCare || []).filter(s => !s.originalId).length;
+    if (customCount < 10) {
+      html += `<div class="sb-add-row">
+        <input type="text" id="sb-add-selfcare" placeholder="Add something nice for you..." aria-label="Add custom self-care item" style="flex:1;font-size:13px;padding:8px 12px;min-height:40px">
+        <button class="btn btn-primary btn-sm" onclick="sbAddCustomSelfCare('${containerId}','${context}')">Add</button>
+      </div>`;
+    }
+  }
+
+  html += '</div>'; // close sb-panel
+
+  container.innerHTML = html;
+}
+
+function sbAddCustomDaily(containerId, context) {
+  const input = document.getElementById('sb-add-daily');
+  if (!input || !input.value.trim()) return;
+  const name = input.value.trim();
+  const id = 'cdh_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + Date.now().toString(36).slice(-4);
+  if (!state.prefs.customDailyHabits) state.prefs.customDailyHabits = [];
+  if (state.prefs.customDailyHabits.length >= 20) return;
+  state.prefs.customDailyHabits.push({ id, name, icon: '🌸', time: 'any' });
+  const order = (state.prefs.habitOrder || []).slice();
+  order.push(id);
+  state.prefs.habitOrder = order;
+  save('bloom_prefs', state.prefs);
+  renderSectionBuilder(containerId, context);
+  renderTodayTab();
+  haptic('light');
+}
+
+function sbAddCustomSelfCare(containerId, context) {
+  const input = document.getElementById('sb-add-selfcare');
+  if (!input || !input.value.trim()) return;
+  const name = input.value.trim();
+  const id = 'csc_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + Date.now().toString(36).slice(-4);
+  if (!state.prefs.customSelfCare) state.prefs.customSelfCare = [];
+  if (state.prefs.customSelfCare.length >= 20) return;
+  state.prefs.customSelfCare.push({ id, name, icon: '✨', routine: 'anytime' });
+  save('bloom_prefs', state.prefs);
+  renderSectionBuilder(containerId, context);
+  renderTodayTab();
+  haptic('light');
+}
+
+// Close popover on outside click
+document.addEventListener('click', () => {
+  if (_sbOpenMenu) {
+    _sbOpenMenu = null;
+    const el = document.querySelector('.sb-panel');
+    if (el) {
+      // Find the container to re-render
+      const container = el.closest('[id]');
+      if (container) renderSectionBuilder(container.id, 'settings');
+    }
+  }
+});
 
 
 function initApp() {
