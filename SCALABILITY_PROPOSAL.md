@@ -346,6 +346,31 @@ Note: Fraunces Medium weight (500) used for hat embroidery since thin serif stro
 - [ ] **Set up Resend email alerts** (create account, verify domain, add env vars: RESEND_API_KEY, ALERT_EMAIL_TO, ALERT_EMAIL_FROM)
 - [ ] **Lawyer review of Terms of Use, Privacy Policy, and threat reporting language**
 
+### Phase 4B -- Living Feedback & Ambient Polish
+
+The buddy level-up badge glow is one of the few places in Bloom where the UI feels alive. That kind of subtle, breathing feedback should be everywhere something meaningful happens. Not flashy, not gamified. Just the app quietly acknowledging that you did something.
+
+**Guiding principle:** The app should feel like it's paying attention. Small ambient cues (a gentle pulse, a soft glow, a brief shimmer) tell the user "I noticed" without demanding attention. These should feel organic, like light moving through leaves, not like a slot machine.
+
+**Candidates for living feedback:**
+- [ ] **Habit completion** — brief soft glow or gentle pulse on the toggle when a habit is checked off. Something that says "noted" without being loud.
+- [ ] **Mood check-in submitted** — the mood emoji or card gets a subtle breathing glow after logging, fading out over a few seconds.
+- [ ] **Journal saved** — warm shimmer or gentle border glow on the journal card after saving. The reflection arriving later could have its own entrance animation.
+- [ ] **XP earned** — the sunlight XP counter could pulse gently when XP is added, drawing the eye without being distracting.
+- [ ] **Level-up badge everywhere** — the growth stage badge on the Progress tab could use the same glow treatment as the buddy level-up badge.
+- [ ] **Streak milestone** — when hitting 7, 14, or 30 day streaks, a brief ambient glow on the streak counter.
+- [ ] **Water/food goal met** — soft completion glow when daily targets are reached.
+- [ ] **All done celebration** — the "all done" state could have a gentle, persistent ambient glow rather than just a static message.
+- [ ] **Breathing exercise completion** — the breathing circle could leave a soft afterglow when a session finishes.
+- [ ] **Community wall post sent** — brief glow on the submitted message card.
+
+**Implementation notes:**
+- Use CSS `box-shadow` with `rgba(var(--sage-rgb), ...)` for glows, matching the existing buddy-level-up-badge pattern.
+- Animations should use `transform` and `opacity` only (GPU-accelerated, per performance patterns).
+- Keep durations short (1-3s) and use `ease-in-out` timing. Breathing/pulsing effects can loop 2-3 times max, then stop.
+- Respect `prefers-reduced-motion`: all living feedback should be disabled when the user has reduced motion enabled.
+- These are purely decorative. They must never block interaction or shift layout.
+
 ### Phase 5 -- Long-term Architecture (Month 6+)
 - [ ] Evaluate migration to Cloudflare Pages + Workers (if Vercel limits are hit)
 - [ ] Offline-first PWA enhancements
