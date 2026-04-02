@@ -212,6 +212,8 @@ Bloom needs more subtle ambient feedback throughout the app. The buddy level-up 
 
 ## Known Issues / Fixes Needed
 
+- **Replace blocking dialogs with non-blocking modals.** There are ~12 `alert()` and ~7 `confirm()` calls still in the codebase (buddy safety checks, vault setup, data deletion, community features). These block the main thread on mobile Safari and Chrome, causing the app to appear frozen. All are user-initiated actions (not startup/background), so not critical, but should be converted to non-blocking bottom sheets or modal dialogs for better mobile UX. Key locations: buddy message safety confirms (~line 21209-21212, double-confirm chain), community data deletion (~line 22224-22225, double-confirm), vault passphrase prompt (~line 16864), and various alert() calls for copy/export feedback.
+
 - **Detailed medication mode doesn't bridge to completion system.** `checkAllDone()` and `getCompletionRate()` (around line ~7880-7950) use the simple medication system's keys (`medication_am`, `medication_pm`, etc. from `MEDICATION_HABIT`). In detailed mode, individual meds use slot-qualified keys (`medId:slot`). Completing all individual meds in detailed mode does not set the simple keys, so the "all done" celebration and completion percentage don't account for detailed medication progress. Fix: when all meds in a slot are checked off in detailed mode, also set `td.medication_<slot>` = true so the completion system picks it up.
 
 ## Deployment
