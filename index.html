@@ -12433,7 +12433,7 @@ function renderSettingsTab() {
       </div>`;
     });
 
-    // Add medication button
+    // Add medication button + paste list
     if (medList.length < 20) {
       dailyHtml += `<div style="display:flex;gap:8px;align-items:center">
         <input type="text" id="new-med-name" placeholder="Add a medication" aria-label="New medication name"
@@ -12442,6 +12442,12 @@ function renderSettingsTab() {
         <div onclick="const i=document.getElementById('new-med-name');if(i){addMedication(i.value,'any','');i.value='';}" style="
           padding:6px 14px;border-radius:99px;cursor:pointer;font-size:12px;min-height:44px;display:flex;align-items:center;
           background:rgba(106,154,176,0.15);border:1px solid rgba(106,154,176,0.3);color:var(--sky-light)" role="button" aria-label="Add medication">+ Add</div>
+      </div>
+      <div onclick="openPasteMedSheet()" style="
+        margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:99px;cursor:pointer;
+        background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.12);
+        font-size:12px;color:var(--sky-light);min-height:44px" role="button" aria-label="Paste a medication list">
+        📋 Paste a list
       </div>`;
     }
     dailyHtml += `</div>`;
@@ -20245,6 +20251,165 @@ function copyMedList() {
       }
     });
   }
+}
+
+// Parse a pasted medication list into structured entries
+function parseMedList(text) {
+  if (!text || !text.trim()) return [];
+  const lines = text.split(/\n/).map(l => l.trim()).filter(l => l.length > 0);
+  const results = [];
+
+  // Common dosage patterns: "10mg", "0.5mg", "100 mg", "10 MG", "50mcg", "200 units", "150mg XL"
+  const dosePattern = /\b(\d+\.?\d*)\s*(mg|mcg|ug|ml|units?|tabs?|capsules?|pills?|drops?|patches?|puffs?|sprays?|iu)\b(\s*[A-Z]{1,3})?/i;
+  // Common frequency/instruction patterns to pull into notes
+  const instrPattern = /\b(take with food|with food|before meals?|after meals?|at bedtime|twice daily|once daily|every \d+ hours?|as needed|prn|daily|weekly|monthly|every \d+ weeks?|every \d+ days?|morning|evening|afternoon|before bed|empty stomach|with milk)\b/i;
+  // Skip header-like lines
+  const skipPattern = /^(my medications?|medication list|current medications?|name|drug|rx|prescriptions?|---+|\*+|#+)$/i;
+
+  lines.forEach(raw => {
+    // Strip common list prefixes: "- ", "* ", "1. ", "• "
+    let line = raw.replace(/^[\-\*•]\s*/, '').replace(/^\d+[\.\)]\s*/, '').trim();
+    if (!line || skipPattern.test(line)) return;
+    if (line.length < 2 || line.length > 100) return;
+
+    let name = line;
+    let note = '';
+
+    // Try to extract dosage
+    const doseMatch = line.match(dosePattern);
+    if (doseMatch) {
+      note = doseMatch[0];
+      // Name is everything before the dosage
+      const beforeDose = line.slice(0, doseMatch.index).trim();
+      if (beforeDose.length >= 2) {
+        name = beforeDose;
+      }
+    }
+
+    // Try to extract instructions
+    const instrMatch = line.match(instrPattern);
+    if (instrMatch) {
+      if (note) note += ', ' + instrMatch[0].toLowerCase();
+      else note = instrMatch[0].toLowerCase();
+      // If we haven't extracted a name yet, take everything before the instruction
+      if (name === line) {
+        const beforeInstr = line.slice(0, instrMatch.index).trim();
+        if (beforeInstr.length >= 2) name = beforeInstr;
+      }
+    }
+
+    // Clean up name: remove trailing dashes, commas, parens
+    name = name.replace(/[\-,\(\)]+$/, '').replace(/\s+/g, ' ').trim();
+    // Remove dosage from name if it's still there
+    if (doseMatch && name.includes(doseMatch[0])) {
+      name = name.replace(doseMatch[0], '').trim();
+    }
+    // Remove trailing punctuation
+    name = name.replace(/[\-–—,;:]+$/, '').trim();
+
+    if (name.length < 2) return;
+    // Capitalize first letter
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+
+    results.push({ name, note: note.trim(), time: 'any' });
+  });
+
+  return results;
+}
+
+// Open the paste medication list sheet
+function openPasteMedSheet() {
+  const existing = document.getElementById('paste-med-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'paste-med-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:700;display:flex;align-items:center;justify-content:center;padding:16px';
+  overlay.innerHTML = `
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.75)" onclick="closePasteMedSheet()"></div>
+    <div id="paste-med-card" style="
+      position:relative;width:100%;max-width:380px;max-height:85vh;overflow-y:auto;
+      background:var(--bg-card);border:1px solid rgba(106,154,176,0.3);
+      border-radius:var(--r-xl);padding:24px 20px;
+      box-shadow:0 8px 40px rgba(0,0,0,0.6);
+      animation:scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1)">
+      <div style="font-size:13px;color:var(--sky-light);font-weight:500;margin-bottom:6px">💊 Paste your medication list</div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px">
+        Paste from your notes, patient portal, or anywhere else. One medication per line. Dosages and instructions will be pulled into the note field automatically.
+      </div>
+      <textarea id="paste-med-input" placeholder="Lexapro 10mg&#10;Wellbutrin 150mg XL&#10;Vitamin D 2000 IU&#10;Xanax 0.5mg as needed"
+        style="width:100%;min-height:120px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+        border-radius:var(--r-md);padding:10px 12px;font-size:13px;color:var(--text-primary);
+        font-family:Instrument Sans,sans-serif;resize:vertical;box-sizing:border-box;line-height:1.6"
+        aria-label="Paste medication list here"></textarea>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button onclick="previewPastedMeds()" class="btn btn-primary" style="flex:1;min-height:44px">Preview</button>
+        <button onclick="closePasteMedSheet()" class="btn btn-ghost" style="min-height:44px">Cancel</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('paste-med-input')?.focus(), 100);
+}
+
+function closePasteMedSheet() {
+  document.getElementById('paste-med-overlay')?.remove();
+}
+
+function previewPastedMeds() {
+  const input = document.getElementById('paste-med-input');
+  if (!input) return;
+  const parsed = parseMedList(input.value);
+  if (parsed.length === 0) {
+    input.style.borderColor = 'rgba(200,100,100,0.5)';
+    input.placeholder = 'No medications found. Try one per line.';
+    return;
+  }
+
+  const card = document.getElementById('paste-med-card');
+  if (!card) return;
+
+  let html = `
+    <div style="font-size:13px;color:var(--sky-light);font-weight:500;margin-bottom:6px">💊 We found ${parsed.length} medication${parsed.length !== 1 ? 's' : ''}</div>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px">
+      Edit names or notes below, then add them to your list. You can set times in Settings afterward.
+    </div>`;
+
+  parsed.forEach((m, i) => {
+    html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+      <span style="font-size:14px">💊</span>
+      <input type="text" value="${m.name}" id="paste-med-name-${i}"
+        style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+        border-radius:var(--r-sm);padding:5px 8px;font-size:13px;color:var(--text-primary);min-height:36px"
+        aria-label="Medication name">
+      <input type="text" value="${m.note}" id="paste-med-note-${i}" placeholder="note"
+        style="width:80px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);
+        border-radius:var(--r-sm);padding:5px 8px;font-size:11px;color:var(--text-secondary);min-height:36px"
+        aria-label="Note">
+      <div onclick="this.parentElement.remove()" style="cursor:pointer;padding:4px;color:var(--text-muted);font-size:14px;min-width:32px;text-align:center" role="button" aria-label="Remove">✕</div>
+    </div>`;
+  });
+
+  html += `
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button onclick="confirmPastedMeds(${parsed.length})" class="btn btn-primary" style="flex:1;min-height:44px">Add ${parsed.length} medication${parsed.length !== 1 ? 's' : ''}</button>
+      <button onclick="closePasteMedSheet()" class="btn btn-ghost" style="min-height:44px">Cancel</button>
+    </div>`;
+
+  card.innerHTML = html;
+}
+
+function confirmPastedMeds(maxCount) {
+  for (let i = 0; i < maxCount; i++) {
+    const nameEl = document.getElementById('paste-med-name-' + i);
+    const noteEl = document.getElementById('paste-med-note-' + i);
+    if (!nameEl) continue; // was removed by user
+    const name = nameEl.value.trim();
+    if (!name) continue;
+    const note = noteEl ? noteEl.value.trim() : '';
+    addMedication(name, 'any', note);
+  }
+  closePasteMedSheet();
 }
 
 // Link a periodic medication to a special date for treatment day acknowledgment
