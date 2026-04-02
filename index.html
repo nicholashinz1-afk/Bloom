@@ -1541,21 +1541,25 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 .sb-toggle.on::after { transform: translateX(16px); }
 .sb-menu-btn {
-  width: 44px;
-  height: 44px;
+  min-width: 44px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   cursor: pointer;
-  color: var(--text-muted);
-  font-size: 16px;
+  color: var(--sky-light);
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'Instrument Sans', sans-serif;
   flex-shrink: 0;
-  border: none;
-  background: none;
-  border-radius: var(--r-sm);
-  transition: background 0.15s;
+  border: 1px solid rgba(106,154,176,0.25);
+  background: rgba(106,154,176,0.08);
+  border-radius: var(--r-full);
+  padding: 4px 12px;
+  transition: all 0.15s;
 }
-.sb-menu-btn:active { background: rgba(255,255,255,0.06); }
+.sb-menu-btn:active { background: rgba(106,154,176,0.15); transform: scale(0.96); }
 .sb-popover {
   position: absolute;
   right: 0;
@@ -22393,7 +22397,7 @@ function renderSectionBuilder(containerId, context) {
 
       // Menu button (exclude medication)
       if (item.id !== 'medication') {
-        html += `<button class="sb-menu-btn" onclick="event.stopPropagation();_sbOpenMenu=_sbOpenMenu==='${item.id}'?null:'${item.id}';renderSectionBuilder('${containerId}','${context}')" aria-label="Move ${item.label}" aria-expanded="${menuOpen}">⋮</button>`;
+        html += `<button class="sb-menu-btn" onclick="event.stopPropagation();_sbOpenMenu=_sbOpenMenu==='${item.id}'?null:'${item.id}';renderSectionBuilder('${containerId}','${context}')" aria-label="Move ${item.label}" aria-expanded="${menuOpen}">Move</button>`;
       }
 
       // Popover menu
