@@ -2700,6 +2700,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   border-radius: var(--r-lg);
   padding: 20px;
   margin-bottom: 12px;
+  overflow: hidden;
 }
 .buddy-card-header {
   display: flex;
@@ -2709,8 +2710,9 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 .buddy-collapsed-stats {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
   padding-top: 8px;
   margin-bottom: 14px;
 }
@@ -2779,7 +2781,8 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 .buddy-stats {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 10px 16px;
   margin-bottom: 14px;
 }
 .buddy-stat {
