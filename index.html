@@ -21536,18 +21536,27 @@ function renderBuddyOnboarding() {
 
 function buddyOnboardNext() {
   buddyOnboardStep++;
-  renderBuddyContent();
+  renderBuddyOnboardingInPlace();
 }
 
 function buddyOnboardPrev() {
   buddyOnboardStep = Math.max(0, buddyOnboardStep - 1);
-  renderBuddyContent();
+  renderBuddyOnboardingInPlace();
+}
+
+function renderBuddyOnboardingInPlace() {
+  const addSection = document.getElementById('buddy-add-section');
+  if (addSection && addSection.style.display !== 'none') {
+    addSection.innerHTML = renderBuddySetup();
+  } else {
+    renderBuddyContent();
+  }
 }
 
 function completeBuddyOnboard() {
   save(BUDDY_ONBOARD_SEEN_KEY, true);
   buddyOnboardStep = 0;
-  renderBuddyContent();
+  renderBuddyOnboardingInPlace();
 }
 
 function renderBuddyPairingOptions() {
