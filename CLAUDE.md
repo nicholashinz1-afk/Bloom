@@ -13,6 +13,7 @@ Mental health self-care PWA. Compassionate, no-shame, no-pressure design philoso
 
 ## API Endpoints (Vercel serverless)
 
+- `api/_redis.js` — **shared Redis module.** All Redis helpers (`getRedis`, `kvGet`, `kvSet`, `kvDel`, `logModeration`) live here. New API endpoints must import from this module, never copy-paste Redis boilerplate.
 - `api/claude.js` — proxies to Anthropic API (server-side key via `ANTHROPIC_API_KEY`)
 - `api/buddy.js` — buddy pairing, messaging, nudges (Redis/Vercel KV via `REDIS_URL`)
 - `api/wall.js` — community encouragement wall (same Redis backend)
