@@ -5106,6 +5106,24 @@ function checkSpecialDates() {
   const todayDay = now.getDate();
   const thisYear = now.getFullYear();
 
+  // Auto-clear past treatment dates: mark them as occurred so the banner doesn't fire again
+  let treatmentCleared = false;
+  dates.forEach(d => {
+    if (d.type !== 'treatment' || !d.month || !d.day) return;
+    if (d._treatmentOccurred) return; // already cleared
+    const isToday = d.month === todayMonth && d.day === todayDay;
+    if (isToday) return; // still active today, don't clear yet
+    // Check if the date has passed (simple: if the date was before today this year)
+    const treatmentDate = new Date(thisYear, d.month - 1, d.day);
+    if (treatmentDate < now) {
+      d._treatmentOccurred = today();
+      d.month = null;
+      d.day = null;
+      treatmentCleared = true;
+    }
+  });
+  if (treatmentCleared) save('bloom_prefs', state.prefs);
+
   const matches = dates.filter(d => d.month === todayMonth && d.day === todayDay);
   if (matches.length === 0) return;
 
@@ -12392,15 +12410,26 @@ function renderSettingsTab() {
           placeholder="Note (optional, e.g. 10mg, take with food, every 2 weeks)"
           aria-label="Note for ${med.name}"
           style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-sm);padding:5px 10px;font-size:11px;color:var(--text-secondary);box-sizing:border-box">
-        ${med.time === 'not_daily' && !(prefs.specialDates || []).some(sd => sd._linkedMedId === med.id) ? `
-          <div onclick="linkMedToSpecialDate('${med.id}')" style="
-            margin-top:6px;padding:4px 10px;border-radius:99px;cursor:pointer;font-size:11px;display:inline-flex;align-items:center;gap:4px;
-            background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.12);color:var(--sky-light)"
-            role="button" aria-label="Mark treatment days for ${med.name}">
-            📅 Mark treatment days
-          </div>` : ''}
-        ${med.time === 'not_daily' && (prefs.specialDates || []).some(sd => sd._linkedMedId === med.id) ? `
-          <div style="margin-top:6px;font-size:11px;color:var(--text-muted)">📅 Treatment days linked — set dates in Special Dates above</div>` : ''}
+        ${(() => {
+          if (med.time !== 'not_daily') return '';
+          const linkedSd = (prefs.specialDates || []).find(sd => sd._linkedMedId === med.id);
+          if (!linkedSd) {
+            return `<div onclick="linkMedToSpecialDate('${med.id}')" style="
+              margin-top:6px;padding:4px 10px;border-radius:99px;cursor:pointer;font-size:11px;display:inline-flex;align-items:center;gap:4px;
+              background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.12);color:var(--sky-light)"
+              role="button" aria-label="Mark treatment days for ${med.name}">
+              📅 Mark treatment days
+            </div>`;
+          }
+          if (linkedSd._treatmentOccurred && !linkedSd.month) {
+            return `<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">📅 Last treatment: ${linkedSd._treatmentOccurred}. Set your next date in Special Dates above.</div>`;
+          }
+          if (linkedSd.month && linkedSd.day) {
+            const monthNames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            return `<div style="margin-top:6px;font-size:11px;color:var(--sky-light)">📅 Next treatment: ${monthNames[linkedSd.month]} ${linkedSd.day}</div>`;
+          }
+          return `<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">📅 Treatment linked. Set the date in Special Dates above.</div>`;
+        })()}
       </div>`;
     });
 
