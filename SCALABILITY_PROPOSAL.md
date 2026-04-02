@@ -350,6 +350,7 @@ Note: Fraunces Medium weight (500) used for hat embroidery since thin serif stro
 - [ ] Evaluate migration to Cloudflare Pages + Workers (if Vercel limits are hit)
 - [ ] Offline-first PWA enhancements
 - [ ] Community contributor program for ongoing development
+- [ ] **Post-treatment date reminder** — after a treatment day auto-clears, prompt the user to set their next treatment date (e.g., "Do you have your next infusion date?"). Gentle, skippable, surfaces in Settings or as a one-time nudge on the Daily tab.
 
 ---
 
