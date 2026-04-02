@@ -16705,7 +16705,8 @@ function deactivateDecoyMask() {
 }
 
 // Long-press on decoy spinner to unmask (3 seconds)
-(function initDecoyMask() {
+// Deferred: #decoy-mask is in the HTML after the script tag, so we init on DOMContentLoaded
+function initDecoyMask() {
   const mask = document.getElementById('decoy-mask');
   if (!mask) return;
 
@@ -16726,10 +16727,15 @@ function deactivateDecoyMask() {
   mask.addEventListener('mousedown', startUnmask);
   mask.addEventListener('mouseup', cancelUnmask);
   mask.addEventListener('mouseleave', cancelUnmask);
-})();
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDecoyMask);
+} else {
+  initDecoyMask();
+}
 
 // ── Crisis Heart Long-Press Handler ─────────────────────────
-// Short tap = crisis sheet, long-press (3s) = safety sheet
+// Short tap = crisis sheet, long-press (2s) = safety sheet
 // Applied to both the main header heart and the lock screen heart
 function attachHeartLongPress(el) {
   if (!el) return;
@@ -16742,7 +16748,7 @@ function attachHeartLongPress(el) {
       triggered = true;
       if (navigator.vibrate) navigator.vibrate(50);
       openSafetySheet();
-    }, 3000);
+    }, 2000);
   }
   function up(e) {
     if (timer) { clearTimeout(timer); timer = null; }
@@ -16764,7 +16770,12 @@ function attachHeartLongPress(el) {
 }
 
 attachHeartLongPress(document.getElementById('crisis-heart'));
-attachHeartLongPress(document.getElementById('lock-crisis-heart'));
+// #lock-crisis-heart is in the HTML after the script tag, so defer
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => attachHeartLongPress(document.getElementById('lock-crisis-heart')));
+} else {
+  attachHeartLongPress(document.getElementById('lock-crisis-heart'));
+}
 
 // ============================================================
 //  SCIENCE / INFO TOOLTIPS
