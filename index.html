@@ -3911,7 +3911,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '3.7.0';
+const VERSION = '3.8.0';
 const LEGACY_DOMAINS = ['bloom-zeta-rouge.vercel.app'];
 const PRODUCTION_DOMAIN = 'bloomselfcare.app';
 
@@ -3959,13 +3959,9 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: '<strong>Privacy Lock</strong> — protect your journals, mood data, and medications. Set up a PIN or use your device\'s biometrics (fingerprint, Face ID) to lock the app. Find it in Settings under Privacy Lock.', spotlight: null, tab: 'settings', tourIcon: '🛡️', tourTitle: 'Privacy Lock', tourText: 'Go to Settings and open Privacy Lock. You can set up a PIN or use your device\'s biometrics. The app will lock when you leave and require authentication to reopen. Your crisis resources stay accessible even while locked.', tourAction: 'settings' },
-  { text: '<strong>Safety resources</strong> — if you or someone you know is in an unsafe situation, bloom now has discreet access to domestic violence, abuse, and safety hotlines with live web chat options that don\'t leave a trace in your call or text history.', spotlight: null, tab: null, tourIcon: '🤍', tourTitle: 'Discreet safety resources', tourText: 'Long-press the white heart in the header for 3 seconds to open safety resources. These include live web chats (no call or text history) for the National DV Hotline, RAINN, Love Is Respect, and more. There\'s also a Quick Exit button that instantly hides everything behind a loading screen.', tourAction: null },
-  { text: '<strong>Quick Exit</strong> — the safety resources screen has a Quick Exit button that instantly covers everything with a neutral loading screen. Long-press the spinner to come back. Your conversation stays alive underneath.', spotlight: null, tab: null, tourIcon: '⚡', tourTitle: 'Quick Exit', tourText: 'If you ever need to hide what\'s on screen fast, tap Quick Exit in the safety resources. It covers everything with a "loading" screen. Nobody would look twice. Long-press the spinner for 3 seconds to come back. Nothing is lost.' },
-  { text: '<strong>Name your medications</strong> — you can now list each medication individually in Settings. Choose <em>Simple</em> (one check per time slot) or <em>Detailed</em> (track each med separately with a "Take all" option).', spotlight: null, tab: 'settings', tourIcon: '💊', tourTitle: 'Name your medications', tourText: 'Head to Settings and scroll to the Medication section under Daily Habits. You can add each medication by name, pick when you take it, and add notes like dosage or "take with food."', tourAction: 'settings' },
-  { text: '<strong>Medication reference card</strong> — your medication list in Settings doubles as a quick reference. Copy it to your clipboard or tap "Show to doctor" for a clean, full-screen view you can hand to a nurse.', spotlight: null, tab: 'settings', tourIcon: '🩺', tourTitle: 'Show to your doctor', tourText: 'Your medication list has a "Show to doctor" button that opens a full-screen card with large, readable text. No app chrome, just your medications. Hand your phone over at an appointment. There\'s also a "Copy to clipboard" button for patient portals.', tourAction: 'settings' },
-  { text: '<strong>As-needed medications</strong> — medications you only take sometimes show up as a quiet log button instead of a daily checkbox. No pressure, no guilt, just a record for yourself.', spotlight: null, tab: null, tourIcon: '📝', tourTitle: 'As-needed logging', tourText: 'Set a medication\'s time to "As needed" and it shows as a soft log button on your Daily tab instead of a checkbox. No XP, no guilt for skipping. Just a personal record.', tourAction: 'today' },
-  { text: '<strong>Treatment day support</strong> — for infusions, injections, or periodic treatments, you can link them to your calendar. Bloom will acknowledge treatment days and offer to make the day a little easier.', spotlight: null, tab: 'settings', tourIcon: '📅', tourTitle: 'Treatment days', tourText: 'For medications you don\'t take daily (like infusions), set the time to "Not daily" and tap "Mark treatment days." Bloom will show a gentle banner on treatment days and offer to activate Hard Day Mode.', tourAction: 'settings' },
+  { text: '<strong>Customize your sections</strong> — move habits between Daily, Weekly, and Self-Care. Items take on the behavior of their new section. Find it in Settings.', spotlight: null, tab: 'settings', tourIcon: '⚙️', tourTitle: 'Customize your sections', tourText: 'Open Settings and look for "Customize your sections." You\'ll see all your habits organized by section. Tap the menu on any item to move it somewhere else. Moved items take on the behavior of their new section: time slots for daily, weekly goals for weekly, and the gentle self-care feel.', tourAction: 'settings' },
+  { text: '<strong>"Make it mine" onboarding</strong> — a new setup path for people who want to shape their own routine from day one. Choose it during onboarding to get the full section builder.', spotlight: null, tab: null, tourIcon: '🎨', tourTitle: 'A new way to start', tourText: 'New users now see a fourth option during setup: "Make it mine." It opens the section builder right away, so you can organize your routine before you\'ve even seen the Daily tab. For existing users, the same tool is in Settings.' },
+  { text: '<strong>Privacy Lock, Safety Resources, and Quick Exit</strong> from v3.7 are still here. Long-press the white heart for discreet safety resources.', spotlight: null, tab: null, tourIcon: '🤍', tourTitle: 'Still here for you', tourText: 'Privacy Lock protects your data with a PIN or biometrics. Long-press the white heart for 3 seconds for discreet safety resources with web chat options that leave no call or text history. Quick Exit hides everything instantly.' },
 ];
 
 // ============================================================
@@ -17869,6 +17865,17 @@ function renderOBReadiness(body, footer) {
         </div>
         <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;padding-left:34px">Pick a theme and jump in. Everything else is default — tweak it from Settings whenever.</div>
       </div>
+      <div onclick="obSetReadiness('custom')" style="
+        padding:16px;border-radius:var(--r-xl);cursor:pointer;
+        border:2px solid ${r === 'custom' ? 'rgba(var(--sage-rgb),0.5)' : 'rgba(255,255,255,0.08)'};
+        background:${r === 'custom' ? 'rgba(var(--sage-rgb),0.1)' : 'var(--bg-card)'};
+        transition:all 0.2s">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <span style="font-size:22px">🎨</span>
+          <div style="font-size:15px;font-weight:500;color:var(--cream)">Make it mine</div>
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;padding-left:34px">I want to shape my own routine. Choose what to track and where it shows up.</div>
+      </div>
     </div>`;
   footer.innerHTML = `
     <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
@@ -17886,6 +17893,12 @@ function renderOBReadiness(body, footer) {
       obData.progressiveDisclosure = true;
     } else if (r === 'exploring') {
       obData.progressiveDisclosure = false;
+    } else if (r === 'custom') {
+      obData.progressiveDisclosure = false;
+      // Enable all daily habits by default — user customizes in section builder
+      if (!obData.dailyHabits) obData.dailyHabits = {};
+      DAILY_HABITS.forEach(h => { obData.dailyHabits[h.id] = true; });
+      obData.selfCareTasks = SELF_CARE_TASKS.map(t => t.id);
     }
     obNext();
   });
@@ -18016,6 +18029,52 @@ function renderOBRoutine(body, footer) {
   <div style="font-size:11px;color:var(--text-muted);margin-top:8px">More options available in Settings.</div>`;
 
   body.innerHTML = html;
+  footer.innerHTML = `
+    <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
+    <button class="btn btn-primary" id="ob-btn-next" style="flex:1">Continue</button>
+  `;
+  document.getElementById('ob-btn-back').addEventListener('click', obBack);
+  document.getElementById('ob-btn-next').addEventListener('click', obNext);
+}
+
+function renderOBSectionBuilder(body, footer) {
+  body.innerHTML = `
+    <div class="ob-title">Shape your routine</div>
+    <div class="ob-sub">Move items between sections to match how you want to track them. You can always change this later in Settings.</div>
+    <div id="ob-section-builder" style="margin-top:8px"></div>
+  `;
+
+  // Initialize obData fields for section builder
+  if (!obData.sectionOverrides) obData.sectionOverrides = {};
+  if (!obData.promotedWeeklyHabits) obData.promotedWeeklyHabits = [];
+
+  // Temporarily set state.prefs so section builder helpers work during onboarding
+  const savedPrefs = state.prefs;
+  state.prefs = {
+    ...state.prefs,
+    dailyHabits: obData.dailyHabits || {},
+    habits: obData.habits || {},
+    selfCareTasks: obData.selfCareTasks || [],
+    sectionOverrides: obData.sectionOverrides,
+    promotedWeeklyHabits: obData.promotedWeeklyHabits,
+    customDailyHabits: obData.customDailyHabits || [],
+    customSelfCare: obData.customSelfCare || [],
+    habitOrder: obData.habitOrder || [],
+  };
+
+  renderSectionBuilder('ob-section-builder', 'onboarding');
+
+  // Sync back to obData after any changes
+  obData.sectionOverrides = state.prefs.sectionOverrides;
+  obData.promotedWeeklyHabits = state.prefs.promotedWeeklyHabits;
+  obData.customDailyHabits = state.prefs.customDailyHabits;
+  obData.customSelfCare = state.prefs.customSelfCare;
+  obData.habitOrder = state.prefs.habitOrder;
+  obData.dailyHabits = state.prefs.dailyHabits;
+  obData.selfCareTasks = state.prefs.selfCareTasks;
+
+  state.prefs = savedPrefs;
+
   footer.innerHTML = `
     <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
     <button class="btn btn-primary" id="ob-btn-next" style="flex:1">Continue</button>
