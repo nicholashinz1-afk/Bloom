@@ -12429,14 +12429,31 @@ function renderSettingsTab() {
               📅 Mark treatment days
             </div>`;
           }
+          const _mn = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          let dateHtml = `<div style="margin-top:8px;padding:8px 10px;background:rgba(106,154,176,0.04);border:1px solid rgba(106,154,176,0.1);border-radius:var(--r-sm)">`;
           if (linkedSd._treatmentOccurred && !linkedSd.month) {
-            return `<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">📅 Last treatment: ${linkedSd._treatmentOccurred}. Set your next date in Special Dates above.</div>`;
+            dateHtml += `<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">📅 Last treatment: ${linkedSd._treatmentOccurred}</div>`;
+            dateHtml += `<div style="font-size:11px;color:var(--sky-light);margin-bottom:6px">Set your next treatment date:</div>`;
+          } else if (linkedSd.month && linkedSd.day) {
+            dateHtml += `<div style="font-size:11px;color:var(--sky-light);margin-bottom:6px">📅 Next treatment: ${_mn[linkedSd.month]} ${linkedSd.day}</div>`;
+          } else {
+            dateHtml += `<div style="font-size:11px;color:var(--sky-light);margin-bottom:6px">📅 Set treatment date:</div>`;
           }
-          if (linkedSd.month && linkedSd.day) {
-            const monthNames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            return `<div style="margin-top:6px;font-size:11px;color:var(--sky-light)">📅 Next treatment: ${monthNames[linkedSd.month]} ${linkedSd.day}</div>`;
-          }
-          return `<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">📅 Treatment linked. Set the date in Special Dates above.</div>`;
+          dateHtml += `<div style="display:flex;gap:6px;align-items:center">
+            <select onchange="updateTreatmentDate('${linkedSd.id}','month',this.value)" aria-label="Month" style="
+              background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-sm);
+              padding:5px 8px;font-size:12px;color:var(--text-primary);min-height:36px">
+              <option value="">Month</option>
+              ${_mn.slice(1).map((m,i) => `<option value="${i+1}"${linkedSd.month === i+1 ? ' selected' : ''}>${m}</option>`).join('')}
+            </select>
+            <select onchange="updateTreatmentDate('${linkedSd.id}','day',this.value)" aria-label="Day" style="
+              background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-sm);
+              padding:5px 8px;font-size:12px;color:var(--text-primary);min-height:36px">
+              <option value="">Day</option>
+              ${Array.from({length:31},(_,i)=>`<option value="${i+1}"${linkedSd.day === i+1 ? ' selected' : ''}>${i+1}</option>`).join('')}
+            </select>
+          </div></div>`;
+          return dateHtml;
         })()}
       </div>`;
     });
@@ -20516,7 +20533,21 @@ function linkMedToSpecialDate(medId) {
     _linkedMedId: medId
   });
   save('bloom_prefs', state.prefs);
-  renderSettingsTab();
+  reRenderSettingsPreservingScroll();
+}
+
+function updateTreatmentDate(sdId, field, value) {
+  const entry = (state.prefs.specialDates || []).find(d => d.id === sdId);
+  if (!entry) return;
+  entry[field] = value ? parseInt(value) : null;
+  // Clear the occurred flag when setting a new date
+  if (field === 'month' || field === 'day') {
+    if (entry.month && entry.day) {
+      delete entry._treatmentOccurred;
+    }
+  }
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
 }
 
 // Render treatment day banner on the Daily tab
