@@ -343,17 +343,46 @@
 
     <!-- Scaling Roadmap -->
     <h2 style="font-size:16px;margin:20px 0 12px;color:var(--sage-light)">Scaling Roadmap</h2>
+    <style>
+      .roadmap-details { display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06); }
+      .roadmap-card.open .roadmap-details { display:block; }
+      .roadmap-toggle { cursor:pointer;font-size:11px;color:var(--text-muted);margin-top:6px; }
+      .roadmap-card.open .roadmap-toggle .toggle-text::after { content:'Hide details ▴'; }
+      .roadmap-card:not(.open) .roadmap-toggle .toggle-text::after { content:'Show details ▾'; }
+      .roadmap-item { font-size:12px;line-height:1.8;color:var(--text-secondary); }
+      .roadmap-item.done { color:var(--text-muted);text-decoration:line-through;opacity:0.6; }
+      .roadmap-item.todo { color:var(--cream); }
+      .roadmap-item .ri-check { display:inline-block;width:16px;text-align:center;margin-right:4px; }
+    </style>
+    <script>
+      function toggleRoadmapCard(el) {
+        el.closest('.roadmap-card').classList.toggle('open');
+      }
+    </script>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
-      <div class="card" style="border-left:3px solid var(--sage)">
+
+      <!-- Phase 1 -->
+      <div class="card roadmap-card" style="border-left:3px solid var(--sage)">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
             <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 1: Quick Wins</div>
             <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Haiku/Sonnet split, telemetry batching, accessibility fixes, AGPL-3.0 license</div>
           </div>
-          <span style="font-size:12px;color:var(--sage-light);font-weight:600">DONE ✓</span>
+          <span style="font-size:12px;color:var(--sage-light);font-weight:600">2/4 open</span>
+        </div>
+        <div class="roadmap-toggle" onclick="toggleRoadmapCard(this)"><span class="toggle-text"></span></div>
+        <div class="roadmap-details">
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Switch to Haiku for daily reflections, keep Sonnet for weekly/monthly</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Batch telemetry events</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Apply for Vercel OSS sponsorship</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Apply for Upstash OSS program</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Set up GitHub Sponsors</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Make the repo public (if not already)</div>
         </div>
       </div>
-      <div class="card" style="border-left:3px solid var(--amber)">
+
+      <!-- Phase 2 -->
+      <div class="card roadmap-card" style="border-left:3px solid var(--amber)">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
             <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 2: Free AI Tier</div>
@@ -361,38 +390,149 @@
           </div>
           <span style="font-size:12px;color:var(--amber);font-weight:600">NEXT</span>
         </div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--text-muted)">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 3: Sustainability</div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Awesome Foundation (applied), Anthropic credits (emailed), funding.json (done), merch line (planning, first phrase: "Stay."), NLnet (needs tech co-applicant), NSF SBIR (paused), Detroit Startup Fund (watch for Round 3)</div>
+        <div class="roadmap-toggle" onclick="toggleRoadmapCard(this)"><span class="toggle-text"></span></div>
+        <div class="roadmap-details">
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Add Cloudflare Workers AI as primary LLM for daily reflections</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Implement fallback chain (Workers AI → Claude Haiku → scripted)</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Add client-side wall caching</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Remove client-side health checks</div>
         </div>
       </div>
-      <div class="card" style="border-left:3px solid var(--sage)">
+
+      <!-- Phase 3 -->
+      <div class="card roadmap-card" style="border-left:3px solid var(--text-muted)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 3: Sustainability</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Funding, grants, sponsorships, and community growth</div>
+          </div>
+          <span style="font-size:12px;color:var(--text-muted);font-weight:600">6/12 done</span>
+        </div>
+        <div class="roadmap-toggle" onclick="toggleRoadmapCard(this)"><span class="toggle-text"></span></div>
+        <div class="roadmap-details">
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Set up Ko-fi (ko-fi.com/bloomselfcare)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Set up GitHub Sponsors (via Stripe)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Add "Support Bloom" links in Settings and Today tabs</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Apply for Awesome Foundation micro-grant ($1,000)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Add funding.json manifest to repo (FLOSS/fund discoverability)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Email Anthropic about social impact API credits</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Apply for Cloudflare Project Galileo</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Reapply to Open Collective once community grows</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Explore alternative fiscal sponsors (SFC, Hack Club, NumFOCUS)</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Apply for NLnet Foundation grant (needs tech co-applicant)</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Monitor NSF SBIR Digital Health for reopening (paused)</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Monitor Detroit Startup Fund for Round 3</div>
+        </div>
+      </div>
+
+      <!-- Phase 3B -->
+      <div class="card roadmap-card" style="border-left:3px solid var(--text-muted)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 3B: Merch Line (SaidGently)</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">First phrase: "Stay." 6 products designed. Awaiting samples + Etsy setup.</div>
+          </div>
+          <span style="font-size:12px;color:var(--text-muted);font-weight:600">6/12 done</span>
+        </div>
+        <div class="roadmap-toggle" onclick="toggleRoadmapCard(this)"><span class="toggle-text"></span></div>
+        <div class="roadmap-details">
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Create Printful account</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Design heavyweight tee and hoodie print files</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Design all-over print sun hoodie (forest canopy pattern)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Design hat embroidery files</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Set up all six products in Printful</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Draft Etsy listing descriptions</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Pay Etsy $29 startup fee and claim SaidGently shop name</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Order samples from Printful (20% discount on samples)</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Photograph samples for listings</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Connect Printful to Etsy</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Publish listings with real product photos</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Add packaging insert linking to Bloom</div>
+        </div>
+      </div>
+
+      <!-- Safety & Compliance -->
+      <div class="card roadmap-card" style="border-left:3px solid var(--sage)">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
             <div style="font-size:13px;font-weight:600;color:var(--cream)">Safety & Compliance</div>
-            <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Threat detection, compliance logging, admin alerts, prompt injection fix, rate limiting, age gate, terms consent, GDPR deletion, shared moderation module, incident response plan</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Threat detection, compliance logging, admin alerts, age gate, terms consent, GDPR deletion, moderation module</div>
           </div>
-          <span style="font-size:12px;color:var(--sage-light);font-weight:600">DONE ✓</span>
+          <span style="font-size:12px;color:var(--sage-light);font-weight:600">2 open</span>
         </div>
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
-          <div style="font-size:11px;color:var(--amber);line-height:1.6">TODO: Set up Resend email alerts (verify domain, add RESEND_API_KEY + ALERT_EMAIL_TO env vars)</div>
-          <div style="font-size:11px;color:var(--amber);line-height:1.6">TODO: Lawyer review of Terms of Use, Privacy Policy, and threat reporting language</div>
+        <div class="roadmap-toggle" onclick="toggleRoadmapCard(this)"><span class="toggle-text"></span></div>
+        <div class="roadmap-details">
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Credible threat detection (CREDIBLE_THREAT_PATTERNS)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Threat compliance logging with full metadata (1-year retention)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Admin threat alerts via email, push, and webhook</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Incident response plan (INCIDENT_RESPONSE.md)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Prompt injection fix (server-side system prompt allowlist)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>AI endpoint rate limiting (20 req/hr per IP)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Admin key moved from URL params to X-Admin-Key header</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Buddy receiver crisis guidance</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>HSTS security header</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Terms of Service acceptance mechanism</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Three-tier age gate (under 13 / 13-15 / 16+)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Self-serve age group update in Settings</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>OneSignal privacy disclosure fix</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Anthropic data retention claim corrected</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>GDPR data deletion endpoint</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>AGPL-3.0 license notice visible to users</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Health claims language softened</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Expanded self-harm detection (6 additional patterns)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Shared moderation module (api/moderation.js)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Trauma-informed under-13 messaging</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Crisis resource descriptions clarified</div>
+          <div class="roadmap-item todo" style="color:var(--amber)"><span class="ri-check">○</span>Set up Resend email alerts (verify domain, add RESEND_API_KEY + ALERT_EMAIL_TO env vars)</div>
+          <div class="roadmap-item todo" style="color:var(--amber)"><span class="ri-check">○</span>Lawyer review of Terms of Use, Privacy Policy, and threat reporting language</div>
         </div>
       </div>
-      <div class="card" style="border-left:3px solid var(--text-muted)">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 4: Reach</div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">School outreach (DePauw — emailed, Interlochen — discovery call April 6), employer/parent company wellness (pitched), internationalization, crisis org partnerships</div>
+
+      <!-- Phase 4 -->
+      <div class="card roadmap-card" style="border-left:3px solid var(--text-muted)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 4: Reach</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">School outreach, internationalization, crisis org partnerships, public launch</div>
+          </div>
+          <span style="font-size:12px;color:var(--text-muted);font-weight:600">7 open</span>
+        </div>
+        <div class="roadmap-toggle" onclick="toggleRoadmapCard(this)"><span class="toggle-text"></span></div>
+        <div class="roadmap-details">
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Purchase custom domain (bloomselfcare.app)</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Submit to PsyberGuide for credibility review</div>
+          <div class="roadmap-item done"><span class="ri-check">✓</span>Reach out to university counseling centers (MCTS Rose, Schoolcraft, Wayne State, DePauw, Interlochen)</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Interlochen discovery call with counseling director (April 6, 2026)</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Internationalization framework + first community translations</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Reach out to crisis organizations for cross-promotion</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Apply for larger grants (McGovern Foundation, Google.org)</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Post on Product Hunt</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Post on Hacker News (Show HN)</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Set up Instagram account for Bloom</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Apply for Cloudflare Project Galileo</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Switch OneSignal Site URL to bloomselfcare.app</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Remove OneSignal diagnostic logging after notifications confirmed working</div>
         </div>
       </div>
-      <div class="card" style="border-left:3px solid var(--text-muted)">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 5: Architecture</div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Cloudflare Pages + Workers migration if Vercel limits are hit. Target: 50K+ DAU at $0/month.</div>
+
+      <!-- Phase 5 -->
+      <div class="card roadmap-card" style="border-left:3px solid var(--text-muted)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--cream)">Phase 5: Architecture</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Long-term infrastructure and feature development</div>
+          </div>
+          <span style="font-size:12px;color:var(--text-muted);font-weight:600">4 open</span>
+        </div>
+        <div class="roadmap-toggle" onclick="toggleRoadmapCard(this)"><span class="toggle-text"></span></div>
+        <div class="roadmap-details">
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Evaluate migration to Cloudflare Pages + Workers (if Vercel limits hit)</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Offline-first PWA enhancements</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Community contributor program for ongoing development</div>
+          <div class="roadmap-item todo"><span class="ri-check">○</span>Post-treatment date reminder (nudge user to set next treatment date after auto-clear)</div>
         </div>
       </div>
+
     </div>
 
     <!-- Documentation -->
