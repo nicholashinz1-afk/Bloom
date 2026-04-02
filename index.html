@@ -876,6 +876,30 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   color: var(--text-primary);
   cursor: pointer;
 }
+.banner-highlight {
+  background: rgba(var(--sage-rgb),0.06);
+  border: 1px solid rgba(var(--sage-rgb),0.12);
+  position: relative;
+}
+.banner-highlight .banner-dismiss {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  opacity: 0.5;
+}
+.banner-highlight .banner-dismiss:hover { opacity: 1; }
+.banner-highlight .banner-action {
+  background: rgba(var(--sage-rgb),0.15);
+  border-color: rgba(var(--sage-rgb),0.3);
+  color: var(--sage-light);
+}
 
 /* ============================================================
    BUTTONS
@@ -8858,7 +8882,12 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('beforeunload', flushTelemetry);
 
-function trackFeature(feature) { sendTelemetry('feature_use', { feature }); }
+function trackFeature(feature) {
+  sendTelemetry('feature_use', { feature });
+  // Persist locally for feature highlight system
+  const used = load('bloom_features_used', []);
+  if (!used.includes(feature)) { used.push(feature); save('bloom_features_used', used); }
+}
 function trackEvent(eventName, meta) { sendTelemetry(eventName, meta ? { meta } : {}); }
 
 // ── API response time tracking ────────────────────────────
@@ -9535,6 +9564,15 @@ function renderTodayTop() {
         </div>
       </div>
     </div>`;
+  }
+
+  // Feature highlight (gentle biweekly discovery nudge)
+  if (shouldShowFeatureHighlight()) {
+    const _fhHighlight = pickFeatureHighlight();
+    if (_fhHighlight) {
+      html += renderFeatureHighlightBanner(_fhHighlight);
+      markHighlightShown(_fhHighlight.id);
+    }
   }
 
   // Affirmation banner
@@ -14092,6 +14130,11 @@ function renderSettingsTab() {
       <div class="toggle${notifs.weeklySummary ? ' on' : ''}" onclick="toggleNotif('weeklySummary')"></div>
     </div>
     <div class="divider"></div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">Feature highlights</div><div class="toggle-sub">Occasionally surface features you haven't tried yet</div></div>
+      <div class="toggle${notifs.featureHighlights !== false ? ' on' : ''}" onclick="toggleNotif('featureHighlights')"></div>
+    </div>
+    <div class="divider"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="resetServiceWorker()">↺ Fix notifications</button>
       <button class="btn btn-ghost btn-sm" onclick="testPushNotification()">🔔 Test notification</button>
@@ -17950,6 +17993,571 @@ function renderWhatsNewTourCard(items) {
     whatsNewTourStep++;
     renderWhatsNewTourCard(items);
   });
+}
+
+// ============================================================
+//  FEATURE HIGHLIGHTS
+// ============================================================
+const FEATURE_HIGHLIGHTS = [
+  // Tier 1 — Contextually relevant (show first)
+  {
+    id: 'hard_day_mode',
+    trackKeys: ['hard_day'],
+    tier: 1, minWeek: 2, minDays: 5,
+    contextCheck: () => {
+      // Only show if user has logged low mood but never activated hard day mode
+      const history = load('bloom_history', {});
+      const days = Object.values(history);
+      const hasLowMood = days.some(d => d.mood === 0 || d.mood === 1);
+      return hasLowMood;
+    },
+    icon: '🫂',
+    title: {
+      gentle: 'There\'s a Hard Day Mode',
+      real: 'Hard Day Mode exists'
+    },
+    body: {
+      gentle: 'When things feel heavy, it simplifies everything and gives you space. Tap the "Having a hard day?" banner when it appears.',
+      real: 'Strips the app down to basics on rough days. Look for the prompt at the top of Today when you haven\'t logged mood yet.'
+    },
+    action: { tab: 'today', label: 'Got it' }
+  },
+  {
+    id: 'grounding',
+    trackKeys: ['grounding'],
+    tier: 1, minWeek: 2, minDays: 3,
+    contextCheck: () => {
+      const used = load('bloom_features_used', []);
+      return used.includes('mood_log') && !used.includes('wellness');
+    },
+    icon: '🌍',
+    title: {
+      gentle: 'A grounding exercise for overwhelming moments',
+      real: 'There\'s a grounding tool'
+    },
+    body: {
+      gentle: 'The 5-4-3-2-1 grounding exercise in Wellness can help when things feel overwhelming. It only takes a minute.',
+      real: 'In the Wellness tab. 5-4-3-2-1 senses. Takes about 60 seconds. Might help on rough days.'
+    },
+    action: { tab: 'wellness', label: 'Try it' }
+  },
+  {
+    id: 'weekly_insights',
+    trackKeys: ['weekly_insight'],
+    tier: 1, minWeek: 2, minDays: 7,
+    contextCheck: () => {
+      const history = load('bloom_history', {});
+      return Object.keys(history).length >= 7;
+    },
+    icon: '📊',
+    title: {
+      gentle: 'Your weekly insights are ready',
+      real: 'Weekly insights are a thing'
+    },
+    body: {
+      gentle: 'After a week of check-ins, Bloom can show you mood and habit patterns. It\'s in the Weekly tab.',
+      real: 'You\'ve got enough data for weekly mood-habit insights. Check the Weekly tab.'
+    },
+    action: { tab: 'weekly', label: 'View insights' }
+  },
+  // Tier 2 — Depth features
+  {
+    id: 'breathing',
+    trackKeys: ['breathing'],
+    tier: 2, minWeek: 2, minDays: 5,
+    icon: '🌬️',
+    title: {
+      gentle: 'A breathing exercise when you need to slow down',
+      real: 'Breathing exercise available'
+    },
+    body: {
+      gentle: 'There\'s a guided breathing tool in Wellness. It walks you through a calming rhythm. No pressure, just an option.',
+      real: 'Wellness tab has a breathing exercise. Guided rhythm, takes a couple minutes.'
+    },
+    action: { tab: 'wellness', label: 'Try it' }
+  },
+  {
+    id: 'body_scan',
+    trackKeys: ['bodyscan'],
+    tier: 2, minWeek: 3, minDays: 7,
+    contextCheck: () => {
+      const used = load('bloom_features_used', []);
+      return used.includes('breathing') || used.includes('grounding');
+    },
+    icon: '🧘',
+    title: {
+      gentle: 'Body scan for checking in with yourself',
+      real: 'There\'s a body scan too'
+    },
+    body: {
+      gentle: 'A quick body awareness exercise in Wellness. Helps you notice where you\'re holding tension.',
+      real: 'In Wellness. 20-second guided body awareness check. Quick and simple.'
+    },
+    action: { tab: 'wellness', label: 'Try it' }
+  },
+  {
+    id: 'reframe',
+    trackKeys: ['reframe'],
+    tier: 2, minWeek: 3, minDays: 7,
+    contextCheck: () => {
+      const used = load('bloom_features_used', []);
+      return used.includes('journal') || used.includes('breathing');
+    },
+    icon: '🪞',
+    title: {
+      gentle: 'Gentle reframe for difficult thoughts',
+      real: 'Thought reframe tool'
+    },
+    body: {
+      gentle: 'When a thought is weighing on you, the reframe tool in Wellness can help you see it differently. AI-powered, private.',
+      real: 'Wellness tab. Type a negative thought, get an AI-powered reframe. Keeps a history too.'
+    },
+    action: { tab: 'wellness', label: 'Try it' }
+  },
+  {
+    id: 'vault_backup',
+    trackKeys: ['encrypted_backup', 'backup'],
+    tier: 2, minWeek: 3, minDays: 14,
+    icon: '🔐',
+    title: {
+      gentle: 'You\'ve been showing up. Consider backing up your data.',
+      real: 'Back up your data'
+    },
+    body: {
+      gentle: 'There\'s an encrypted cloud backup option in Settings under Data & Privacy. Your data is safe and only you can access it.',
+      real: 'You\'ve got real data now. Encrypted backup in Settings > Data & Privacy. Worth 2 minutes.'
+    },
+    action: { tab: 'settings', section: 'data', label: 'Set it up' }
+  },
+  {
+    id: 'buddy_system',
+    trackKeys: ['buddy'],
+    tier: 2, minWeek: 3, minDays: 7,
+    contextCheck: () => typeof buddyState !== 'undefined' && buddyState.status !== 'paired',
+    icon: '👋',
+    title: {
+      gentle: 'You don\'t have to do this alone',
+      real: 'Bloom Buddy is available'
+    },
+    body: {
+      gentle: 'Bloom Buddy pairs you with someone for mutual encouragement. Anonymous, safe, and always optional.',
+      real: 'Community tab has Bloom Buddy. Anonymous peer pairing for encouragement. Optional.'
+    },
+    action: { tab: 'community', label: 'Check it out' }
+  },
+  {
+    id: 'community_wall',
+    trackKeys: ['wall'],
+    tier: 2, minWeek: 3, minDays: 5,
+    icon: '💬',
+    title: {
+      gentle: 'A wall of encouragement from others',
+      real: 'Community wall exists'
+    },
+    body: {
+      gentle: 'The Community tab has an encouragement wall where people share anonymous support. Reading or posting is always optional.',
+      real: 'Community tab. Anonymous encouragement wall. Read or post. No pressure.'
+    },
+    action: { tab: 'community', label: 'Take a look' }
+  },
+  // Tier 3a — Settings-buried features
+  {
+    id: 'medication_detailed',
+    trackKeys: ['medication_detailed_mode'],
+    tier: 3, minWeek: 3, minDays: 7,
+    contextCheck: () => {
+      const prefs = state.prefs || {};
+      const medOn = prefs.habits?.medication_am || prefs.habits?.medication_pm || prefs.habits?.medication_any;
+      return medOn && (prefs.medicationMode || 'simple') === 'simple';
+    },
+    icon: '💊',
+    title: {
+      gentle: 'You can name and customize your medications',
+      real: 'Medication detailed mode'
+    },
+    body: {
+      gentle: 'In Settings > Habits, there\'s a detailed mode where you can name each medication, set specific times, and mark as-needed.',
+      real: 'Settings > Habits. Detailed mode lets you name meds, set times, mark as-needed.'
+    },
+    action: { tab: 'settings', section: 'daily', label: 'Customize' }
+  },
+  {
+    id: 'doctor_card',
+    trackKeys: ['doctor_reference_card'],
+    tier: 3, minWeek: 4, minDays: 14,
+    contextCheck: () => {
+      const prefs = state.prefs || {};
+      return (prefs.medicationMode === 'detailed') && ((prefs.medications?.am?.length || 0) + (prefs.medications?.pm?.length || 0) + (prefs.medications?.any?.length || 0) > 0);
+    },
+    icon: '🩺',
+    title: {
+      gentle: 'A medication card for doctor visits',
+      real: 'Doctor reference card'
+    },
+    body: {
+      gentle: 'Bloom can generate a summary of your medications to show your doctor. Look for it in Settings > Habits under medication.',
+      real: 'Settings > Habits > medication section. Generates a printable med summary for appointments.'
+    },
+    action: { tab: 'settings', section: 'daily', label: 'View' }
+  },
+  {
+    id: 'schedule_customization',
+    trackKeys: ['schedule_customized'],
+    tier: 3, minWeek: 3, minDays: 14,
+    contextCheck: () => {
+      const prefs = state.prefs || {};
+      return prefs.habits && Object.values(prefs.habits).some(v => v === true);
+    },
+    icon: '⏰',
+    title: {
+      gentle: 'You can adjust when habits appear',
+      real: 'Customize your schedule'
+    },
+    body: {
+      gentle: 'In Settings > Habits, you can change which time slots your habits show up in. Morning, afternoon, evening, or anytime.',
+      real: 'Settings > Habits. Move habits between AM/PM/evening/anytime. Make it fit your actual routine.'
+    },
+    action: { tab: 'settings', section: 'daily', label: 'Adjust' }
+  },
+  {
+    id: 'checkin_frequency',
+    trackKeys: ['checkin_frequency_changed'],
+    tier: 3, minWeek: 3, minDays: 10,
+    contextCheck: () => {
+      const used = load('bloom_features_used', []);
+      return used.includes('journal');
+    },
+    icon: '📝',
+    title: {
+      gentle: 'You can change how often check-ins happen',
+      real: 'Check-in frequency is adjustable'
+    },
+    body: {
+      gentle: 'In Settings > Check-ins, you can adjust how often journal and reflection prompts appear. More or less, whatever feels right.',
+      real: 'Settings > Check-ins. Set journal/reflection frequency to what works for you.'
+    },
+    action: { tab: 'settings', section: 'checkins', label: 'Adjust' }
+  },
+  {
+    id: 'selfcare_tasks',
+    trackKeys: ['selfcare_toggled'],
+    tier: 3, minWeek: 3, minDays: 10,
+    icon: '🌸',
+    title: {
+      gentle: 'There are extra self-care tasks you can turn on',
+      real: 'More self-care tasks available'
+    },
+    body: {
+      gentle: 'In Settings > Daily Self-Care, there are 18+ optional tasks across categories like morning moments, movement, connection, and wind-down.',
+      real: 'Settings > Daily Self-Care. 18+ optional tasks. Movement, connection, wind-down, etc.'
+    },
+    action: { tab: 'settings', section: 'selfcare', label: 'Browse' }
+  },
+  {
+    id: 'special_dates',
+    trackKeys: ['special_dates_set'],
+    tier: 3, minWeek: 3, minDays: 14,
+    contextCheck: () => {
+      const prefs = state.prefs || {};
+      return !prefs.specialDates || prefs.specialDates.length === 0;
+    },
+    icon: '📅',
+    title: {
+      gentle: 'Mark dates that matter to you',
+      real: 'Special dates feature'
+    },
+    body: {
+      gentle: 'In Settings > Special Dates, you can mark birthdays, anniversaries, or hard days. Bloom will check in with you on those days.',
+      real: 'Settings > Special Dates. Birthdays, anniversaries, hard days. App acknowledges them when they come around.'
+    },
+    action: { tab: 'settings', section: 'special-dates', label: 'Set up' }
+  },
+  {
+    id: 'buddy_mood_sharing',
+    trackKeys: ['buddy_mood_share_toggled'],
+    tier: 3, minWeek: 4, minDays: 14,
+    contextCheck: () => typeof buddyState !== 'undefined' && buddyState.status === 'paired',
+    icon: '💛',
+    title: {
+      gentle: 'Your buddy can know when you\'re having a rough day',
+      real: 'Buddy mood sharing'
+    },
+    body: {
+      gentle: 'In buddy settings, there\'s a toggle to share your mood with your buddy. They\'ll get a gentle nudge if you\'re having a hard day.',
+      real: 'Buddy settings. Toggle mood sharing. Your buddy gets a heads-up on rough days.'
+    },
+    action: { tab: 'settings', section: 'buddy', label: 'Enable' }
+  },
+  {
+    id: 'voice_preference',
+    trackKeys: ['voice_preference_changed'],
+    tier: 3, minWeek: 3, minDays: 7,
+    icon: '🗣️',
+    title: {
+      gentle: 'You can change how Bloom talks to you',
+      real: 'Voice preference is changeable'
+    },
+    body: {
+      gentle: 'In Settings > Profile, you can switch between "Keep it gentle" and "Keep it real." It changes the tone everywhere in the app.',
+      real: 'Settings > Profile. Switch between gentle and real voice. Changes tone app-wide.'
+    },
+    action: { tab: 'settings', section: 'profile', label: 'Change' }
+  },
+  // Tier 3b — Utility features
+  {
+    id: 'water_tracking',
+    trackKeys: ['water_tracked'],
+    tier: 4, minWeek: 3, minDays: 7,
+    contextCheck: () => {
+      const history = load('bloom_history', {});
+      return !Object.values(history).some(d => (d.water || 0) > 0);
+    },
+    icon: '💧',
+    title: {
+      gentle: 'There\'s water tracking built in',
+      real: 'Water tracking exists'
+    },
+    body: {
+      gentle: 'In your daily self-care tasks, you can track water intake. Bloom can also send gentle reminders throughout the day.',
+      real: 'Daily self-care has water tracking. Optional reminders too.'
+    },
+    action: { tab: 'settings', section: 'selfcare', label: 'Enable' }
+  },
+  {
+    id: 'high_contrast',
+    trackKeys: ['high_contrast_toggled'],
+    tier: 4, minWeek: 4, minDays: 14,
+    icon: '♿',
+    title: {
+      gentle: 'Accessibility options are available',
+      real: 'Accessibility settings'
+    },
+    body: {
+      gentle: 'In Settings, there\'s a high contrast mode and larger text option if you\'d like things easier to read.',
+      real: 'Settings has high contrast and large text modes. Under Accessibility.'
+    },
+    action: { tab: 'settings', section: 'accessibility', label: 'View' }
+  },
+  {
+    id: 'winddown',
+    trackKeys: ['winddown_started'],
+    tier: 4, minWeek: 3, minDays: 10,
+    icon: '🌙',
+    title: {
+      gentle: 'An evening wind-down sequence',
+      real: 'Wind-down sequence'
+    },
+    body: {
+      gentle: 'When you\'re winding down for the night, there\'s a gentle sequence that walks you through a mood check, journal, and breathing.',
+      real: 'Evening wind-down. Mood check, quick journal, breathing. Shows up on low-mood evenings.'
+    },
+    action: { tab: 'today', label: 'Got it' }
+  },
+  {
+    id: 'affirmations',
+    trackKeys: ['affirmation_engaged'],
+    tier: 4, minWeek: 3, minDays: 5,
+    icon: '✨',
+    title: {
+      gentle: 'Daily affirmations are part of your routine',
+      real: 'Daily affirmations'
+    },
+    body: {
+      gentle: 'A new affirmation appears each day at the bottom of your Today tab. They change based on your voice preference.',
+      real: 'Bottom of Today tab. New one daily. Matches your voice preference.'
+    },
+    action: { tab: 'today', label: 'Got it' }
+  },
+  {
+    id: 'mood_patterns',
+    trackKeys: ['mood_pattern_viewed'],
+    tier: 4, minWeek: 4, minDays: 14,
+    contextCheck: () => {
+      const history = load('bloom_history', {});
+      return Object.keys(history).length >= 14;
+    },
+    icon: '📈',
+    title: {
+      gentle: 'Bloom can show you mood and habit patterns',
+      real: 'Mood-habit patterns available'
+    },
+    body: {
+      gentle: 'The Progress tab shows how your mood connects with your habits over time. It gets more useful the more you check in.',
+      real: 'Progress tab. Mood-habit correlations. Gets better with more data.'
+    },
+    action: { tab: 'progress', label: 'Explore' }
+  },
+  {
+    id: 'data_export',
+    trackKeys: ['backup', 'transfer_qr', 'encrypted_backup'],
+    tier: 4, minWeek: 4, minDays: 14,
+    icon: '💾',
+    title: {
+      gentle: 'Multiple ways to save your data',
+      real: 'Data export options'
+    },
+    body: {
+      gentle: 'Beyond the vault, you can export your data as a backup link, QR code, or JSON file. All in Settings > Data & Privacy.',
+      real: 'Settings > Data & Privacy. Backup link, QR code, JSON export. Multiple options.'
+    },
+    action: { tab: 'settings', section: 'data', label: 'View options' }
+  }
+];
+
+// ── Feature Highlight State & Logic ──────────────────────────
+
+function getHighlightState() {
+  return load('bloom_highlight_state', {
+    lastShown: null,
+    lastFeatureId: null,
+    dismissed: [],
+    shownCounts: {},
+    activeDaysSinceLast: 0,
+    lastActiveDay: null
+  });
+}
+
+function saveHighlightState(hs) {
+  save('bloom_highlight_state', hs);
+}
+
+function hasUsedFeature(trackKeys) {
+  const used = load('bloom_features_used', []);
+  return trackKeys.some(k => used.includes(k));
+}
+
+function shouldShowFeatureHighlight() {
+  // Disabled in settings
+  const notifs = state.prefs?.notifications || {};
+  if (notifs.featureHighlights === false) return false;
+
+  // Hard day or low mood
+  if (state.hardDayMode) return false;
+  const mood = state.todayData?.mood;
+  if (mood === 0 || mood === 1) return false;
+
+  // Other banners showing
+  if (state.showWelcomeBack) return false;
+  const specialMatches = state._specialDateMatches || [];
+  const responses = state.todayData?._specialDateResponses || {};
+  if (specialMatches.some(sd => !responses[sd.id])) return false;
+  if (state.showReflectionBanner) return false;
+
+  // Onboarding not done
+  if (!load('bloom_tutorial_done')) return false;
+
+  // Too early (first 2 weeks)
+  const userWeek = (state.prefs?.progressiveDisclosure === false) ? 99 : getUserWeekNumber();
+  if (userWeek < 2) return false;
+
+  // Cadence check: 10+ days since last highlight
+  const hs = getHighlightState();
+  if (hs.lastShown) {
+    const daysSinceLast = Math.floor((Date.now() - new Date(hs.lastShown).getTime()) / 86400000);
+    if (daysSinceLast < 10) return false;
+  }
+
+  // Need 3+ active days since last highlight
+  if (hs.lastShown && hs.activeDaysSinceLast < 3) return false;
+
+  return true;
+}
+
+function pickFeatureHighlight() {
+  const hs = getHighlightState();
+  const used = load('bloom_features_used', []);
+  const userWeek = (state.prefs?.progressiveDisclosure === false) ? 99 : getUserWeekNumber();
+  const xp = state.xpData || {};
+  const totalDays = xp.daysShowedUp || 0;
+
+  // Filter and score candidates
+  const candidates = FEATURE_HIGHLIGHTS.filter(f => {
+    // Already engaged with this feature
+    if (hasUsedFeature(f.trackKeys)) return false;
+    // Already dismissed
+    if (hs.dismissed.includes(f.id)) return false;
+    // Shown 3+ times (auto-expired)
+    if ((hs.shownCounts[f.id] || 0) >= 3) return false;
+    // Progressive disclosure gate
+    if (userWeek < f.minWeek) return false;
+    // Minimum days gate
+    if (totalDays < f.minDays) return false;
+    // Context check
+    if (f.contextCheck && !f.contextCheck()) return false;
+    return true;
+  });
+
+  if (candidates.length === 0) return null;
+
+  // Sort by tier (lower = higher priority), then by minDays (show simpler ones first)
+  candidates.sort((a, b) => a.tier - b.tier || a.minDays - b.minDays);
+
+  return candidates[0];
+}
+
+function renderFeatureHighlightBanner(highlight) {
+  const voice = state.prefs?.voice === 'real' ? 'real' : 'gentle';
+  const title = highlight.title[voice];
+  const body = highlight.body[voice];
+  const actionLabel = highlight.action.label;
+
+  return `<div class="banner banner-highlight" id="feature-highlight-banner" style="margin-bottom:12px">
+    <button class="banner-dismiss" onclick="dismissFeatureHighlight('${highlight.id}')" aria-label="Dismiss">&times;</button>
+    <div class="banner-icon">${highlight.icon}</div>
+    <div class="banner-body" style="padding-right:20px">
+      <div class="banner-title" style="color:var(--sage-light)">${title}</div>
+      <div class="banner-text">${body}</div>
+      <div class="banner-actions">
+        <div class="banner-action" onclick="engageFeatureHighlight('${highlight.id}', '${highlight.action.tab}', '${highlight.action.section || ''}')">${actionLabel}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function dismissFeatureHighlight(id) {
+  const hs = getHighlightState();
+  if (!hs.dismissed.includes(id)) hs.dismissed.push(id);
+  saveHighlightState(hs);
+  trackEvent('feature_highlight_dismissed', { feature: id });
+  const banner = document.getElementById('feature-highlight-banner');
+  if (banner) banner.remove();
+}
+
+function engageFeatureHighlight(id, tab, section) {
+  const hs = getHighlightState();
+  if (!hs.dismissed.includes(id)) hs.dismissed.push(id);
+  saveHighlightState(hs);
+  trackEvent('feature_highlight_engaged', { feature: id });
+  const banner = document.getElementById('feature-highlight-banner');
+  if (banner) banner.remove();
+  if (tab) switchTab(tab);
+  if (section) setTimeout(() => openSettingsSection(section), 300);
+}
+
+let _highlightShownThisSession = false;
+
+function updateHighlightSessionState() {
+  const hs = getHighlightState();
+  const t = today();
+
+  // Increment active days counter if this is a new day
+  if (hs.lastActiveDay !== t) {
+    hs.activeDaysSinceLast = (hs.activeDaysSinceLast || 0) + 1;
+    hs.lastActiveDay = t;
+    saveHighlightState(hs);
+  }
+}
+
+function markHighlightShown(featureId) {
+  if (_highlightShownThisSession) return;
+  _highlightShownThisSession = true;
+  const hs = getHighlightState();
+  hs.shownCounts[featureId] = (hs.shownCounts[featureId] || 0) + 1;
+  hs.lastShown = new Date().toISOString().split('T')[0];
+  hs.lastFeatureId = featureId;
+  hs.activeDaysSinceLast = 0;
+  saveHighlightState(hs);
+  trackEvent('feature_highlight_shown', { feature: featureId });
 }
 
 // ============================================================
@@ -22965,6 +23573,8 @@ function initApp() {
   }
   checkForUpdate();
   sendTelemetry('session_start', { uid: _bloomUid });
+  // Update feature highlight session state (active day counter, shown counts)
+  updateHighlightSessionState();
   // Send level snapshot for analytics (after short delay so state is fully loaded)
   setTimeout(() => {
     const xp = state.xpData?.total || 0;

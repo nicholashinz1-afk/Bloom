@@ -150,6 +150,11 @@ Daily bonus based on current consecutive run: +15 XP at 7+ days, +30 at 14+, +50
 
 Daily | History | Wellness | Progress | Community | Settings
 
+## Development Checklist
+
+- **Onboarding review:** Any major UX or feature change must include a review of the onboarding tutorial to make sure it's still accurate and up to date. New features that change the Today tab, add new tabs, or modify core flows (mood, journal, habits) are especially likely to need onboarding updates.
+- **Feature highlights:** When adding a new feature that users might not discover on their own, add an entry to the `FEATURE_HIGHLIGHTS` array in `index.html`. Include both voice variants (gentle + real) and a contextual relevance check if appropriate.
+
 ## Deployment
 
 https://bloomselfcare.app
