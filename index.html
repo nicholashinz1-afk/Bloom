@@ -17787,9 +17787,14 @@ function closeAllSheets(force) {
     _sheetTriggerElement = null;
     setTimeout(() => { if (elToFocus) elToFocus.focus(); }, 50);
   }
-  // Pop the history state we pushed (unless back button already did)
-  if (wasOpen && history.state?.sheetOpen) {
+  // Pop the history state we pushed (unless back button already did).
+  // Skip history.back() when force-closing from background return — on Safari PWA
+  // a shallow history stack means history.back() can navigate out of the app entirely.
+  if (!force && wasOpen && history.state?.sheetOpen) {
     history.back();
+  } else if (force && wasOpen && history.state?.sheetOpen) {
+    // Replace the sheetOpen state instead of navigating back
+    history.replaceState({}, '');
   }
   // Re-render wellness tab if history was edited retroactively
   if (state._historySheetDirty) {
