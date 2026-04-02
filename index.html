@@ -3424,7 +3424,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '3.5.0';
+const VERSION = '3.6.0';
 const LEGACY_DOMAINS = ['bloom-zeta-rouge.vercel.app'];
 const PRODUCTION_DOMAIN = 'bloomselfcare.app';
 
@@ -3472,11 +3472,10 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: '<strong>Choose your voice</strong> — bloom now speaks in two tones: <em>Keep it real</em> (short, honest, no fluff) and <em>Keep it gentle</em> (warm, grounded, steady). Your choice shapes prompts, celebrations, and your morning greeting. Pick yours in Settings under Voice.', spotlight: null, tab: 'settings' },
-  { text: '<strong>Daily community prompt</strong> — a new question appears at the top of the Community tab each day. Your answer saves to your journal, and others can see that people answered, but never what anyone wrote. Private reflection with a sense of connection.', spotlight: null, tab: 'community' },
-  { text: '<strong>Quick thoughts</strong> — after logging your mood, a small text field appears so you can jot one thought and move on. It saves as a journal entry. No pressure to write more.', spotlight: null },
-  { text: '<strong>Shared milestones</strong> — if you have a buddy, you\'ll now see how many days you\'ve both shown up. It never goes down, just like your own days count.', spotlight: null, tab: 'community' },
-  { text: '<strong>Your colors, everywhere</strong> — the flower and streak tree now match your chosen theme. Pick a theme in Settings and watch your growth visuals change.', spotlight: null, tab: 'settings' },
+  { text: '<strong>Name your medications</strong> — you can now list each medication individually in Settings. Choose <em>Simple</em> (one check per time slot) or <em>Detailed</em> (track each med separately with a "Take all" option).', spotlight: null, tab: 'settings' },
+  { text: '<strong>Medication reference card</strong> — your medication list in Settings doubles as a quick reference you can show your doctor. Copy it to your clipboard with one tap.', spotlight: null, tab: 'settings' },
+  { text: '<strong>As-needed medications</strong> — medications you only take sometimes show up as a quiet log button instead of a daily checkbox. No pressure, no guilt, just a record for yourself.', spotlight: null },
+  { text: '<strong>Treatment day support</strong> — for infusions, injections, or periodic treatments, you can link them to your calendar. Bloom will acknowledge treatment days and offer to make the day a little easier.', spotlight: null, tab: 'settings' },
 ];
 
 // ============================================================
@@ -8597,6 +8596,22 @@ function renderTodayTop() {
           </div>
         </div>
       </div>`;
+    } else if (sd.type === 'treatment') {
+      html += `<div id="special-date-banner-${sd.id}" class="banner" style="background:rgba(106,154,176,0.08);border:1px solid rgba(106,154,176,0.18);margin-bottom:12px">
+        <div style="text-align:center;width:100%">
+          <div style="font-size:28px;margin-bottom:10px">💊</div>
+          <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sky-light);line-height:1.7;margin-bottom:4px">
+            Treatment day${sd.name ? ' — ' + sd.name.replace(' treatment', '') : ''}. Be kind to yourself today.
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px">
+            You're doing something hard for your health. That takes real strength.
+          </div>
+          <div style="display:flex;gap:10px;justify-content:center">
+            <button class="btn btn-sm" style="background:rgba(106,154,176,0.2);border:1px solid rgba(106,154,176,0.35);color:var(--sky-light)" onclick="respondToSpecialDate('${sd.id}','hard')">Make today easier</button>
+            <button class="btn btn-ghost btn-sm" onclick="respondToSpecialDate('${sd.id}','okay')">I've got this</button>
+          </div>
+        </div>
+      </div>`;
     } else {
       html += `<div id="special-date-banner-${sd.id}" class="banner" style="background:rgba(201,149,74,0.1);border:1px solid rgba(201,149,74,0.25);margin-bottom:12px">
         <div style="text-align:center;width:100%">
@@ -9099,6 +9114,17 @@ function renderTodayTab() {
   const htPrefs = prefs?.habitTimes || {};
   let allDailyHabits = getOrderedDailyHabits().filter(h => dhPrefs[h.id]);
   const medEnabled = !!dhPrefs.medication;
+  const medMode = prefs?.medicationMode || (medEnabled ? 'simple' : 'off');
+  const medDetailed = medMode === 'detailed';
+  const medMeds = (prefs?.medications || []);
+  const medMedsAm = medMeds.filter(m => m.time === 'am');
+  const medMedsAfternoon = medMeds.filter(m => m.time === 'afternoon');
+  const medMedsPm = medMeds.filter(m => m.time === 'pm');
+  const medMedsAny = medMeds.filter(m => m.time === 'any');
+  const medHasDetailedAm = medDetailed && medMedsAm.length > 0;
+  const medHasDetailedAfternoon = medDetailed && medMedsAfternoon.length > 0;
+  const medHasDetailedPm = medDetailed && medMedsPm.length > 0;
+  const medHasDetailedAny = medDetailed && medMedsAny.length > 0;
 
   // Adaptive difficulty: if mood is low (0 or 1) or gentle mode, mute non-priority habits
   const isReducedDay = isLowMoodDay || isGentleMode;
@@ -9198,27 +9224,30 @@ function renderTodayTab() {
   }
 
   // --- MORNING SECTION ---
-  if (amHabits.length > 0 || medInAm || customAm.length > 0) {
+  if (amHabits.length > 0 || medInAm || medHasDetailedAm || customAm.length > 0) {
     html += `<div class="section-label">🌅 Morning</div><div class="card mb-0">`;
-    if (medInAm) html += medHabitRow('am', medMuted);
+    if (medHasDetailedAm) html += renderMedGroup('am', medMedsAm, td);
+    else if (medInAm) html += medHabitRow('am', medMuted);
     amHabits.forEach(h => { html += dailyHabitRow(h, 'am', isMuted(h)); });
     customAm.forEach(ch => { html += customDailyHabitRow(ch, 'am'); });
     html += `</div>`;
   }
 
   // --- AFTERNOON SECTION ---
-  if (afternoonHabits.length > 0 || medInAfternoon || customAfternoon.length > 0) {
+  if (afternoonHabits.length > 0 || medInAfternoon || medHasDetailedAfternoon || customAfternoon.length > 0) {
     html += `<div class="section-label">🌤️ Afternoon</div><div class="card mb-0">`;
-    if (medInAfternoon) html += medHabitRow('afternoon', medMuted);
+    if (medHasDetailedAfternoon) html += renderMedGroup('afternoon', medMedsAfternoon, td);
+    else if (medInAfternoon) html += medHabitRow('afternoon', medMuted);
     afternoonHabits.forEach(h => { html += dailyHabitRow(h, 'afternoon', isMuted(h)); });
     customAfternoon.forEach(ch => { html += customDailyHabitRow(ch, 'afternoon'); });
     html += `</div>`;
   }
 
   // --- EVENING SECTION ---
-  if (pmHabits.length > 0 || medInPm || customPm.length > 0) {
+  if (pmHabits.length > 0 || medInPm || medHasDetailedPm || customPm.length > 0) {
     html += `<div class="section-label">🌙 Evening</div><div class="card mb-0">`;
-    if (medInPm) html += medHabitRow('pm', medMuted);
+    if (medHasDetailedPm) html += renderMedGroup('pm', medMedsPm, td);
+    else if (medInPm) html += medHabitRow('pm', medMuted);
     pmHabits.forEach(h => { html += dailyHabitRow(h, 'pm', isMuted(h)); });
     customPm.forEach(ch => { html += customDailyHabitRow(ch, 'pm'); });
     html += `</div>`;
@@ -9243,11 +9272,13 @@ function renderTodayTab() {
   const householdTasks = allHouseholdTasks.filter(t => isTodayScheduled(htDayPrefs[t.id] || 'any'));
 
   const customSCForAnytime = getCustomSelfCare();
-  const hasAnytime = anyHabits.length > 0 || medInAny || customAny.length > 0 || todayWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled || customSCForAnytime.length > 0;
+  const hasPrnMeds = medMeds.some(m => m.time === 'prn');
+  const hasAnytime = anyHabits.length > 0 || medInAny || medHasDetailedAny || customAny.length > 0 || todayWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled || customSCForAnytime.length > 0 || hasPrnMeds;
 
   if (hasAnytime) {
     html += `<div class="section-label"><span style="color:#f0c040">☀️</span> Anytime today</div><div class="card mb-0">`;
-    if (medInAny) html += medHabitRow('any', medMuted);
+    if (medHasDetailedAny) html += renderMedGroup('any', medMedsAny, td);
+    else if (medInAny) html += medHabitRow('any', medMuted);
     anyHabits.forEach(h => { html += dailyHabitRow(h, 'any', isMuted(h)); });
     customAny.forEach(ch => { html += customDailyHabitRow(ch, 'any'); });
 
@@ -9344,6 +9375,11 @@ function renderTodayTab() {
         </div>`;
       });
       html += `</div>`; // close self-care wrapper
+    }
+
+    // PRN (as-needed) medication logging
+    if (hasPrnMeds) {
+      html += renderPrnSection();
     }
 
     html += `</div>`; // close Anytime card
@@ -12296,22 +12332,115 @@ function renderSettingsTab() {
   dailyHtml += orderedHabits.map((h, i) => dailyHabitSettingsRow(h, i, orderedHabits.length)).join('');
   dailyHtml += `</div>`;
 
-  // Medication — visually separated
-  const medOn = !!dh.medication;
+  // Medication — visually separated, multi-medication support
+  const medMode = prefs.medicationMode || 'off';
+  const medList = prefs.medications || [];
   dailyHtml += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(106,154,176,0.15)">
     <div style="font-size:12px;color:var(--sky-light);font-weight:500;margin-bottom:8px">💊 Medication</div>
-    <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">A private, judgment-free nudge. Just "did I remember?" — nothing more.</div>
-    <div class="toggle-row" style="flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:10px;flex:1">
-        <span style="font-size:18px">💊</span>
-        <div class="toggle-label">Medication reminder</div>
-      </div>
-      <div class="toggle${medOn ? ' on' : ''}" onclick="toggleDailyHabitPref('medication')"></div>`;
-  if (medOn) {
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">A private, judgment-free nudge. Track your medications however works for you.</div>`;
+
+  // Mode selector
+  const _medModes = [
+    { id: 'off', label: 'Off', desc: "I don't track medication" },
+    { id: 'simple', label: 'Simple', desc: 'One check per time slot' },
+    { id: 'detailed', label: 'Detailed', desc: 'Track each medication' },
+  ];
+  dailyHtml += `<div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap">`;
+  _medModes.forEach(mm => {
+    const sel = medMode === mm.id;
+    dailyHtml += `<div onclick="setMedicationMode('${mm.id}')" style="
+      padding:6px 12px;border-radius:99px;cursor:pointer;font-size:12px;min-height:44px;display:flex;align-items:center;
+      background:${sel ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};
+      border:1px solid ${sel ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};
+      color:${sel ? 'var(--sky-light)' : 'var(--text-muted)'}" role="radio" aria-checked="${sel}" aria-label="${mm.desc}">${mm.label}</div>`;
+  });
+  dailyHtml += `</div>`;
+
+  if (medMode !== 'off') {
+    // Medication list editor
+    dailyHtml += `<div style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--sky-light);margin-bottom:8px">Your medications</div>`;
+
+    const _timeOptions = [
+      { id: 'am', label: 'Morning' },
+      { id: 'afternoon', label: 'Afternoon' },
+      { id: 'pm', label: 'Evening' },
+      { id: 'any', label: 'Daily' },
+      { id: 'prn', label: 'As needed' },
+      { id: 'not_daily', label: 'Not daily' },
+    ];
+
+    medList.forEach((med, idx) => {
+      dailyHtml += `<div style="background:rgba(106,154,176,0.04);border:1px solid rgba(106,154,176,0.12);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <input type="text" value="${med.name}" onchange="editMedication('${med.id}','name',this.value)"
+            placeholder="Medication name" aria-label="Medication name"
+            style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-sm);padding:6px 10px;font-size:13px;color:var(--text-primary);min-height:44px">
+          <div onclick="removeMedication('${med.id}')" style="cursor:pointer;padding:8px;color:var(--text-muted);font-size:16px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center" role="button" aria-label="Remove ${med.name}">✕</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">
+          ${_timeOptions.map(t => {
+            const sel2 = med.time === t.id;
+            return `<div onclick="editMedication('${med.id}','time','${t.id}');reRenderSettingsPreservingScroll()" style="
+              padding:3px 8px;border-radius:99px;cursor:pointer;font-size:11px;
+              background:${sel2 ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};
+              border:1px solid ${sel2 ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};
+              color:${sel2 ? 'var(--sky-light)' : 'var(--text-muted)'}">${t.label}</div>`;
+          }).join('')}
+        </div>
+        <input type="text" value="${med.note || ''}" onchange="editMedication('${med.id}','note',this.value)"
+          placeholder="Note (optional, e.g. 10mg, take with food, every 2 weeks)"
+          aria-label="Note for ${med.name}"
+          style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-sm);padding:5px 10px;font-size:11px;color:var(--text-secondary);box-sizing:border-box">
+        ${med.time === 'not_daily' && !(prefs.specialDates || []).some(sd => sd._linkedMedId === med.id) ? `
+          <div onclick="linkMedToSpecialDate('${med.id}')" style="
+            margin-top:6px;padding:4px 10px;border-radius:99px;cursor:pointer;font-size:11px;display:inline-flex;align-items:center;gap:4px;
+            background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.12);color:var(--sky-light)"
+            role="button" aria-label="Mark treatment days for ${med.name}">
+            📅 Mark treatment days
+          </div>` : ''}
+        ${med.time === 'not_daily' && (prefs.specialDates || []).some(sd => sd._linkedMedId === med.id) ? `
+          <div style="margin-top:6px;font-size:11px;color:var(--text-muted)">📅 Treatment days linked — set dates in Special Dates above</div>` : ''}
+      </div>`;
+    });
+
+    // Add medication button
+    if (medList.length < 20) {
+      dailyHtml += `<div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="new-med-name" placeholder="Add a medication" aria-label="New medication name"
+          style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-sm);padding:6px 10px;font-size:13px;color:var(--text-primary);min-height:44px"
+          onkeydown="if(event.key==='Enter'){const i=this;addMedication(i.value,'any','');i.value='';}">
+        <div onclick="const i=document.getElementById('new-med-name');if(i){addMedication(i.value,'any','');i.value='';}" style="
+          padding:6px 14px;border-radius:99px;cursor:pointer;font-size:12px;min-height:44px;display:flex;align-items:center;
+          background:rgba(106,154,176,0.15);border:1px solid rgba(106,154,176,0.3);color:var(--sky-light)" role="button" aria-label="Add medication">+ Add</div>
+      </div>`;
+    }
+    dailyHtml += `</div>`;
+
+    // Reference card — for doctor visits
+    if (medList.length > 0) {
+      const _timeLabels = { am: 'Morning', afternoon: 'Afternoon', pm: 'Evening', any: 'Daily', prn: 'As needed', not_daily: 'Periodic' };
+      dailyHtml += `<div style="background:rgba(158,196,216,0.06);border:1px solid rgba(158,196,216,0.15);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--sky-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">My Medications</div>`;
+      medList.forEach(m => {
+        dailyHtml += `<div style="display:flex;align-items:baseline;gap:6px;padding:3px 0;font-size:13px">
+          <span style="color:var(--text-primary)">${m.name}</span>
+          <span style="color:var(--text-muted);font-size:11px">${_timeLabels[m.time] || m.time}</span>
+          ${m.note ? `<span style="color:var(--text-muted);font-size:11px">· ${m.note}</span>` : ''}
+        </div>`;
+      });
+      dailyHtml += `<div style="margin-top:10px;border-top:1px solid rgba(158,196,216,0.1);padding-top:8px">
+        <div onclick="copyMedList()" id="copy-med-list-btn" style="
+          display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:99px;cursor:pointer;
+          background:rgba(106,154,176,0.1);border:1px solid rgba(106,154,176,0.2);
+          font-size:12px;color:var(--sky-light);min-height:44px" role="button" aria-label="Copy medication list to clipboard">
+          Copy to clipboard
+        </div>
+      </div></div>`;
+    }
+
+    // Reminder config (kept from original)
     const medTime = ht.medication || 'any';
-    dailyHtml += `<div style="display:flex;gap:4px;width:100%;margin-top:8px;margin-left:28px">
-      ${timeChipsHtml('medication', medTime, 'rgba(106,154,176,0.2)', 'rgba(106,154,176,0.4)', 'var(--sky-light)')}
-    </div>`;
     // Inline cue inputs for medication
     if (medTime === 'any') {
       dailyHtml += inlineCueInput('medication', null);
@@ -12325,7 +12454,7 @@ function renderSettingsTab() {
     const _timeDesc = medTime === 'any' ? 'noon' : _medSlots.map(s => _medSlotTimes[s][0]).join(', ');
     const _followDesc = medTime === 'any' ? '2pm' : _medSlots.map(s => _medSlotTimes[s][1]).join(', ');
     const _remindLabels = { auto: '🔔 Auto — ' + _timeDesc + ', follow-up at ' + _followDesc, gentle: '🔕 Once — ' + _timeDesc + ' only', off: '❌ Off' };
-    dailyHtml += `<div style="margin-top:8px;margin-left:28px">
+    dailyHtml += `<div style="margin-top:8px">
       <div style="font-size:11px;color:var(--sky-light);margin-bottom:6px">Reminders</div>
       <div style="display:flex;gap:4px;flex-wrap:wrap">
         ${['auto','gentle','off'].map(m => `<div onclick="setMedRemindMode('${m}')" style="
@@ -12337,7 +12466,7 @@ function renderSettingsTab() {
       <div style="font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.4">${_remindLabels[_medRemindMode]}</div>
     </div>`;
   }
-  dailyHtml += `</div></div>`;
+  dailyHtml += `</div>`;
 
   // Water & Nourishment tracking
   const waterGoal = prefs.waterGoal || 3;
@@ -13309,63 +13438,102 @@ function goalStepper(name, key, val, compact = false) {
   </div>`;
 }
 
-function openMedicationSheet() {
+function openMedicationSheet(step) {
   const body = document.getElementById('medication-sheet-body');
   if (!body) return;
-  const current = state.prefs?.medicationTiming || ['once'];
-  const times = [
-    { id: 'morning',   icon: '🌅', label: 'Morning',    sub: 'Start of day' },
-    { id: 'afternoon', icon: '☀️', label: 'Afternoon',  sub: 'Midday' },
-    { id: 'evening',   icon: '🌙', label: 'Evening',    sub: 'End of day' },
-  ];
-  let html = `
-    <h2 class="sheet-title">💊 Medication reminder</h2>
-    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">
-      A private, judgment-free nudge. Choose which times of day are relevant to you — you can change this any time.
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">`;
-  times.forEach(t => {
-    const on = current.includes(t.id);
-    html += `<div onclick="toggleMedTime('${t.id}')" id="med-time-${t.id}" style="
-      display:flex;align-items:center;justify-content:space-between;
-      padding:14px 16px;border-radius:var(--r-lg);cursor:pointer;
-      background:${on ? 'rgba(106,154,176,0.14)' : 'rgba(106,154,176,0.06)'};
-      border:1px solid ${on ? 'rgba(106,154,176,0.4)' : 'rgba(106,154,176,0.15)'};
-      transition:all 0.15s">
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:20px">${t.icon}</span>
-        <div>
-          <div style="font-size:14px;color:var(--sky-light);font-weight:500">${t.label}</div>
-          <div style="font-size:12px;color:var(--text-muted)">${t.sub}</div>
-        </div>
+  const currentStep = step || 'timing';
+
+  if (currentStep === 'timing') {
+    // Step 1: Choose timing (original flow)
+    const current = state.prefs?.medicationTiming || ['once'];
+    const times = [
+      { id: 'morning',   icon: '🌅', label: 'Morning',    sub: 'Start of day' },
+      { id: 'afternoon', icon: '☀️', label: 'Afternoon',  sub: 'Midday' },
+      { id: 'evening',   icon: '🌙', label: 'Evening',    sub: 'End of day' },
+    ];
+    let html = `
+      <h2 class="sheet-title">💊 Medication reminder</h2>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">
+        A private, judgment-free nudge. Choose which times of day are relevant to you — you can change this any time.
       </div>
-      <div id="med-check-${t.id}" style="font-size:18px;color:var(--sky-light);opacity:${on ? '1' : '0.3'}">${on ? '✓' : '○'}</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">`;
+    times.forEach(t => {
+      const on = current.includes(t.id);
+      html += `<div onclick="toggleMedTime('${t.id}')" id="med-time-${t.id}" style="
+        display:flex;align-items:center;justify-content:space-between;
+        padding:14px 16px;border-radius:var(--r-lg);cursor:pointer;
+        background:${on ? 'rgba(106,154,176,0.14)' : 'rgba(106,154,176,0.06)'};
+        border:1px solid ${on ? 'rgba(106,154,176,0.4)' : 'rgba(106,154,176,0.15)'};
+        transition:all 0.15s">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px">${t.icon}</span>
+          <div>
+            <div style="font-size:14px;color:var(--sky-light);font-weight:500">${t.label}</div>
+            <div style="font-size:12px;color:var(--text-muted)">${t.sub}</div>
+          </div>
+        </div>
+        <div id="med-check-${t.id}" style="font-size:18px;color:var(--sky-light);opacity:${on ? '1' : '0.3'}">${on ? '✓' : '○'}</div>
+      </div>`;
+    });
+    const onceOn = current.includes('once');
+    html += `<div style="height:1px;background:rgba(255,255,255,0.06);margin:4px 0"></div>
+      <div onclick="toggleMedTime('once')" id="med-time-once" style="
+        display:flex;align-items:center;justify-content:space-between;
+        padding:14px 16px;border-radius:var(--r-lg);cursor:pointer;
+        background:${onceOn ? 'rgba(106,154,176,0.14)' : 'rgba(106,154,176,0.06)'};
+        border:1px solid ${onceOn ? 'rgba(106,154,176,0.4)' : 'rgba(106,154,176,0.15)'};
+        transition:all 0.15s">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px">💊</span>
+          <div>
+            <div style="font-size:14px;color:var(--sky-light);font-weight:500">Once a day</div>
+            <div style="font-size:12px;color:var(--text-muted)">Single daily reminder</div>
+          </div>
+        </div>
+        <div id="med-check-once" style="font-size:18px;color:var(--sky-light);opacity:${onceOn ? '1' : '0.3'}">${onceOn ? '✓' : '○'}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveMedicationTiming(true);openMedicationSheet('naming')">Next</button>
+      <button class="btn btn-ghost" onclick="saveMedicationTiming(false);closeAllSheets()">Skip</button>
     </div>`;
-  });
-  const onceOn = current.includes('once');
-  html += `<div style="height:1px;background:rgba(255,255,255,0.06);margin:4px 0"></div>
-    <div onclick="toggleMedTime('once')" id="med-time-once" style="
-      display:flex;align-items:center;justify-content:space-between;
-      padding:14px 16px;border-radius:var(--r-lg);cursor:pointer;
-      background:${onceOn ? 'rgba(106,154,176,0.14)' : 'rgba(106,154,176,0.06)'};
-      border:1px solid ${onceOn ? 'rgba(106,154,176,0.4)' : 'rgba(106,154,176,0.15)'};
-      transition:all 0.15s">
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:20px">💊</span>
-        <div>
-          <div style="font-size:14px;color:var(--sky-light);font-weight:500">Once a day</div>
-          <div style="font-size:12px;color:var(--text-muted)">Single daily reminder</div>
-        </div>
+    body.innerHTML = html;
+    openSheet('medication-sheet');
+
+  } else if (currentStep === 'naming') {
+    // Step 2: Optionally name your medications
+    const medList = state.prefs?.medications || [];
+    let html = `
+      <h2 class="sheet-title">💊 Name your medications</h2>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px">
+        Want to track each one individually? Add them here. This is just for you — a quick reference you can show your doctor.
       </div>
-      <div id="med-check-once" style="font-size:18px;color:var(--sky-light);opacity:${onceOn ? '1' : '0.3'}">${onceOn ? '✓' : '○'}</div>
-    </div>
-  </div>
-  <div style="display:flex;gap:10px">
-    <button class="btn btn-primary" style="flex:1" onclick="saveMedicationTiming()">Save</button>
-    <button class="btn btn-ghost" onclick="closeAllSheets()">Cancel</button>
-  </div>`;
-  body.innerHTML = html;
-  openSheet('medication-sheet');
+      <div id="med-sheet-list">`;
+    medList.forEach(m => {
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:14px">💊</span>
+        <span style="font-size:13px;color:var(--sky-light)">${m.name}</span>
+        <div onclick="removeMedication('${m.id}');openMedicationSheet('naming')" style="font-size:11px;color:var(--text-muted);cursor:pointer;margin-left:auto;padding:4px 8px">✕</div>
+      </div>`;
+    });
+    html += `</div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input type="text" id="med-sheet-name" placeholder="Medication name" aria-label="Medication name"
+          style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-sm);padding:8px 12px;font-size:13px;color:var(--text-primary);min-height:44px"
+          onkeydown="if(event.key==='Enter'){const i=this;addMedication(i.value,'any','');i.value='';openMedicationSheet('naming');}">
+        <div onclick="const i=document.getElementById('med-sheet-name');if(i&&i.value.trim()){addMedication(i.value,'any','');i.value='';openMedicationSheet('naming');}" style="
+          padding:8px 14px;border-radius:99px;cursor:pointer;font-size:13px;min-height:44px;display:flex;align-items:center;
+          background:rgba(106,154,176,0.15);border:1px solid rgba(106,154,176,0.3);color:var(--sky-light)" role="button">+ Add</div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:16px">
+        You can add details like timing and notes in Settings later.${medList.length >= 3 ? ' With multiple medications, you might like the <strong style="color:var(--sky-light)">Detailed</strong> tracking mode in Settings.' : ''}
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" style="flex:1" onclick="closeAllSheets()">Done</button>
+        <button class="btn btn-ghost" onclick="closeAllSheets()">I'll do this later</button>
+      </div>`;
+    body.innerHTML = html;
+  }
 }
 
 function toggleMedTime(time) {
@@ -13397,19 +13565,19 @@ function saveMedicationTiming() {
     if (!state.prefs.selfCareTasks.includes('sc_medication')) {
       state.prefs.selfCareTasks.push('sc_medication');
     }
+    // Enable medication mode if not already set
+    if (!state.prefs.medicationMode || state.prefs.medicationMode === 'off') {
+      state.prefs.medicationMode = 'simple';
+    }
+    if (!state.prefs.dailyHabits) state.prefs.dailyHabits = {};
+    state.prefs.dailyHabits.medication = true;
   } else {
     // Remove medication entirely if no times selected
     state.prefs.selfCareTasks = state.prefs.selfCareTasks.filter(id => id !== 'sc_medication');
   }
   save('bloom_prefs', state.prefs);
-  closeAllSheets();
   renderTodayTab();
   renderSettingsTab();
-  setTimeout(() => {
-    const sh = document.getElementById('sh-selfcare');
-    const sb = document.getElementById('sb-selfcare');
-    if (sh && sb) { sh.classList.add('open'); sb.classList.add('open'); }
-  }, 50);
 }
 
 function toggleSelfCareTask(id) {
@@ -19866,6 +20034,386 @@ function tapCustomDailyHabit(id, timeSlot, el) {
   archiveToday();
   renderTodayTab();
   checkAllDone();
+}
+
+// ============================================================
+//  MULTI-MEDICATION MANAGEMENT
+// ============================================================
+
+function getMedications() {
+  return state.prefs?.medications || [];
+}
+
+function getMedsForSlot(slot) {
+  return getMedications().filter(m => m.time === slot);
+}
+
+function getDailyMedSlots() {
+  const meds = getMedications();
+  const slots = new Set();
+  meds.forEach(m => {
+    if (m.time !== 'prn' && m.time !== 'not_daily') slots.add(m.time);
+  });
+  return Array.from(slots);
+}
+
+function addMedication(name, time, note) {
+  if (!state.prefs.medications) state.prefs.medications = [];
+  if (state.prefs.medications.length >= 20) return;
+  const cleanName = (name || '').trim();
+  if (!cleanName) return;
+  const id = 'med_' + cleanName.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + Date.now().toString(36).slice(-4);
+  state.prefs.medications.push({ id, name: cleanName, time: time || 'any', note: (note || '').trim() });
+  // Auto-enable medication mode if adding first med while off
+  if (state.prefs.medicationMode === 'off') {
+    state.prefs.medicationMode = 'simple';
+    state.prefs.dailyHabits = state.prefs.dailyHabits || {};
+    state.prefs.dailyHabits.medication = true;
+  }
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
+  haptic('light');
+}
+
+function removeMedication(id) {
+  if (!state.prefs.medications) return;
+  state.prefs.medications = state.prefs.medications.filter(m => m.id !== id);
+  // Clean up todayData for this med
+  if (state.todayData[id]) delete state.todayData[id];
+  // Remove linked special date if exists
+  if (state.prefs.specialDates) {
+    state.prefs.specialDates = state.prefs.specialDates.filter(sd => sd._linkedMedId !== id);
+  }
+  save('bloom_prefs', state.prefs);
+  saveState();
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
+}
+
+function editMedication(id, field, value) {
+  const med = (state.prefs.medications || []).find(m => m.id === id);
+  if (!med) return;
+  med[field] = value;
+  save('bloom_prefs', state.prefs);
+}
+
+function setMedicationMode(mode) {
+  state.prefs.medicationMode = mode;
+  // Sync legacy dailyHabits.medication flag
+  if (!state.prefs.dailyHabits) state.prefs.dailyHabits = {};
+  state.prefs.dailyHabits.medication = mode !== 'off';
+  // Sync habitTimes from medication list
+  if (mode !== 'off') {
+    syncMedHabitTimes();
+  }
+  save('bloom_prefs', state.prefs);
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
+}
+
+function syncMedHabitTimes() {
+  // Build a bitmask from the medications list for the legacy habitTimes.medication
+  if (!state.prefs.habitTimes) state.prefs.habitTimes = {};
+  const meds = getMedications().filter(m => m.time !== 'prn' && m.time !== 'not_daily');
+  if (meds.length === 0) {
+    state.prefs.habitTimes.medication = 'any';
+    return;
+  }
+  const slotToBit = { am: TIME_AM, afternoon: TIME_AFTERNOON, pm: TIME_PM };
+  let mask = 0;
+  let hasAny = false;
+  meds.forEach(m => {
+    if (m.time === 'any') hasAny = true;
+    else if (slotToBit[m.time]) mask |= slotToBit[m.time];
+  });
+  if (hasAny || mask === 0) state.prefs.habitTimes.medication = 'any';
+  else state.prefs.habitTimes.medication = mask;
+}
+
+// Detailed mode: tap individual medication
+function tapMedication(medId, el) {
+  const med = (state.prefs.medications || []).find(m => m.id === medId);
+  if (!med) return;
+  const wasDone = state.todayData[medId];
+  if (!wasDone) _justCompletedKey = medId;
+  state.todayData[medId] = !wasDone;
+
+  const slot = med.time;
+  const slotXpKey = 'medication_' + slot + '_xp';
+
+  if (!wasDone) {
+    // Award 20 XP for the slot if this is the first med checked in this slot
+    if (!state.todayData[slotXpKey]) {
+      state.todayData[slotXpKey] = true;
+      addXP(20, el);
+      checkFirstTaskStreak();
+      celebrate('medication', el);
+    } else {
+      // Additional med in same slot, just celebrate without XP
+      haptic('light');
+      celebrate('medication', el);
+    }
+  } else {
+    // Unchecking: deduct XP only if no other meds remain checked in this slot
+    const slotMeds = getMedsForSlot(slot);
+    const anyStillChecked = slotMeds.some(m => m.id !== medId && state.todayData[m.id]);
+    if (!anyStillChecked) {
+      state.todayData[slotXpKey] = false;
+      state.xpData.total = Math.max(0, (state.xpData.total || 0) - 20);
+      haptic('light');
+      updateProgressTab();
+      showUndoToast(medId, 20);
+    } else {
+      haptic('light');
+    }
+  }
+
+  saveState();
+  archiveToday();
+  renderTodayTab();
+  checkAllDone();
+  scheduleBuddySync();
+}
+
+// Detailed mode: take all meds in a time slot
+function tapAllMedsInSlot(slot) {
+  const meds = getMedsForSlot(slot);
+  if (meds.length === 0) return;
+
+  const slotXpKey = 'medication_' + slot + '_xp';
+  let awarded = false;
+
+  meds.forEach(m => {
+    if (!state.todayData[m.id]) {
+      state.todayData[m.id] = true;
+      if (!state.todayData[slotXpKey] && !awarded) {
+        state.todayData[slotXpKey] = true;
+        addXP(20, null);
+        awarded = true;
+      }
+    }
+  });
+
+  if (awarded) {
+    checkFirstTaskStreak();
+    celebrate('medication', null);
+  }
+
+  saveState();
+  archiveToday();
+  renderTodayTab();
+  checkAllDone();
+  haptic('light');
+}
+
+// Toggle expanded state for medication group on Daily tab
+function toggleMedGroupExpanded(slot) {
+  if (!state._medGroupExpanded) state._medGroupExpanded = {};
+  state._medGroupExpanded[slot] = !state._medGroupExpanded[slot];
+  renderTodayTab();
+}
+
+// PRN (as-needed) medication logging
+function logPrnMed(medId) {
+  const med = (state.prefs.medications || []).find(m => m.id === medId);
+  if (!med) return;
+  if (!state.todayData.prnLogs) state.todayData.prnLogs = [];
+  // Don't log the same PRN med twice in one day
+  if (state.todayData.prnLogs.some(l => l.medId === medId)) return;
+  state.todayData.prnLogs.push({ medId, date: today() });
+  saveState();
+  archiveToday();
+  renderTodayTab();
+  haptic('light');
+}
+
+function undoPrnLog(medId) {
+  if (!state.todayData.prnLogs) return;
+  state.todayData.prnLogs = state.todayData.prnLogs.filter(l => l.medId !== medId);
+  saveState();
+  archiveToday();
+  renderTodayTab();
+}
+
+// Copy medication list to clipboard for doctor visits
+function copyMedList() {
+  const meds = getMedications();
+  if (meds.length === 0) return;
+  const timeLabels = { am: 'Morning', afternoon: 'Afternoon', pm: 'Evening', any: 'Daily', prn: 'As needed', not_daily: 'Periodic' };
+  const lines = meds.map(m => {
+    let line = m.name;
+    if (m.time) line += ' - ' + (timeLabels[m.time] || m.time);
+    if (m.note) line += ' - ' + m.note;
+    return line;
+  });
+  const text = 'My Medications\n' + lines.join('\n');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copy-med-list-btn');
+      if (btn) {
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy to clipboard'; }, 2000);
+      }
+    });
+  }
+}
+
+// Link a periodic medication to a special date for treatment day acknowledgment
+function linkMedToSpecialDate(medId) {
+  const med = (state.prefs.medications || []).find(m => m.id === medId);
+  if (!med) return;
+  if (!state.prefs.specialDates) state.prefs.specialDates = [];
+  // Check if already linked
+  if (state.prefs.specialDates.some(sd => sd._linkedMedId === medId)) return;
+  const id = 'sd_med_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  state.prefs.specialDates.push({
+    id,
+    name: med.name + ' treatment',
+    month: null,
+    day: null,
+    year: null,
+    type: 'treatment',
+    isDefault: false,
+    _linkedMedId: medId
+  });
+  save('bloom_prefs', state.prefs);
+  renderSettingsTab();
+}
+
+// Render treatment day banner on the Daily tab
+function renderTreatmentDayBanner() {
+  const dates = state.prefs?.specialDates || [];
+  const now = new Date();
+  const todayMonth = now.getMonth() + 1;
+  const todayDay = now.getDate();
+  const treatmentToday = dates.filter(d => d.type === 'treatment' && d.month === todayMonth && d.day === todayDay);
+  if (treatmentToday.length === 0) return '';
+
+  const responses = state.todayData._specialDateResponses || {};
+  let html = '';
+  treatmentToday.forEach(sd => {
+    if (responses[sd.id]) return;
+    html += `<div id="special-date-banner-${sd.id}" class="banner" style="background:rgba(106,154,176,0.08);border:1px solid rgba(106,154,176,0.18);margin-bottom:12px">
+      <div style="text-align:center;width:100%">
+        <div style="font-size:28px;margin-bottom:10px">💊</div>
+        <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sky-light);line-height:1.7;margin-bottom:4px">
+          Treatment day${sd.name ? ' — ' + sd.name.replace(' treatment', '') : ''}. Be kind to yourself today.
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px">
+          You're doing something hard for your health. That takes real strength.
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="btn btn-sm" style="background:rgba(106,154,176,0.2);border:1px solid rgba(106,154,176,0.35);color:var(--sky-light)" onclick="respondToSpecialDate('${sd.id}','hard')">Make today easier</button>
+          <button class="btn btn-ghost btn-sm" onclick="respondToSpecialDate('${sd.id}','okay')">I've got this</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  return html;
+}
+
+// Render the as-needed medication logging section for the Daily tab
+function renderPrnSection() {
+  const prnMeds = getMedications().filter(m => m.time === 'prn');
+  if (prnMeds.length === 0) return '';
+  const logs = state.todayData.prnLogs || [];
+  const loggedIds = new Set(logs.map(l => l.medId));
+
+  let html = '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(106,154,176,0.1)">';
+  html += `<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">As-needed</div>`;
+  // Show logged meds
+  const loggedMeds = prnMeds.filter(m => loggedIds.has(m.id));
+  loggedMeds.forEach(m => {
+    html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:14px">💊</span>
+        <span style="font-size:12px;color:var(--sky-light)">Took ${m.name} today</span>
+        ${m.note ? `<span style="font-size:11px;color:var(--text-muted)">${m.note}</span>` : ''}
+      </div>
+      <div onclick="undoPrnLog('${m.id}')" style="font-size:11px;color:var(--text-muted);cursor:pointer;padding:4px 8px;min-height:44px;display:flex;align-items:center" role="button" aria-label="Undo ${m.name} log">undo</div>
+    </div>`;
+  });
+
+  // Show unlogged meds as log buttons
+  const unloggedMeds = prnMeds.filter(m => !loggedIds.has(m.id));
+  if (unloggedMeds.length > 0) {
+    html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">`;
+    unloggedMeds.forEach(m => {
+      html += `<div onclick="logPrnMed('${m.id}')" style="
+        display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;cursor:pointer;
+        background:rgba(106,154,176,0.06);border:1px solid rgba(106,154,176,0.15);
+        font-size:12px;color:var(--sky-light);min-height:44px" role="button" aria-label="Log ${m.name} taken today">
+        <span>💊</span> ${m.name}
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// Render collapsible medication group for detailed mode
+function renderMedGroup(slot, meds, td) {
+  if (meds.length === 0) return '';
+  const expanded = state._medGroupExpanded?.[slot];
+  const doneCount = meds.filter(m => td[m.id]).length;
+  const allDone = doneCount === meds.length;
+  const slotLabels = { am: 'Morning', afternoon: 'Afternoon', pm: 'Evening', any: 'Daily' };
+  const label = slotLabels[slot] || slot;
+
+  // Single med: render as simple row without collapsible wrapper
+  if (meds.length === 1) {
+    const m = meds[0];
+    const done = td[m.id];
+    const noteHtml = m.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px">${m.note}</div>` : '';
+    return `<div class="habit-row" onclick="tapMedication('${m.id}', this)" role="checkbox" aria-checked="${done ? 'true' : 'false'}" aria-label="${m.name}">
+      <div class="habit-check${done ? ' done' : ''}" style="${!done ? 'border-color:rgba(106,154,176,0.3)' : ''}">${done ? CHECK_SVG : '💊'}</div>
+      <div class="habit-info">
+        <div class="habit-name" style="color:var(--sky-light)">${m.name}</div>
+        ${noteHtml}
+      </div>
+      ${!done ? '<div class="habit-xp" style="background:rgba(106,154,176,0.15);border-color:rgba(106,154,176,0.3);color:var(--sky-light)">+20</div>' : ''}
+    </div>`;
+  }
+
+  // Multiple meds: collapsible group
+  let html = `<div class="habit-row" onclick="toggleMedGroupExpanded('${slot}')" style="cursor:pointer" role="button" aria-expanded="${expanded ? 'true' : 'false'}" aria-controls="med-group-${slot}">
+    <div class="habit-check${allDone ? ' done' : ''}" style="${!allDone ? 'border-color:rgba(106,154,176,0.3)' : ''}">${allDone ? CHECK_SVG : '💊'}</div>
+    <div class="habit-info">
+      <div class="habit-name" style="color:var(--sky-light)">${label} meds (${doneCount}/${meds.length})</div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);padding:4px">${expanded ? '▾' : '▸'}</div>
+  </div>`;
+
+  if (expanded) {
+    html += `<div id="med-group-${slot}" style="padding-left:16px;border-left:2px solid rgba(106,154,176,0.15);margin-left:18px;margin-bottom:4px">`;
+    // Take all button
+    if (doneCount < meds.length) {
+      html += `<div onclick="tapAllMedsInSlot('${slot}')" style="
+        display:flex;align-items:center;gap:6px;padding:8px 12px;margin-bottom:4px;border-radius:var(--r-md);cursor:pointer;
+        background:rgba(106,154,176,0.06);font-size:12px;color:var(--sky-light);min-height:44px" role="button" aria-label="Mark all ${label.toLowerCase()} medications as taken">
+        ✓ Take all
+      </div>`;
+    }
+    // Individual medication rows
+    meds.forEach(m => {
+      const done = td[m.id];
+      const noteHtml = m.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px">${m.note}</div>` : '';
+      html += `<div class="habit-row" onclick="tapMedication('${m.id}', this)" role="checkbox" aria-checked="${done ? 'true' : 'false'}" aria-label="${m.name}">
+        <div class="habit-check${done ? ' done' : ''}" style="${!done ? 'border-color:rgba(106,154,176,0.3)' : ''}">${done ? CHECK_SVG : '💊'}</div>
+        <div class="habit-info">
+          <div class="habit-name" style="color:var(--sky-light);font-size:13px">${m.name}</div>
+          ${noteHtml}
+        </div>
+        ${!done ? '<div class="habit-xp" style="background:rgba(106,154,176,0.15);border-color:rgba(106,154,176,0.3);color:var(--sky-light)">+20</div>' : ''}
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  return html;
 }
 
 // ============================================================
