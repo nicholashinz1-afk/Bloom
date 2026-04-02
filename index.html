@@ -5219,6 +5219,7 @@ function addSpecialDate() {
   state.prefs.specialDates.push({ id, name: '', month: null, day: null, year: null, type: 'celebration', isDefault: false });
   save('bloom_prefs', state.prefs);
   renderSettingsTab();
+  reopenSpecialDates();
 }
 
 function updateSpecialDate(id, field, value) {
@@ -5236,14 +5237,23 @@ function removeSpecialDate(id) {
   state.prefs.specialDates = (state.prefs.specialDates || []).filter(d => d.id !== id);
   save('bloom_prefs', state.prefs);
   renderSettingsTab();
+  reopenSpecialDates();
 }
 
-function toggleSpecialDateType(id) {
+function setSpecialDateType(id, type) {
   const entry = (state.prefs.specialDates || []).find(d => d.id === id);
   if (!entry || entry.isDefault) return;
-  entry.type = entry.type === 'celebration' ? 'hard' : 'celebration';
+  entry.type = type;
   save('bloom_prefs', state.prefs);
   renderSettingsTab();
+  reopenSpecialDates();
+}
+
+function reopenSpecialDates() {
+  const header = document.getElementById('sh-special-dates');
+  const body = document.getElementById('sb-special-dates');
+  if (header) { header.classList.add('open'); header.setAttribute('aria-expanded', 'true'); }
+  if (body) body.classList.add('open');
 }
 
 function dismissWelcomeBack(reason) {
@@ -12099,12 +12109,16 @@ function renderSettingsTab() {
         </select>
         <input type="number" aria-label="Year" value="${sd.year || ''}" placeholder="Year" style="width:70px;padding:5px 8px;font-size:12px" min="1900" max="2100" onchange="updateSpecialDate('${sd.id}','year',this.value)">
         ${!isBirthday ? `
-          <div onclick="toggleSpecialDateType('${sd.id}')" style="
-            padding:4px 10px;border-radius:99px;cursor:pointer;font-size:11px;margin-left:auto;
-            background:${sd.type === 'celebration' ? 'rgba(201,149,74,0.15)' : 'rgba(106,154,176,0.15)'};
-            border:1px solid ${sd.type === 'celebration' ? 'rgba(201,149,74,0.3)' : 'rgba(106,154,176,0.3)'};
-            color:${sd.type === 'celebration' ? 'var(--amber-light)' : 'var(--sky-light)'}">
-            ${sd.type === 'celebration' ? '🎉 Celebration' : '🫂 Hard day'}
+          <div style="display:flex;border-radius:99px;overflow:hidden;margin-left:auto;border:1px solid rgba(255,255,255,0.1)">
+            <div onclick="setSpecialDateType('${sd.id}','celebration')" style="
+              padding:4px 10px;cursor:pointer;font-size:11px;transition:background 0.2s,color 0.2s;
+              background:${sd.type === 'celebration' ? 'rgba(201,149,74,0.2)' : 'transparent'};
+              color:${sd.type === 'celebration' ? 'var(--amber-light)' : 'var(--text-muted)'}">🎉 Celebration</div>
+            <div onclick="setSpecialDateType('${sd.id}','hard')" style="
+              padding:4px 10px;cursor:pointer;font-size:11px;transition:background 0.2s,color 0.2s;
+              border-left:1px solid rgba(255,255,255,0.1);
+              background:${sd.type === 'hard' ? 'rgba(106,154,176,0.2)' : 'transparent'};
+              color:${sd.type === 'hard' ? 'var(--sky-light)' : 'var(--text-muted)'}">🫂 Hard day</div>
           </div>` : ''}
       </div>
     </div>`;
