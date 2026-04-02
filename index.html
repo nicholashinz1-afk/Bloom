@@ -1504,6 +1504,36 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   flex-wrap: wrap;
   align-items: center;
 }
+/* Emoji picker */
+.emoji-pick-btn {
+  width: 40px; height: 40px; border-radius: var(--r-md); border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center;
+  font-size: 20px; cursor: pointer; flex-shrink: 0; transition: border-color 0.15s, background 0.15s;
+}
+.emoji-pick-btn:active { background: rgba(255,255,255,0.08); }
+.emoji-pick-btn.open { border-color: rgba(var(--sage-rgb),0.5); background: rgba(var(--sage-rgb),0.1); }
+.emoji-picker-popover {
+  position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 200;
+  background: var(--bg-card); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--r-lg); padding: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  width: 280px; max-height: 260px; overflow-y: auto;
+  animation: scaleIn 0.15s ease;
+}
+.emoji-picker-popover .ep-category {
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); margin: 8px 0 4px; padding: 0 2px;
+}
+.emoji-picker-popover .ep-category:first-child { margin-top: 0; }
+.emoji-picker-popover .ep-grid {
+  display: flex; flex-wrap: wrap; gap: 2px;
+}
+.emoji-picker-popover .ep-emoji {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  font-size: 20px; border-radius: var(--r-sm); cursor: pointer; transition: background 0.1s;
+}
+.emoji-picker-popover .ep-emoji:hover, .emoji-picker-popover .ep-emoji:active {
+  background: rgba(var(--sage-rgb),0.15);
+}
 .sb-item:last-child { border-bottom: none; }
 .sb-item.disabled { opacity: 0.4; }
 .sb-item.moved {
@@ -4588,14 +4618,58 @@ function getDailyXPPotential() {
   const prefs = state.prefs || {};
   const dh = prefs.dailyHabits || {};
   const ht = prefs.habitTimes || {};
+  const overrides = prefs.sectionOverrides || {};
   let potential = 0;
 
-  // Daily habits
+  // Daily habits (skip items moved to other sections)
   [...DAILY_HABITS, MEDICATION_HABIT].forEach(h => {
     if (!dh[h.id]) return;
+    if (overrides[h.id] && overrides[h.id] !== 'daily') return;
     const time = ht[h.id] || h.defaultTime || 'any';
     const slots = timeSlotCount(time);
     potential += (h.xp || 15) * slots;
+  });
+
+  // Custom daily habits (user-created, not promoted)
+  (prefs.customDailyHabits || []).forEach(h => {
+    if (h.originalId) return; // promoted items counted separately below
+    const time = h.time || 'any';
+    const slots = timeSlotCount(time);
+    potential += 15 * slots;
+  });
+
+  // Promoted items moved TO daily from other sections
+  (prefs.customDailyHabits || []).filter(h => h.originalId).forEach(h => {
+    const time = h.time || 'any';
+    const slots = timeSlotCount(time);
+    potential += 15 * slots;
+  });
+
+  // Weekly habits scheduled for today (including promoted)
+  const whDays = prefs.weeklyHabitDays || {};
+  WEEKLY_HABITS.forEach(h => {
+    if (prefs.habits?.[h.id] === false) return;
+    if (overrides[h.id] && overrides[h.id] !== 'weekly') return;
+    if (isTodayScheduled(whDays[h.id] || 'any')) potential += (h.xp || 20);
+  });
+  (prefs.promotedWeeklyHabits || []).forEach(h => {
+    if (isTodayScheduled(whDays[h.id] || 'any')) potential += (h.xp || 20);
+  });
+
+  // Self-care tasks
+  const selectedSC = prefs.selfCareTasks || [];
+  selectedSC.forEach(id => {
+    if (overrides[id] && overrides[id] !== 'selfcare') return;
+    potential += 20;
+  });
+  // Custom self-care (user-created only)
+  (prefs.customSelfCare || []).forEach(s => {
+    if (s.originalId) return;
+    potential += 20;
+  });
+  // Promoted items moved TO self-care
+  (prefs.customSelfCare || []).filter(s => s.originalId).forEach(() => {
+    potential += 20;
   });
 
   // Non-habit daily XP (mood, journal, reflection, water, food, wins, affirmation)
@@ -13447,6 +13521,7 @@ function renderSettingsTab() {
 
   if ((customNourishment.length || 0) < 5) {
     dailyHtml += `<div style="display:flex;gap:8px;align-items:center">
+      ${emojiPickButtonHtml('cn-settings','nourishment')}
       <input type="text" id="custom-nourishment-name" aria-label="Add custom nourishment item" placeholder="Add something custom..." style="flex:1">
       <button class="btn btn-primary btn-sm" onclick="addCustomNourishment()">Add</button>
     </div>`;
@@ -13486,8 +13561,9 @@ function renderSettingsTab() {
     });
 
     if (customDH.length < 10) {
-      dailyHtml += `<div style="display:flex;gap:8px;margin-top:10px">
-        <input type="text" id="custom-daily-habit-name" aria-label="Add a custom daily habit" placeholder="Add a custom habit...">
+      dailyHtml += `<div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+        ${emojiPickButtonHtml('cdh-settings','daily')}
+        <input type="text" id="custom-daily-habit-name" aria-label="Add a custom daily habit" placeholder="Add a custom habit..." style="flex:1">
         <button class="btn btn-primary btn-sm" onclick="addCustomDailyHabit()">Add</button>
       </div>`;
   } else {
@@ -13594,7 +13670,7 @@ function renderSettingsTab() {
   }
   customTasks.forEach(t2 => {
     weeklyHtml += `<div class="toggle-row" style="flex-wrap:wrap">
-      <div><div class="toggle-label">🌸 ${t2.name}</div></div>
+      <div><div class="toggle-label">${t2.icon || '🌸'} ${t2.name}</div></div>
       <div onclick="removeCustomTask('${t2.id}')" style="font-size:11px;color:var(--rose-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(176,120,120,0.08)">Remove</div>`;
     const dayMask2 = htDays[t2.id] || 'any';
     const isAnyDay2 = dayMask2 === 'any' || typeof dayMask2 !== 'number';
@@ -13627,8 +13703,9 @@ function renderSettingsTab() {
     weeklyHtml += `</div>`;
   });
 
-  weeklyHtml += `<div style="display:flex;gap:8px;margin-top:12px">
-    <input type="text" id="custom-task-input" aria-label="Add custom weekly task" placeholder="Add custom task...">
+  weeklyHtml += `<div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+    ${emojiPickButtonHtml('cwt-settings','weekly')}
+    <input type="text" id="custom-task-input" aria-label="Add custom weekly task" placeholder="Add custom task..." style="flex:1">
     <button class="btn btn-primary btn-sm" onclick="addCustomTask()">Add</button>
   </div>`;
 
@@ -13755,8 +13832,9 @@ function renderSettingsTab() {
     });
   }
   if (customSC.length < 10) {
-    scHtml += `<div style="display:flex;gap:8px;margin-top:10px">
-      <input type="text" id="custom-selfcare-name" aria-label="Add custom self-care item" placeholder="Add something nice for you...">
+    scHtml += `<div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+      ${emojiPickButtonHtml('csc-settings','selfcare')}
+      <input type="text" id="custom-selfcare-name" aria-label="Add custom self-care item" placeholder="Add something nice for you..." style="flex:1">
       <button class="btn btn-primary btn-sm" onclick="addCustomSelfCare()">Add</button>
     </div>`;
   } else {
@@ -15007,12 +15085,14 @@ function addCustomNourishment() {
   if (!nameInput || !nameInput.value.trim()) return;
 
   const name = nameInput.value.trim();
+  const icon = getSelectedEmoji('cn-settings', 'nourishment');
   const id = 'cn_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + Date.now().toString(36).slice(-4);
 
   if (!state.prefs.customNourishment) state.prefs.customNourishment = [];
   if (state.prefs.customNourishment.length >= 5) return;
 
-  state.prefs.customNourishment.push({ id, name, icon: '🌿' });
+  state.prefs.customNourishment.push({ id, name, icon });
+  delete _selectedEmoji['cn-settings'];
   save('bloom_prefs', state.prefs);
   nameInput.value = '';
   reRenderSettingsPreservingScroll();
@@ -15090,7 +15170,9 @@ function addCustomTask() {
   if (!input || !input.value.trim()) return;
   if (!state.prefs.householdTasks) state.prefs.householdTasks = [];
   const id = 'custom_' + Date.now();
-  state.prefs.householdTasks.push({ id, name: input.value.trim(), icon: '🌸' });
+  const icon = getSelectedEmoji('cwt-settings', 'weekly');
+  state.prefs.householdTasks.push({ id, name: input.value.trim(), icon });
+  delete _selectedEmoji['cwt-settings'];
   save('bloom_prefs', state.prefs);
   reRenderSettingsPreservingScroll();
 }
@@ -21549,12 +21631,14 @@ function addCustomDailyHabit() {
   if (!nameInput || !nameInput.value.trim()) return;
 
   const name = nameInput.value.trim();
+  const icon = getSelectedEmoji('cdh-settings', 'daily');
   const id = 'cdh_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + Date.now().toString(36).slice(-4);
 
   if (!state.prefs.customDailyHabits) state.prefs.customDailyHabits = [];
   if (state.prefs.customDailyHabits.length >= 10) return;
 
-  state.prefs.customDailyHabits.push({ id, name, icon: '🌸', time: 'any' });
+  state.prefs.customDailyHabits.push({ id, name, icon, time: 'any' });
+  delete _selectedEmoji['cdh-settings'];
   // Append to habit order
   const order = getHabitOrder().slice();
   order.push(id);
@@ -22380,12 +22464,14 @@ function addCustomSelfCare() {
   if (!nameInput || !nameInput.value.trim()) return;
 
   const name = nameInput.value.trim();
+  const icon = getSelectedEmoji('csc-settings', 'selfcare');
   const id = 'csc_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + Date.now().toString(36).slice(-4);
 
   if (!state.prefs.customSelfCare) state.prefs.customSelfCare = [];
   if (state.prefs.customSelfCare.length >= 10) return;
 
-  state.prefs.customSelfCare.push({ id, name, icon: '✨', routine: 'anytime' });
+  state.prefs.customSelfCare.push({ id, name, icon, routine: 'anytime' });
+  delete _selectedEmoji['csc-settings'];
   save('bloom_prefs', state.prefs);
   nameInput.value = '';
   reRenderSettingsPreservingScroll();
@@ -22432,6 +22518,133 @@ function tapCustomSelfCare(id, el) {
   renderTodayTab();
 }
 
+
+// ============================================================
+//  EMOJI PICKER — Curated icons for custom habits
+// ============================================================
+
+// Emoji sets curated for a mental health self-care app.
+// Warm, gentle, grounded. No party/alcohol/gambling emojis.
+const EMOJI_SETS = {
+  daily: [
+    { cat: 'Hygiene & body', emojis: ['🦷','🪥','💇','🧴','👕','👗','🩴','🪞','🛁','🧖','🫧','🧼','🪮'] },
+    { cat: 'Routine & structure', emojis: ['🌅','☕','🍵','🫖','🌙','📵','⏰','🛏','📝','📓','🗓'] },
+    { cat: 'Nourishment', emojis: ['💧','🍽','🥦','🍎','🍳','🥣','🫗'] },
+    { cat: 'Movement & rest', emojis: ['🧘','🚶','👟','🏃','💪','😴','🫁'] },
+    { cat: 'Gentleness', emojis: ['🌸','🌿','🌻','🍃','🕯','💚','✨','🧸','🫶','💛'] },
+  ],
+  weekly: [
+    { cat: 'Movement & health', emojis: ['🚿','💪','🌿','🛋️','🏃','🧘','🚶','🏊','🚴','🧗'] },
+    { cat: 'Home & life', emojis: ['🧺','🗑','🍽','🧹','🏡','🛒','📬','🧑‍🍳','🪴','🧽'] },
+    { cat: 'Growth & learning', emojis: ['📚','🎨','🎵','🖼','✍️','📖','🧩','🎸'] },
+    { cat: 'Connection', emojis: ['📱','💌','🤝','🐾','☎️','🫂'] },
+    { cat: 'Gentleness', emojis: ['🌸','🌻','💚','✨','🕯','🧸','💛','🫶'] },
+  ],
+  selfcare: [
+    { cat: 'Morning moments', emojis: ['☀️','🛏','☕','🪟','🌅','🫖','🍵'] },
+    { cat: 'Movement & breath', emojis: ['🧘','🚶','💃','😮‍💨','🫁','🌊','🏞'] },
+    { cat: 'Connection & joy', emojis: ['📱','🐾','🪴','📖','🎵','🎧','💌','🤝'] },
+    { cat: 'Winding down', emojis: ['🙏','🧹','🕯','🧸','🫧','😴','🌙','📓'] },
+    { cat: 'Kindness', emojis: ['✨','🌸','💚','🌻','💭','🫶','💛','🍃','🌿'] },
+  ],
+  nourishment: [
+    { cat: 'Meals & cooking', emojis: ['🍽','🍳','🥣','🍲','🥗','🧑‍🍳','🥘','🍜'] },
+    { cat: 'Fruits & veggies', emojis: ['🍎','🍌','🫐','🥦','🥕','🥑','🍇','🍓'] },
+    { cat: 'Drinks & hydration', emojis: ['💧','☕','🍵','🫖','🥤','🫗','🧃'] },
+    { cat: 'Comfort & nourishment', emojis: ['🍞','🧁','🍪','🍯','🥜','🌿','💚','✨'] },
+  ],
+};
+
+// Track which picker is open: { id, type }
+let _emojiPickerOpen = null;
+// Track selected emoji per input context
+let _selectedEmoji = {};
+
+function getEmojiDefault(type) {
+  return type === 'daily' ? '🌸' : type === 'weekly' ? '🌸' : type === 'nourishment' ? '🌿' : '✨';
+}
+
+function toggleEmojiPicker(pickerId, type) {
+  if (_emojiPickerOpen && _emojiPickerOpen.id === pickerId) {
+    _emojiPickerOpen = null;
+  } else {
+    _emojiPickerOpen = { id: pickerId, type };
+  }
+  renderEmojiPicker(pickerId, type);
+}
+
+function selectEmoji(pickerId, emoji) {
+  _selectedEmoji[pickerId] = emoji;
+  _emojiPickerOpen = null;
+  // Update the button display
+  const btn = document.getElementById('ep-btn-' + pickerId);
+  if (btn) btn.textContent = emoji;
+  // Close popover
+  const pop = document.getElementById('ep-pop-' + pickerId);
+  if (pop) pop.remove();
+  haptic('light');
+}
+
+function getSelectedEmoji(pickerId, type) {
+  return _selectedEmoji[pickerId] || getEmojiDefault(type);
+}
+
+function renderEmojiPicker(pickerId, type) {
+  // Remove any existing popover
+  const existing = document.getElementById('ep-pop-' + pickerId);
+  if (existing) existing.remove();
+
+  if (!_emojiPickerOpen || _emojiPickerOpen.id !== pickerId) {
+    const btn = document.getElementById('ep-btn-' + pickerId);
+    if (btn) btn.classList.remove('open');
+    return;
+  }
+
+  const btn = document.getElementById('ep-btn-' + pickerId);
+  if (btn) btn.classList.add('open');
+
+  const set = EMOJI_SETS[type] || EMOJI_SETS.daily;
+  let html = '';
+  set.forEach(g => {
+    html += `<div class="ep-category">${g.cat}</div><div class="ep-grid">`;
+    g.emojis.forEach(e => {
+      html += `<div class="ep-emoji" onclick="event.stopPropagation();selectEmoji('${pickerId}','${e}')" role="button" aria-label="${e}">${e}</div>`;
+    });
+    html += '</div>';
+  });
+
+  const pop = document.createElement('div');
+  pop.id = 'ep-pop-' + pickerId;
+  pop.className = 'emoji-picker-popover';
+  pop.onclick = e => e.stopPropagation();
+  pop.innerHTML = html;
+
+  // Position relative to button
+  const wrapper = btn?.closest('.emoji-pick-wrapper') || btn?.parentElement;
+  if (wrapper) {
+    wrapper.style.position = 'relative';
+    wrapper.appendChild(pop);
+  }
+}
+
+// Close emoji picker on outside click
+document.addEventListener('click', () => {
+  if (_emojiPickerOpen) {
+    const pop = document.getElementById('ep-pop-' + _emojiPickerOpen.id);
+    if (pop) pop.remove();
+    const btn = document.getElementById('ep-btn-' + _emojiPickerOpen.id);
+    if (btn) btn.classList.remove('open');
+    _emojiPickerOpen = null;
+  }
+});
+
+// Helper: render an emoji pick button + wrapper
+function emojiPickButtonHtml(pickerId, type) {
+  const emoji = getSelectedEmoji(pickerId, type);
+  return `<div class="emoji-pick-wrapper" style="position:relative;flex-shrink:0">
+    <div class="emoji-pick-btn" id="ep-btn-${pickerId}" onclick="event.stopPropagation();toggleEmojiPicker('${pickerId}','${type}')" role="button" aria-label="Choose icon">${emoji}</div>
+  </div>`;
+}
 
 // ============================================================
 //  SECTION BUILDER — Tabbed UI component
@@ -22610,7 +22823,8 @@ function renderSectionBuilder(containerId, context) {
   if (_sbActiveTab === 'daily') {
     const customCount = (state.prefs?.customDailyHabits || []).filter(h => !h.originalId).length;
     if (customCount < 10) {
-      html += `<div class="sb-add-row">
+      html += `<div class="sb-add-row" style="align-items:center">
+        ${emojiPickButtonHtml('sb-cdh','daily')}
         <input type="text" id="sb-add-daily" placeholder="Add custom daily habit..." aria-label="Add custom daily habit" style="flex:1;font-size:13px;padding:8px 12px;min-height:40px">
         <button class="btn btn-primary btn-sm" onclick="sbAddCustomDaily('${containerId}','${context}')">Add</button>
       </div>`;
@@ -22618,7 +22832,8 @@ function renderSectionBuilder(containerId, context) {
   } else if (_sbActiveTab === 'selfcare') {
     const customCount = (state.prefs?.customSelfCare || []).filter(s => !s.originalId).length;
     if (customCount < 10) {
-      html += `<div class="sb-add-row">
+      html += `<div class="sb-add-row" style="align-items:center">
+        ${emojiPickButtonHtml('sb-csc','selfcare')}
         <input type="text" id="sb-add-selfcare" placeholder="Add something nice for you..." aria-label="Add custom self-care item" style="flex:1;font-size:13px;padding:8px 12px;min-height:40px">
         <button class="btn btn-primary btn-sm" onclick="sbAddCustomSelfCare('${containerId}','${context}')">Add</button>
       </div>`;
@@ -22634,10 +22849,12 @@ function sbAddCustomDaily(containerId, context) {
   const input = document.getElementById('sb-add-daily');
   if (!input || !input.value.trim()) return;
   const name = input.value.trim();
+  const icon = getSelectedEmoji('sb-cdh', 'daily');
   const id = 'cdh_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + Date.now().toString(36).slice(-4);
   if (!state.prefs.customDailyHabits) state.prefs.customDailyHabits = [];
   if (state.prefs.customDailyHabits.length >= 20) return;
-  state.prefs.customDailyHabits.push({ id, name, icon: '🌸', time: 'any' });
+  state.prefs.customDailyHabits.push({ id, name, icon, time: 'any' });
+  delete _selectedEmoji['sb-cdh'];
   const order = (state.prefs.habitOrder || []).slice();
   order.push(id);
   state.prefs.habitOrder = order;
@@ -22651,10 +22868,12 @@ function sbAddCustomSelfCare(containerId, context) {
   const input = document.getElementById('sb-add-selfcare');
   if (!input || !input.value.trim()) return;
   const name = input.value.trim();
+  const icon = getSelectedEmoji('sb-csc', 'selfcare');
   const id = 'csc_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + Date.now().toString(36).slice(-4);
   if (!state.prefs.customSelfCare) state.prefs.customSelfCare = [];
   if (state.prefs.customSelfCare.length >= 20) return;
-  state.prefs.customSelfCare.push({ id, name, icon: '✨', routine: 'anytime' });
+  state.prefs.customSelfCare.push({ id, name, icon, routine: 'anytime' });
+  delete _selectedEmoji['sb-csc'];
   save('bloom_prefs', state.prefs);
   renderSectionBuilder(containerId, context);
   renderTodayTab();
