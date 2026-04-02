@@ -34,6 +34,9 @@ Use these when writing about Bloom in any context:
 - **Hard day mode.** When things are rough, Bloom scales back to just your top 2 habits. No guilt.
 - **AI reflections, not AI therapy.** Warm, supportive journaling companion. Never clinical advice.
 - **Crisis resources always accessible.** 988, Crisis Text Line, international resources. One tap away.
+- **Privacy Lock.** Lock the app with a PIN or biometrics. Journals, medications, and mood data stay private even if someone picks up your phone.
+- **Safety resources for unsafe situations.** Discreet access to domestic violence, abuse, and danger hotlines via web chat. No call or text history. Hidden behind a gesture that a snooper won't find.
+- **Quick Exit.** One tap covers the screen with a neutral loading overlay. Long-press to come back. Your session stays alive.
 - **Open source (AGPL-3.0).** Anyone can see the code, contribute, or fork it. No closed-source derivatives.
 - **Built from lived experience.** Not a startup pitch. A person who needed this, building it for others.
 
