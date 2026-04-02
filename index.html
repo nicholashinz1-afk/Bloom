@@ -3164,6 +3164,12 @@ select:focus {
   <div id="medication-sheet-body" style="padding:0 20px 24px"></div>
 </div>
 
+<!-- PRN (as-needed) medication log sheet -->
+<div class="bottom-sheet" id="prn-sheet">
+  <div class="sheet-handle"></div>
+  <div id="prn-sheet-body" style="padding:0 20px 24px"></div>
+</div>
+
 <!-- Re-intro sheet for existing users -->
 
 <!-- Daily affirmation overlay -->
@@ -9241,6 +9247,18 @@ function renderTodayTab() {
     </div>`;
   }
 
+  // PRN link helper: renders a subtle "log as-needed med" link below a section card
+  const prnLoggedIds = new Set((td.prnLogs || []).map(l => l.medId));
+  const prnMedsList = medMeds.filter(m => m.time === 'prn');
+  const prnTodayCount = prnMedsList.filter(m => prnLoggedIds.has(m.id)).length;
+  function prnLink() {
+    if (prnMedsList.length === 0) return '';
+    const countLabel = prnTodayCount > 0 ? ` (${prnTodayCount} logged today)` : '';
+    return `<div onclick="openPrnSheet()" style="font-size:11px;color:var(--sky-light);padding:4px 0 8px 4px;cursor:pointer;min-height:32px;display:flex;align-items:center">
+      + Log as-needed med${countLabel}
+    </div>`;
+  }
+
   // --- MORNING SECTION ---
   if (amHabits.length > 0 || medInAm || medHasDetailedAm || customAm.length > 0) {
     html += `<div class="section-label">🌅 Morning</div><div class="card mb-0">`;
@@ -9249,6 +9267,7 @@ function renderTodayTab() {
     amHabits.forEach(h => { html += dailyHabitRow(h, 'am', isMuted(h)); });
     customAm.forEach(ch => { html += customDailyHabitRow(ch, 'am'); });
     html += `</div>`;
+    html += prnLink();
   }
 
   // --- AFTERNOON SECTION ---
@@ -9259,6 +9278,7 @@ function renderTodayTab() {
     afternoonHabits.forEach(h => { html += dailyHabitRow(h, 'afternoon', isMuted(h)); });
     customAfternoon.forEach(ch => { html += customDailyHabitRow(ch, 'afternoon'); });
     html += `</div>`;
+    html += prnLink();
   }
 
   // --- EVENING SECTION ---
@@ -9269,6 +9289,7 @@ function renderTodayTab() {
     pmHabits.forEach(h => { html += dailyHabitRow(h, 'pm', isMuted(h)); });
     customPm.forEach(ch => { html += customDailyHabitRow(ch, 'pm'); });
     html += `</div>`;
+    html += prnLink();
   }
 
   // --- ANYTIME SECTION (daily habits + weekly habits + household + self-care) ---
@@ -9291,7 +9312,7 @@ function renderTodayTab() {
 
   const customSCForAnytime = getCustomSelfCare();
   const hasPrnMeds = medMeds.some(m => m.time === 'prn');
-  const hasAnytime = anyHabits.length > 0 || medInAny || medHasDetailedAny || customAny.length > 0 || todayWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled || customSCForAnytime.length > 0 || hasPrnMeds;
+  const hasAnytime = anyHabits.length > 0 || medInAny || medHasDetailedAny || customAny.length > 0 || todayWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled || customSCForAnytime.length > 0;
 
   if (hasAnytime) {
     html += `<div class="section-label"><span style="color:#f0c040">☀️</span> Anytime today</div><div class="card mb-0">`;
@@ -9395,12 +9416,8 @@ function renderTodayTab() {
       html += `</div>`; // close self-care wrapper
     }
 
-    // PRN (as-needed) medication logging
-    if (hasPrnMeds) {
-      html += renderPrnSection();
-    }
-
     html += `</div>`; // close Anytime card
+    html += prnLink();
   }
 
   // --- Legacy support: show old teeth habits if user hasn't migrated yet ---
@@ -20328,8 +20345,13 @@ function logPrnMed(medId) {
   state.todayData.prnLogs.push({ medId, date: today() });
   saveState();
   archiveToday();
-  renderTodayTab();
   haptic('light');
+  // Re-render the PRN sheet if it's open, then re-render today tab
+  const sheetBody = document.getElementById('prn-sheet-body');
+  if (sheetBody && document.getElementById('prn-sheet')?.classList.contains('open')) {
+    openPrnSheet();
+  }
+  renderTodayTab();
 }
 
 function undoPrnLog(medId) {
@@ -20337,7 +20359,60 @@ function undoPrnLog(medId) {
   state.todayData.prnLogs = state.todayData.prnLogs.filter(l => l.medId !== medId);
   saveState();
   archiveToday();
+  // Re-render the PRN sheet if it's open, then re-render today tab
+  const sheetBody = document.getElementById('prn-sheet-body');
+  if (sheetBody && document.getElementById('prn-sheet')?.classList.contains('open')) {
+    openPrnSheet();
+  }
   renderTodayTab();
+}
+
+function openPrnSheet() {
+  const body = document.getElementById('prn-sheet-body');
+  if (!body) return;
+  const prnMeds = getMedications().filter(m => m.time === 'prn');
+  if (prnMeds.length === 0) return;
+  const logs = state.todayData.prnLogs || [];
+  const loggedIds = new Set(logs.map(l => l.medId));
+
+  let html = `<h2 class="sheet-title" style="color:var(--sky-light)">💊 Log as-needed medication</h2>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+      Tap a medication to log that you took it today.
+    </div>`;
+
+  prnMeds.forEach(m => {
+    const logged = loggedIds.has(m.id);
+    if (logged) {
+      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;margin-bottom:8px;
+        background:rgba(106,154,176,0.08);border:1px solid rgba(106,154,176,0.2);border-radius:var(--r-lg)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px;color:var(--sky-light)">✓</span>
+          <div>
+            <div style="font-size:14px;color:var(--sky-light)">${m.name}</div>
+            ${m.note ? `<div style="font-size:12px;color:var(--text-muted)">${m.note}</div>` : ''}
+          </div>
+        </div>
+        <div onclick="undoPrnLog('${m.id}')" style="font-size:12px;color:var(--text-muted);cursor:pointer;padding:8px;min-height:44px;display:flex;align-items:center" role="button" aria-label="Undo ${m.name}">Undo</div>
+      </div>`;
+    } else {
+      html += `<div onclick="logPrnMed('${m.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;margin-bottom:8px;
+        background:rgba(106,154,176,0.04);border:1px solid rgba(106,154,176,0.12);border-radius:var(--r-lg);
+        cursor:pointer;min-height:44px" role="button" aria-label="Log ${m.name}">
+        <span style="font-size:18px">💊</span>
+        <div>
+          <div style="font-size:14px;color:var(--cream)">${m.name}</div>
+          ${m.note ? `<div style="font-size:12px;color:var(--text-muted)">${m.note}</div>` : ''}
+        </div>
+      </div>`;
+    }
+  });
+
+  html += `<button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="closeAllSheets()">Done</button>`;
+
+  body.innerHTML = html;
+  if (!document.getElementById('prn-sheet')?.classList.contains('open')) {
+    openSheet('prn-sheet');
+  }
 }
 
 // Copy medication list to clipboard for doctor visits
@@ -20718,8 +20793,10 @@ function renderMedGroup(slot, meds, td) {
   }
 
   // Multiple meds: collapsible group
+  // Pill icon = quick take all (when not all done), rest of row = expand/collapse
+  const pillClick = !allDone ? `onclick="event.stopPropagation();tapAllMedsInSlot('${slot}')" style="cursor:pointer;border-color:rgba(106,154,176,0.3)"` : `style=""`;
   let html = `<div class="habit-row" onclick="toggleMedGroupExpanded('${slot}')" style="cursor:pointer" role="button" aria-expanded="${expanded ? 'true' : 'false'}" aria-controls="med-group-${slot}">
-    <div class="habit-check${allDone ? ' done' : ''}" style="${!allDone ? 'border-color:rgba(106,154,176,0.3)' : ''}">${allDone ? CHECK_SVG : '💊'}</div>
+    <div class="habit-check${allDone ? ' done' : ''}" ${pillClick} aria-label="${allDone ? 'All ' + label + ' meds taken' : 'Take all ' + label + ' meds'}">${allDone ? CHECK_SVG : '💊'}</div>
     <div class="habit-info">
       <div class="habit-name" style="color:var(--sky-light)">${label} meds (${doneCount}/${meds.length})</div>
     </div>
