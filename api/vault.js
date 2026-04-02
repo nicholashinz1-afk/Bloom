@@ -2,18 +2,8 @@
 // Stores client-side encrypted backup blobs in Redis, keyed by hashed recovery codes.
 // The server never sees plaintext data, passphrases, or recovery codes.
 
-import { createClient } from 'redis';
-
-// ── Redis client helpers (same pattern as buddy.js) ────────
-let _redisClient = null;
-async function getRedis() {
-  if (_redisClient && _redisClient.isReady) return _redisClient;
-  if (_redisClient) { try { await _redisClient.disconnect(); } catch(e) {} }
-  _redisClient = createClient({ url: process.env.REDIS_URL, socket: { reconnectStrategy: (retries) => retries < 3 ? Math.min(retries * 200, 1000) : false } });
-  _redisClient.on('error', () => {});
-  await _redisClient.connect();
-  return _redisClient;
-}
+// ── Redis client helpers (shared module) ────────────────────
+import { getRedis } from './_redis.js';
 
 // ── Validation helpers ─────────────────────────────────────
 const CODE_HASH_RE = /^[0-9a-f]{64}$/;

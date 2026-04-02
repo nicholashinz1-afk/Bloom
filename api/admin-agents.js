@@ -2,38 +2,8 @@
 // Three AI-powered agents that audit telemetry data and provide actionable insights
 // Protected by ADMIN_KEY env var
 
-import { createClient } from 'redis';
-
-let _redisClient = null;
-async function getRedis() {
-  if (_redisClient && _redisClient.isReady) return _redisClient;
-  if (_redisClient) { try { await _redisClient.disconnect(); } catch(e) {} }
-  _redisClient = createClient({ url: process.env.REDIS_URL, socket: { reconnectStrategy: (retries) => retries < 3 ? Math.min(retries * 200, 1000) : false } });
-  _redisClient.on('error', () => {});
-  await _redisClient.connect();
-  return _redisClient;
-}
-
-async function kvGet(key) {
-  try {
-    const client = await getRedis();
-    const val = await client.get(key);
-    if (val === null) return null;
-    return JSON.parse(val);
-  } catch(e) { return null; }
-}
-
-async function kvSet(key, value, ttl) {
-  try {
-    const client = await getRedis();
-    const str = JSON.stringify(value);
-    if (ttl) {
-      await client.set(key, str, { EX: ttl });
-    } else {
-      await client.set(key, str);
-    }
-  } catch(e) { /* silent */ }
-}
+// ── Redis client helpers (shared module) ────────────────────
+import { kvGet, kvSet } from './_redis.js';
 
 // Redis keys (matching diagnostics.js)
 const KEYS = {
@@ -53,13 +23,15 @@ async function gatherData() {
 
   const dailyStats = {};
   const now = new Date();
+  const dateKeys = [];
   for (let i = 0; i < 30; i++) {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    const stats = await kvGet(KEYS.dailyStats(key));
-    if (stats) dailyStats[key] = stats;
+    dateKeys.push(d.toISOString().slice(0, 10));
   }
+  // Fetch all 30 days in parallel instead of sequentially
+  const statsResults = await Promise.all(dateKeys.map(k => kvGet(KEYS.dailyStats(k))));
+  dateKeys.forEach((k, i) => { if (statsResults[i]) dailyStats[k] = statsResults[i]; });
 
   // Window events to last 30 days for consistency with dailyStats
   const thirtyDaysAgo = Date.now() - 30 * 86400000;
@@ -483,20 +455,29 @@ async function runAgent(agentType, data) {
 
   const prompt = agent.buildPrompt(data);
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2000,
-      system: `You are an admin audit agent for Bloom, a mental health self-care PWA in its early stages. The app has a small but growing user base — calibrate your assessments accordingly. Low absolute numbers are expected. Focus on patterns, ratios, and whether safety mechanisms are functioning, not volume. Respond ONLY with valid JSON. No markdown, no explanation outside the JSON.`,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
+  // 30s timeout to prevent hanging on network issues
+  const _fetchAC = new AbortController();
+  const _fetchTimeout = setTimeout(() => _fetchAC.abort(), 30000);
+  let response;
+  try {
+    response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        system: `You are an admin audit agent for Bloom, a mental health self-care PWA in its early stages. The app has a small but growing user base — calibrate your assessments accordingly. Low absolute numbers are expected. Focus on patterns, ratios, and whether safety mechanisms are functioning, not volume. Respond ONLY with valid JSON. No markdown, no explanation outside the JSON.`,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+      signal: _fetchAC.signal,
+    });
+  } finally {
+    clearTimeout(_fetchTimeout);
+  }
 
   if (!response.ok) {
     const err = await response.text();

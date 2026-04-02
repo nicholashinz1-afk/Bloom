@@ -253,14 +253,22 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
    SKELETON LOADER
    ============================================================ */
 .skeleton {
-  background: linear-gradient(90deg, var(--bg-elevated) 25%, rgba(255,255,255,0.04) 50%, var(--bg-elevated) 75%);
-  background-size: 200% 100%;
-  animation: skeletonShimmer 1.4s ease infinite;
+  background: var(--bg-elevated);
   border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.04) 50%, transparent 75%);
+  animation: skeletonShimmer 1.4s ease infinite;
+  will-change: transform;
 }
 @keyframes skeletonShimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 /* ============================================================
@@ -272,6 +280,8 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   height: 8px;
   pointer-events: none;
   z-index: 997;
+  contain: strict;
+  will-change: transform, opacity;
   animation: confettiFall var(--dur, 1.2s) var(--delay, 0s) cubic-bezier(0.25,0.46,0.45,0.94) forwards;
   border-radius: var(--shape, 2px);
 }
@@ -294,6 +304,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   background: rgba(0,0,0,0.7);
   animation: fadeIn 0.3s ease;
   pointer-events: all;
+  contain: layout style paint;
 }
 .levelup-card {
   background: linear-gradient(135deg, var(--bg-card), rgba(var(--sage-rgb),0.08));
@@ -639,7 +650,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  transition: background-color 0.25s cubic-bezier(0.34,1.56,0.64,1), border-color 0.25s cubic-bezier(0.34,1.56,0.64,1), transform 0.25s cubic-bezier(0.34,1.56,0.64,1), color 0.25s cubic-bezier(0.34,1.56,0.64,1);
   font-size: 14px;
 }
 .habit-check.done {
@@ -712,7 +723,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   border: 2px solid transparent;
   background: var(--bg-elevated);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
 }
 .mood-btn:active { transform: scale(0.93); }
 .mood-btn.selected {
@@ -787,7 +798,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   font-size: 12px;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
   white-space: nowrap;
 }
 .food-chip.selected {
@@ -810,7 +821,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   border-radius: 50%;
   background: var(--bg-elevated);
   border: 1px solid rgba(255,255,255,0.1);
-  transition: all 0.3s;
+  transition: background-color 0.3s, border-color 0.3s;
 }
 .week-pip.done { background: var(--sage); border-color: var(--sage); }
 .week-pip.goal { background: var(--amber); border-color: var(--amber); }
@@ -902,6 +913,25 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
 }
 
 /* ============================================================
+   CHECK-IN TYPE CHIPS
+   ============================================================ */
+.cc-type-chip {
+  padding: 6px 12px;
+  border-radius: 99px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-muted);
+}
+.cc-type-chip.selected {
+  background: rgba(var(--sage-rgb),0.18);
+  border-color: rgba(var(--sage-rgb),0.45);
+  color: var(--sage-light);
+}
+
+/* ============================================================
    BUTTONS
    ============================================================ */
 .btn {
@@ -917,7 +947,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   font-weight: 500;
   cursor: pointer;
   border: none;
-  transition: all 0.2s;
+  transition: background-color 0.2s, color 0.2s, transform 0.2s, opacity 0.2s;
 }
 .btn:active { transform: scale(0.96); }
 .btn-primary {
@@ -1146,6 +1176,7 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
   max-height: 90vh;
   overflow-y: auto;
+  contain: layout style;
 }
 .bottom-sheet.open { transform: translateY(0); }
 .sheet-handle {
@@ -1298,7 +1329,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color 0.15s, transform 0.15s, opacity 0.15s;
   flex-shrink: 0;
 }
 .stepper-btn:active { transform: scale(0.88); }
@@ -1322,9 +1353,11 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
 }
 .xp-bar-fill {
   height: 100%;
+  width: 100%;
   background: linear-gradient(90deg, var(--sage), var(--sage-light));
   border-radius: 3px;
-  transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  transform-origin: left center;
+  transition: transform 0.6s cubic-bezier(0.34,1.56,0.64,1);
 }
 
 /* ============================================================
@@ -1376,7 +1409,7 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  transition: all 0.3s;
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
 .week-dot.full { background: var(--sage-dim); border-color: var(--sage); }
 .week-dot.partial { background: var(--amber-dim); border-color: var(--amber); }
@@ -4499,11 +4532,28 @@ async function dbGetAll() {
   });
 }
 
+// Debounced IndexedDB backup — batches async writes to reduce overhead
+const _dbPending = {};
+let _dbFlushTimer = null;
+function _flushDB() {
+  _dbFlushTimer = null;
+  const entries = Object.entries(_dbPending);
+  for (const [k, v] of entries) {
+    delete _dbPending[k];
+    dbSet(k, v).catch(e => console.warn('IndexedDB backup failed for', k, e));
+  }
+}
+function _queueDB(key, str) {
+  _dbPending[key] = str;
+  if (!_dbFlushTimer) _dbFlushTimer = setTimeout(_flushDB, 500);
+}
+// Flush pending IndexedDB writes before app closes
+document.addEventListener('visibilitychange', () => { if (document.hidden && _dbFlushTimer) { clearTimeout(_dbFlushTimer); _flushDB(); } });
+window.addEventListener('pagehide', () => { if (_dbFlushTimer) { clearTimeout(_dbFlushTimer); _flushDB(); } });
+
 function save(key, value) {
   const str = JSON.stringify(value);
-  let lsFailed = false;
   try { localStorage.setItem(key, str); } catch(e) {
-    lsFailed = true;
     // Quota exceeded — show warning and mark key as stale so IndexedDB wins on reload
     if (e.name === 'QuotaExceededError' || e.code === 22) {
       try {
@@ -4514,7 +4564,7 @@ function save(key, value) {
       // IndexedDB backup will still get the write below
     }
   }
-  dbSet(key, str).catch(e => console.warn('IndexedDB backup failed for', key, e));
+  _queueDB(key, str);
 }
 
 function checkStorageQuota() {
@@ -5027,6 +5077,9 @@ function launchConfetti(cx, cy, count = 40) {
   const themeKey = state.prefs?.theme || 'forest';
   const colors = (THEMES[themeKey] || THEMES.forest).confetti;
   const shapes = ['2px','50%','0'];
+  const frag = document.createDocumentFragment();
+  const pieces = [];
+  let maxLife = 0;
   for (let i = 0; i < count; i++) {
     const p = document.createElement('div');
     p.className = 'confetti-piece';
@@ -5045,20 +5098,25 @@ function launchConfetti(cx, cy, count = 40) {
       --shape:${shapes[Math.floor(Math.random()*shapes.length)]};
       width:${5+Math.random()*6}px;height:${5+Math.random()*6}px;
     `;
-    document.body.appendChild(p);
-    setTimeout(() => p.remove(), (dur + delay) * 1000 + 100);
+    frag.appendChild(p);
+    pieces.push(p);
+    maxLife = Math.max(maxLife, (dur + delay) * 1000 + 100);
   }
+  document.body.appendChild(frag);
+  // Single cleanup timer for all pieces
+  setTimeout(() => pieces.forEach(p => p.remove()), maxLife);
 }
 
 // ── Stagger card entrance animations ────────────────────────
 function staggerCards(panel) {
   if (!panel) return;
   const cards = panel.querySelectorAll('.card, .insight-card, .history-day');
-  cards.forEach((c, i) => {
-    c.style.animationDelay = `${i * 40}ms`;
-    c.classList.remove('card-enter');
-    void c.offsetWidth; // reflow
-    c.classList.add('card-enter');
+  cards.forEach(c => c.classList.remove('card-enter'));
+  requestAnimationFrame(() => {
+    cards.forEach((c, i) => {
+      c.style.animationDelay = `${i * 40}ms`;
+      c.classList.add('card-enter');
+    });
   });
 }
 
@@ -8884,11 +8942,12 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('beforeunload', flushTelemetry);
 
+let _featuresUsedCache = null;
 function trackFeature(feature) {
   sendTelemetry('feature_use', { feature });
-  // Persist locally for feature highlight system
-  const used = load('bloom_features_used', []);
-  if (!used.includes(feature)) { used.push(feature); save('bloom_features_used', used); }
+  // Persist locally for feature highlight system (cached to avoid repeated JSON.parse)
+  if (!_featuresUsedCache) _featuresUsedCache = load('bloom_features_used', []);
+  if (!_featuresUsedCache.includes(feature)) { _featuresUsedCache.push(feature); save('bloom_features_used', _featuresUsedCache); }
 }
 function trackEvent(eventName, meta) { sendTelemetry(eventName, meta ? { meta } : {}); }
 
@@ -9301,12 +9360,18 @@ function initAccessibility() {
 
   // Make all toggles keyboard accessible
   enhanceToggles();
-  const observer = new MutationObserver(() => enhanceToggles());
+  let _toggleRAF = null;
+  const observer = new MutationObserver(() => {
+    // Debounce: coalesce rapid DOM mutations into one enhanceToggles call
+    if (_toggleRAF) return;
+    _toggleRAF = requestAnimationFrame(() => { _toggleRAF = null; enhanceToggles(); });
+  });
   observer.observe(document.getElementById('app') || document.body, { childList: true, subtree: true });
 }
 
 function enhanceToggles() {
-  document.querySelectorAll('.toggle:not([role])').forEach(toggle => {
+  document.querySelectorAll('.toggle:not([data-enhanced])').forEach(toggle => {
+    toggle.setAttribute('data-enhanced', '1');
     toggle.setAttribute('role', 'checkbox');
     toggle.setAttribute('aria-checked', toggle.classList.contains('on') ? 'true' : 'false');
     toggle.setAttribute('tabindex', '0');
@@ -9375,11 +9440,16 @@ function initScrollProgress() {
     bar.className = 'scroll-progress';
     scroller.style.position = 'relative';
     scroller.prepend(bar);
+    let _spRAF = null;
     scroller.addEventListener('scroll', () => {
-      const pct = scroller.scrollTop / (scroller.scrollHeight - scroller.clientHeight);
-      const clamped = Math.min(1, Math.max(0, pct));
-      bar.style.width = (clamped * 100) + '%';
-      bar.classList.toggle('visible', clamped > 0.01 && clamped < 0.99);
+      if (_spRAF) return;
+      _spRAF = requestAnimationFrame(() => {
+        _spRAF = null;
+        const pct = scroller.scrollTop / (scroller.scrollHeight - scroller.clientHeight);
+        const clamped = Math.min(1, Math.max(0, pct));
+        bar.style.width = (clamped * 100) + '%';
+        bar.classList.toggle('visible', clamped > 0.01 && clamped < 0.99);
+      });
     }, { passive: true });
   });
 }
@@ -12194,7 +12264,7 @@ function renderProgressTab() {
         <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Earned by showing up and completing habits</div>
       </div>
     </div>
-    <div class="xp-bar-track"><div class="xp-bar-fill" style="width:${pct}%"></div></div>
+    <div class="xp-bar-track"><div class="xp-bar-fill" style="transform:scaleX(${pct / 100})"></div></div>
     ${nextLevel ? `<div style="display:flex;justify-content:space-between;margin-top:6px">
       <div style="font-size:11px;color:var(--text-muted)">${total - level.min} / ${nextLevel.min - level.min} sunlight</div>
       <div style="font-size:11px;color:var(--text-muted)">Next: ${nextLevel.name} ${nextLevel.emoji}</div>
@@ -14031,11 +14101,7 @@ function renderSettingsTab() {
     ccHtml += `<div style="margin-top:14px">
       <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:500">Type</div>
       <div id="checkin-type-chips" style="display:flex;gap:6px;margin-bottom:10px">
-        ${[{type:'yesno',label:'✓ Yes / No'},{type:'scale',label:'⊡ 1–5 Scale'},{type:'number',label:'# Counter'}].map((t, i) => `<div class="cc-type-chip${i === 0 ? ' selected' : ''}" data-type="${t.type}" onclick="document.querySelectorAll('.cc-type-chip').forEach(c=>{c.classList.remove('selected');c.style.background='rgba(255,255,255,0.04)';c.style.borderColor='rgba(255,255,255,0.08)';c.style.color='var(--text-muted)'});this.classList.add('selected');this.style.background='rgba(var(--sage-rgb),0.18)';this.style.borderColor='rgba(var(--sage-rgb),0.45)';this.style.color='var(--sage-light)'" style="
-          padding:6px 12px;border-radius:99px;cursor:pointer;font-size:12px;transition:all 0.15s;
-          background:${i === 0 ? 'rgba(var(--sage-rgb),0.18)' : 'rgba(255,255,255,0.04)'};
-          border:1px solid ${i === 0 ? 'rgba(var(--sage-rgb),0.45)' : 'rgba(255,255,255,0.08)'};
-          color:${i === 0 ? 'var(--sage-light)' : 'var(--text-muted)'}">${t.label}</div>`).join('')}
+        ${[{type:'yesno',label:'✓ Yes / No'},{type:'scale',label:'⊡ 1–5 Scale'},{type:'number',label:'# Counter'}].map((t, i) => `<div class="cc-type-chip${i === 0 ? ' selected' : ''}" data-type="${t.type}" onclick="document.querySelectorAll('.cc-type-chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected')">${t.label}</div>`).join('')}
       </div>
       <div style="display:flex;gap:8px">
         <input type="text" id="custom-checkin-name" aria-label="Add custom check-in question" placeholder="e.g. Did I take a walk?" style="flex:1">
@@ -14870,7 +14936,16 @@ function toggleHabitPref(id) {
   reRenderSettingsPreservingScroll();
 }
 
+let _settingsRenderRAF = null;
 function reRenderSettingsPreservingScroll() {
+  // Debounce: coalesce multiple rapid calls into one render per frame
+  if (_settingsRenderRAF) return;
+  _settingsRenderRAF = requestAnimationFrame(() => {
+    _settingsRenderRAF = null;
+    _doReRenderSettings();
+  });
+}
+function _doReRenderSettings() {
   const settingsScroll = document.getElementById('settings-scroll');
   const savedScrollTop = settingsScroll ? settingsScroll.scrollTop : 0;
   // Remember which sections were open before re-render
@@ -14956,6 +15031,11 @@ function initHabitDragReorder() {
   const list = document.getElementById('habit-reorder-list');
   if (!list) return;
 
+  // Clean up previous listeners to prevent accumulation
+  if (list._dragAbort) list._dragAbort.abort();
+  const ac = new AbortController();
+  list._dragAbort = ac;
+
   let dragItem = null;
   let startY = 0;
 
@@ -15021,8 +15101,8 @@ function initHabitDragReorder() {
     reRenderSettingsPreservingScroll();
   }
 
-  list.addEventListener('touchstart', onDragStart, { passive: false });
-  list.addEventListener('mousedown', onDragStart);
+  list.addEventListener('touchstart', onDragStart, { passive: false, signal: ac.signal });
+  list.addEventListener('mousedown', onDragStart, { signal: ac.signal });
 }
 
 function toggleHabitTimeSlot(id, slotBit) {
@@ -23678,13 +23758,7 @@ function initApp() {
   } else {
     initOneSignal();
   }
-  // Buddy: register once, then sync if paired (sync includes conditional re-register)
-  buddyRegisterAndSync().then(() => {
-    fetchBuddyData();
-    if (buddyState.status !== 'none') {
-      syncBuddyStatus();
-    }
-  });
+  // Defer non-critical startup work to let the main UI paint first
   const pendingBuddyInvite = load('bloom_pending_buddy_invite', null);
   if (pendingBuddyInvite) {
     save('bloom_pending_buddy_invite', null);
@@ -23696,18 +23770,29 @@ function initApp() {
   } else {
     showWhatsNew();
   }
-  checkBackupReminder();
-  checkVaultNudge();
-  checkSafariDataWarning();
-  checkShowTutorial();
-  // Local fallback reminders — only fire if push notifications aren't active
-  if (!pushNotificationsActive()) {
-    checkScheduledReminders();
-    checkWaterReminders();
-    checkMedicationReminders();
-    checkEveningNudge();
-  }
-  checkNudgeCredit();
+  setTimeout(() => {
+    // Buddy: register once, then sync if paired
+    if (!pendingBuddyInvite) {
+      buddyRegisterAndSync().then(() => {
+        fetchBuddyData();
+        if (buddyState.status !== 'none') {
+          syncBuddyStatus();
+        }
+      });
+    }
+    checkBackupReminder();
+    checkVaultNudge();
+    checkSafariDataWarning();
+    checkShowTutorial();
+    // Local fallback reminders — only fire if push notifications aren't active
+    if (!pushNotificationsActive()) {
+      checkScheduledReminders();
+      checkWaterReminders();
+      checkMedicationReminders();
+      checkEveningNudge();
+    }
+    checkNudgeCredit();
+  }, 2000);
   checkWeeklySummaryNotification();
   // Schedule real push notifications via OneSignal (delayed to let SDK init)
   setTimeout(() => scheduleAllPushNotifications(), 8000);
