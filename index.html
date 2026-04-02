@@ -21069,15 +21069,18 @@ function syncMedHabitTimes() {
 }
 
 // Detailed mode: tap individual medication
-function tapMedication(medId, el) {
+function tapMedication(medId, el, slot) {
   const med = (state.prefs.medications || []).find(m => m.id === medId);
   if (!med) return;
-  const wasDone = state.todayData[medId];
-  if (!wasDone) _justCompletedKey = medId;
-  state.todayData[medId] = !wasDone;
+  // Use slot-qualified key so the same med in different time slots tracks independently
+  const tdKey = slot ? medId + ':' + slot : medId;
+  const wasDone = state.todayData[tdKey];
+  if (!wasDone) _justCompletedKey = tdKey;
+  state.todayData[tdKey] = !wasDone;
 
-  const slot = med.time;
-  const slotXpKey = 'medication_' + slot + '_xp';
+  // Determine which slot to use for XP (passed in or fall back to med.time for legacy)
+  const effectiveSlot = slot || med.time;
+  const slotXpKey = 'medication_' + effectiveSlot + '_xp';
 
   if (!wasDone) {
     // Award 20 XP for the slot if this is the first med checked in this slot
@@ -21093,14 +21096,17 @@ function tapMedication(medId, el) {
     }
   } else {
     // Unchecking: deduct XP only if no other meds remain checked in this slot
-    const slotMeds = getMedsForSlot(slot);
-    const anyStillChecked = slotMeds.some(m => m.id !== medId && state.todayData[m.id]);
+    const slotMeds = getMedsForSlot(effectiveSlot);
+    const anyStillChecked = slotMeds.some(m => {
+      const key = slot ? m.id + ':' + effectiveSlot : m.id;
+      return key !== tdKey && state.todayData[key];
+    });
     if (!anyStillChecked) {
       state.todayData[slotXpKey] = false;
       state.xpData.total = Math.max(0, (state.xpData.total || 0) - 20);
       haptic('light');
       updateProgressTab();
-      showUndoToast(medId, 20);
+      showUndoToast(tdKey, 20);
     } else {
       haptic('light');
     }
@@ -21122,8 +21128,9 @@ function tapAllMedsInSlot(slot) {
   let awarded = false;
 
   meds.forEach(m => {
-    if (!state.todayData[m.id]) {
-      state.todayData[m.id] = true;
+    const tdKey = m.id + ':' + slot;
+    if (!state.todayData[tdKey]) {
+      state.todayData[tdKey] = true;
       if (!state.todayData[slotXpKey] && !awarded) {
         state.todayData[slotXpKey] = true;
         addXP(20, null);
@@ -21588,34 +21595,38 @@ function renderPrnSection() {
 function renderMedGroup(slot, meds, td) {
   if (meds.length === 0) return '';
   const expanded = state._medGroupExpanded?.[slot];
-  const doneCount = meds.filter(m => td[m.id]).length;
+  // Use slot-qualified keys for done state
+  const doneCount = meds.filter(m => td[m.id + ':' + slot]).length;
   const allDone = doneCount === meds.length;
+  const slotXpAwarded = td['medication_' + slot + '_xp'];
   const slotLabels = { am: 'Morning', afternoon: 'Afternoon', pm: 'Evening', any: 'Daily' };
   const label = slotLabels[slot] || slot;
 
   // Single med: render as simple row without collapsible wrapper
   if (meds.length === 1) {
     const m = meds[0];
-    const done = td[m.id];
+    const done = td[m.id + ':' + slot];
     const noteHtml = m.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px">${m.note}</div>` : '';
-    return `<div class="habit-row" onclick="tapMedication('${m.id}', this)" role="checkbox" aria-checked="${done ? 'true' : 'false'}" aria-label="${m.name}">
+    return `<div class="habit-row" onclick="tapMedication('${m.id}', this, '${slot}')" role="checkbox" aria-checked="${done ? 'true' : 'false'}" aria-label="${m.name}">
       <div class="habit-check${done ? ' done' : ''}" style="${!done ? 'border-color:rgba(106,154,176,0.3)' : ''}">${done ? CHECK_SVG : '💊'}</div>
       <div class="habit-info">
         <div class="habit-name" style="color:var(--sky-light)">${m.name}</div>
         ${noteHtml}
       </div>
-      ${!done ? '<div class="habit-xp" style="background:rgba(106,154,176,0.15);border-color:rgba(106,154,176,0.3);color:var(--sky-light)">+20</div>' : ''}
+      ${!done && !slotXpAwarded ? '<div class="habit-xp" style="background:rgba(106,154,176,0.15);border-color:rgba(106,154,176,0.3);color:var(--sky-light)">+20</div>' : ''}
     </div>`;
   }
 
   // Multiple meds: collapsible group
   // Pill icon = quick take all (when not all done), rest of row = expand/collapse
+  // Show +20 on the group header only if no XP awarded yet for this slot
   const pillClick = !allDone ? `onclick="event.stopPropagation();tapAllMedsInSlot('${slot}')" style="cursor:pointer;border-color:rgba(106,154,176,0.3)"` : `style=""`;
   let html = `<div class="habit-row" onclick="toggleMedGroupExpanded('${slot}')" style="cursor:pointer" role="button" aria-expanded="${expanded ? 'true' : 'false'}" aria-controls="med-group-${slot}">
     <div class="habit-check${allDone ? ' done' : ''}" ${pillClick} aria-label="${allDone ? 'All ' + label + ' meds taken' : 'Take all ' + label + ' meds'}">${allDone ? CHECK_SVG : '💊'}</div>
     <div class="habit-info">
       <div class="habit-name" style="color:var(--sky-light)">${label} meds (${doneCount}/${meds.length})</div>
     </div>
+    ${!allDone && !slotXpAwarded ? '<div class="habit-xp" style="background:rgba(106,154,176,0.15);border-color:rgba(106,154,176,0.3);color:var(--sky-light)">+20</div>' : ''}
     <div style="font-size:12px;color:var(--text-muted);padding:4px">${expanded ? '▾' : '▸'}</div>
   </div>`;
 
@@ -21629,17 +21640,16 @@ function renderMedGroup(slot, meds, td) {
         ✓ Take all
       </div>`;
     }
-    // Individual medication rows
+    // Individual medication rows (no per-med XP badge, XP is per-slot)
     meds.forEach(m => {
-      const done = td[m.id];
+      const done = td[m.id + ':' + slot];
       const noteHtml = m.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px">${m.note}</div>` : '';
-      html += `<div class="habit-row" onclick="tapMedication('${m.id}', this)" role="checkbox" aria-checked="${done ? 'true' : 'false'}" aria-label="${m.name}">
+      html += `<div class="habit-row" onclick="tapMedication('${m.id}', this, '${slot}')" role="checkbox" aria-checked="${done ? 'true' : 'false'}" aria-label="${m.name}">
         <div class="habit-check${done ? ' done' : ''}" style="${!done ? 'border-color:rgba(106,154,176,0.3)' : ''}">${done ? CHECK_SVG : '💊'}</div>
         <div class="habit-info">
           <div class="habit-name" style="color:var(--sky-light);font-size:13px">${m.name}</div>
           ${noteHtml}
         </div>
-        ${!done ? '<div class="habit-xp" style="background:rgba(106,154,176,0.15);border-color:rgba(106,154,176,0.3);color:var(--sky-light)">+20</div>' : ''}
       </div>`;
     });
     html += `</div>`;
