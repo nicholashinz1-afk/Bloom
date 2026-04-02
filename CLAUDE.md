@@ -112,6 +112,26 @@ For users in unsafe environments (domestic violence, abuse, controlling relation
 - Disclaimer: "not a substitute for professional mental health care"
 - Moderation allows venting. Don't over-filter emotional language.
 
+## Voice Preference
+
+Two voices: `'real'` (direct, no fluff) and `'reflective'` (gentle, warm). Stored in `state.prefs.voice`.
+
+**This applies to everything.** Every piece of copy the user sees must respect their voice preference: AI reflection framing text, button labels, banner copy, toast messages, affirmations, journal prompts, community prompts, hard day responses. If you're adding or changing user-facing text, check whether it needs both voice variants.
+
+- Voice does NOT need to be threaded to the Claude API. The server-side system prompts enforce a warm, non-clinical baseline that works for both voices. Voice modulation happens client-side through prompt pools and conditional copy.
+- Existing voice-aware pools: `JOURNAL_PROMPTS` / `JOURNAL_PROMPTS_REAL`, `COMMUNITY_PROMPTS` / `COMMUNITY_PROMPTS_REAL`, `AFFIRMATIONS_DEFAULT` / `AFFIRMATIONS_REAL`, `SCRIPTED_LOW_MOOD_RESPONSES` / `SCRIPTED_LOW_MOOD_RESPONSES_REAL`, `WINDDOWN_AFFIRMATIONS` / `WINDDOWN_AFFIRMATIONS_REAL`.
+- Pattern: `state.prefs?.voice === 'real' ? realVariant : gentleVariant`
+
+## Special Dates
+
+Users create special dates in Settings with a name, date, and type (celebration or hard day). Birthday is a default. `checkSpecialDates()` detects matches on load and populates `state._specialDateMatches`.
+
+- Banners appear on the Today tab with response buttons tailored to the date type.
+- When the user responds, a bottom sheet opens with an AI-generated reflection (context: `special_date` in `api/claude.js`). The reflection engages with the emotional meaning of the date, not just the label.
+- Voice preference applies to the framing text around the reflection (via `getSpecialDateFraming()`), not the AI call itself.
+- Existing behavior is preserved: 'hard' activates hard day mode, 'celebrate' fires confetti, 'complicated' offers a journal entry.
+- Special date reflections use Haiku (fires rarely, 1-2x/year per date).
+
 ## Scoring & Leveling System (Sunlight XP)
 
 The system exists to recognize showing up, not to gamify progress. It should never discourage someone from continuing. Every action is always recognized, never zero.
@@ -223,6 +243,9 @@ Established during the v3.8.1 performance audit. Follow these patterns in new co
 - **Specific transition properties:** Never use `transition: all` in CSS class definitions. Specify exact properties (e.g. `transition: background-color 0.2s, transform 0.2s`). Inline styles in JS templates are lower priority but should follow this when touched.
 - **Batch DOM insertions:** Use `DocumentFragment` when adding multiple elements (see `launchConfetti`). Use a single cleanup timer instead of per-element timers.
 - **IndexedDB writes are batched:** The `save()` function writes to localStorage immediately (synchronous, no data loss risk) but batches IndexedDB backup writes with a 500ms debounce. Pending writes flush on `visibilitychange` and `pagehide`.
+- **Non-blocking Google Fonts:** Fonts load via `<link rel="preload" as="style">` with `onload` swap. The page paints immediately with system fonts and swaps in Fraunces/Instrument Sans when they arrive. Don't convert this back to a blocking `<link rel="stylesheet">`.
+- **Deferred non-critical checks:** Only `checkNewWeek()`, `checkWelcomeBack()`, `checkSpecialDates()`, and `updateStreak()` run before `renderTodayTab()` (they set state it reads). Everything else (modals, affirmations, milestones, reminders, nudges) is deferred to after first paint via `requestAnimationFrame` or `setTimeout`. Don't move deferred checks back into the critical path.
+- **Progressive Today tab rendering:** On first load, `renderTodayTab()` paints only the mood/sleep card and gentle mode toggle (above the fold), then fills in the rest via `requestAnimationFrame` in `renderTodayTabRest()`. Subsequent re-renders (habit taps, etc.) do a full synchronous render. The split is controlled by `renderTodayTab._initialized`.
 
 ### Known remaining performance items
 
