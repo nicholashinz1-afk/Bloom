@@ -84,7 +84,7 @@ For users in unsafe environments (domestic violence, abuse, controlling relation
 - Decoy mask sits above everything including lock screen
 
 ### Discoverability
-- What's New tour card (v3.7.0) walks users through all three features
+- What's New tour cards (v3.7.0 safety features, v3.8.0 section builder) walk users through new features
 - FAQ hint in Settings: "The white heart also has more resources if you hold it."
 - First-time discovery toast on long-press
 
@@ -155,6 +155,29 @@ Daily | History | Wellness | Progress | Community | Settings
 
 - **Onboarding review:** Any major UX or feature change must include a review of the onboarding tutorial to make sure it's still accurate and up to date. New features that change the Today tab, add new tabs, or modify core flows (mood, journal, habits) are especially likely to need onboarding updates.
 - **Feature highlights:** When adding a new feature that users might not discover on their own, add an entry to the `FEATURE_HIGHLIGHTS` array in `index.html`. Include both voice variants (gentle + real) and a contextual relevance check if appropriate.
+
+## Section Builder (v3.8.0)
+
+Settings > Customize your sections. Lets users move items between Daily, Weekly, and Self-Care. Items adopt the behavior (XP, scheduling, tracking) of their destination section.
+
+- **Data model:** `state.prefs.sectionOverrides` maps item IDs to their new section. Promoted items are stored in `customDailyHabits` (with `originalId`), `promotedWeeklyHabits`, or `customSelfCare` (with `originalId`).
+- **XP:** Items earn XP at the rate of their destination section (daily: 15/slot, weekly: 20, self-care: 20). `getDailyXPPotential()` accounts for all of this.
+- **Scheduling:** Inline controls in the Section Builder. Daily gets time slot chips (AM/Mid/PM/Any), weekly gets day-of-week chips, self-care gets routine chips (AM/PM/Any).
+- **Settings integration:** Each settings section (Daily, Weekly, Self-Care) shows a "Moved here" subsection for promoted items with full scheduling controls and Reset buttons. Items moved away show as dimmed "(moved to X)" with a Reset button.
+- **Visibility gate:** Immediate for Ready/Exploring/Custom readiness paths. Gentle path unlocks at week 2 (with "show me everything now" override).
+- **"Make it mine" onboarding:** Fourth readiness option during setup. Includes section builder step so users can customize from day one.
+- **What's New tour cards:** Support back/forward navigation. Users can swipe through in both directions.
+
+### Emoji Picker
+
+Custom task add inputs (daily habits, weekly tasks, self-care, nourishment, section builder) have an emoji picker button. Curated sets per section type, no party/alcohol/gambling emojis. Categories: hygiene, routine, movement, connection, kindness, meals, etc.
+
+### Implementation notes
+
+- Promoted items with `originalId` are excluded from the main settings reorder list and custom items sections. They only appear in the "Moved here" subsections and Section Builder.
+- `getOrderedDailyHabits()` normalizes `name` to `label` for custom habits and skips promoted items.
+- `toggleWeeklyHabitDay` / `setWeeklyHabitDay` work with promoted IDs like `pw_brush_teeth`. If these functions are ever refactored to validate against `WEEKLY_HABITS`, promoted items would break.
+- Emoji picker popover opens upward. Works because add inputs are always at the bottom of their sections. Would clip if inputs moved to the top of a panel.
 
 ## Deployment
 
