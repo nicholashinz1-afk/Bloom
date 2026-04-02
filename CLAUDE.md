@@ -111,6 +111,41 @@ For users in unsafe environments (domestic violence, abuse, controlling relation
 - Disclaimer: "not a substitute for professional mental health care"
 - Moderation allows venting. Don't over-filter emotional language.
 
+## Scoring & Leveling System (Sunlight XP)
+
+The system exists to recognize showing up, not to gamify progress. It should never discourage someone from continuing. Every action is always recognized, never zero.
+
+### Growth Stages (botanically accurate)
+
+Seed (0) → Seedling (175) → Sprout (525) → Budding (1,200) → Blooming (2,600) → Flowering (5,000) → Flourishing (9,000) → Rooted (15,000) → Evergreen (25,000) → Full Bloom (40,000)
+
+Names follow how a plant actually grows. Don't rename stages to anything that implies arrival before the journey warrants it. Gaps between stages grow gently so no level ever feels like a wall.
+
+### XP values
+
+- **Habits/self-care:** 15 XP each. Medication: 20 XP. All self-care is equally valued.
+- **Mood check-in:** 10 XP (once/day). **Sleep logging:** 5 XP (once/day).
+- **Journal entry:** 20 XP (once/day). **Reflection:** 15 XP (once/day).
+- **Water goal:** 10 XP. **Food tracking:** 10 XP. **Small wins:** 10 XP. **Affirmations:** 10 XP.
+- **Skill-building (breathing, grounding, body scan, reframe):** 15-20 XP first session/day, 5 XP for repeats.
+- **Self-care act:** 10 XP. **Comeback bonus:** 25 XP.
+
+### Hard day boost
+
+All XP earns 1.5x when hard day mode or gentle mode is active. Showing up on a hard day is harder, so it counts for more. Don't remove this.
+
+### Diminishing returns
+
+Repeatable activities (breathing, grounding, body scan, reframe) use `addActivityXP()`: full XP on first session per day, 5 XP for every repeat. Never zero. This prevents curve distortion without punishing someone for doing more.
+
+### Streak consistency bonus
+
+Daily bonus based on current consecutive run: +15 XP at 7+ days, +30 at 14+, +50 at 30+. This rewards steadiness without punishing missed days (daysShowedUp never goes down).
+
+### Scaling
+
+`getScaledLevels()` adjusts thresholds proportionally based on configured habits (`getDailyXPPotential()`). Baseline is 175 XP/day. If a user has more habits enabled, thresholds scale up to keep the timeline roughly the same. Don't use dynamic scaling based on actual engagement. It punishes people for doing more.
+
 ## Tabs
 
 Daily | History | Wellness | Progress | Community | Settings
