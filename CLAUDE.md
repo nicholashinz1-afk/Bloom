@@ -178,6 +178,9 @@ Custom task add inputs (daily habits, weekly tasks, self-care, nourishment, sect
 - `getOrderedDailyHabits()` normalizes `name` to `label` for custom habits and skips promoted items.
 - `toggleWeeklyHabitDay` / `setWeeklyHabitDay` work with promoted IDs like `pw_brush_teeth`. If these functions are ever refactored to validate against `WEEKLY_HABITS`, promoted items would break.
 - Emoji picker popover opens upward. Works because add inputs are always at the bottom of their sections. Would clip if inputs moved to the top of a panel.
+## Known Issues / Fixes Needed
+
+- **Detailed medication mode doesn't bridge to completion system.** `checkAllDone()` and `getCompletionRate()` (around line ~7880-7950) use the simple medication system's keys (`medication_am`, `medication_pm`, etc. from `MEDICATION_HABIT`). In detailed mode, individual meds use slot-qualified keys (`medId:slot`). Completing all individual meds in detailed mode does not set the simple keys, so the "all done" celebration and completion percentage don't account for detailed medication progress. Fix: when all meds in a slot are checked off in detailed mode, also set `td.medication_<slot>` = true so the completion system picks it up.
 
 ## Deployment
 
