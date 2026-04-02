@@ -4031,6 +4031,8 @@ const PRODUCTION_DOMAIN = 'bloomselfcare.app';
 // Fetches the live page, compares VERSION, and reloads if newer.
 // Runs on app open and when returning from background.
 async function checkForUpdate() {
+  // Prevent concurrent or repeated reload attempts
+  if (window._updateReloading) return;
   try {
     // Bypass service worker cache with cache-busting query param
     const url = window.location.href.split('?')[0] + '?_v=' + Date.now();
@@ -4039,6 +4041,7 @@ async function checkForUpdate() {
     const html = await res.text();
     const match = html.match(/const VERSION\s*=\s*'([^']+)'/);
     if (match && match[1] !== VERSION) {
+      window._updateReloading = true;
       // Clear service worker caches before reloading
       if ('caches' in window) {
         const names = await caches.keys();
