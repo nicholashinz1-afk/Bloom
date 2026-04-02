@@ -3472,10 +3472,10 @@ function listenForSWUpdate() {
 // Each item can have an optional spotlight target selector
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
-  { text: '<strong>Name your medications</strong> — you can now list each medication individually in Settings. Choose <em>Simple</em> (one check per time slot) or <em>Detailed</em> (track each med separately with a "Take all" option).', spotlight: null, tab: 'settings' },
-  { text: '<strong>Medication reference card</strong> — your medication list in Settings doubles as a quick reference you can show your doctor. Copy it to your clipboard with one tap.', spotlight: null, tab: 'settings' },
-  { text: '<strong>As-needed medications</strong> — medications you only take sometimes show up as a quiet log button instead of a daily checkbox. No pressure, no guilt, just a record for yourself.', spotlight: null },
-  { text: '<strong>Treatment day support</strong> — for infusions, injections, or periodic treatments, you can link them to your calendar. Bloom will acknowledge treatment days and offer to make the day a little easier.', spotlight: null, tab: 'settings' },
+  { text: '<strong>Name your medications</strong> — you can now list each medication individually in Settings. Choose <em>Simple</em> (one check per time slot) or <em>Detailed</em> (track each med separately with a "Take all" option).', spotlight: null, tab: 'settings', tourIcon: '💊', tourTitle: 'Name your medications', tourText: 'Head to Settings and scroll to the Medication section under Daily Habits. You can add each medication by name, pick when you take it, and add notes like dosage or "take with food."', tourAction: 'settings' },
+  { text: '<strong>Medication reference card</strong> — your medication list in Settings doubles as a quick reference you can show your doctor. Copy it to your clipboard with one tap.', spotlight: null, tab: 'settings', tourIcon: '📋', tourTitle: 'Your doctor visit card', tourText: 'Once you have medications listed, a reference card appears below the list. It shows everything at a glance and has a "Copy to clipboard" button. Hand your phone to the nurse or paste it into a patient portal.', tourAction: null },
+  { text: '<strong>As-needed medications</strong> — medications you only take sometimes show up as a quiet log button instead of a daily checkbox. No pressure, no guilt, just a record for yourself.', spotlight: null, tab: null, tourIcon: '📝', tourTitle: 'As-needed logging', tourText: 'Set a medication\'s time to "As needed" and it shows as a soft log button on your Daily tab instead of a checkbox. No XP, no guilt for skipping. Just a personal record.', tourAction: 'today' },
+  { text: '<strong>Treatment day support</strong> — for infusions, injections, or periodic treatments, you can link them to your calendar. Bloom will acknowledge treatment days and offer to make the day a little easier.', spotlight: null, tab: 'settings', tourIcon: '📅', tourTitle: 'Treatment days', tourText: 'For medications you don\'t take daily (like infusions), set the time to "Not daily" and tap "Mark treatment days." Bloom will show a gentle banner on treatment days and offer to activate Hard Day Mode.', tourAction: 'settings' },
 ];
 
 // ============================================================
@@ -16190,7 +16190,7 @@ function showWhatsNew(force = false) {
   }
 
   const tourBtn = document.getElementById('whats-new-tour-btn');
-  const hasTour = WHATS_NEW.some(i => i.spotlight);
+  const hasTour = WHATS_NEW.some(i => i.tourTitle);
   if (tourBtn) tourBtn.style.display = hasTour ? '' : 'none';
 
   openSheet('whats-new-sheet');
@@ -16200,137 +16200,96 @@ let whatsNewTourStep = 0;
 function startWhatsNewTour() {
   closeAllSheets();
   whatsNewTourStep = 0;
-  const tourItems = WHATS_NEW.filter(i => i.spotlight);
+  const tourItems = WHATS_NEW.filter(i => i.tourTitle);
   if (tourItems.length === 0) return;
-  runWhatsNewTourStep(tourItems);
+  renderWhatsNewTourCard(tourItems);
 }
 
 function cancelWhatsNewTour() {
-  document.getElementById('tour-spotlight')?.remove();
+  document.getElementById('whats-new-tour-overlay')?.remove();
   whatsNewTourStep = 0;
-  // Return to today tab cleanly
   switchTab('today');
 }
 
-function runWhatsNewTourStep(items) {
+function renderWhatsNewTourCard(items) {
+  document.getElementById('whats-new-tour-overlay')?.remove();
+
   if (whatsNewTourStep >= items.length) {
-    // Tour done
-    const div = document.createElement('div');
-    div.id = 'tour-done-toast';
-    const doneAppRect = document.getElementById('app')?.getBoundingClientRect() || { left: 0, width: window.innerWidth };
-    const doneCx = doneAppRect.left + doneAppRect.width / 2;
-    div.style.cssText = `position:fixed;bottom:100px;left:${doneCx}px;transform:translateX(-50%);
+    // Tour complete toast
+    const toast = document.createElement('div');
+    const appRect = document.getElementById('app')?.getBoundingClientRect() || { left: 0, width: window.innerWidth };
+    const cx = appRect.left + appRect.width / 2;
+    toast.style.cssText = `position:fixed;bottom:100px;left:${cx}px;transform:translateX(-50%);
       background:var(--bg-card);border:2px solid var(--sage);border-radius:99px;
       padding:12px 24px;font-size:14px;color:var(--cream);z-index:600;
       font-family:Fraunces,serif;font-style:italic;white-space:nowrap;
       animation:celebrateIn 0.4s ease forwards`;
-    div.textContent = "You're all caught up 🌿";
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 2500);
+    toast.textContent = "You're all caught up 🌿";
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2500);
+    switchTab('today');
     return;
   }
 
   const item = items[whatsNewTourStep];
+  const total = items.length;
+  const isLast = whatsNewTourStep + 1 >= total;
 
-  // Switch to correct tab if needed
-  if (item.tab) switchTab(item.tab);
-
-  setTimeout(() => {
-    const target = document.querySelector(item.spotlight);
-    if (!target) {
-      whatsNewTourStep++;
-      runWhatsNewTourStep(items);
-      return;
-    }
-
-    // Scroll target into view
-    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    // Show spotlight overlay
-    showTourSpotlight(target, item.text, items.length, () => {
-      whatsNewTourStep++;
-      runWhatsNewTourStep(items);
-    });
-  }, item.tab ? 400 : 100);
-}
-
-function showTourSpotlight(el, text, total, onNext) {
-  // Remove any existing spotlight
-  document.getElementById('tour-spotlight')?.remove();
-
-  const appEl = document.getElementById('app');
-  if (!appEl || !el) return;
-  const appRect = appEl.getBoundingClientRect();
-  const elRect = el.getBoundingClientRect();
-  const pad = 8;
-
-  // Positions relative to the app container
-  const relLeft = elRect.left - appRect.left;
-  const relTop = elRect.top - appRect.top;
-  const appW = appRect.width;
-  const appH = appRect.height;
+  // Build progress dots
+  const dots = items.map((_, i) =>
+    `<div style="width:${i === whatsNewTourStep ? '16px' : '6px'};height:6px;border-radius:3px;
+      background:${i === whatsNewTourStep ? 'var(--sage)' : 'rgba(255,255,255,0.15)'};transition:all 0.2s"></div>`
+  ).join('');
 
   const overlay = document.createElement('div');
-  overlay.id = 'tour-spotlight';
-  overlay.style.cssText = `position:fixed;top:${appRect.top}px;left:${appRect.left}px;width:${appW}px;height:${appH}px;z-index:700;pointer-events:none;overflow:hidden`;
-
-  // Whether info card should go above or below the target
-  const elMid = elRect.top - appRect.top + elRect.height / 2;
-  const showAbove = elMid > appH / 2;
-  const cardPos = showAbove
-    ? `bottom:${appH - relTop + 16}px`
-    : `top:${relTop + elRect.height + pad + 12}px`;
-
+  overlay.id = 'whats-new-tour-overlay';
+  overlay.style.cssText = `position:fixed;inset:0;z-index:700;display:flex;align-items:center;justify-content:center;padding:16px`;
   overlay.innerHTML = `
-    <svg width="${appW}" height="${appH}" aria-hidden="true" style="position:absolute;top:0;left:0">
-      <defs>
-        <mask id="tour-mask">
-          <rect width="${appW}" height="${appH}" fill="white"/>
-          <rect x="${relLeft - pad}" y="${relTop - pad}"
-            width="${elRect.width + pad*2}" height="${elRect.height + pad*2}"
-            rx="12" fill="black"/>
-        </mask>
-      </defs>
-      <rect width="${appW}" height="${appH}" fill="rgba(0,0,0,0.7)" mask="url(#tour-mask)"/>
-      <rect x="${relLeft - pad}" y="${relTop - pad}"
-        width="${elRect.width + pad*2}" height="${elRect.height + pad*2}"
-        rx="12" fill="none" stroke="var(--sage, #5a9e60)" stroke-width="2"
-        style="animation:pulse 1.5s ease-in-out infinite"/>
-    </svg>
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.75)" onclick="cancelWhatsNewTour()"></div>
     <div style="
-      position:absolute;
-      left:16px;right:16px;
-      ${cardPos};
-      background:var(--bg-card);border:2px solid var(--sage);border-radius:20px;
-      padding:16px 18px;pointer-events:all;
-      box-shadow:0 8px 32px rgba(0,0,0,0.8)">
-      <div style="font-size:11px;color:var(--sage-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">
-        What's new — ${whatsNewTourStep + 1} of ${total}
+      position:relative;width:100%;max-width:360px;
+      background:var(--bg-card);border:1px solid rgba(var(--sage-rgb),0.3);
+      border-radius:var(--r-xl);padding:24px 20px;
+      box-shadow:0 8px 40px rgba(0,0,0,0.6);
+      animation:scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1)">
+      <div style="text-align:center;font-size:36px;margin-bottom:12px">${item.tourIcon || '🌿'}</div>
+      <div style="font-size:10px;font-weight:600;color:var(--sage);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;text-align:center">
+        ${whatsNewTourStep + 1} of ${total}
       </div>
-      <div style="font-size:14px;color:var(--cream);line-height:1.5;margin-bottom:14px;font-family:Fraunces,serif;font-style:italic">
-        ${text}
+      <div style="font-family:Fraunces,serif;font-size:18px;font-weight:300;color:var(--cream);margin-bottom:8px;text-align:center;line-height:1.3">
+        ${item.tourTitle}
       </div>
-      <div style="display:flex;gap:10px">
-        <button onclick="cancelWhatsNewTour()" style="
-          background:none;border:1px solid rgba(255,255,255,0.15);
-          color:var(--text-muted);border-radius:99px;padding:8px 16px;
-          font-size:13px;cursor:pointer;font-family:Instrument Sans,sans-serif">
-          Skip tour
-        </button>
-        <button id="tour-next-btn" style="
-          flex:1;background:rgba(var(--sage-rgb),0.2);border:1px solid var(--sage);
-          color:var(--sage-light);border-radius:99px;padding:8px 16px;
-          font-size:13px;cursor:pointer;font-family:Instrument Sans,sans-serif">
-          ${whatsNewTourStep + 1 >= total ? 'Done ✓' : 'Next →'}
-        </button>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px;text-align:center">
+        ${item.tourText}
+      </div>
+      ${item.tourAction ? `<div onclick="cancelWhatsNewTour();switchTab('${item.tourAction}')" style="
+        text-align:center;font-size:12px;color:var(--sky-light);cursor:pointer;margin-bottom:16px;text-decoration:underline">
+        Take me there
+      </div>` : '<div style="margin-bottom:16px"></div>'}
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;gap:5px">${dots}</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="cancelWhatsNewTour()" style="
+            background:none;border:1px solid rgba(255,255,255,0.12);
+            color:var(--text-muted);border-radius:99px;padding:8px 14px;
+            font-size:12px;cursor:pointer;font-family:Instrument Sans,sans-serif;min-height:44px">
+            ${isLast ? 'Close' : 'Skip'}
+          </button>
+          <button id="wn-tour-next" style="
+            background:rgba(var(--sage-rgb),0.2);border:1px solid var(--sage);
+            color:var(--sage-light);border-radius:99px;padding:8px 20px;
+            font-size:12px;cursor:pointer;font-family:Instrument Sans,sans-serif;min-height:44px">
+            ${isLast ? 'Done ✓' : 'Next'}
+          </button>
+        </div>
       </div>
     </div>
   `;
 
   document.body.appendChild(overlay);
-  document.getElementById('tour-next-btn').addEventListener('click', () => {
-    overlay.remove();
-    onNext();
+  document.getElementById('wn-tour-next').addEventListener('click', () => {
+    whatsNewTourStep++;
+    renderWhatsNewTourCard(items);
   });
 }
 
