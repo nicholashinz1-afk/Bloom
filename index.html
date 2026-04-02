@@ -3318,35 +3318,35 @@ select:focus {
     <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;padding:0 0 8px">These resources are private. Chats happen in your browser, not in your call or text history.</p>
   </div>
   <div class="safety-section-label">Live Chat (no call needed)</div>
-  <button class="crisis-option" onclick="window.open('https://www.thehotline.org/get-help/')" aria-label="Chat with the National Domestic Violence Hotline">
+  <button class="crisis-option" onclick="safetyChatOpen('https://www.thehotline.org/get-help/', 'National DV Hotline')" aria-label="Chat with the National Domestic Violence Hotline">
     <span class="crisis-option-icon" aria-hidden="true">💬</span>
     <span>
       <span class="crisis-option-title">National DV Hotline</span>
       <span class="crisis-option-sub">thehotline.org — live chat, 24/7. Domestic violence, dating abuse, stalking.</span>
     </span>
   </button>
-  <button class="crisis-option" onclick="window.open('https://hotline.rainn.org/online')" aria-label="Chat with RAINN online">
+  <button class="crisis-option" onclick="safetyChatOpen('https://hotline.rainn.org/online', 'RAINN')" aria-label="Chat with RAINN online">
     <span class="crisis-option-icon" aria-hidden="true">💬</span>
     <span>
       <span class="crisis-option-title">RAINN</span>
       <span class="crisis-option-sub">online.rainn.org — live chat, 24/7. Sexual assault support.</span>
     </span>
   </button>
-  <button class="crisis-option" onclick="window.open('https://www.loveisrespect.org/get-relationship-help/')" aria-label="Chat with Love Is Respect">
+  <button class="crisis-option" onclick="safetyChatOpen('https://www.loveisrespect.org/get-relationship-help/', 'Love Is Respect')" aria-label="Chat with Love Is Respect">
     <span class="crisis-option-icon" aria-hidden="true">💬</span>
     <span>
       <span class="crisis-option-title">Love Is Respect</span>
       <span class="crisis-option-sub">loveisrespect.org — live chat. Teen and young adult dating abuse.</span>
     </span>
   </button>
-  <button class="crisis-option" onclick="window.open('https://connect.crisistextline.org/chat')" aria-label="Chat with Crisis Text Line online">
+  <button class="crisis-option" onclick="safetyChatOpen('https://connect.crisistextline.org/chat', 'Crisis Text Line')" aria-label="Chat with Crisis Text Line online">
     <span class="crisis-option-icon" aria-hidden="true">💬</span>
     <span>
       <span class="crisis-option-title">Crisis Text Line</span>
       <span class="crisis-option-sub">crisistextline.org — web chat for any crisis.</span>
     </span>
   </button>
-  <button class="crisis-option" onclick="window.open('https://findahelpline.com/')" aria-label="Find international helplines">
+  <button class="crisis-option" onclick="safetyChatOpen('https://findahelpline.com/', 'Find A Helpline')" aria-label="Find international helplines">
     <span class="crisis-option-icon" aria-hidden="true">🌍</span>
     <span>
       <span class="crisis-option-title">International Resources</span>
@@ -16687,6 +16687,46 @@ function openSafetySheet() {
     save('bloom_safety_seen', true);
     showToast('You found the safety resources');
   }
+}
+
+// ── Safety Chat Interstitial ────────────────────────────────
+// Shows a warning before opening external chat links
+function safetyChatOpen(url, name) {
+  const sheet = document.getElementById('safety-sheet');
+  if (!sheet) return;
+
+  // Replace the sheet content with the interstitial
+  const original = sheet.innerHTML;
+  sheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div style="padding:0 20px 4px">
+      <button class="quick-exit-btn" onclick="activateDecoyMask()" aria-label="Quick exit - hide this screen immediately">
+        <span aria-hidden="true">⚡</span> Quick Exit
+      </button>
+    </div>
+    <div style="padding:0 20px 20px">
+      <h2 class="sheet-title">Before you go</h2>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+        <strong style="color:var(--cream)">${name}</strong> will open in your browser as a separate tab.
+      </div>
+      <div style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px;font-size:12px;color:var(--text-secondary);line-height:1.7">
+        <div style="font-weight:500;color:var(--cream);margin-bottom:6px">If you need to hide quickly</div>
+        Quick Exit covers Bloom, but it can't reach your browser tab. To hide the chat, close or swipe away the browser tab. You can also clear your browser history after.
+      </div>
+      <button onclick="window.open('${url}');safetyChatBack()" class="btn btn-primary btn-block" style="margin-bottom:8px">Open ${name}</button>
+      <button onclick="safetyChatBack()" class="btn btn-secondary btn-block">Go back</button>
+    </div>
+  `;
+
+  // Store original content for restoration
+  sheet._originalHTML = original;
+}
+
+function safetyChatBack() {
+  const sheet = document.getElementById('safety-sheet');
+  if (!sheet || !sheet._originalHTML) return;
+  sheet.innerHTML = sheet._originalHTML;
+  delete sheet._originalHTML;
 }
 
 // ── Decoy Mask (Quick Exit) ─────────────────────────────────
