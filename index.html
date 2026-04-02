@@ -17658,12 +17658,17 @@ function renderWhatsNewTourCard(items) {
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;gap:5px">${dots}</div>
         <div style="display:flex;gap:8px">
-          <button onclick="cancelWhatsNewTour()" style="
+          ${whatsNewTourStep > 0 ? `<button id="wn-tour-back" style="
             background:none;border:1px solid rgba(255,255,255,0.12);
             color:var(--text-muted);border-radius:99px;padding:8px 14px;
             font-size:12px;cursor:pointer;font-family:Instrument Sans,sans-serif;min-height:44px">
-            ${isLast ? 'Close' : 'Skip'}
-          </button>
+            ← Back
+          </button>` : `<button onclick="cancelWhatsNewTour()" style="
+            background:none;border:1px solid rgba(255,255,255,0.12);
+            color:var(--text-muted);border-radius:99px;padding:8px 14px;
+            font-size:12px;cursor:pointer;font-family:Instrument Sans,sans-serif;min-height:44px">
+            Skip
+          </button>`}
           <button id="wn-tour-next" style="
             background:rgba(var(--sage-rgb),0.2);border:1px solid var(--sage);
             color:var(--sage-light);border-radius:99px;padding:8px 20px;
@@ -17676,6 +17681,12 @@ function renderWhatsNewTourCard(items) {
   `;
 
   document.body.appendChild(overlay);
+  if (whatsNewTourStep > 0) {
+    document.getElementById('wn-tour-back').addEventListener('click', () => {
+      whatsNewTourStep--;
+      renderWhatsNewTourCard(items);
+    });
+  }
   document.getElementById('wn-tour-next').addEventListener('click', () => {
     whatsNewTourStep++;
     renderWhatsNewTourCard(items);
