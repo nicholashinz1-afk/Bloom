@@ -253,9 +253,16 @@ Uses `applyLivingFeedback(el, type, duration)` helper. Respects `prefers-reduced
 - Purely decorative. No layout shifts. No interaction blocking. Screen readers unaffected.
 - Organic feel (light through leaves), not gamified.
 
-### Phase B: Evolving SVG Growth Illustrations (Future)
+### Phase B: Evolving Visuals (Future)
 
-Not yet implemented. Vision: refactor `buildFlowerSVG()` into `buildEcosystemSVG(levelIdx)` where each growth stage adds environmental richness to the scene. Seed starts as dark soil with a single seed. By Ecosystem, it's a full landscape with trees, water, mountains, diverse wildlife. Each level composites SVG layers: ground, plants, creatures, atmosphere, light effects. Think nature illustration/Studio Ghibli, not cartoon. Elements never disappear as you level up, they mature. Theme colors drive all SVG fills via `getThemeSVGColors()`.
+Not yet implemented. Full spec at `docs/PHASE_B_GARDEN_VIEW.md`. Four sub-phases:
+
+- **B0: Evolving ambient background.** The app background itself grows with the user's level. Layered SVG silhouettes (treelines, hills, ground cover) appear behind content at very low opacity, visible through translucent cards. Seed level is bare. Ecosystem has a full layered landscape. Passive, no interaction. Each theme has its own environmental character (forest treelines, ocean coral, rose garden hedges, etc.).
+- **B1: Garden View foundation.** Full-screen immersive view accessed by tapping the flower on Progress tab. `buildGardenSVG()` for all 14 levels. Theme-aware, reduced-motion-aware.
+- **B2: Memory palace visitors.** Tappable elements (butterflies, fireflies, flowers) surface journal excerpts, affirmations, milestones. Randomly rotated each visit so it never gets stale.
+- **B3: Full ecology.** Birds (mood memories), water features (AI insights), sky elements (lifetime stats). Complete living world.
+
+Design principles: Studio Ghibli, not cartoon. Elements never disappear as you level up, they mature. Theme colors drive all SVG fills via `getThemeSVGColors()`. The garden never shows negative data or demands attention.
 
 ## Known Issues / Fixes Needed
 
