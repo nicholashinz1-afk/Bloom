@@ -45,7 +45,7 @@
 
 <style>
 /* ============================================================
-   BLOOM v1.3.0 — DESIGN TOKENS
+   BLOOM — DESIGN TOKENS
    ============================================================ */
 :root {
   /* Base palette — deep forest green */
@@ -836,13 +836,16 @@ body.theme-pride .ambient-wisp {
    CARDS
    ============================================================ */
 .card {
-  background: rgba(var(--bg-card-rgb), 0.82);
+  background: rgba(var(--bg-card-rgb), 0.55);
   border-radius: var(--r-lg);
   padding: 16px;
   margin-bottom: 12px;
-  border: 1px solid rgba(255,255,255,0.04);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+body.high-contrast .card {
+  background: rgba(var(--bg-card-rgb), 0.88);
 }
 .card-title {
   font-family: 'Fraunces', serif;
@@ -3294,24 +3297,24 @@ body.theme-pastel .card {
 }
 
 /* Gradient card borders — all themes (background-clip trick preserves border-radius) */
-/* Cards are slightly translucent so ambient particles show through as soft light */
+/* Cards are translucent so ambient particles show through as soft light */
 .card {
   border: 1px solid transparent;
   background:
-    linear-gradient(rgba(var(--bg-card-rgb),0.82), rgba(var(--bg-card-rgb),0.82)) padding-box,
+    linear-gradient(rgba(var(--bg-card-rgb),0.55), rgba(var(--bg-card-rgb),0.55)) padding-box,
     linear-gradient(135deg,
       rgba(var(--sage-rgb),0.3) 0%,
       rgba(var(--sage-light-rgb),0.15) 50%,
       rgba(var(--sage-rgb),0.3) 100%
     ) border-box;
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
 /* Pride — rainbow gradient override */
 body.theme-pride .card {
   background:
-    linear-gradient(rgba(var(--bg-card-rgb),0.82), rgba(var(--bg-card-rgb),0.82)) padding-box,
+    linear-gradient(rgba(var(--bg-card-rgb),0.55), rgba(var(--bg-card-rgb),0.55)) padding-box,
     linear-gradient(135deg,
       rgba(224,64,80,0.35), rgba(232,112,48,0.35), rgba(232,200,64,0.35),
       rgba(80,184,104,0.35), rgba(64,128,208,0.35), rgba(144,80,200,0.35)
@@ -3322,20 +3325,10 @@ body.theme-pride .card {
 body.hard-day-active #app::before {
   opacity: 0.3;
 }
-body.hard-day-active .card::after,
-body.hard-day-active #app-header::after,
-body.hard-day-active .tab-scroll::before {
-  display: none;
-}
-
-/* ── Hard day dimming ───────────────────────────────────── */
-body.hard-day-active {
-  --bg:          #0b120d;
-  --bg-card:     #131b15;
-  --bg-elevated: #182019;
-}
+/* ── Hard day warm shift ─────────────────────────────────── */
+/* Quieter and warmer, never darker or sadder. Golden-hour feel. */
 body.hard-day-active #app {
-  filter: saturate(0.7) brightness(0.92);
+  filter: saturate(0.9) brightness(1.0) sepia(0.08);
   transition: filter 0.8s ease;
 }
 body.hard-day-active .celebrate-toast {
@@ -4261,7 +4254,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '3.8.1';
+const VERSION = '3.9.0';
 const LEGACY_DOMAINS = ['bloom-zeta-rouge.vercel.app'];
 const PRODUCTION_DOMAIN = 'bloomselfcare.app';
 
@@ -7700,6 +7693,29 @@ const MED_REMINDER_MESSAGES = [
   { title: 'Hey, a small reminder 💊', body: 'Have you had your medication? Taking care of yourself matters.' },
 ];
 
+// Check if all meds in a time slot are done (handles both simple and detailed mode)
+function isMedSlotDone(slot, td, isDetailed) {
+  if (!td) td = state.todayData;
+  if (isDetailed === undefined) isDetailed = state.prefs?.medicationMode === 'detailed';
+  // Simple mode key always checked first
+  if (td['medication_' + slot]) return true;
+  if (!isDetailed) return false;
+  // Detailed mode: check if all individual meds in this slot are done
+  const slotMeds = getMedsForSlot(slot);
+  if (slotMeds.length === 0) return false;
+  return slotMeds.every(m => td[m.id + ':' + slot]);
+}
+
+// Bridge detailed mode completion to simple keys (for checkAllDone/getCompletionRate)
+function bridgeDetailedMedSlot(slot) {
+  const td = state.todayData;
+  if (state.prefs?.medicationMode !== 'detailed') return;
+  const slotMeds = getMedsForSlot(slot);
+  if (slotMeds.length === 0) return;
+  const allDone = slotMeds.every(m => td[m.id + ':' + slot]);
+  td['medication_' + slot] = allDone;
+}
+
 function checkMedicationReminders() {
   if (!state.prefs?.notifications?.habitReminders) return;
   const medOn = state.prefs?.dailyHabits?.medication;
@@ -7718,16 +7734,16 @@ function checkMedicationReminders() {
   // Build schedule: { slotKey, firstHour, followupHour, checkFn }
   const schedule = [];
   if (hasTimeSlot(medTime, TIME_AM)) {
-    schedule.push({ slot: 'am', firstHour: 9, followupHour: 11, done: () => td.medication_am });
+    schedule.push({ slot: 'am', firstHour: 9, followupHour: 11, done: () => isMedSlotDone('am', td) });
   }
   if (hasTimeSlot(medTime, TIME_AFTERNOON)) {
-    schedule.push({ slot: 'afternoon', firstHour: 14, followupHour: 16, done: () => td.medication_afternoon });
+    schedule.push({ slot: 'afternoon', firstHour: 14, followupHour: 16, done: () => isMedSlotDone('afternoon', td) });
   }
   if (hasTimeSlot(medTime, TIME_PM)) {
-    schedule.push({ slot: 'pm', firstHour: 20, followupHour: 22, done: () => td.medication_pm });
+    schedule.push({ slot: 'pm', firstHour: 20, followupHour: 22, done: () => isMedSlotDone('pm', td) });
   }
   if (medTime === 'any') {
-    schedule.push({ slot: 'any', firstHour: 12, followupHour: 14, done: () => td.medication_any });
+    schedule.push({ slot: 'any', firstHour: 12, followupHour: 14, done: () => isMedSlotDone('any', td) });
   }
 
   const slotDisplayName = { am: 'AM', afternoon: 'Afternoon', pm: 'PM' };
@@ -8075,18 +8091,19 @@ async function scheduleAllPushNotifications() {
   if (medOn && medRemindMode !== 'off') {
     const medTime = state.prefs?.habitTimes?.medication || 'am';
     const td = state.todayData;
+    const isDetailed = state.prefs?.medicationMode === 'detailed';
     const schedule = [];
     if (hasTimeSlot(medTime, TIME_AM)) {
-      schedule.push({ slot: 'am', firstHour: 9, done: () => td.medication_am });
+      schedule.push({ slot: 'am', firstHour: 9, done: () => isMedSlotDone('am', td, isDetailed) });
     }
     if (hasTimeSlot(medTime, TIME_AFTERNOON)) {
-      schedule.push({ slot: 'afternoon', firstHour: 14, done: () => td.medication_afternoon });
+      schedule.push({ slot: 'afternoon', firstHour: 14, done: () => isMedSlotDone('afternoon', td, isDetailed) });
     }
     if (hasTimeSlot(medTime, TIME_PM)) {
-      schedule.push({ slot: 'pm', firstHour: 20, done: () => td.medication_pm });
+      schedule.push({ slot: 'pm', firstHour: 20, done: () => isMedSlotDone('pm', td, isDetailed) });
     }
     if (medTime === 'any') {
-      schedule.push({ slot: 'any', firstHour: 12, done: () => td.medication_any });
+      schedule.push({ slot: 'any', firstHour: 12, done: () => isMedSlotDone('any', td, isDetailed) });
     }
     schedule.forEach(s => {
       if (s.firstHour > hour && !s.done() && !sent[`med_first_${s.slot}`]) {
@@ -10261,11 +10278,23 @@ function renderTodayTop() {
       : ` ${sd._years} year${sd._years !== 1 ? 's' : ''} since ${sd.name}.`) : '';
 
     if (sd.type === 'hard') {
+      const isReal = state.prefs?.voice === 'real';
+      const hasYears = sd._years && sd._years > 0;
+      let bannerText;
+      if (isReal) {
+        bannerText = hasYears
+          ? `${sd._years} year${sd._years !== 1 ? 's' : ''}. Today is heavy. You don't have to carry it perfectly.`
+          : `Today holds weight. Whatever you're feeling right now, that's okay.`;
+      } else {
+        bannerText = hasYears
+          ? `${sd._years} year${sd._years !== 1 ? 's' : ''} since ${sd.name}. This day still matters, and so does however you're feeling right now.`
+          : `Today holds weight. Whatever is moving through you right now is valid.`;
+      }
       html += `<div id="special-date-banner-${sd.id}" class="banner" style="background:rgba(106,154,176,0.08);border:1px solid rgba(106,154,176,0.18);margin-bottom:12px">
         <div style="text-align:center;width:100%">
           <div style="font-size:28px;margin-bottom:10px">🫂</div>
           <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sky-light);line-height:1.7;margin-bottom:4px">
-            We remember today is ${sd.name}.${yearText ? '<br>' + yearText.trim() : ''} How are you feeling?
+            ${bannerText}
           </div>
           <div style="display:flex;gap:10px;justify-content:center;margin-top:14px">
             <button class="btn btn-sm" style="background:rgba(106,154,176,0.2);border:1px solid rgba(106,154,176,0.35);color:var(--sky-light)" onclick="respondToSpecialDate('${sd.id}','hard')">I could use some support</button>
@@ -10827,10 +10856,10 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
   const medMode = prefs?.medicationMode || (medEnabled ? 'simple' : 'off');
   const medDetailed = medMode === 'detailed';
   const medMeds = (prefs?.medications || []);
-  const medMedsAm = medMeds.filter(m => medHasSlot(m, 'am'));
-  const medMedsAfternoon = medMeds.filter(m => medHasSlot(m, 'afternoon'));
-  const medMedsPm = medMeds.filter(m => medHasSlot(m, 'pm'));
-  const medMedsAny = medMeds.filter(m => medHasSlot(m, 'any'));
+  const medMedsAm = medMeds.filter(m => medHasSlot(m, 'am') && isMedScheduledToday(m));
+  const medMedsAfternoon = medMeds.filter(m => medHasSlot(m, 'afternoon') && isMedScheduledToday(m));
+  const medMedsPm = medMeds.filter(m => medHasSlot(m, 'pm') && isMedScheduledToday(m));
+  const medMedsAny = medMeds.filter(m => medHasSlot(m, 'any') && isMedScheduledToday(m));
   const medHasDetailedAm = medDetailed && medMedsAm.length > 0;
   const medHasDetailedAfternoon = medDetailed && medMedsAfternoon.length > 0;
   const medHasDetailedPm = medDetailed && medMedsPm.length > 0;
@@ -10945,37 +10974,55 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
     </div>`;
   }
 
+  // --- MEDICATIONS SECTION (dedicated card) ---
+  if (medEnabled) {
+    const medSlots = [];
+    if (medInAm || medHasDetailedAm) medSlots.push({ slot: 'am', label: 'Morning', meds: medMedsAm, detailed: medHasDetailedAm });
+    if (medInAfternoon || medHasDetailedAfternoon) medSlots.push({ slot: 'afternoon', label: 'Afternoon', meds: medMedsAfternoon, detailed: medHasDetailedAfternoon });
+    if (medInPm || medHasDetailedPm) medSlots.push({ slot: 'pm', label: 'Evening', meds: medMedsPm, detailed: medHasDetailedPm });
+    if (medInAny || medHasDetailedAny) medSlots.push({ slot: 'any', label: 'Daily', meds: medMedsAny, detailed: medHasDetailedAny });
+    if (medSlots.length > 0 || prnMedsList.length > 0) {
+      html += `<div class="card" id="medication-card">
+        <div class="card-title" style="margin-bottom:10px">💊 Medications</div>`;
+      medSlots.forEach((ms, si) => {
+        if (si > 0) html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0"></div>`;
+        if (medSlots.length > 1) html += `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;margin-top:2px">${ms.label}</div>`;
+        if (ms.detailed) html += renderMedGroup(ms.slot, ms.meds, td);
+        else html += medHabitRow(ms.slot, medMuted);
+      });
+      if (prnMedsList.length > 0) {
+        if (medSlots.length > 0) html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0"></div>`;
+        const countLabel = prnTodayCount > 0 ? ` (${prnTodayCount} logged today)` : '';
+        html += `<div onclick="openPrnSheet()" style="font-size:12px;color:var(--sky-light);padding:6px 0;cursor:pointer;display:flex;align-items:center;gap:4px">
+          <span style="font-size:14px">💊</span> Log as-needed med${countLabel}
+        </div>`;
+      }
+      html += `</div>`;
+    }
+  }
+
   // --- MORNING SECTION ---
-  if (amHabits.length > 0 || medInAm || medHasDetailedAm || customAm.length > 0) {
+  if (amHabits.length > 0 || customAm.length > 0) {
     html += `<div class="section-label">🌅 Morning</div><div class="card mb-0">`;
-    if (medHasDetailedAm) html += renderMedGroup('am', medMedsAm, td);
-    else if (medInAm) html += medHabitRow('am', medMuted);
     amHabits.forEach(h => { html += dailyHabitRow(h, 'am', isMuted(h)); });
     customAm.forEach(ch => { html += customDailyHabitRow(ch, 'am'); });
     html += `</div>`;
-    html += prnLink();
   }
 
   // --- AFTERNOON SECTION ---
-  if (afternoonHabits.length > 0 || medInAfternoon || medHasDetailedAfternoon || customAfternoon.length > 0) {
+  if (afternoonHabits.length > 0 || customAfternoon.length > 0) {
     html += `<div class="section-label">🌤️ Afternoon</div><div class="card mb-0">`;
-    if (medHasDetailedAfternoon) html += renderMedGroup('afternoon', medMedsAfternoon, td);
-    else if (medInAfternoon) html += medHabitRow('afternoon', medMuted);
     afternoonHabits.forEach(h => { html += dailyHabitRow(h, 'afternoon', isMuted(h)); });
     customAfternoon.forEach(ch => { html += customDailyHabitRow(ch, 'afternoon'); });
     html += `</div>`;
-    html += prnLink();
   }
 
   // --- EVENING SECTION ---
-  if (pmHabits.length > 0 || medInPm || medHasDetailedPm || customPm.length > 0) {
+  if (pmHabits.length > 0 || customPm.length > 0) {
     html += `<div class="section-label">🌙 Evening</div><div class="card mb-0">`;
-    if (medHasDetailedPm) html += renderMedGroup('pm', medMedsPm, td);
-    else if (medInPm) html += medHabitRow('pm', medMuted);
     pmHabits.forEach(h => { html += dailyHabitRow(h, 'pm', isMuted(h)); });
     customPm.forEach(ch => { html += customDailyHabitRow(ch, 'pm'); });
     html += `</div>`;
-    html += prnLink();
   }
 
   // --- ANYTIME SECTION (daily habits + weekly habits + household + self-care) ---
@@ -11004,18 +11051,16 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
 
   const customSCForAnytime = getCustomSelfCare();
   const hasPrnMeds = medMeds.some(m => m.time === 'prn');
-  const hasAnytime = anyHabits.length > 0 || medInAny || medHasDetailedAny || customAny.length > 0 || todayWeeklyHabits.length > 0 || promotedWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled || customSCForAnytime.length > 0;
+  const hasAnytime = anyHabits.length > 0 || customAny.length > 0 || todayWeeklyHabits.length > 0 || promotedWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled || customSCForAnytime.length > 0;
 
   if (hasAnytime) {
     html += `<div class="section-label"><span style="color:#f0c040">☀️</span> Anytime today</div><div class="card mb-0">`;
-    if (medHasDetailedAny) html += renderMedGroup('any', medMedsAny, td);
-    else if (medInAny) html += medHabitRow('any', medMuted);
     anyHabits.forEach(h => { html += dailyHabitRow(h, 'any', isMuted(h)); });
     customAny.forEach(ch => { html += customDailyHabitRow(ch, 'any'); });
 
     // Weekly habits with weekly progress badge
     if (todayWeeklyHabits.length > 0) {
-      const hasItemsAbove = anyHabits.length > 0 || medInAny;
+      const hasItemsAbove = anyHabits.length > 0;
       if (hasItemsAbove) {
         html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0"></div>`;
       }
@@ -11054,7 +11099,7 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
 
     // Household tasks
     if (householdTasks.length > 0) {
-      const hasItemsAbove2 = anyHabits.length > 0 || medInAny || todayWeeklyHabits.length > 0 || promotedWeeklyHabits.length > 0;
+      const hasItemsAbove2 = anyHabits.length > 0 || todayWeeklyHabits.length > 0 || promotedWeeklyHabits.length > 0;
       if (hasItemsAbove2) {
         html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0"></div>`;
       }
@@ -11093,7 +11138,7 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
     const hasAnySelfCare = scEnabled || customSCItems.length > 0;
     if (hasAnySelfCare) {
       const scDone = td.selfCare || {};
-      const hasItemsAbove3 = anyHabits.length > 0 || medInAny || customAny.length > 0 || todayWeeklyHabits.length > 0 || householdTasks.length > 0;
+      const hasItemsAbove3 = anyHabits.length > 0 || customAny.length > 0 || todayWeeklyHabits.length > 0 || householdTasks.length > 0;
       if (hasItemsAbove3) {
         html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:8px 0"></div>`;
       }
@@ -11125,7 +11170,6 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
     }
 
     html += `</div>`; // close Anytime card
-    html += prnLink();
   }
 
   // --- Legacy support: show old teeth habits if user hasn't migrated yet ---
@@ -11752,13 +11796,14 @@ function renderWellnessTab() {
 
   // Show editing textarea
   if (state.editingJournal) {
-    const editText = state.editingJournalIndex !== null && state.editingJournalIndex !== undefined
-      ? (journalEntries[state.editingJournalIndex]?.text || '')
-      : (state.journalDraft || '');
+    const editEntry = state.editingJournalSavedAt
+      ? journalEntries.find(e => e.savedAt === state.editingJournalSavedAt)
+      : null;
+    const editText = editEntry ? (editEntry.text || '') : (state.journalDraft || '');
     const placeholder = state.journalMode === 'free' ? 'No prompt, no pressure. Just write...' : 'What\'s on your mind today...';
     html += `<textarea id="journal-textarea" aria-label="Journal entry" placeholder="${placeholder}" rows="5" style="margin-bottom:10px">${editText}</textarea>
     <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn btn-primary" style="flex:1" onclick="saveJournal()">${state.editingJournalIndex !== null && state.editingJournalIndex !== undefined ? 'Update entry' : 'Save & reflect'}</button>
+      <button class="btn btn-primary" style="flex:1" onclick="saveJournal()">${state.editingJournalSavedAt ? 'Update entry' : 'Save & reflect'}</button>
       <button class="btn btn-ghost" onclick="cancelEditJournal()">Cancel</button>
     </div>
     <div style="font-size:12px;color:var(--sky);margin-top:10px;display:flex;align-items:center;gap:5px"><span>✦</span> bloom will respond to what you write</div>`;
@@ -11781,7 +11826,7 @@ function renderWellnessTab() {
           <div style="font-size:12px;color:var(--sky);font-style:italic">bloom is reading what you wrote...</div>
         </div>`;
       }
-      html += `<button class="btn btn-ghost btn-sm" style="margin-top:8px;font-size:11px" onclick="editJournalEntry(${entry._origIdx})">Edit</button>`;
+      html += `<button class="btn btn-ghost btn-sm" style="margin-top:8px;font-size:11px" onclick="editJournalEntry('${entry.savedAt}')">Edit</button>`;
       html += `</div>`;
     });
     // Entry count transparency
@@ -12088,11 +12133,18 @@ async function saveJournal() {
   if (!Array.isArray(state.wellnessData.journal[t])) state.wellnessData.journal[t] = [];
 
   let entryIndex;
-  if (state.editingJournalIndex !== null && state.editingJournalIndex !== undefined) {
-    // Editing existing entry
-    state.wellnessData.journal[t][state.editingJournalIndex].text = text;
-    state.wellnessData.journal[t][state.editingJournalIndex].ai = null;
-    entryIndex = state.editingJournalIndex;
+  if (state.editingJournalSavedAt) {
+    // Editing existing entry - find by savedAt timestamp
+    entryIndex = state.wellnessData.journal[t].findIndex(e => e.savedAt === state.editingJournalSavedAt);
+    if (entryIndex >= 0) {
+      state.wellnessData.journal[t][entryIndex].text = text;
+      state.wellnessData.journal[t][entryIndex].ai = null;
+    } else {
+      // Fallback: treat as new entry if not found
+      const prompt = state.journalMode === 'free' ? null : (state.journalSamePrompt || getTodayJournalPrompt());
+      state.wellnessData.journal[t].push({ text, ai: null, savedAt: new Date().toISOString(), prompt, source: state.journalMode === 'free' ? 'open' : 'journal' });
+      entryIndex = state.wellnessData.journal[t].length - 1;
+    }
   } else {
     // New entry
     const prompt = state.journalMode === 'free' ? null : (state.journalSamePrompt || getTodayJournalPrompt());
@@ -12102,6 +12154,7 @@ async function saveJournal() {
 
   state.editingJournal = false;
   state.editingJournalIndex = null;
+  state.editingJournalSavedAt = null;
   state.journalDraft = '';
   state.journalSamePrompt = null;
   state.loadingJournalAI = true;
@@ -12148,6 +12201,7 @@ async function saveJournal() {
 function editJournal() {
   state.editingJournal = true;
   state.editingJournalIndex = null;
+  state.editingJournalSavedAt = null;
   state.journalMode = 'prompt';
   renderWellnessTab();
   setTimeout(() => {
@@ -12156,14 +12210,15 @@ function editJournal() {
   }, 100);
 }
 
-function editJournalEntry(index) {
+function editJournalEntry(savedAt) {
   state.editingJournal = true;
-  state.editingJournalIndex = index;
+  state.editingJournalSavedAt = savedAt;
+  state.editingJournalIndex = null;
   // Preserve the original prompt so the edit UI shows what the user actually wrote for
   const entries = getJournalEntries(today());
-  const originalPrompt = entries[index]?.prompt;
-  if (originalPrompt) {
-    state.journalSamePrompt = originalPrompt;
+  const entry = entries.find(e => e.savedAt === savedAt);
+  if (entry?.prompt) {
+    state.journalSamePrompt = entry.prompt;
     state.journalMode = 'prompt';
   } else {
     state.journalMode = 'free';
@@ -12178,6 +12233,7 @@ function editJournalEntry(index) {
 function newJournalEntry(mode) {
   state.editingJournal = true;
   state.editingJournalIndex = null;
+  state.editingJournalSavedAt = null;
   state.journalDraft = '';
   if (mode === 'prompt') {
     // Cycle to a different prompt than the current one
@@ -12204,6 +12260,7 @@ function newJournalEntry(mode) {
 function cancelEditJournal() {
   state.editingJournal = false;
   state.editingJournalIndex = null;
+  state.editingJournalSavedAt = null;
   state.journalSamePrompt = null;
   state.journalMode = 'prompt';
   renderWellnessTab();
@@ -12961,22 +13018,12 @@ function processReframe() {
     </div>`;
 
   // Use the Claude API for a warm reframe
-  timedFetch('/api/claude', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      messages: [{
-        role: 'user',
-        content: `You are a warm, compassionate inner voice — not a therapist, not clinical. Someone shared this thought that's weighing on them: "${thought}"
+  const prompt = `You are a warm, compassionate inner voice — not a therapist, not clinical. Someone shared this thought that's weighing on them: "${thought}"
 
-Give a gentle cognitive reframe in 2-3 sentences. Validate their feeling first, then offer a kinder perspective. Use "you" language, be warm and human. No bullet points, no labels, no jargon. Just a soft, honest reframe like a kind friend would offer.`
-      }],
-      max_tokens: 200,
-    }),
-  })
-  .then(r => r.json())
-  .then(data => {
-    const reframe = data.content || data.text || (data.choices && data.choices[0]?.message?.content) || '';
+Give a gentle cognitive reframe in 2-3 sentences. Validate their feeling first, then offer a kinder perspective. Use "you" language, be warm and human. No bullet points, no labels, no jargon. Just a soft, honest reframe like a kind friend would offer.`;
+
+  callClaude(prompt, 'reframe')
+  .then(reframe => {
     if (!reframe) throw new Error('No response');
 
     if (!state.wellnessData.reframeSessions) state.wellnessData.reframeSessions = 0;
@@ -13860,13 +13907,30 @@ function renderSettingsTab() {
 
   let html = '';
 
-  // ── GROUP: YOUR SETUP ────────────────────────────────────────
-  html += `<div class="settings-group">
-    <div class="settings-group-header" onclick="toggleSettingsGroup('setup')" role="button" aria-expanded="true" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSettingsGroup('setup')}">
-      <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">Your setup</span>
-      <span class="settings-group-chevron" id="sg-chevron-setup" style="font-size:10px;color:var(--text-muted);transition:transform 0.2s">▾</span>
-    </div>
-    <div class="settings-group-body" id="sg-body-setup">`;
+  // ── SETTINGS CATEGORY TABS ────────────────────────────────────
+  const _settingsCat = state._settingsCategory || 'profile';
+  const _catTabs = [
+    { id: 'profile', label: '👤 Profile' },
+    { id: 'routine', label: '☀️ Routine' },
+    { id: 'meds', label: '💊 Meds' },
+    { id: 'community', label: '🤝 Community' },
+    { id: 'about', label: '🌿 About' },
+  ];
+  html += `<div style="display:flex;gap:6px;overflow-x:auto;padding:4px 0 12px;margin-bottom:4px;-webkit-overflow-scrolling:touch" role="tablist">`;
+  _catTabs.forEach(ct => {
+    const sel = _settingsCat === ct.id;
+    html += `<div onclick="state._settingsCategory='${ct.id}';renderSettingsTab()" role="tab" aria-selected="${sel}" tabindex="${sel ? '0' : '-1'}" style="
+      padding:7px 14px;border-radius:99px;cursor:pointer;font-size:12px;white-space:nowrap;
+      background:${sel ? 'rgba(var(--sage-rgb),0.2)' : 'rgba(255,255,255,0.04)'};
+      border:1px solid ${sel ? 'rgba(var(--sage-rgb),0.4)' : 'rgba(255,255,255,0.08)'};
+      color:${sel ? 'var(--cream)' : 'var(--text-muted)'};font-weight:${sel ? '500' : '400'}">${ct.label}</div>`;
+  });
+  html += `</div>`;
+
+  // All sections are generated but wrapped in category divs for show/hide
+
+  // ══════ PROFILE CATEGORY ══════
+  html += `<div data-scat="profile"${_settingsCat !== 'profile' ? ' style="display:none"' : ''}>`;
 
   // ── PROFILE ──────────────────────────────────────────────────
   html += settingsSection('profile', '👤 Profile', `
@@ -14063,6 +14127,11 @@ function renderSettingsTab() {
       </div>
     `);
   }
+
+  html += `</div>`; // close profile category
+
+  // ══════ ROUTINE CATEGORY ══════
+  html += `<div data-scat="routine"${_settingsCat !== 'routine' ? ' style="display:none"' : ''}>`;
 
   // ── DAILY HABITS ─────────────────────────────────────────────
   const dh = prefs.dailyHabits || {};
@@ -14272,6 +14341,7 @@ function renderSettingsTab() {
       { id: 'afternoon', label: 'Afternoon' },
       { id: 'pm', label: 'Evening' },
       { id: 'any', label: 'Daily' },
+      { id: 'weekly', label: 'Weekly' },
       { id: 'prn', label: 'As needed' },
       { id: 'not_daily', label: 'Not daily' },
     ];
@@ -14288,7 +14358,7 @@ function renderSettingsTab() {
           ${_timeOptions.map(t => {
             const _slotBits = { am: 1, afternoon: 2, pm: 4 };
             let sel2 = false;
-            if (t.id === 'any' || t.id === 'prn' || t.id === 'not_daily') {
+            if (t.id === 'any' || t.id === 'prn' || t.id === 'not_daily' || t.id === 'weekly') {
               sel2 = med.time === t.id;
             } else if (typeof med.time === 'number') {
               sel2 = !!(med.time & (_slotBits[t.id] || 0));
@@ -14306,6 +14376,26 @@ function renderSettingsTab() {
           placeholder="Note (optional, e.g. 10mg, take with food, every 2 weeks)"
           aria-label="Note for ${med.name}"
           style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-sm);padding:5px 10px;font-size:11px;color:var(--text-secondary);box-sizing:border-box">
+        ${(() => {
+          if (med.time === 'weekly') {
+            const _dayLabels = ['M','T','W','T','F','S','S'];
+            const dayMask = med.days || 0;
+            return `<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">
+              <div style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;margin-right:4px">Days:</div>
+              ${_dayLabels.map((d, i) => {
+                const bit = DAY_BITS[i];
+                const sel = (dayMask & bit) !== 0;
+                return `<div onclick="toggleMedDay('${med.id}',${bit})" style="
+                  width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                  cursor:pointer;font-size:11px;font-weight:500;
+                  background:${sel ? 'rgba(106,154,176,0.25)' : 'rgba(255,255,255,0.04)'};
+                  border:1px solid ${sel ? 'rgba(106,154,176,0.5)' : 'rgba(255,255,255,0.08)'};
+                  color:${sel ? 'var(--sky-light)' : 'var(--text-muted)'}">${d}</div>`;
+              }).join('')}
+            </div>`;
+          }
+          return '';
+        })()}
         ${(() => {
           if (med.time !== 'not_daily') return '';
           const linkedSd = (prefs.specialDates || []).find(sd => sd._linkedMedId === med.id);
@@ -14929,8 +15019,39 @@ function renderSettingsTab() {
 
   html += settingsSection('checkins', '🪞 Check-ins', ccHtml);
 
-  // Group divider — Social
-  html += `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:20px 4px 8px">Social</div>`;
+  html += `</div>`; // close routine category
+
+  // ══════ MEDS CATEGORY ══════
+  // Show medication settings as a standalone section (same content as in daily habits)
+  html += `<div data-scat="meds"${_settingsCat !== 'meds' ? ' style="display:none"' : ''}>`;
+  html += settingsSection('medications', '💊 Medications', dailyHtml.substring(dailyHtml.indexOf('💊 Medication')).length > 0 ? (() => {
+    // Extract medication HTML from dailyHtml for standalone display
+    let medSettingsHtml = `<div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">A private, judgment-free nudge. Track your medications however works for you.</div>`;
+    medSettingsHtml += `<div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap">`;
+    const _medModesStandalone = [
+      { id: 'off', label: 'Off', desc: "I don't track medication" },
+      { id: 'simple', label: 'Simple', desc: 'One check per time slot' },
+      { id: 'detailed', label: 'Detailed', desc: 'Track each medication' },
+    ];
+    const _medModeVal = prefs.medicationMode || 'off';
+    _medModesStandalone.forEach(mm => {
+      const sel = _medModeVal === mm.id;
+      medSettingsHtml += `<div onclick="setMedicationMode('${mm.id}')" style="
+        padding:6px 12px;border-radius:99px;cursor:pointer;font-size:12px;min-height:44px;display:flex;align-items:center;
+        background:${sel ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};
+        border:1px solid ${sel ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};
+        color:${sel ? 'var(--sky-light)' : 'var(--text-muted)'}" role="radio" aria-checked="${sel}" aria-label="${mm.desc}">${mm.label}</div>`;
+    });
+    medSettingsHtml += `</div>`;
+    if (_medModeVal !== 'off') {
+      medSettingsHtml += `<div style="font-size:12px;color:var(--sky-light);margin-bottom:8px">Configure your medications in the <span onclick="state._settingsCategory='routine';renderSettingsTab()" style="cursor:pointer;text-decoration:underline">Routine tab</span> under Daily habits.</div>`;
+    }
+    return medSettingsHtml;
+  })() : '');
+  html += `</div>`; // close meds category
+
+  // ══════ COMMUNITY CATEGORY ══════
+  html += `<div data-scat="community"${_settingsCat !== 'community' ? ' style="display:none"' : ''}>`;
 
   // ── BLOOM BUDDY ────────────────────────────────────────────
   const multiBuddyOn = prefs.multiBuddy || false;
@@ -15116,16 +15237,11 @@ function renderSettingsTab() {
     </div>
   `);
 
-  // Group divider — Info
-  html += `</div></div>`; // Close sg-body-setup and settings-group
+  html += `</div>`; // close community category
 
-  // ── GROUP: ABOUT & INFO ──────────────────────────────────────
-  html += `<div class="settings-group">
-    <div class="settings-group-header" onclick="toggleSettingsGroup('about')" role="button" aria-expanded="true" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSettingsGroup('about')}">
-      <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">About & info</span>
-      <span class="settings-group-chevron" id="sg-chevron-about" style="font-size:10px;color:var(--text-muted);transition:transform 0.2s">▾</span>
-    </div>
-    <div class="settings-group-body" id="sg-body-about">`;
+  // ══════ ABOUT CATEGORY ══════
+  html += `<div data-scat="about"${_settingsCat !== 'about' ? ' style="display:none"' : ''}>`;
+
 
   // ── SCIENCE ──────────────────────────────────────────────────
   html += settingsSection('science', '📚 Science behind bloom', `
@@ -15466,8 +15582,6 @@ function renderSettingsTab() {
     </div>
   `);
 
-  html += `</div></div>`; // Close sg-body-about and settings-group
-
   // ── SHARE BLOOM ──────────────────────────────────────────────
   html += `
   <div style="margin:8px 0 4px;padding:20px 16px;background:linear-gradient(135deg,rgba(var(--sage-rgb),0.12),rgba(var(--sage-rgb),0.04));border:1px solid rgba(var(--sage-rgb),0.2);border-radius:var(--r-xl);text-align:center">
@@ -15490,6 +15604,9 @@ function renderSettingsTab() {
     </div>`;
   }
 
+  html += `</div>`; // close about category
+
+  // Version footer (always visible)
   html += `<div style="text-align:center;padding:20px 0 4px;font-size:11px;color:var(--text-muted)">bloom v${VERSION} · made with care 🌿</div>`;
   html += `<div style="text-align:center;padding:0 0 4px;font-size:10px;color:var(--text-muted);opacity:0.6">
     Free and open source software · <a href="https://github.com/nicholashinz1-afk/Bloom/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--text-muted);text-decoration:underline">AGPL-3.0</a>
@@ -23314,6 +23431,7 @@ function getMedications() {
 function medHasSlot(med, slot) {
   const t = med.time;
   if (t === 'prn' || t === 'not_daily') return false;
+  if (t === 'weekly') return slot === 'any'; // weekly meds show in "any" slot on their scheduled days
   if (t === 'any') return slot === 'any';
   if (typeof t === 'number') {
     const slotBit = { am: TIME_AM, afternoon: TIME_AFTERNOON, pm: TIME_PM };
@@ -23323,8 +23441,17 @@ function medHasSlot(med, slot) {
   return t === slot;
 }
 
-function getMedsForSlot(slot) {
-  return getMedications().filter(m => medHasSlot(m, slot));
+// Check if a weekly medication is scheduled for today
+function isMedScheduledToday(med) {
+  if (med.time !== 'weekly') return true; // non-weekly meds always show
+  if (!med.days || med.days === 0) return true; // no days selected = show every day
+  return isTodayScheduled(med.days);
+}
+
+function getMedsForSlot(slot, filterByToday) {
+  let meds = getMedications().filter(m => medHasSlot(m, slot));
+  if (filterByToday !== false) meds = meds.filter(m => isMedScheduledToday(m));
+  return meds;
 }
 
 function getDailyMedSlots() {
@@ -23332,6 +23459,7 @@ function getDailyMedSlots() {
   const slots = new Set();
   meds.forEach(m => {
     if (m.time === 'prn' || m.time === 'not_daily') return;
+    if (m.time === 'weekly') { if (isMedScheduledToday(m)) slots.add('any'); return; }
     if (m.time === 'any') { slots.add('any'); return; }
     if (typeof m.time === 'number') {
       if (m.time & TIME_AM) slots.add('am');
@@ -23351,8 +23479,9 @@ function toggleMedTimeSlot(medId, slotId) {
   if (!med) return;
 
   // Special single-select options
-  if (slotId === 'any' || slotId === 'prn' || slotId === 'not_daily') {
+  if (slotId === 'any' || slotId === 'prn' || slotId === 'not_daily' || slotId === 'weekly') {
     med.time = med.time === slotId ? 'any' : slotId;
+    if (slotId === 'weekly' && !med.days) med.days = 0; // bitmask for days
     save('bloom_prefs', state.prefs);
     syncMedHabitTimes();
     reRenderSettingsPreservingScroll();
@@ -23378,6 +23507,15 @@ function toggleMedTimeSlot(medId, slotId) {
 
   save('bloom_prefs', state.prefs);
   syncMedHabitTimes();
+  reRenderSettingsPreservingScroll();
+  renderTodayTab();
+}
+
+function toggleMedDay(medId, dayBit) {
+  const med = (state.prefs.medications || []).find(m => m.id === medId);
+  if (!med) return;
+  med.days = (med.days || 0) ^ dayBit;
+  save('bloom_prefs', state.prefs);
   reRenderSettingsPreservingScroll();
   renderTodayTab();
 }
@@ -23502,6 +23640,12 @@ function tapMedication(medId, el, slot) {
     }
   }
 
+  // Bridge detailed mode to simple keys and cancel push notifications
+  bridgeDetailedMedSlot(effectiveSlot);
+  if (isMedSlotDone(effectiveSlot)) {
+    onHabitCompletedCancelPush('medication_' + effectiveSlot);
+  }
+
   saveState();
   archiveToday();
   renderTodayTab();
@@ -23533,6 +23677,10 @@ function tapAllMedsInSlot(slot) {
     checkFirstTaskStreak();
     celebrate('medication', null);
   }
+
+  // Bridge detailed mode to simple keys and cancel push notifications
+  bridgeDetailedMedSlot(slot);
+  onHabitCompletedCancelPush('medication_' + slot);
 
   saveState();
   archiveToday();
