@@ -112,6 +112,18 @@ For users in unsafe environments (domestic violence, abuse, controlling relation
 - Disclaimer: "not a substitute for professional mental health care"
 - Moderation allows venting. Don't over-filter emotional language.
 
+## Visual Design Philosophy: Ethereal
+
+Bloom's visual identity is **ethereal**. The app should feel like a living, breathing natural space. Not flat. Not clinical. Not gamified. Think light filtering through a forest canopy, bioluminescence in deep water, fireflies at dusk.
+
+**Core principles:**
+- **Alive, not static.** Ambient particles drift through the app at all times. The environment breathes. It should feel like something is gently moving even when you're not interacting.
+- **Visible, not subtle.** Ethereal doesn't mean invisible. Particles, glows, and light effects should be clearly noticeable. They create atmosphere. If you have to squint to see them, they're too subtle.
+- **Warm, not flashy.** Effects should feel organic and comforting (light through leaves, embers, pollen) rather than digital (neon, sharp edges, strobing). The visual language is nature, not technology.
+- **Theme-specific identity.** Each theme isn't just a color swap. Forest has leaves and fireflies. Ocean has bioluminescence. Rose has petals. Amber has golden dust motes. Every theme should feel like a distinct natural environment.
+- **Responsive to emotion.** On hard days, the visual world gets quieter and warmer (slower particles, softer glow), never darker or sadder. The app holds space for you.
+- **No lightbulbs, no clipboards, no corporate iconography.** Bloom uses natural and emotional emoji (🌱 🌿 🌤️ 🫧 🪞), not productivity-app iconography (💡 📋 ⚡ 🔔). If an icon wouldn't feel at home in a garden, it doesn't belong in Bloom.
+
 ## Voice Preference
 
 Two voices: `'real'` (direct, no fluff) and `'reflective'` (gentle, warm). Stored in `state.prefs.voice`.
