@@ -198,17 +198,52 @@ Custom task add inputs (daily habits, weekly tasks, self-care, nourishment, sect
 - `getOrderedDailyHabits()` normalizes `name` to `label` for custom habits and skips promoted items.
 - `toggleWeeklyHabitDay` / `setWeeklyHabitDay` work with promoted IDs like `pw_brush_teeth`. If these functions are ever refactored to validate against `WEEKLY_HABITS`, promoted items would break.
 - Emoji picker popover opens upward. Works because add inputs are always at the bottom of their sections. Would clip if inputs moved to the top of a panel.
-## Living Feedback (Phase 4B)
+## Living Feedback (Phase 4B) -- IMPLEMENTED
 
-Bloom needs more subtle ambient feedback throughout the app. The buddy level-up badge glow (`.buddy-levelup-badge` at ~line 2760 in index.html, using the `buddyLevelPulse` keyframe) is the reference pattern. Copy that approach (CSS `box-shadow` with `rgba(var(--sage-rgb), ...)`, `transform: scale()` + `opacity` only, 1-3s duration, `ease-in-out`) for all new living feedback.
+All 10 Phase 4B living feedback items are now implemented, plus an ambient particle ecosystem.
 
-**Candidates (see SCALABILITY_PROPOSAL.md Phase 4B for full list):** habit completion glow, mood check-in breathing glow, journal saved shimmer, XP earned pulse, growth stage badge glow on Progress tab, streak milestone glow, water/food goal completion glow, all-done celebration ambient glow, breathing exercise afterglow, community wall post sent glow.
+### Ambient Particle Ecosystem
 
-**Rules:**
-- All living feedback must respect `prefers-reduced-motion` (disable when set).
-- Animations must be GPU-accelerated (`transform` + `opacity` only, never `width`/`height`/`box-shadow` transitions on their own).
-- Purely decorative. Never block interaction or shift layout.
-- Keep it organic (like light through leaves), not gamified (no slot machine energy).
+A persistent, theme-aware particle system (`#ambient-particles`) floats behind all content. CSS-animated, 6-13 particles (density scales with growth level), recycling via `animationiteration` events. No canvas, no JS animation loops. Pure compositor.
+
+**Theme-specific particle identities** (each theme has 2-3 particle types):
+- **Forest**: drifting leaves, golden light motes, fireflies
+- **Ocean**: bioluminescent plankton, lateral current particles, deep glows
+- **Rose**: falling petals, warm pollen, pink light motes
+- **Amber**: golden dust motes, ember glows, drifting rays
+- **Pastel**: cotton orbs, soft bubbles, tiny twinkles
+- **Pride**: prismatic particles (rainbow cycling), aurora wisps
+
+**Growth-stage-aware density**: Seed-Budding (6 particles), Blooming-Rooted (9), Evergreen-Ecosystem (13).
+
+**Gentle mode response**: `updateAmbientMood(true)` slows particles 1.5x and softens via CSS `filter: saturate(0.7) brightness(1.1)`. The world gets quieter, not darker.
+
+**Key functions**: `initAmbientParticles()`, `updateAmbientMood()`, `ambientBurst()` (brief extra particles on interaction).
+
+### Phase 4B Living Micro-Feedback (all 10 implemented)
+
+Uses `applyLivingFeedback(el, type, duration)` helper. Respects `prefers-reduced-motion`. CSS keyframes: `livingGlow`, `livingShimmer`, `livingBreathe`, `livingPulse`.
+
+1. **Habit completion glow** -- `toggleHabit()`, glow on habit row + ambient burst
+2. **Mood check-in breathing glow** -- `logMood()`, mood card breathes after check-in
+3. **Journal saved shimmer** -- `saveJournal()`, light sweep across journal card
+4. **XP earned pulse** -- `addXP()`, gentle scale bump on XP bar
+5. **Growth stage badge glow** -- `renderProgressTab()`, persistent breathe at Flowering+ (idx >= 5)
+6. **Streak milestone glow** -- `updateStreak()`, glow at 7/14/30/60/100 day runs
+7. **Water/food goal completion glow** -- `tapWater()`/`tapFood()`, glow on goal met
+8. **All-done ambient glow** -- `checkAllDone()`, persistent breathe on Today tab
+9. **Breathing exercise afterglow** -- `stopBreathing()`/`stopInlineBreathing()`, calm lingers
+10. **Community wall post glow** -- `postToWall()`, glow on submitted message
+
+### Rules (still apply)
+- All living feedback respects `prefers-reduced-motion` (particles hidden, glows disabled).
+- Animations use `transform` + `opacity` for GPU compositing. `box-shadow` used in keyframes at low iteration counts (matches existing `buddyLevelPulse` pattern).
+- Purely decorative. No layout shifts. No interaction blocking. Screen readers unaffected.
+- Organic feel (light through leaves), not gamified.
+
+### Phase B: Evolving SVG Growth Illustrations (Future)
+
+Not yet implemented. Vision: refactor `buildFlowerSVG()` into `buildEcosystemSVG(levelIdx)` where each growth stage adds environmental richness to the scene. Seed starts as dark soil with a single seed. By Ecosystem, it's a full landscape with trees, water, mountains, diverse wildlife. Each level composites SVG layers: ground, plants, creatures, atmosphere, light effects. Think nature illustration/Studio Ghibli, not cartoon. Elements never disappear as you level up, they mature. Theme colors drive all SVG fills via `getThemeSVGColors()`.
 
 ## Known Issues / Fixes Needed
 

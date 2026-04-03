@@ -357,6 +357,221 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
 }
 
 /* ============================================================
+   AMBIENT PARTICLE ECOSYSTEM
+   ============================================================ */
+#ambient-particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.ambient-particle {
+  position: absolute;
+  will-change: transform, opacity;
+  border-radius: 50%;
+}
+
+/* Drift: rises gently from bottom to top with horizontal wander */
+@keyframes ambientDrift {
+  0%   { transform: translate3d(var(--ax), 100vh, 0) rotate(0deg); opacity: 0; }
+  8%   { opacity: var(--ao); }
+  92%  { opacity: var(--ao); }
+  100% { transform: translate3d(var(--bx), -20px, 0) rotate(var(--ar)); opacity: 0; }
+}
+/* Float: gentle hovering wander in place */
+@keyframes ambientFloat {
+  0%   { transform: translate3d(var(--ax), var(--ay), 0) scale(var(--as)); opacity: 0; }
+  12%  { opacity: var(--ao); }
+  50%  { transform: translate3d(calc(var(--ax) + var(--wx)), calc(var(--ay) - 30px), 0) scale(calc(var(--as) * 1.15)); }
+  88%  { opacity: var(--ao); }
+  100% { transform: translate3d(var(--bx), calc(var(--ay) - 60px), 0) scale(var(--as)); opacity: 0; }
+}
+/* Glow: firefly / bioluminescent pulse in place */
+@keyframes ambientGlow {
+  0%, 100% { opacity: 0.1; transform: translate3d(var(--ax), var(--ay), 0) scale(0.8); }
+  50%      { opacity: 0.45; transform: translate3d(var(--ax), calc(var(--ay) - 8px), 0) scale(1.2); }
+}
+/* Lateral: ocean current / wind drift sideways */
+@keyframes ambientLateral {
+  0%   { transform: translate3d(-10%, var(--ay), 0); opacity: 0; }
+  12%  { opacity: var(--ao); }
+  88%  { opacity: var(--ao); }
+  100% { transform: translate3d(110%, calc(var(--ay) + var(--wy)), 0); opacity: 0; }
+}
+
+/* ── Theme-specific particle shapes ──────────────────────── */
+
+/* Forest: drifting leaves */
+body.theme-forest .ambient-leaf {
+  width: 8px; height: 6px;
+  border-radius: 0 80% 0 80%;
+  background: rgba(var(--sage-light-rgb), 0.3);
+}
+/* Forest: golden light motes */
+body.theme-forest .ambient-mote {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: rgba(232, 224, 208, 0.35);
+}
+/* Forest: firefly */
+body.theme-forest .ambient-firefly {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: rgba(232, 224, 160, 0.5);
+  box-shadow: 0 0 8px rgba(232, 224, 160, 0.3);
+}
+
+/* Ocean: bioluminescent plankton */
+body.theme-ocean .ambient-plankton {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: rgba(var(--sage-light-rgb), 0.5);
+  box-shadow: 0 0 6px rgba(var(--sage-light-rgb), 0.3);
+}
+/* Ocean: current particle */
+body.theme-ocean .ambient-current {
+  width: 12px; height: 2px;
+  border-radius: 1px;
+  background: rgba(var(--sage-light-rgb), 0.15);
+}
+/* Ocean: deep glow */
+body.theme-ocean .ambient-deepglow {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--sage-light-rgb), 0.3), transparent);
+}
+
+/* Rose: falling petals */
+body.theme-rose .ambient-petal {
+  width: 7px; height: 5px;
+  border-radius: 50% 0 50% 0;
+  background: rgba(var(--sage-light-rgb), 0.25);
+}
+/* Rose: warm pollen */
+body.theme-rose .ambient-pollen {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: rgba(232, 200, 200, 0.3);
+}
+/* Rose: pink light */
+body.theme-rose .ambient-warmlight {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--sage-light-rgb), 0.2), transparent);
+}
+
+/* Amber: golden dust motes */
+body.theme-amber .ambient-dust {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: rgba(var(--sage-light-rgb), 0.4);
+  box-shadow: 0 0 4px rgba(var(--sage-light-rgb), 0.2);
+}
+/* Amber: ember */
+body.theme-amber .ambient-ember {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: rgba(224, 160, 80, 0.35);
+  box-shadow: 0 0 6px rgba(224, 160, 80, 0.2);
+}
+/* Amber: warm ray */
+body.theme-amber .ambient-ray {
+  width: 2px; height: 14px;
+  border-radius: 1px;
+  background: rgba(var(--sage-light-rgb), 0.12);
+  transform-origin: center;
+}
+
+/* Pastel: cotton orbs */
+body.theme-pastel .ambient-orb {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--sage-light-rgb), 0.18), transparent);
+}
+/* Pastel: bubble shimmer */
+body.theme-pastel .ambient-bubble {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: inset 0 0 3px rgba(var(--sage-light-rgb), 0.25);
+}
+/* Pastel: tiny twinkle */
+body.theme-pastel .ambient-twinkle {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: rgba(var(--sage-light-rgb), 0.35);
+}
+
+/* Pride: prismatic particles (colors set inline per-particle) */
+body.theme-pride .ambient-prism {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  box-shadow: 0 0 5px currentColor;
+}
+/* Pride: aurora wisp */
+body.theme-pride .ambient-wisp {
+  width: 16px; height: 3px;
+  border-radius: 2px;
+  opacity: 0.2;
+}
+
+/* ── Gentle mode: quieter, warmer ────────────────────────── */
+#ambient-particles.ambient-gentle .ambient-particle {
+  filter: saturate(0.7) brightness(1.1);
+}
+
+/* ============================================================
+   LIVING MICRO-FEEDBACK (Phase 4B)
+   ============================================================ */
+@keyframes livingGlow {
+  0%   { box-shadow: 0 0 0 rgba(var(--sage-rgb), 0); }
+  35%  { box-shadow: 0 0 18px rgba(var(--sage-rgb), 0.25); }
+  100% { box-shadow: 0 0 0 rgba(var(--sage-rgb), 0); }
+}
+@keyframes livingShimmer {
+  0%   { transform: translateX(-100%); opacity: 0; }
+  50%  { opacity: 0.25; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+@keyframes livingBreathe {
+  0%, 100% { box-shadow: 0 0 8px rgba(var(--sage-rgb), 0.08); }
+  50%      { box-shadow: 0 0 22px rgba(var(--sage-rgb), 0.18); }
+}
+@keyframes livingPulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.living-glow {
+  animation: livingGlow 1.2s ease-out forwards;
+}
+.living-breathe {
+  animation: livingBreathe 3s ease-in-out 2;
+}
+.living-breathe-persistent {
+  animation: livingBreathe 3s ease-in-out infinite;
+}
+.living-pulse {
+  animation: livingPulse 0.6s ease-in-out;
+}
+/* Shimmer uses a pseudo-element sweep */
+.living-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.living-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(var(--sage-light-rgb), 0.2), transparent);
+  animation: livingShimmer 1.5s ease-in-out forwards;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ============================================================
    MOOD BUTTON BOUNCE
    ============================================================ */
 .mood-btn.bounce {
@@ -2981,6 +3196,12 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   .xp-float,
   .celebrate-toast { animation: none !important; }
   .confetti-piece { display: none !important; }
+  #ambient-particles { display: none !important; }
+  .living-glow, .living-breathe, .living-breathe-persistent,
+  .living-pulse, .living-shimmer, .living-shimmer::after {
+    animation: none !important;
+    box-shadow: none !important;
+  }
   .habit-check.done .check-path { stroke-dashoffset: 0 !important; animation: none !important; }
   .habit-check.done { animation: none !important; }
   .scroll-progress { display: none !important; }
@@ -5582,6 +5803,9 @@ function addXP(amount, sourceEl) {
   if (sourceEl) showXPFloat(earned, sourceEl);
   checkLevelUp(oldXP, state.xpData.total);
   updateProgressTab();
+  // Living feedback: pulse the XP display on Progress tab (if visible)
+  const xpBar = document.querySelector('.xp-bar-fill');
+  if (xpBar) applyLivingFeedback(xpBar.parentElement, 'pulse', 800);
 }
 
 // ── Diminishing returns for repeatable activities ────────────
@@ -5757,6 +5981,11 @@ function updateStreak() {
       // Keep legacy streak field in sync for buddy display
       xp.streak = xp.currentRun;
       xp.lastStreakDate = t;
+
+      // Living feedback: flag streak milestones for glow
+      if (xp.currentRun === 7 || xp.currentRun === 14 || xp.currentRun === 30 || xp.currentRun === 60 || xp.currentRun === 100) {
+        state._streakMilestoneGlow = true;
+      }
 
       // Consistency bonus — steady showing up earns extra sunlight
       const run = xp.currentRun;
@@ -6540,6 +6769,7 @@ async function saveOpenJournal() {
 
 function toggleGentleMode() {
   state.todayData.gentleMode = !state.todayData.gentleMode;
+  updateAmbientMood(state.todayData.gentleMode || state.hardDayMode);
   saveState();
   archiveToday();
   renderTodayTab();
@@ -6557,6 +6787,7 @@ function activateHardDayMode() {
   trackEvent('hard_day_activated', { mood: state.todayData.mood, habitsCompleted: Object.keys(state.todayData).filter(k => (k.endsWith('_am') || k.endsWith('_afternoon') || k.endsWith('_pm') || k.endsWith('_any')) && state.todayData[k]).length });
   // Dim the UI to feel calmer
   document.body.classList.add('hard-day-active');
+  updateAmbientMood(true);
   closeAllSheets();
   renderHardDaySheet();
   openSheet('hard-day-sheet');
@@ -6961,6 +7192,261 @@ function setTheme(key) {
   const navIcon = document.getElementById('nav-today-icon');
   if (navIcon) navIcon.innerHTML = bloomIcon(20);
   reRenderSettingsPreservingScroll();
+  initAmbientParticles(); // Rebuild particles for new theme
+}
+
+// ============================================================
+//  AMBIENT PARTICLE ECOSYSTEM
+// ============================================================
+
+// Theme-specific particle configurations.
+// Each theme defines 2-3 particle types with CSS class, animation style, and weight.
+const AMBIENT_PARTICLE_CONFIG = {
+  forest: [
+    { cls: 'ambient-leaf',    anim: 'ambientDrift',   weight: 6 },
+    { cls: 'ambient-mote',    anim: 'ambientFloat',   weight: 4 },
+    { cls: 'ambient-firefly', anim: 'ambientGlow',    weight: 2 },
+  ],
+  ocean: [
+    { cls: 'ambient-plankton', anim: 'ambientFloat',   weight: 5 },
+    { cls: 'ambient-current',  anim: 'ambientLateral', weight: 4 },
+    { cls: 'ambient-deepglow', anim: 'ambientGlow',    weight: 3 },
+  ],
+  rose: [
+    { cls: 'ambient-petal',     anim: 'ambientDrift',  weight: 5 },
+    { cls: 'ambient-pollen',    anim: 'ambientFloat',  weight: 3 },
+    { cls: 'ambient-warmlight', anim: 'ambientGlow',   weight: 2 },
+  ],
+  amber: [
+    { cls: 'ambient-dust',  anim: 'ambientFloat',  weight: 5 },
+    { cls: 'ambient-ember', anim: 'ambientGlow',   weight: 3 },
+    { cls: 'ambient-ray',   anim: 'ambientDrift',  weight: 2 },
+  ],
+  pastel: [
+    { cls: 'ambient-orb',     anim: 'ambientFloat', weight: 4 },
+    { cls: 'ambient-bubble',  anim: 'ambientFloat', weight: 3 },
+    { cls: 'ambient-twinkle', anim: 'ambientGlow',  weight: 3 },
+  ],
+  pride: [
+    { cls: 'ambient-prism', anim: 'ambientFloat', weight: 7 },
+    { cls: 'ambient-wisp',  anim: 'ambientLateral', weight: 5 },
+  ],
+};
+
+// Pride rainbow colors for cycling
+const PRIDE_COLORS = ['#e04050','#e87030','#e8c840','#50b868','#4080d0','#9050c8'];
+
+// Returns particle count based on growth level (ambient world grows with user)
+function getAmbientDensity() {
+  const xp = state?.xpData?.total || 0;
+  const level = getLevel(xp);
+  const idx = getScaledLevels().indexOf(level);
+  if (idx <= 3) return 6;   // Seed → Budding: sparse, quiet
+  if (idx <= 7) return 9;   // Blooming → Rooted: coming alive
+  return 13;                 // Evergreen → Ecosystem: full living world
+}
+
+// Weighted random selection from particle types
+function pickParticleType(types) {
+  const totalWeight = types.reduce((s, t) => s + t.weight, 0);
+  let r = Math.random() * totalWeight;
+  for (const t of types) {
+    r -= t.weight;
+    if (r <= 0) return t;
+  }
+  return types[types.length - 1];
+}
+
+// Create randomized CSS custom properties for a particle
+function randomParticleProps(anim) {
+  const dur = 15 + Math.random() * 18; // 15-33s for smooth, unhurried movement
+  const props = {
+    '--ao': (0.12 + Math.random() * 0.2).toFixed(2), // opacity 0.12-0.32
+    '--as': (0.7 + Math.random() * 0.6).toFixed(2),  // scale 0.7-1.3
+    '--ar': Math.floor(Math.random() * 360) + 'deg',
+  };
+
+  if (anim === 'ambientDrift') {
+    props['--ax'] = Math.floor(Math.random() * 100) + 'vw';
+    props['--bx'] = Math.floor(Math.random() * 100) + 'vw';
+  } else if (anim === 'ambientFloat') {
+    props['--ax'] = Math.floor(Math.random() * 90) + 5 + 'vw';
+    props['--ay'] = Math.floor(Math.random() * 80) + 10 + 'vh';
+    props['--bx'] = Math.floor(Math.random() * 90) + 5 + 'vw';
+    props['--wx'] = (-20 + Math.random() * 40).toFixed(0) + 'px';
+  } else if (anim === 'ambientGlow') {
+    props['--ax'] = Math.floor(Math.random() * 85) + 5 + 'vw';
+    props['--ay'] = Math.floor(Math.random() * 75) + 10 + 'vh';
+  } else if (anim === 'ambientLateral') {
+    props['--ay'] = Math.floor(Math.random() * 80) + 10 + 'vh';
+    props['--wy'] = (-15 + Math.random() * 30).toFixed(0) + 'px';
+  }
+
+  return { dur, props };
+}
+
+let _ambientContainer = null;
+
+function initAmbientParticles() {
+  // Respect reduced motion
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  // Remove existing container (for theme switches)
+  if (_ambientContainer) {
+    _ambientContainer.remove();
+    _ambientContainer = null;
+  }
+
+  const themeKey = state.prefs?.theme || 'forest';
+  const types = AMBIENT_PARTICLE_CONFIG[themeKey] || AMBIENT_PARTICLE_CONFIG.forest;
+  const count = getAmbientDensity();
+
+  const container = document.createElement('div');
+  container.id = 'ambient-particles';
+  _ambientContainer = container;
+
+  const frag = document.createDocumentFragment();
+
+  for (let i = 0; i < count; i++) {
+    const type = pickParticleType(types);
+    const { dur, props } = randomParticleProps(type.anim);
+
+    const el = document.createElement('div');
+    el.className = 'ambient-particle ' + type.cls;
+
+    // Apply CSS custom properties
+    for (const [k, v] of Object.entries(props)) {
+      el.style.setProperty(k, v);
+    }
+
+    // Pride theme: cycle colors per particle
+    if (themeKey === 'pride') {
+      const c = PRIDE_COLORS[i % PRIDE_COLORS.length];
+      el.style.color = c;
+      el.style.background = c;
+      el.style.opacity = '0'; // animation controls actual opacity
+    }
+
+    // Animation: use negative delay so particles start at different phases immediately
+    const delay = -(Math.random() * dur);
+    el.style.animation = `${type.anim} ${dur.toFixed(1)}s linear ${delay.toFixed(1)}s infinite`;
+
+    // On each animation iteration, re-randomize position for organic variation
+    el.addEventListener('animationiteration', function() {
+      const fresh = randomParticleProps(type.anim);
+      for (const [k, v] of Object.entries(fresh.props)) {
+        this.style.setProperty(k, v);
+      }
+      if (themeKey === 'pride') {
+        const c = PRIDE_COLORS[Math.floor(Math.random() * PRIDE_COLORS.length)];
+        this.style.color = c;
+        this.style.background = c;
+      }
+    });
+
+    frag.appendChild(el);
+  }
+
+  container.appendChild(frag);
+
+  // Apply gentle mode if currently active
+  if (state.hardDayMode || state.todayData?.gentleMode) {
+    container.classList.add('ambient-gentle');
+  }
+
+  document.body.insertBefore(container, document.body.firstChild);
+}
+
+function updateAmbientMood(gentle) {
+  if (!_ambientContainer) return;
+  if (gentle) {
+    _ambientContainer.classList.add('ambient-gentle');
+    // Slow animations by 1.5x for a calmer feel
+    _ambientContainer.querySelectorAll('.ambient-particle').forEach(p => {
+      const current = parseFloat(p.style.animationDuration) || 20;
+      p.style.animationDuration = (current * 1.5).toFixed(1) + 's';
+    });
+  } else {
+    _ambientContainer.classList.remove('ambient-gentle');
+    // Restore normal speeds by re-initializing
+    initAmbientParticles();
+  }
+}
+
+// Brief burst of extra particles near an interaction point
+function ambientBurst(originEl) {
+  if (!_ambientContainer) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const themeKey = state.prefs?.theme || 'forest';
+  const types = AMBIENT_PARTICLE_CONFIG[themeKey] || AMBIENT_PARTICLE_CONFIG.forest;
+  const burstCount = 4;
+  const frag = document.createDocumentFragment();
+
+  // Get origin position as viewport percentages
+  let originX = 50, originY = 50;
+  if (originEl) {
+    const rect = originEl.getBoundingClientRect();
+    originX = ((rect.left + rect.width / 2) / window.innerWidth * 100);
+    originY = ((rect.top + rect.height / 2) / window.innerHeight * 100);
+  }
+
+  for (let i = 0; i < burstCount; i++) {
+    const type = pickParticleType(types);
+    const el = document.createElement('div');
+    el.className = 'ambient-particle ' + type.cls;
+
+    // Position near the origin with some spread
+    const spreadX = originX + (-10 + Math.random() * 20);
+    const spreadY = originY + (-5 + Math.random() * 10);
+    const dur = 3 + Math.random() * 3; // shorter: 3-6s
+
+    el.style.setProperty('--ax', spreadX.toFixed(0) + 'vw');
+    el.style.setProperty('--ay', spreadY.toFixed(0) + 'vh');
+    el.style.setProperty('--bx', (spreadX + (-15 + Math.random() * 30)).toFixed(0) + 'vw');
+    el.style.setProperty('--ao', (0.2 + Math.random() * 0.25).toFixed(2));
+    el.style.setProperty('--as', (0.8 + Math.random() * 0.4).toFixed(2));
+    el.style.setProperty('--wx', (-10 + Math.random() * 20).toFixed(0) + 'px');
+    el.style.setProperty('--ar', Math.floor(Math.random() * 360) + 'deg');
+    el.style.setProperty('--wy', (-10 + Math.random() * 20).toFixed(0) + 'px');
+
+    if (themeKey === 'pride') {
+      const c = PRIDE_COLORS[Math.floor(Math.random() * PRIDE_COLORS.length)];
+      el.style.color = c;
+      el.style.background = c;
+    }
+
+    // Single iteration, then remove
+    el.style.animation = `ambientFloat ${dur.toFixed(1)}s ease-out forwards`;
+
+    frag.appendChild(el);
+  }
+
+  _ambientContainer.appendChild(frag);
+
+  // Single cleanup timer for all burst particles
+  setTimeout(() => {
+    _ambientContainer?.querySelectorAll('.ambient-particle[style*="forwards"]').forEach(p => p.remove());
+  }, 6500);
+}
+
+// ============================================================
+//  LIVING MICRO-FEEDBACK (Phase 4B)
+// ============================================================
+
+const _reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+function applyLivingFeedback(el, type, durationMs) {
+  if (!el || _reducedMotionQuery.matches) return;
+  const cls = 'living-' + type;
+  // Remove and re-add to retrigger if already applied
+  el.classList.remove(cls);
+  // Force style recalc only if class was present (avoids unnecessary reflow)
+  void el.offsetHeight;
+  el.classList.add(cls);
+  if (durationMs) {
+    setTimeout(() => el.classList.remove(cls), durationMs);
+  }
 }
 
 // ============================================================
@@ -8842,6 +9328,10 @@ function toggleHabit(habitId, el) {
     // Cancel the scheduled push notification for this habit
     onHabitCompletedCancelPush(habitId);
     onAnyActivityCancelEveningNudge();
+    // Living feedback: glow on the habit row + ambient burst
+    const row = el?.closest?.('.habit-row') || el?.parentElement;
+    if (row) applyLivingFeedback(row, 'glow', 1500);
+    ambientBurst(el);
   } else {
     const xpVal = XP_VALUES[habitId] || 10;
     state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
@@ -9053,7 +9543,12 @@ function checkAllDone() {
   const wasAllDone = state.allDone;
   state.allDone = allHabitsDone && td.mood !== undefined;
   if (state.allDone && !wasAllDone) {
-    setTimeout(() => celebrate('all_done', document.getElementById('today-scroll')), 300);
+    setTimeout(() => {
+      celebrate('all_done', document.getElementById('today-scroll'));
+      // Living feedback: persistent gentle glow on today tab when all done
+      const todayScroll = document.getElementById('today-scroll');
+      if (todayScroll) todayScroll.classList.add('living-breathe-persistent');
+    }, 300);
   }
 
   // Partial completion celebrations (persisted to todayData so they don't repeat on reload)
@@ -10076,12 +10571,16 @@ function stopInlineBreathing() {
   archiveToday();
   playSound('breath_done');
   const ui = document.getElementById('inline-breath-ui');
-  if (ui) ui.innerHTML = `
+  if (ui) {
+    ui.innerHTML = `
     <div style="text-align:center;padding:8px 0">
       <div style="font-size:36px;margin-bottom:8px">🌿</div>
       <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sage-light);margin-bottom:16px">Well done. Take a moment.</div>
       <button class="btn btn-ghost btn-sm" onclick="toggleInlineBreathe()">Close</button>
     </div>`;
+    // Living feedback: afterglow on breathing completion
+    applyLivingFeedback(ui, 'breathe', 6500);
+  }
 }
 
 function inlineContinueBreathing() {
@@ -11015,6 +11514,7 @@ function logMood(val) {
   // Auto-enable gentle mode for low moods (user can toggle off)
   if (val >= 0 && val <= 1 && !wasLow) {
     state.todayData.gentleMode = true;
+    updateAmbientMood(true);
   }
   // Checking in with yourself matters
   if (!state.todayData.moodXPGiven) {
@@ -11027,6 +11527,11 @@ function logMood(val) {
   checkFirstTaskStreak();
   onAnyActivityCancelEveningNudge();
   renderTodayTab();
+  // Living feedback: mood card breathes after check-in
+  setTimeout(() => {
+    const moodCard = document.querySelector('#today-scroll .card');
+    if (moodCard) applyLivingFeedback(moodCard, 'breathe', 6500);
+  }, 200);
   // Auto-expand feelings on first mood selection of the day
   if (prevMood === undefined) {
     setTimeout(() => {
@@ -11083,6 +11588,7 @@ function tapWater(i) {
     setTimeout(() => {
       const wEl = document.getElementById('water-bottles-row');
       celebrate('water', wEl);
+      if (wEl) applyLivingFeedback(wEl.closest('.card') || wEl, 'glow', 1800);
     }, 200);
   }
   trackFeature('water_tracked');
@@ -11116,6 +11622,11 @@ function tapFood(id) {
       state.todayData.foodXPGiven = true;
       addXP(10, null);
       saveState();
+      // Living feedback: glow on food goal met
+      setTimeout(() => {
+        const el = document.querySelector('.food-chips');
+        if (el) applyLivingFeedback(el.closest('.card') || el, 'glow', 1800);
+      }, 300);
     }
     setTimeout(() => {
       const el = document.querySelector('.food-chips');
@@ -11581,6 +12092,11 @@ async function saveJournal() {
   saveState();
   checkFirstTaskStreak();
   renderWellnessTab();
+  // Living feedback: warm shimmer on journal card
+  setTimeout(() => {
+    const jCard = document.getElementById('journal-card');
+    if (jCard) applyLivingFeedback(jCard, 'shimmer', 1800);
+  }, 200);
 
   if (!state.todayData.journalXPGiven) {
     state.todayData.journalXPGiven = true;
@@ -12225,12 +12741,16 @@ function stopBreathing() {
   archiveToday();
   playSound('breath_done');
   const ui = document.getElementById('breath-ui');
-  if (ui) ui.innerHTML = `
+  if (ui) {
+    ui.innerHTML = `
     <div style="text-align:center;padding:8px 0">
       <div style="font-size:36px;margin-bottom:8px">🌿</div>
       <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sage-light);margin-bottom:16px">Well done. Take a moment.</div>
       <button class="btn btn-ghost btn-sm" onclick="closeAllSheets()">Done</button>
     </div>`;
+    // Living feedback: afterglow on breathing completion
+    applyLivingFeedback(ui, 'breathe', 6500);
+  }
 }
 
 function continueBreathing() {
@@ -12874,6 +13394,22 @@ function renderProgressTab() {
   </div>`;
 
   scroll.innerHTML = html;
+
+  // Living feedback: persistent breathing glow on level card at Flowering+ (idx >= 5)
+  const scaled = getScaledLevels();
+  const lvlIdx = scaled.findIndex(l => l.name === level.name);
+  if (lvlIdx >= 5) {
+    const levelCard = scroll.querySelector('.card');
+    if (levelCard) levelCard.classList.add('living-breathe-persistent');
+  }
+
+  // Living feedback: streak milestone glow (7, 14, 30, 60, 100 day run)
+  if (state._streakMilestoneGlow) {
+    state._streakMilestoneGlow = false;
+    const cards = scroll.querySelectorAll('.card');
+    // The current run card is typically the second card's second child
+    if (cards.length >= 2) applyLivingFeedback(cards[1], 'glow', 2500);
+  }
 }
 
 async function generateRollingInsight() {
@@ -22345,6 +22881,9 @@ async function postToWall() {
       haptic('medium');
       trackEvent('wall_post');
       showWallStatus('Your words are out there now, making someone\'s day a little brighter.', 'var(--sage)');
+      // Living feedback: glow on wall post card
+      const wallCard = document.getElementById('wall-post-card');
+      if (wallCard) applyLivingFeedback(wallCard, 'glow', 1800);
       // Refresh messages only, preserve textarea (force refresh to bypass cache)
       await fetchWallMessages(true);
       renderWallMessages();
@@ -24031,6 +24570,7 @@ function initApp() {
 
   // Deferred: visual extras and modals that don't affect first paint
   requestAnimationFrame(() => {
+    initAmbientParticles();
     renderDailyQuote();
     applySeasonalTheme();
     checkMonthlyReflection();
