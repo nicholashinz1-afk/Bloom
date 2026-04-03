@@ -4023,7 +4023,7 @@ function buddyIcon(size = 24) {
   </svg>`;
 }
 
-const VERSION = '3.8.3';
+const VERSION = '3.8.4';
 const LEGACY_DOMAINS = ['bloom-zeta-rouge.vercel.app'];
 const PRODUCTION_DOMAIN = 'bloomselfcare.app';
 
@@ -4031,8 +4031,6 @@ const PRODUCTION_DOMAIN = 'bloomselfcare.app';
 // Fetches the live page, compares VERSION, and reloads if newer.
 // Runs on app open and when returning from background.
 async function checkForUpdate() {
-  // Prevent concurrent or repeated reload attempts
-  if (window._updateReloading) return;
   try {
     // Bypass service worker cache with cache-busting query param
     const url = window.location.href.split('?')[0] + '?_v=' + Date.now();
@@ -4041,27 +4039,6 @@ async function checkForUpdate() {
     const html = await res.text();
     const match = html.match(/const VERSION\s*=\s*'([^']+)'/);
     if (match && match[1] !== VERSION) {
-      // Prevent reload loops: if we already tried updating to this version
-      // within the last 60 seconds, don't reload again (cache may be stale)
-      const lastAttempt = localStorage.getItem('bloom_update_attempt');
-      if (lastAttempt) {
-        try {
-          const parsed = JSON.parse(lastAttempt);
-          if (parsed.version === match[1] && (Date.now() - parsed.ts) < 60000) {
-            return; // Already tried this version recently, skip
-          }
-        } catch(e) {}
-      }
-      localStorage.setItem('bloom_update_attempt', JSON.stringify({ version: match[1], ts: Date.now() }));
-
-      // Safari PWA: location.reload() can crash the standalone window,
-      // kicking the user to the home screen. Show a banner instead.
-      if (isSafariPWA()) {
-        showUpdateBanner(match[1]);
-        return;
-      }
-
-      window._updateReloading = true;
       // Clear service worker caches before reloading
       if ('caches' in window) {
         const names = await caches.keys();
@@ -4076,38 +4053,6 @@ async function checkForUpdate() {
       window.location.reload(true);
     }
   } catch(e) { /* offline or network error — skip silently */ }
-}
-
-function showUpdateBanner(newVersion) {
-  if (document.getElementById('update-banner')) return;
-  const banner = document.createElement('div');
-  banner.id = 'update-banner';
-  banner.setAttribute('role', 'alert');
-  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;background:rgba(var(--sage-rgb),0.95);color:var(--text-on-sage);padding:16px 20px;font-size:13px;line-height:1.6;display:flex;flex-direction:column;gap:10px;animation:slideDown 0.3s ease;backdrop-filter:blur(8px)';
-  banner.innerHTML = `
-    <div style="display:flex;align-items:flex-start;gap:10px">
-      <span style="font-size:18px;flex-shrink:0">🌿</span>
-      <div>A new version of Bloom is available (v${newVersion}). Tap update to get the latest fixes.</div>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button id="update-banner-dismiss" style="background:transparent;border:1px solid rgba(255,255,255,0.3);color:inherit;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer">Later</button>
-      <button id="update-banner-go" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:inherit;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:500">Update now</button>
-    </div>`;
-  document.body.appendChild(banner);
-
-  banner.querySelector('#update-banner-dismiss').addEventListener('click', () => banner.remove());
-  banner.querySelector('#update-banner-go').addEventListener('click', async () => {
-    banner.querySelector('#update-banner-go').textContent = 'Updating...';
-    if ('caches' in window) {
-      const names = await caches.keys();
-      await Promise.all(names.map(n => caches.delete(n)));
-    }
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r => r.update()));
-    }
-    window.location.reload(true);
-  });
 }
 
 // ── Force refresh on service worker update ──────────────────
@@ -7150,9 +7095,6 @@ function handleVisibilityChange() {
       showLockScreen();
       return; // don't resume app activity while locked
     }
-    // Close any sheets that were open when the app was backgrounded —
-    // Safari PWA can restore frozen DOM state with sheets blocking interaction
-    closeAllSheets(true);
     // Resume buddy polling when tab becomes visible again
     if (buddyState.status === 'paired' || buddyState.status === 'searching') {
       startBuddyPolling();
@@ -7211,11 +7153,7 @@ document.addEventListener('visibilitychange', handleVisibilityChange);
 // Best-effort vault sync when page is being discarded (OS kill, tab close, navigation away)
 window.addEventListener('pagehide', () => syncToVault());
 window.addEventListener('pageshow', (e) => {
-  if (e.persisted) {
-    checkForUpdate();
-    // Safari PWA may restore frozen DOM with sheets still open — close them
-    closeAllSheets(true);
-  }
+  if (e.persisted) checkForUpdate();
 });
 // ── Local notification helper ────────────────────────────────
 const _localNotifCount = { count: 0, resetTs: 0 };
@@ -17842,14 +17780,9 @@ function closeAllSheets(force) {
     _sheetTriggerElement = null;
     setTimeout(() => { if (elToFocus) elToFocus.focus(); }, 50);
   }
-  // Pop the history state we pushed (unless back button already did).
-  // Skip history.back() when force-closing from background return — on Safari PWA
-  // a shallow history stack means history.back() can navigate out of the app entirely.
-  if (!force && wasOpen && history.state?.sheetOpen) {
+  // Pop the history state we pushed (unless back button already did)
+  if (wasOpen && history.state?.sheetOpen) {
     history.back();
-  } else if (force && wasOpen && history.state?.sheetOpen) {
-    // Replace the sheetOpen state instead of navigating back
-    history.replaceState({}, '');
   }
   // Re-render wellness tab if history was edited retroactively
   if (state._historySheetDirty) {
