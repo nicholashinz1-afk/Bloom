@@ -534,6 +534,150 @@ body.theme-pride .ambient-wisp {
 }
 
 /* ============================================================
+   GARDEN VIEW — Atmospheric Experience
+   ============================================================ */
+#garden-overlay {
+  position: fixed; inset: 0; z-index: 998;
+  background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.4s ease;
+}
+#garden-overlay.garden-visible { opacity: 1; }
+#garden-overlay.garden-closing { opacity: 0; transition: opacity 0.3s ease; }
+.garden-scene { position: absolute; inset: 0; overflow: hidden; }
+.garden-sky {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 50% at 50% 30%, rgba(var(--sage-light-rgb), 0.06) 0%, transparent 70%),
+              radial-gradient(ellipse 60% 40% at 30% 60%, rgba(var(--sage-rgb), 0.04) 0%, transparent 60%),
+              radial-gradient(ellipse 50% 35% at 70% 50%, rgba(var(--sage-light-rgb), 0.03) 0%, transparent 55%);
+}
+.garden-orb {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--sage-light-rgb), 0.12) 0%, rgba(var(--sage-light-rgb), 0.04) 40%, transparent 70%);
+  animation: gardenOrbFloat 8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.garden-orb:nth-child(2) { animation-duration: 11s; animation-delay: -3s; }
+.garden-orb:nth-child(3) { animation-duration: 14s; animation-delay: -7s; }
+.garden-orb:nth-child(4) { animation-duration: 10s; animation-delay: -2s; }
+.garden-orb:nth-child(5) { animation-duration: 13s; animation-delay: -5s; }
+@keyframes gardenOrbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+  25% { transform: translate(8px, -12px) scale(1.05); opacity: 0.8; }
+  50% { transform: translate(-5px, -8px) scale(0.95); opacity: 1; }
+  75% { transform: translate(10px, 5px) scale(1.02); opacity: 0.7; }
+}
+.garden-haze {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 40%;
+  background: linear-gradient(to top, rgba(var(--sage-rgb), 0.08) 0%, transparent 100%);
+  pointer-events: none;
+}
+.garden-emoji {
+  position: relative; z-index: 2; font-size: 96px; line-height: 1;
+  filter: drop-shadow(0 0 40px rgba(var(--sage-light-rgb), 0.3)) drop-shadow(0 0 80px rgba(var(--sage-rgb), 0.15));
+  animation: gardenEmojiBreathe 4s ease-in-out infinite;
+}
+@keyframes gardenEmojiBreathe {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 40px rgba(var(--sage-light-rgb), 0.3)) drop-shadow(0 0 80px rgba(var(--sage-rgb), 0.15)); }
+  50% { transform: scale(1.04); filter: drop-shadow(0 0 50px rgba(var(--sage-light-rgb), 0.4)) drop-shadow(0 0 100px rgba(var(--sage-rgb), 0.2)); }
+}
+.garden-stage-name {
+  position: relative; z-index: 2;
+  font-family: Fraunces, serif; font-size: 20px; font-weight: 300;
+  color: var(--cream); margin-top: 16px; opacity: 0.8; letter-spacing: 0.05em;
+}
+.garden-stage-sub {
+  position: relative; z-index: 2;
+  font-size: 12px; color: var(--text-muted); margin-top: 6px; opacity: 0.6;
+  font-style: italic; font-family: Fraunces, serif;
+}
+.garden-close {
+  position: fixed; top: 16px; right: 16px; z-index: 999;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-muted); font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  transition: background 0.2s, opacity 0.2s; opacity: 0.5;
+}
+.garden-close:hover { background: rgba(255,255,255,0.1); opacity: 0.8; }
+.garden-visitor {
+  position: absolute; z-index: 3;
+  cursor: pointer; transition: transform 0.3s ease, filter 0.3s ease;
+}
+.garden-visitor:active { transform: scale(1.15); }
+.garden-visitor-glow { filter: drop-shadow(0 0 12px rgba(var(--sage-light-rgb), 0.5)); }
+.garden-visitor-butterfly { animation: gardenButterflyIdle 3s ease-in-out infinite; }
+.garden-visitor-firefly { animation: gardenFireflyIdle 2.5s ease-in-out infinite; }
+.garden-visitor-bird { animation: gardenBirdIdle 4s ease-in-out infinite; }
+.garden-visitor-flower { animation: gardenFlowerIdle 5s ease-in-out infinite; }
+.garden-visitor-stone { animation: gardenStoneIdle 6s ease-in-out infinite; }
+.garden-visitor-water { animation: gardenWaterIdle 3s ease-in-out infinite; }
+.garden-visitor-cloud { animation: gardenCloudIdle 8s ease-in-out infinite; }
+@keyframes gardenButterflyIdle {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(3px, -5px) rotate(2deg); }
+  50% { transform: translate(-2px, -8px) rotate(-1deg); }
+  75% { transform: translate(4px, -3px) rotate(1deg); }
+}
+@keyframes gardenFireflyIdle {
+  0%, 100% { opacity: 0.4; transform: translate(0, 0); }
+  50% { opacity: 1; transform: translate(2px, -4px); }
+}
+@keyframes gardenBirdIdle {
+  0%, 85%, 100% { transform: translate(0, 0); }
+  88% { transform: translate(0, -3px); }
+  91% { transform: translate(0, 0); }
+  94% { transform: translate(0, -2px); }
+}
+@keyframes gardenFlowerIdle { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(2deg); } }
+@keyframes gardenStoneIdle { 0%, 100% { opacity: 0.7; } 50% { opacity: 0.85; } }
+@keyframes gardenWaterIdle { 0%, 100% { transform: scaleX(1); opacity: 0.7; } 50% { transform: scaleX(1.05); opacity: 0.9; } }
+@keyframes gardenCloudIdle { 0%, 100% { transform: translateX(0); opacity: 0.5; } 50% { transform: translateX(8px); opacity: 0.7; } }
+.garden-text-card {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+  padding: 20px 24px 32px; text-align: center;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, transparent 100%);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  transform: translateY(100%); transition: transform 0.3s ease;
+}
+.garden-text-card.garden-card-visible { transform: translateY(0); }
+.garden-text-card-icon { font-size: 24px; margin-bottom: 8px; }
+.garden-text-card-content {
+  font-family: Fraunces, serif; font-size: 15px; font-weight: 300;
+  color: var(--cream); line-height: 1.7; max-width: 320px; margin: 0 auto; font-style: italic;
+}
+.garden-thumbnail {
+  position: relative; overflow: hidden; border-radius: 16px;
+  height: 140px; margin-bottom: 12px; cursor: pointer;
+  background: var(--bg); transition: transform 0.2s ease;
+}
+.garden-thumbnail:active { transform: scale(0.98); }
+.garden-thumbnail-sky {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(var(--sage-light-rgb), 0.08) 0%, transparent 70%),
+              radial-gradient(ellipse 50% 40% at 30% 60%, rgba(var(--sage-rgb), 0.05) 0%, transparent 55%);
+}
+.garden-thumbnail-haze {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 35%;
+  background: linear-gradient(to top, rgba(var(--sage-rgb), 0.1) 0%, transparent 100%);
+}
+.garden-thumbnail-emoji {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -55%);
+  font-size: 52px; line-height: 1;
+  filter: drop-shadow(0 0 24px rgba(var(--sage-light-rgb), 0.25)) drop-shadow(0 0 48px rgba(var(--sage-rgb), 0.1));
+}
+.garden-thumbnail-orb {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--sage-light-rgb), 0.1) 0%, transparent 70%);
+  animation: gardenOrbFloat 10s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .garden-orb, .garden-visitor, .garden-emoji, .garden-thumbnail-orb { animation: none !important; }
+  .garden-emoji { filter: drop-shadow(0 0 40px rgba(var(--sage-light-rgb), 0.3)); }
+}
+
+/* ============================================================
    LIVING MICRO-FEEDBACK (Phase 4B)
    ============================================================ */
 @keyframes livingGlow {
@@ -5302,6 +5446,12 @@ function playSound(type, param) {
       playWarmTone(392, 1.2, 0.10, 0.5);
       break;
 
+    case 'garden_open':
+      playWarmTone(392, 0.8, 0.10);
+      playWarmTone(494, 0.8, 0.10, 0.15);
+      playWarmTone(587, 0.9, 0.12, 0.3);
+      break;
+
     case 'breath_inhale':
       playTone(220, 1.8, 'sine', 0.07);
       playTone(440, 1.8, 'sine', 0.04, 0.0);
@@ -5823,6 +5973,230 @@ function addXP(amount, sourceEl) {
   // Living feedback: pulse the XP display on Progress tab (if visible)
   const xpBar = document.querySelector('.xp-bar-fill');
   if (xpBar) applyLivingFeedback(xpBar.parentElement, 'pulse', 800);
+}
+
+// ============================================================
+//  GARDEN VIEW — Atmospheric Experience
+// ============================================================
+
+let _gardenCardTimer = null;
+
+function openGardenView() {
+  if (document.getElementById('garden-overlay')) return;
+  trackFeature('garden_view');
+
+  const xp = state.xpData?.total || 0;
+  const level = getLevel(xp);
+  const lvlIdx = getLevelIndex(level);
+  const gentle = state.hardDayMode || state.todayData?.gentleMode;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'garden-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-label', 'Your garden');
+
+  const orbCount = 3 + Math.min(Math.floor(lvlIdx / 3), 4);
+  let orbsHTML = '';
+  for (let j = 0; j < orbCount; j++) {
+    const size = 80 + (j * 37 + j * j * 13) % 120;
+    const x = 10 + (j * 29 + j * j * 7) % 70;
+    const y = 15 + (j * 41 + j * j * 11) % 55;
+    orbsHTML += `<div class="garden-orb" style="width:${size}px;height:${size}px;left:${x}%;top:${y}%;animation-delay:${-(j * 2.3)}s"></div>`;
+  }
+
+  const subText = lvlIdx === 0 ? 'Something is beginning.' :
+                  lvlIdx <= 3 ? 'Growing, quietly.' :
+                  lvlIdx <= 6 ? 'This is becoming something.' :
+                  lvlIdx <= 10 ? 'You\'ve built a world.' :
+                  'Everything is connected.';
+
+  overlay.innerHTML = `
+    <div class="garden-scene">
+      <div class="garden-sky"></div>
+      ${orbsHTML}
+      <div class="garden-haze"></div>
+    </div>
+    <div class="garden-emoji">${level.emoji}</div>
+    <div class="garden-stage-name">${level.name}</div>
+    <div class="garden-stage-sub">${subText}</div>
+    <button class="garden-close" onclick="closeGardenView()" aria-label="Close garden">✕</button>
+    <div id="garden-visitors"></div>
+    <div id="garden-text-card" class="garden-text-card" aria-live="polite"></div>
+  `;
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => { requestAnimationFrame(() => overlay.classList.add('garden-visible')); });
+  playSound('garden_open');
+  setTimeout(() => populateGardenVisitors(lvlIdx, gentle), 400);
+
+  // Swipe down to close
+  let touchStartY = 0;
+  overlay.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+  overlay.addEventListener('touchend', e => {
+    if (e.changedTouches[0].clientY - touchStartY > 80) closeGardenView();
+  }, { passive: true });
+
+  // Escape to close
+  const escHandler = e => { if (e.key === 'Escape') { closeGardenView(); document.removeEventListener('keydown', escHandler); } };
+  document.addEventListener('keydown', escHandler);
+
+  // First visit hint
+  if (!load('bloom_garden_visited')) {
+    save('bloom_garden_visited', true);
+    setTimeout(() => {
+      const visitors = document.getElementById('garden-visitors');
+      if (visitors && visitors.children.length > 0) {
+        showGardenCard('🌿', 'Tap anything that catches your eye.');
+      }
+    }, 1500);
+  }
+}
+
+function closeGardenView() {
+  const overlay = document.getElementById('garden-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('garden-visible');
+  overlay.classList.add('garden-closing');
+  dismissGardenCard();
+  setTimeout(() => overlay.remove(), 300);
+}
+
+// ── Garden Visitor System ────────────────────────────────────
+
+function populateGardenVisitors(lvlIdx, gentle) {
+  const container = document.getElementById('garden-visitors');
+  if (!container) return;
+
+  const pool = [];
+
+  // Firefly (affirmations) — level 1+
+  if (lvlIdx >= 1) {
+    const affs = getAffirmations();
+    const todayAffs = state.todayData?.affirmations || [];
+    const affPool = todayAffs.length > 0 ? todayAffs : affs;
+    pool.push({ type: 'firefly', emoji: '✨', content: affPool[Math.floor(Math.random() * affPool.length)] });
+  }
+
+  // Butterflies (journal excerpts) — level 3+
+  if (lvlIdx >= 3) {
+    const journal = state.wellnessData?.journal || {};
+    const excerpts = [];
+    Object.keys(journal).sort().reverse().slice(0, 30).forEach(d => {
+      const entries = journal[d];
+      if (Array.isArray(entries)) entries.forEach(e => {
+        if (e.text && e.text.length > 10) excerpts.push(e.text.length > 80 ? e.text.substring(0, 80) + '...' : e.text);
+      });
+    });
+    if (excerpts.length > 0) {
+      const shuffled = excerpts.sort(() => Math.random() - 0.5);
+      const count = Math.min(lvlIdx >= 5 ? 2 : 1, shuffled.length);
+      for (let j = 0; j < count; j++) pool.push({ type: 'butterfly', emoji: '🦋', content: '\u201c' + shuffled[j] + '\u201d' });
+    }
+  }
+
+  // Base flowers (milestones) — level 3+
+  if (lvlIdx >= 3) {
+    const days = state.xpData?.daysShowedUp || 0;
+    const run = state.xpData?.currentRun || 0;
+    const ms = [];
+    if (days >= 7) ms.push(days + ' days. This soil is rich.');
+    else if (days >= 1) ms.push('Day ' + days + '. You showed up.');
+    if (run >= 7) ms.push(run + ' days in a row. Steady.');
+    if (ms.length > 0) pool.push({ type: 'flower', emoji: '🌸', content: ms[Math.floor(Math.random() * ms.length)] });
+  }
+
+  // Birds (mood memories) — level 5+
+  if (lvlIdx >= 5) {
+    const history = state.historyData || {};
+    const moodNames = ['rough', 'low', 'okay', 'good', 'hopeful'];
+    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const moodEntries = [];
+    Object.keys(history).sort().reverse().slice(0, 14).forEach(d => {
+      const mood = history[d]?.mood;
+      if (mood !== undefined && mood >= 0) {
+        const dayName = dayNames[new Date(d + 'T12:00:00').getDay()];
+        moodEntries.push('Last ' + dayName + ' you felt ' + moodNames[mood] + '.');
+      }
+    });
+    if (moodEntries.length > 0) pool.push({ type: 'bird', emoji: '🐦', content: moodEntries[Math.floor(Math.random() * moodEntries.length)] });
+  }
+
+  // Stones (small wins, breath sessions) — level 5+
+  if (lvlIdx >= 5) {
+    const allWins = [];
+    Object.values(state.wellnessData?.wins || {}).forEach(arr => { if (Array.isArray(arr)) allWins.push(...arr); });
+    if (allWins.length > 0) pool.push({ type: 'stone', emoji: '🪨', content: allWins[Math.floor(Math.random() * allWins.length)] });
+    const breaths = state.wellnessData?.breathSessions || 0;
+    if (breaths > 0) pool.push({ type: 'stone', emoji: '🫧', content: breaths + ' breath sessions. Each one mattered.' });
+  }
+
+  // Water (AI insights) — level 9+
+  if (lvlIdx >= 9) {
+    const insights = state.wellnessData?.insights || [];
+    if (insights.length > 0) { const ins = insights[Math.floor(Math.random() * insights.length)]; pool.push({ type: 'water', emoji: '💧', content: ins.text }); }
+    const monthly = state.wellnessData?.monthlyReflections || [];
+    if (monthly.length > 0) { const m = monthly[Math.floor(Math.random() * monthly.length)]; pool.push({ type: 'water', emoji: '🌊', content: m.text }); }
+  }
+
+  // Clouds (lifetime stats) — level 12+
+  if (lvlIdx >= 12) {
+    pool.push({ type: 'cloud', emoji: '☁️', content: (state.xpData?.daysShowedUp || 0) + ' days shown up. ' + (state.wellnessData?.breathSessions || 0) + ' breaths taken.' });
+  }
+
+  // Hard day: favor gentle content
+  if (gentle && pool.length > 3) {
+    pool.sort((a, b) => {
+      const g = ['firefly', 'flower'];
+      return (g.includes(a.type) ? 0 : 1) - (g.includes(b.type) ? 0 : 1);
+    });
+  }
+
+  const maxVisitors = Math.min(pool.length, 3 + Math.min(Math.floor(lvlIdx / 2), 4));
+  const selected = pool.sort(() => Math.random() - 0.5).slice(0, maxVisitors);
+
+  // Zone-based placement — no overlap
+  const zones = [
+    { x: 15, y: 25 }, { x: 72, y: 22 },
+    { x: 10, y: 55 }, { x: 78, y: 58 },
+    { x: 20, y: 75 }, { x: 68, y: 78 },
+    { x: 45, y: 18 }, { x: 50, y: 80 },
+  ];
+
+  selected.forEach((v, idx) => {
+    const z = zones[idx] || zones[0];
+    const el = document.createElement('div');
+    el.className = 'garden-visitor garden-visitor-' + v.type;
+    el.style.cssText = 'left:' + (z.x + (Math.random() - 0.5) * 8) + '%;top:' + (z.y + (Math.random() - 0.5) * 6) + '%;font-size:28px;opacity:0;transition:opacity 0.6s ease;';
+    el.textContent = v.emoji;
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', v.type + ' - tap to reveal');
+    el.addEventListener('click', () => onVisitorTap(el, v));
+    container.appendChild(el);
+    setTimeout(() => { el.style.opacity = '1'; }, 500 + idx * 200);
+  });
+}
+
+function onVisitorTap(el, visitor) {
+  el.classList.add('garden-visitor-glow');
+  setTimeout(() => el.classList.remove('garden-visitor-glow'), 1500);
+  const pitches = { firefly: 659, butterfly: 784, bird: 523, flower: 587, stone: 392, water: 440, cloud: 494 };
+  playWarmTone(pitches[visitor.type] || 523, 0.6, 0.12);
+  showGardenCard(visitor.emoji, visitor.content);
+}
+
+function showGardenCard(emoji, content) {
+  if (_gardenCardTimer) clearTimeout(_gardenCardTimer);
+  const card = document.getElementById('garden-text-card');
+  if (!card) return;
+  card.innerHTML = '<div class="garden-text-card-icon">' + emoji + '</div><div class="garden-text-card-content">' + content + '</div>';
+  requestAnimationFrame(() => card.classList.add('garden-card-visible'));
+  _gardenCardTimer = setTimeout(dismissGardenCard, 8000);
+}
+
+function dismissGardenCard() {
+  if (_gardenCardTimer) { clearTimeout(_gardenCardTimer); _gardenCardTimer = null; }
+  const card = document.getElementById('garden-text-card');
+  if (card) card.classList.remove('garden-card-visible');
 }
 
 // ── Diminishing returns for repeatable activities ────────────
@@ -13049,6 +13423,20 @@ function renderProgressTab() {
 
   let html = '';
 
+  // Garden thumbnail
+  const lvlIdx = getScaledLevels().findIndex(l => l.name === level.name);
+  html += `<div class="garden-thumbnail" onclick="openGardenView()" role="button" aria-label="Open your garden">
+    <div class="garden-thumbnail-sky"></div>
+    <div class="garden-thumbnail-orb" style="width:80px;height:80px;left:15%;top:20%;animation-delay:-2s"></div>
+    <div class="garden-thumbnail-orb" style="width:60px;height:60px;right:20%;top:35%;animation-delay:-5s"></div>
+    <div class="garden-thumbnail-haze"></div>
+    <div class="garden-thumbnail-emoji">${level.emoji}</div>
+  </div>`;
+  if (!load('bloom_garden_hint_shown')) {
+    save('bloom_garden_hint_shown', true);
+    html += `<div style="text-align:center;margin:-8px 0 10px;font-family:Fraunces,serif;font-style:italic;font-size:12px;color:var(--text-muted);opacity:0.5">Tap your garden to step inside</div>`;
+  }
+
   // XP + Level card
   html += `<div class="card">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
@@ -13414,8 +13802,6 @@ function renderProgressTab() {
   scroll.innerHTML = html;
 
   // Living feedback: persistent breathing glow on level card at Flowering+ (idx >= 5)
-  const scaled = getScaledLevels();
-  const lvlIdx = scaled.findIndex(l => l.name === level.name);
   if (lvlIdx >= 5) {
     const levelCard = scroll.querySelector('.card');
     if (levelCard) levelCard.classList.add('living-breathe-persistent');
