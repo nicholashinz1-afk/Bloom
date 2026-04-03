@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d1610">
+<title>Bloom — Peer Support Ecosystem Proposal</title>
+<meta name="description" content="A proposal for community-driven peer support in Bloom: Welcome Buddy rotation, encouragement roles, async support circles, and peer-led activities.">
+
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1610;
+    --bg-card: #162019;
+    --bg-elevated: #1c2a1f;
+    --sage: #7a9e7e;
+    --sage-light: #a8c5ab;
+    --rose: #b07878;
+    --rose-light: #d4a8a8;
+    --sky: #6a9ab0;
+    --sky-light: #9ec4d8;
+    --amber: #c9954a;
+    --amber-light: #e0b87a;
+    --cream: #e8e0d0;
+    --text-secondary: #a3b5a5;
+    --text-muted: #8a9e8c;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Instrument Sans', -apple-system, sans-serif;
+    line-height: 1.65;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--sage);
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 36px;
+  }
+  .back-link:hover { text-decoration: underline; }
+
+  /* Header */
+  .page-header {
+    margin-bottom: 48px;
+  }
+
+  .eyebrow {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 10px;
+  }
+
+  .page-header h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 2.2rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  .page-header .subtitle {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* Section headings */
+  h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--sage-light);
+    margin: 48px 0 14px;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--cream);
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: var(--cream);
+    margin-bottom: 12px;
+    font-size: 0.97rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 12px;
+  }
+
+  ul li {
+    color: var(--cream);
+    font-size: 0.95rem;
+    padding: 3px 0 3px 18px;
+    position: relative;
+    margin-bottom: 4px;
+  }
+
+  ul li::before {
+    content: "·";
+    color: var(--sage);
+    font-weight: 600;
+    position: absolute;
+    left: 0;
+  }
+
+  a { color: var(--sage-light); }
+  a:hover { color: var(--sage); }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 22px 20px;
+    margin-bottom: 12px;
+  }
+
+  .card h3 {
+    color: var(--sage-light);
+    margin-bottom: 6px;
+  }
+
+  .card p {
+    font-size: 0.93rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+  }
+
+  /* Phase cards */
+  .phase-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 22px 20px;
+    margin-bottom: 14px;
+    border-left: 3px solid var(--sage);
+  }
+
+  .phase-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 4px;
+  }
+
+  .phase-card h3 {
+    font-size: 1.05rem;
+    color: var(--cream);
+    margin-bottom: 8px;
+  }
+
+  .phase-card p {
+    font-size: 0.93rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+  }
+
+  /* Trust criteria table replacement */
+  .trust-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 16px 0;
+  }
+
+  .trust-row {
+    background: var(--bg-card);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: start;
+  }
+
+  .trust-criterion {
+    font-size: 0.93rem;
+    color: var(--cream);
+    font-weight: 500;
+  }
+
+  .trust-threshold {
+    font-size: 0.85rem;
+    color: var(--sage-light);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .trust-why {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    grid-column: 1 / -1;
+    margin-top: 2px;
+  }
+
+  /* Timeline */
+  .timeline {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 16px 0;
+  }
+
+  .timeline-item {
+    background: var(--bg-card);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .timeline-phase {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 1.3rem;
+    color: var(--sage);
+    min-width: 24px;
+    line-height: 1;
+    padding-top: 2px;
+  }
+
+  .timeline-content h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--cream);
+    margin-bottom: 3px;
+  }
+
+  .timeline-content p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0;
+  }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .status-ready {
+    background: rgba(122, 158, 126, 0.15);
+    color: var(--sage-light);
+    border: 1px solid rgba(122, 158, 126, 0.3);
+  }
+
+  .status-later {
+    background: rgba(163, 181, 165, 0.08);
+    color: var(--text-muted);
+    border: 1px solid rgba(163, 181, 165, 0.15);
+  }
+
+  /* Collapsible */
+  details {
+    background: var(--bg-card);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+
+  summary {
+    padding: 18px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.97rem;
+    color: var(--cream);
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+  }
+
+  summary::-webkit-details-marker { display: none; }
+
+  summary::after {
+    content: "+";
+    color: var(--sage);
+    font-size: 1.2rem;
+    font-weight: 400;
+    transition: transform 0.2s;
+  }
+
+  details[open] summary::after {
+    content: "−";
+  }
+
+  .details-body {
+    padding: 0 20px 20px;
+  }
+
+  .details-body p,
+  .details-body li {
+    font-size: 0.93rem;
+  }
+
+  .details-body ul {
+    margin-top: 6px;
+  }
+
+  /* Questions */
+  .question-group {
+    margin-bottom: 20px;
+  }
+
+  .question-group h4 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 10px;
+  }
+
+  .question {
+    background: var(--bg-card);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    font-size: 0.93rem;
+    color: var(--text-secondary);
+  }
+
+  .question::before {
+    content: "Q: ";
+    color: var(--sage);
+    font-weight: 600;
+  }
+
+  /* Contact */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .contact-item {
+    background: var(--bg-card);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .contact-item .contact-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .contact-item a {
+    font-size: 0.9rem;
+    color: var(--sage-light);
+    text-decoration: none;
+    word-break: break-all;
+  }
+
+  .contact-item a:hover { text-decoration: underline; }
+
+  /* Blockquote */
+  blockquote {
+    border-left: 3px solid var(--sage);
+    padding: 16px 20px;
+    margin: 20px 0;
+    background: var(--bg-card);
+    border-radius: 0 14px 14px 0;
+    font-family: 'Fraunces', Georgia, serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--cream);
+    line-height: 1.7;
+  }
+
+  /* Footer */
+  .page-footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--bg-elevated);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .page-footer a {
+    color: var(--sage);
+    text-decoration: none;
+  }
+
+  .page-footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    .page-header h1 { font-size: 1.75rem; }
+    .container { padding: 32px 16px 64px; }
+    .trust-row { grid-template-columns: 1fr; }
+    .trust-threshold { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a href="/press" class="back-link">&larr; Back to Press Kit</a>
+
+  <header class="page-header">
+    <p class="eyebrow">Bloom Community</p>
+    <h1>Peer Support Ecosystem</h1>
+    <p class="subtitle">A proposal for building community-driven mental health support into Bloom, starting with a Welcome Buddy rotation that replaces the single-admin fallback with trusted peers.</p>
+  </header>
+
+
+  <!-- WHY -->
+  <h2>Why this exists</h2>
+
+  <blockquote>
+    The tools that helped me most weren't always the clinical ones. Sometimes it was just knowing someone else was showing up too.
+  </blockquote>
+
+  <p>Bloom already has a buddy system. Two anonymous people paired together, checking in, sending nudges, sharing the quiet work of getting through each day. It works. But right now, when someone new joins and can't find a match, they get paired with me. I'm the only fallback. That doesn't scale, and honestly, the people who've been using Bloom for months are often better at this than I am.</p>
+
+  <p>The growth stages in Bloom already tell this story. You start as a Seed. You grow into Seedling, Sprout, eventually Rooted. The final stage is called Ecosystem: "you sustain others now." Right now that's just a label. This proposal makes it real.</p>
+
+
+  <!-- PHASES -->
+  <h2>The four phases</h2>
+
+  <div class="phase-card">
+    <p class="phase-label">Phase 1 <span class="status-badge status-ready">Ready to build</span></p>
+    <h3>Welcome Buddy</h3>
+    <p>When someone can't find a buddy match, the system pairs them with a trusted peer instead of always falling back to the admin. The Welcome Buddy sees a private note: "This person is new to Bloom. A little warmth goes a long way." The new user sees a completely normal pairing. No badges, no titles, no hierarchy.</p>
+  </div>
+
+  <div class="phase-card">
+    <p class="phase-label">Phase 2 <span class="status-badge status-later">After Phase 1</span></p>
+    <h3>Encouragement Roles</h3>
+    <p>Users around 5 months in can submit daily community prompts that enter the rotation pool (moderated before going live). There's also a subtle ability to amplify wall posts. Not upvoting. More like tending a garden.</p>
+  </div>
+
+  <div class="phase-card">
+    <p class="phase-label">Phase 3 <span class="status-badge status-later">After Phase 2</span></p>
+    <h3>Support Circles</h3>
+    <p>Small async group spaces of 3-5 people, organized by theme: anxiety, grief, school stress, recovery, creative burnout. Not chat rooms. Someone posts a reflection, others respond when they're ready. Everything is moderated before it becomes visible. A trusted peer facilitates each circle, not as a counselor, but as someone who keeps the space warm.</p>
+  </div>
+
+  <div class="phase-card">
+    <p class="phase-label">Phase 4 <span class="status-badge status-later">After Phase 3</span></p>
+    <h3>Peer-Led Activities</h3>
+    <p>Experienced users guide groups through Bloom's existing tools: a breathing session, grounding exercise, or journaling prompt. They provide the framing and encouragement, not clinical instruction. Includes companionship pairing ("companion," not "mentor") and an anonymous presence indicator. "3 experienced members are around right now." Just a quiet signal that you're not alone.</p>
+  </div>
+
+
+  <!-- TRUST SYSTEM -->
+  <h2>Trust system</h2>
+
+  <p>XP level alone doesn't make someone trustworthy. Someone could grind XP while being harmful in messages. Trust requires all of the following, calculated server-side on every sync.</p>
+
+  <div class="trust-grid">
+    <div class="trust-row">
+      <span class="trust-criterion">Growth stage</span>
+      <span class="trust-threshold">Rooted (15,000 XP)</span>
+      <span class="trust-why">About 3 months of sustained daily engagement</span>
+    </div>
+    <div class="trust-row">
+      <span class="trust-criterion">Days showed up</span>
+      <span class="trust-threshold">60+ days</span>
+      <span class="trust-why">Proves presence over time, can't be gamed in a week</span>
+    </div>
+    <div class="trust-row">
+      <span class="trust-criterion">Moderation history</span>
+      <span class="trust-threshold">Zero strikes in 90 days</span>
+      <span class="trust-why">Clean community behavior, recently verified</span>
+    </div>
+    <div class="trust-row">
+      <span class="trust-criterion">Peer reports</span>
+      <span class="trust-threshold">Never blocked</span>
+      <span class="trust-why">Never flagged by other community members</span>
+    </div>
+    <div class="trust-row">
+      <span class="trust-criterion">Buddy experience</span>
+      <span class="trust-threshold">1 pairing, 14+ shared days</span>
+      <span class="trust-why">Actually used the system positively</span>
+    </div>
+    <div class="trust-row">
+      <span class="trust-criterion">Auto-ban history</span>
+      <span class="trust-threshold">Never</span>
+      <span class="trust-why">No history of harmful community behavior</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>How trust works in practice</h3>
+    <p>Opt-in only. Meeting the criteria doesn't assign you a role. It makes you eligible. You choose. Instantly revocable. One moderation strike, one peer report, one auto-ban, and all roles are removed immediately. Invisible to others. No one can see who is a Welcome Buddy or Circle facilitator. No badges, no public lists, no leaderboards.</p>
+  </div>
+
+
+  <!-- SAFETY -->
+  <h2>Safety architecture</h2>
+
+  <details>
+    <summary>What peer supporters are not</summary>
+    <div class="details-body">
+      <ul>
+        <li>Not therapists, counselors, or crisis responders</li>
+        <li>Cannot see anyone's journal, mood history, medications, or private data</li>
+        <li>No elevated permissions. Same message limits, same moderation rules, same content filtering.</li>
+        <li>Anonymous. No real names, no contact information, no way to connect outside Bloom.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Moderation is identical for everyone</summary>
+    <div class="details-body">
+      <p>All messages pass through the same multi-tier content filter.</p>
+      <ul>
+        <li>Blocked: threats, directed harm, slurs, grooming language, contact exchange, spam</li>
+        <li>Flagged: self-harm language surfaces crisis resources to the recipient</li>
+        <li>Soft-flagged: crude content gets a content warning on the wall, hard-blocked in buddy/circle</li>
+        <li>Auto-ban: 3+ blocked messages in 24 hours or any credible threat</li>
+      </ul>
+      <p style="margin-top: 10px; margin-bottom: 0;">Peer supporters get zero special treatment. One violation removes their role entirely.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Age restrictions</summary>
+    <div class="details-body">
+      <ul>
+        <li>Under 13: no community features at all</li>
+        <li>13-15: solo features only (journaling, mood, habits, breathing). No buddy, no wall, no circles.</li>
+        <li>16+: full community access, including eligibility for peer support roles when trust criteria are met</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Grooming and exploitation protection</summary>
+    <div class="details-body">
+      <p>Bloom's moderation blocks grooming patterns in all community channels: age questions, location requests, requests for photos, secrecy language, meeting requests. Contact exchange is blocked server-side regardless of context. These protections apply equally to peer supporters and regular users. Earning trust does not bypass safety filters.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Crisis resources</summary>
+    <div class="details-body">
+      <p>The white heart button in Bloom's header provides immediate access to 988, Crisis Text Line, and international resources via findahelpline.com. Long-press reveals discreet safety resources for users in unsafe environments. These are accessible everywhere: main app, lock screen, and behind the decoy mask. Peer supporters are never positioned as crisis support. The app handles crisis routing independently.</p>
+    </div>
+  </details>
+
+
+  <!-- TECHNICAL -->
+  <h2>Technical overview</h2>
+
+  <details>
+    <summary>Current stack</summary>
+    <div class="details-body">
+      <ul>
+        <li>Frontend: single-page app in index.html (~24K lines). No framework.</li>
+        <li>Backend: Vercel serverless functions (api/buddy.js, api/wall.js, api/claude.js)</li>
+        <li>Storage: Redis via Upstash (Vercel KV). Client-side: localStorage + IndexedDB backup.</li>
+        <li>Auth: none. Device fingerprints for rate limiting and moderation tracking. Anonymous by design.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>What changes for Phase 1</summary>
+    <div class="details-body">
+      <p>Everything extends existing patterns. No new dependencies, no new serverless functions.</p>
+      <ul>
+        <li>New <code>checkPeerTrust(buddyId)</code> function in api/buddy.js. Reads existing buddy profile, moderation strikes, and buddy lookup records.</li>
+        <li>Three new API actions: peer-opt-in, peer-opt-out, peer-status</li>
+        <li>Modified find-match fallback: before falling back to admin, check the peer roster. Pick a random eligible welcome buddy. Fall back to admin only if roster is empty.</li>
+        <li>Trust re-check on every sync call. Auto-revoke if criteria no longer met.</li>
+        <li>Two new Redis keys: bloom_peer_trust:{buddyId} and bloom_peer_roster</li>
+      </ul>
+      <p style="margin-top: 10px; margin-bottom: 0;">Infrastructure impact: minimal. Two new Redis keys, a few KB of data. Well within Upstash free tier.</p>
+    </div>
+  </details>
+
+
+  <!-- OPEN QUESTIONS -->
+  <h2>Open questions</h2>
+  <p>If you're reading this, your perspective matters. This is a living document.</p>
+
+  <div class="question-group">
+    <h4>For counseling professionals</h4>
+    <div class="question">What does responsible peer support look like in a digital mental health context? Are there frameworks or best practices we should be building on?</div>
+    <div class="question">At what point does peer support risk creating a dependency dynamic? How do we design against that?</div>
+    <div class="question">How do you feel about the trust criteria? Too strict? Not strict enough? What would you add or remove?</div>
+    <div class="question">Are there specific scenarios where a peer supporter should be guided to disengage or redirect to professional resources?</div>
+  </div>
+
+  <div class="question-group">
+    <h4>For developers and collaborators</h4>
+    <div class="question">The async-only approach for circles avoids real-time complexity but limits interactivity. Is there a middle ground worth exploring?</div>
+    <div class="question">Without user accounts, trust is tied to device fingerprints. If someone switches devices, they lose their trust history. Is this acceptable, or do we need a lightweight identity system?</div>
+    <div class="question">What's the right way to handle circle moderation at scale? One moderation call per message works for buddy (1-on-1), but circles multiply the surface area.</div>
+  </div>
+
+  <div class="question-group">
+    <h4>For community members</h4>
+    <div class="question">Would you want to be a Welcome Buddy? What would make you say yes? What would make you hesitate?</div>
+    <div class="question">What kind of support circles would be most meaningful to you?</div>
+    <div class="question">Is there anything about this proposal that feels like pressure, gamification, or hierarchy? That's the opposite of what we want.</div>
+  </div>
+
+
+  <!-- TIMELINE -->
+  <h2>What's next</h2>
+
+  <p>Phase 1 is ready to build. Everything after depends on what we learn. No hard dates. Bloom is built by one person. Things ship when they're ready.</p>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <span class="timeline-phase">1</span>
+      <div class="timeline-content">
+        <h4>Welcome Buddy <span class="status-badge status-ready">Now</span></h4>
+        <p>Trust system, API changes, and client UI are designed and scoped. Starting here because it's the simplest, highest-impact change.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-phase">2</span>
+      <div class="timeline-content">
+        <h4>Encouragement Roles</h4>
+        <p>After Phase 1 proves out. Depends on Phase 1 trust system and community prompt infrastructure.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-phase">3</span>
+      <div class="timeline-content">
+        <h4>Support Circles</h4>
+        <p>New API endpoint, circle data structures, facilitator guidelines. The biggest technical lift of the four phases.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-phase">4</span>
+      <div class="timeline-content">
+        <h4>Peer-Led Activities</h4>
+        <p>Reuses circle infrastructure. Activity templates, guided sessions, companionship matching.</p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- CONTACT -->
+  <h2>Reach out</h2>
+  <p>This is a living document. Feedback from counselors, clinicians, developers, and community members shapes what gets built next.</p>
+
+  <div class="contact-grid">
+    <div class="contact-item">
+      <p class="contact-label">Email</p>
+      <a href="mailto:bloomhabits@proton.me">bloomhabits@proton.me</a>
+    </div>
+    <div class="contact-item">
+      <p class="contact-label">GitHub</p>
+      <a href="https://github.com/nicholashinz1-afk/Bloom" target="_blank" rel="noopener">nicholashinz1-afk/Bloom</a>
+    </div>
+    <div class="contact-item">
+      <p class="contact-label">Website</p>
+      <a href="https://bloomselfcare.app" target="_blank" rel="noopener">bloomselfcare.app</a>
+    </div>
+    <div class="contact-item">
+      <p class="contact-label">Support</p>
+      <a href="https://ko-fi.com/bloomselfcare" target="_blank" rel="noopener">ko-fi.com/bloomselfcare</a>
+    </div>
+  </div>
+
+  <p style="margin-top: 20px; font-size: 0.88rem; color: var(--text-muted);">Bloom is AGPL-3.0 licensed. Always free, always open source. If you want to help build this, the door is open.</p>
+
+
+  <footer class="page-footer">
+    <p><a href="/">Use Bloom</a> &middot; <a href="/press">Press Kit</a> &middot; <a href="https://github.com/nicholashinz1-afk/bloom">GitHub</a> &middot; <a href="mailto:bloomhabits@proton.me">Contact</a></p>
+    <p style="margin-top: 8px;">bloomselfcare.app</p>
+  </footer>
+
+</div>
+</body>
+</html>
