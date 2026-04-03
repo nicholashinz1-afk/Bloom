@@ -5558,49 +5558,83 @@ function buildEcosystemSVG(levelIdx, opts = {}) {
   const anim = animated ? 'class="flower-grow"' : '';
   const maxW = fullscreen ? '100%' : '200px';
 
-  // ── Sky layer ──────────────────────────────────────────────
-  let sky = '';
-  const skyH = Math.round(h * 0.55);
-  sky += `<rect x="0" y="0" width="${w}" height="${skyH}" fill="${tc.sky}"/>`;
-  sky += `<rect x="0" y="0" width="${w}" height="${Math.round(skyH * 0.5)}" fill="${tc.skyLight}" opacity="0.4"/>`;
+  // ── SVG defs: gradients, filters ──────────────────────────
+  const defId = fullscreen ? 'gv' : 'th';
+  let defs = `<defs>
+    <linearGradient id="${defId}-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${tc.sky}" stop-opacity="1"/>
+      <stop offset="40%" stop-color="${tc.skyLight}" stop-opacity="1"/>
+      <stop offset="100%" stop-color="${tc.ground}" stop-opacity="0.6"/>
+    </linearGradient>
+    <radialGradient id="${defId}-glow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="${tc.glow}" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="${tc.glow}" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="${defId}-earth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${tc.ground}"/>
+      <stop offset="60%" stop-color="${tc.groundDark}"/>
+      <stop offset="100%" stop-color="${tc.groundDark}"/>
+    </linearGradient>
+    <radialGradient id="${defId}-light" cx="50%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="${tc.leafLight}" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="${tc.leafLight}" stop-opacity="0"/>
+    </radialGradient>
+  </defs>`;
+
+  // ── Sky ────────────────────────────────────────────────────
+  const skyH = Math.round(h * 0.6);
+  let sky = `<rect x="0" y="0" width="${w}" height="${h}" fill="url(#${defId}-sky)"/>`;
+  // Soft ambient light from above
+  sky += `<ellipse cx="${w * 0.5}" cy="${skyH * 0.2}" rx="${w * 0.6}" ry="${skyH * 0.4}" fill="url(#${defId}-light)"/>`;
+  // Subtle stars at level 4+
   if (i >= 4) {
-    const starCount = Math.min(i - 2, 8);
-    for (let j = 0; j < starCount; j++) {
+    const ct = Math.min(i - 2, 8);
+    for (let j = 0; j < ct; j++) {
       const sx = (17 + j * 43 + j * j * 7) % w;
-      const sy = 10 * s + (j * 31 + j * j * 3) % Math.round(skyH * 0.6);
-      sky += `<circle cx="${sx}" cy="${sy}" r="${0.6 * s + (j % 3) * 0.3 * s}" fill="#fff" opacity="${0.15 + (j % 4) * 0.05}" class="sparkle" style="animation-delay:${j * 0.4}s"/>`;
+      const sy = 10 * s + (j * 31 + j * j * 3) % Math.round(skyH * 0.5);
+      sky += `<circle cx="${sx}" cy="${sy}" r="${(0.5 + (j % 3) * 0.3) * s}" fill="#fff" opacity="${0.12 + (j % 4) * 0.04}" class="sparkle" style="animation-delay:${j * 0.4}s"/>`;
     }
   }
+  // Clouds level 12+
   if (i >= 12) {
-    sky += `<ellipse cx="${60 * s}" cy="${30 * s}" rx="${22 * s}" ry="${8 * s}" fill="#fff" opacity="0.04"/>`;
-    sky += `<ellipse cx="${55 * s}" cy="${28 * s}" rx="${14 * s}" ry="${6 * s}" fill="#fff" opacity="0.03"/>`;
-    sky += `<ellipse cx="${150 * s}" cy="${50 * s}" rx="${18 * s}" ry="${7 * s}" fill="#fff" opacity="0.035"/>`;
+    sky += `<ellipse cx="${60 * s}" cy="${30 * s}" rx="${22 * s}" ry="${8 * s}" fill="#fff" opacity="0.035"/>`;
+    sky += `<ellipse cx="${55 * s}" cy="${28 * s}" rx="${14 * s}" ry="${6 * s}" fill="#fff" opacity="0.025"/>`;
+    sky += `<ellipse cx="${150 * s}" cy="${50 * s}" rx="${18 * s}" ry="${7 * s}" fill="#fff" opacity="0.03"/>`;
   }
 
-  // ── Mountains (level 7+) ───────────────────────────────────
+  // ── Mountains (level 7+) ──────────────────────────────────
   let mountains = '';
   if (i >= 7) {
     const mBase = Math.round(h * 0.48);
     const mH = Math.round(28 * s + (i - 7) * 4 * s);
-    mountains += `<path d="M0 ${mBase} L${30 * s} ${mBase - mH} L${60 * s} ${mBase - mH * 0.7} L${90 * s} ${mBase - mH * 0.9} L${120 * s} ${mBase - mH * 0.5} L${160 * s} ${mBase - mH * 0.8} L${w} ${mBase - mH * 0.3} L${w} ${mBase} Z" fill="${tc.mountain}" opacity="0.6"/>`;
+    mountains += `<path d="M0 ${mBase} C${15 * s} ${mBase - mH * 0.3} ${25 * s} ${mBase - mH * 0.9} ${40 * s} ${mBase - mH} C${55 * s} ${mBase - mH * 0.6} ${70 * s} ${mBase - mH * 0.8} ${90 * s} ${mBase - mH * 0.85} C${110 * s} ${mBase - mH * 0.4} ${130 * s} ${mBase - mH * 0.7} ${160 * s} ${mBase - mH * 0.75} C${180 * s} ${mBase - mH * 0.3} ${w - 10 * s} ${mBase - mH * 0.2} ${w} ${mBase - mH * 0.25} L${w} ${mBase} Z" fill="${tc.mountain}" opacity="0.5"/>`;
     if (i >= 10) {
-      mountains += `<path d="M${20 * s} ${mBase} L${50 * s} ${mBase - mH * 0.6} L${80 * s} ${mBase - mH * 0.3} L${110 * s} ${mBase - mH * 0.5} L${140 * s} ${mBase - mH * 0.2} L${w} ${mBase - mH * 0.4} L${w} ${mBase} Z" fill="${tc.mountain}" opacity="0.35"/>`;
+      mountains += `<path d="M${20 * s} ${mBase} C${40 * s} ${mBase - mH * 0.4} ${60 * s} ${mBase - mH * 0.55} ${80 * s} ${mBase - mH * 0.5} C${100 * s} ${mBase - mH * 0.2} ${120 * s} ${mBase - mH * 0.35} ${w} ${mBase - mH * 0.3} L${w} ${mBase} Z" fill="${tc.mountain}" opacity="0.3"/>`;
     }
   }
 
-  // ── Ground layer ───────────────────────────────────────────
-  let ground = '';
+  // ── Ground ─────────────────────────────────────────────────
   const gTop = Math.round(h * 0.62);
-  ground += `<rect x="0" y="${gTop}" width="${w}" height="${h - gTop}" fill="${tc.groundDark}"/>`;
-  ground += `<ellipse cx="${w / 2}" cy="${gTop}" rx="${w * 0.6}" ry="${16 * s}" fill="${tc.ground}" opacity="0.8"/>`;
-  if (i >= 2) {
-    const tufts = 3 + Math.min(i, 8);
-    for (let j = 0; j < tufts; j++) {
-      const tx = (15 + j * 37 + j * j * 5) % (w - 10 * s) + 5 * s;
-      const ty = gTop + (j % 3) * 6 * s + 2 * s;
-      const th = 4 * s + (j % 3) * 2 * s;
-      ground += `<line x1="${tx}" y1="${ty}" x2="${tx - 2 * s}" y2="${ty - th}" stroke="${tc.leaf}" stroke-width="${1.2 * s}" stroke-linecap="round" opacity="0.5"/>`;
-      ground += `<line x1="${tx}" y1="${ty}" x2="${tx + 2 * s}" y2="${ty - th * 0.8}" stroke="${tc.leafLight}" stroke-width="${1 * s}" stroke-linecap="round" opacity="0.4"/>`;
+  let ground = '';
+  // Rolling hill shape instead of flat rect
+  ground += `<path d="M0 ${gTop + 8 * s} C${w * 0.2} ${gTop - 4 * s} ${w * 0.35} ${gTop - 2 * s} ${w * 0.5} ${gTop} C${w * 0.65} ${gTop + 2 * s} ${w * 0.8} ${gTop - 3 * s} ${w} ${gTop + 4 * s} L${w} ${h} L0 ${h} Z" fill="url(#${defId}-earth)"/>`;
+  // Second softer hill layer for depth
+  ground += `<path d="M0 ${gTop + 14 * s} C${w * 0.25} ${gTop + 6 * s} ${w * 0.5} ${gTop + 10 * s} ${w * 0.75} ${gTop + 5 * s} C${w * 0.9} ${gTop + 8 * s} ${w} ${gTop + 12 * s} ${w} ${gTop + 16 * s} L${w} ${h} L0 ${h} Z" fill="${tc.groundDark}" opacity="0.5"/>`;
+  // Soft glow where sky meets earth
+  ground += `<ellipse cx="${w * 0.5}" cy="${gTop}" rx="${w * 0.45}" ry="${10 * s}" fill="${tc.leafLight}" opacity="0.04"/>`;
+
+  // Grass blades — organic curved paths
+  if (i >= 1) {
+    const bladeCount = 5 + Math.min(i * 3, 18);
+    for (let j = 0; j < bladeCount; j++) {
+      const bx = (8 + j * 23 + j * j * 7) % (w - 8 * s) + 4 * s;
+      const by = gTop + (j % 4) * 4 * s + 2 * s;
+      const bh = (5 + (j % 4) * 2.5 + Math.min(i, 6) * 0.8) * s;
+      const lean = ((j % 3) - 1) * 2.5 * s;
+      const thick = (0.8 + (j % 3) * 0.3) * s;
+      const col = j % 3 === 0 ? tc.leaf : j % 3 === 1 ? tc.leafLight : tc.stem;
+      const op = 0.3 + (j % 4) * 0.1;
+      ground += `<path d="M${bx} ${by} Q${bx + lean} ${by - bh * 0.6} ${bx + lean * 1.3} ${by - bh}" stroke="${col}" stroke-width="${thick}" fill="none" stroke-linecap="round" opacity="${op}"/>`;
     }
   }
 
@@ -5609,112 +5643,129 @@ function buildEcosystemSVG(levelIdx, opts = {}) {
   if (i >= 9) {
     const wy = gTop + 18 * s;
     const ww = (12 + (i - 9) * 6) * s;
-    water += `<ellipse cx="${30 * s}" cy="${wy}" rx="${ww}" ry="${5 * s}" fill="${tc.water}" opacity="0.35"/>`;
-    water += `<ellipse cx="${30 * s}" cy="${wy}" rx="${ww * 0.6}" ry="${3 * s}" fill="${tc.waterLight}" opacity="0.2"/>`;
+    water += `<ellipse cx="${30 * s}" cy="${wy}" rx="${ww}" ry="${5 * s}" fill="${tc.water}" opacity="0.3"/>`;
+    water += `<ellipse cx="${30 * s}" cy="${wy}" rx="${ww * 0.6}" ry="${3 * s}" fill="${tc.waterLight}" opacity="0.18"/>`;
+    // Gentle ripple highlight
+    water += `<ellipse cx="${30 * s - 2 * s}" cy="${wy - 1 * s}" rx="${ww * 0.3}" ry="${1.5 * s}" fill="#fff" opacity="0.06"/>`;
     if (i >= 11) {
-      water += `<ellipse cx="${w - 35 * s}" cy="${wy + 8 * s}" rx="${ww * 0.7}" ry="${4 * s}" fill="${tc.water}" opacity="0.25"/>`;
+      water += `<ellipse cx="${w - 35 * s}" cy="${wy + 8 * s}" rx="${ww * 0.7}" ry="${4 * s}" fill="${tc.water}" opacity="0.22"/>`;
     }
     if (interactive) {
       water += `<g data-garden-slot="water" data-slot-x="${30 * s}" data-slot-y="${wy - 8 * s}"></g>`;
     }
   }
 
-  // ── Base flora (wildflowers, bushes) ───────────────────────
+  // ── Base flora ─────────────────────────────────────────────
   let flora = '';
   if (i >= 3) {
     const flowerCount = Math.min(2 + Math.floor((i - 3) * 1.5), 10);
-    const floraColors = [tc.petal, tc.petalDark, tc.glow, tc.leafLight];
+    const fCols = [tc.petal, tc.petalDark, tc.glow, tc.leafLight];
     for (let j = 0; j < flowerCount; j++) {
       const fx = (12 + j * 31 + j * j * 11) % (w - 20 * s) + 10 * s;
-      const fy = gTop + (j % 3) * 4 * s + 1 * s;
+      const fy = gTop + (j % 3) * 4 * s + 2 * s;
       const fr = (1.5 + (j % 3) * 0.8) * s;
-      flora += `<circle cx="${fx}" cy="${fy}" r="${fr}" fill="${floraColors[j % floraColors.length]}" opacity="0.7"/>`;
-      flora += `<circle cx="${fx}" cy="${fy}" r="${fr * 0.5}" fill="#fff" opacity="0.35"/>`;
       // Tiny stem
-      flora += `<line x1="${fx}" y1="${fy + fr}" x2="${fx}" y2="${fy + fr + 3 * s}" stroke="${tc.stem}" stroke-width="${0.8 * s}" opacity="0.4"/>`;
+      flora += `<path d="M${fx} ${fy + fr} Q${fx + (j % 2 ? 1 : -1) * s} ${fy + fr + 2 * s} ${fx} ${fy + fr + 4 * s}" stroke="${tc.stem}" stroke-width="${0.7 * s}" fill="none" opacity="0.35"/>`;
+      // Petals as small overlapping circles
+      const pc = fCols[j % fCols.length];
+      flora += `<circle cx="${fx - fr * 0.4}" cy="${fy}" r="${fr * 0.7}" fill="${pc}" opacity="0.6"/>`;
+      flora += `<circle cx="${fx + fr * 0.4}" cy="${fy}" r="${fr * 0.7}" fill="${pc}" opacity="0.5"/>`;
+      flora += `<circle cx="${fx}" cy="${fy - fr * 0.3}" r="${fr * 0.6}" fill="${pc}" opacity="0.7"/>`;
+      flora += `<circle cx="${fx}" cy="${fy}" r="${fr * 0.35}" fill="#fff" opacity="0.25"/>`;
     }
   }
   // Bushes at higher levels
   if (i >= 6) {
     const bx1 = 18 * s;
-    flora += `<ellipse cx="${bx1}" cy="${gTop + 2 * s}" rx="${10 * s}" ry="${6 * s}" fill="${tc.leaf}" opacity="0.35"/>`;
-    flora += `<ellipse cx="${bx1 + 3 * s}" cy="${gTop}" rx="${7 * s}" ry="${4 * s}" fill="${tc.leafLight}" opacity="0.3"/>`;
+    flora += `<ellipse cx="${bx1}" cy="${gTop + 2 * s}" rx="${10 * s}" ry="${6 * s}" fill="${tc.leaf}" opacity="0.3"/>`;
+    flora += `<ellipse cx="${bx1 + 3 * s}" cy="${gTop}" rx="${7 * s}" ry="${4 * s}" fill="${tc.leafLight}" opacity="0.25"/>`;
     if (i >= 8) {
       const bx2 = w - 22 * s;
-      flora += `<ellipse cx="${bx2}" cy="${gTop + 3 * s}" rx="${8 * s}" ry="${5 * s}" fill="${tc.leaf}" opacity="0.3"/>`;
-      flora += `<ellipse cx="${bx2 - 2 * s}" cy="${gTop + 1 * s}" rx="${6 * s}" ry="${3.5 * s}" fill="${tc.leafLight}" opacity="0.25"/>`;
+      flora += `<ellipse cx="${bx2}" cy="${gTop + 3 * s}" rx="${8 * s}" ry="${5 * s}" fill="${tc.leaf}" opacity="0.25"/>`;
+      flora += `<ellipse cx="${bx2 - 2 * s}" cy="${gTop + 1 * s}" rx="${6 * s}" ry="${3.5 * s}" fill="${tc.leafLight}" opacity="0.2"/>`;
     }
   }
 
-  // ── Main plant/tree ────────────────────────────────────────
+  // ── Main plant ─────────────────────────────────────────────
   let plant = '';
   const cx = Math.round(w / 2);
   const baseY = gTop + 2 * s;
 
   if (i === 0) {
-    // Seed — dark soil, one tiny green thread
-    const seedY = baseY - 8 * s;
+    // ── Seed: dark earth, one brave green thread ──
+    const sprH = 10 * s;
+    const top = baseY - sprH;
     plant = `<g ${anim}>
-      <ellipse cx="${cx}" cy="${baseY}" rx="${8 * s}" ry="${3 * s}" fill="${tc.groundDark}" opacity="0.6"/>
-      <line x1="${cx}" y1="${baseY}" x2="${cx}" y2="${seedY}" stroke="${tc.stem}" stroke-width="${2 * s}" stroke-linecap="round"/>
-      <ellipse cx="${cx - 2 * s}" cy="${seedY + 1 * s}" rx="${4 * s}" ry="${2.5 * s}" fill="${tc.leaf}" transform="rotate(-25 ${cx - 2 * s} ${seedY + 1 * s})"/>
+      <ellipse cx="${cx}" cy="${baseY + 1 * s}" rx="${6 * s}" ry="${2 * s}" fill="${tc.groundDark}" opacity="0.5"/>
+      <path d="M${cx} ${baseY} C${cx} ${baseY - sprH * 0.3} ${cx - 0.5 * s} ${top + 3 * s} ${cx - 0.5 * s} ${top}" stroke="${tc.stem}" stroke-width="${1.8 * s}" fill="none" stroke-linecap="round"/>
+      <path d="M${cx - 0.5 * s} ${top + 1 * s} C${cx - 4 * s} ${top - 1 * s} ${cx - 6 * s} ${top + 1 * s} ${cx - 3 * s} ${top + 3 * s}" fill="${tc.leaf}" opacity="0.85"/>
     </g>`;
+
   } else if (i === 1) {
-    // Seedling — taller stem, two leaves
-    const stemH = 18 * s;
-    const stemTop = baseY - stemH;
+    // ── Seedling: gentle curve, two leaves unfurling ──
+    const sprH = 22 * s;
+    const top = baseY - sprH;
     plant = `<g ${anim}>
-      <line x1="${cx}" y1="${baseY}" x2="${cx}" y2="${stemTop}" stroke="${tc.stem}" stroke-width="${2.5 * s}" stroke-linecap="round"/>
-      <ellipse cx="${cx - 6 * s}" cy="${stemTop + 8 * s}" rx="${7 * s}" ry="${3.5 * s}" fill="${tc.leaf}" transform="rotate(-35 ${cx - 6 * s} ${stemTop + 8 * s})"/>
-      <ellipse cx="${cx + 6 * s}" cy="${stemTop + 4 * s}" rx="${7 * s}" ry="${3.5 * s}" fill="${tc.leafLight}" transform="rotate(30 ${cx + 6 * s} ${stemTop + 4 * s})"/>
-      <ellipse cx="${cx - 1 * s}" cy="${stemTop + 1 * s}" rx="${3.5 * s}" ry="${5.5 * s}" fill="${tc.leaf}" transform="rotate(-8 ${cx - 1 * s} ${stemTop + 1 * s})"/>
+      <path d="M${cx} ${baseY} C${cx + 0.5 * s} ${baseY - sprH * 0.4} ${cx - 1 * s} ${top + 6 * s} ${cx - 0.5 * s} ${top}" stroke="${tc.stem}" stroke-width="${2.2 * s}" fill="none" stroke-linecap="round"/>
+      <path d="M${cx - 1 * s} ${top + 8 * s} C${cx - 8 * s} ${top + 4 * s} ${cx - 12 * s} ${top + 8 * s} ${cx - 5 * s} ${top + 12 * s}" fill="${tc.leaf}" opacity="0.8"/>
+      <path d="M${cx} ${top + 5 * s} C${cx + 7 * s} ${top + 1 * s} ${cx + 11 * s} ${top + 4 * s} ${cx + 5 * s} ${top + 8 * s}" fill="${tc.leafLight}" opacity="0.75"/>
+      <path d="M${cx - 0.5 * s} ${top + 1 * s} C${cx - 3 * s} ${top - 3 * s} ${cx - 6 * s} ${top - 1 * s} ${cx - 2 * s} ${top + 2 * s}" fill="${tc.leaf}" opacity="0.9"/>
     </g>`;
+
   } else if (i === 2) {
-    // Sprout — taller, leaves spreading, first bud
-    const stemH = 28 * s;
-    const stemTop = baseY - stemH;
+    // ── Sprout: taller, leaves spreading, first bud forming ──
+    const sprH = 32 * s;
+    const top = baseY - sprH;
     plant = `<g ${anim}>
-      <line x1="${cx}" y1="${baseY}" x2="${cx}" y2="${stemTop + 6 * s}" stroke="${tc.stem}" stroke-width="${3 * s}" stroke-linecap="round"/>
-      <ellipse cx="${cx - 8 * s}" cy="${stemTop + 16 * s}" rx="${8 * s}" ry="${4 * s}" fill="${tc.leaf}" transform="rotate(-30 ${cx - 8 * s} ${stemTop + 16 * s})"/>
-      <ellipse cx="${cx + 8 * s}" cy="${stemTop + 12 * s}" rx="${8 * s}" ry="${4 * s}" fill="${tc.leafLight}" transform="rotate(30 ${cx + 8 * s} ${stemTop + 12 * s})"/>
-      <circle cx="${cx}" cy="${stemTop + 5 * s}" r="${7 * s}" fill="${tc.petal}" opacity="0.6"/>
-      <circle cx="${cx}" cy="${stemTop + 5 * s}" r="${4 * s}" fill="${tc.glow}" opacity="0.8"/>
+      <path d="M${cx} ${baseY} C${cx + 1 * s} ${baseY - sprH * 0.3} ${cx - 1 * s} ${top + 10 * s} ${cx} ${top + 4 * s}" stroke="${tc.stem}" stroke-width="${2.8 * s}" fill="none" stroke-linecap="round"/>
+      <path d="M${cx - 1 * s} ${top + 16 * s} C${cx - 12 * s} ${top + 10 * s} ${cx - 16 * s} ${top + 16 * s} ${cx - 6 * s} ${top + 20 * s}" fill="${tc.leaf}" opacity="0.75"/>
+      <path d="M${cx + 1 * s} ${top + 12 * s} C${cx + 10 * s} ${top + 6 * s} ${cx + 15 * s} ${top + 10 * s} ${cx + 6 * s} ${top + 15 * s}" fill="${tc.leafLight}" opacity="0.7"/>
+      <path d="M${cx - 1 * s} ${top + 22 * s} C${cx - 9 * s} ${top + 18 * s} ${cx - 13 * s} ${top + 22 * s} ${cx - 5 * s} ${top + 25 * s}" fill="${tc.leafLight}" opacity="0.6"/>
+      <ellipse cx="${cx}" cy="${top + 3 * s}" rx="${4.5 * s}" ry="${5.5 * s}" fill="${tc.petal}" opacity="0.45"/>
+      <ellipse cx="${cx}" cy="${top + 3 * s}" rx="${2.5 * s}" ry="${3.5 * s}" fill="${tc.glow}" opacity="0.6"/>
     </g>`;
+
   } else if (i === 3) {
-    // Budding — first real flower, multiple leaves
-    const stemH = 35 * s;
-    const stemTop = baseY - stemH;
+    // ── Budding: tulip! cupped petals, elegant stem ──
+    const sprH = 40 * s;
+    const top = baseY - sprH;
+    const ty = top + 2 * s; // tulip center
     plant = `<g ${anim}>
-      <line x1="${cx}" y1="${baseY}" x2="${cx}" y2="${stemTop + 8 * s}" stroke="${tc.stem}" stroke-width="${3.5 * s}" stroke-linecap="round"/>
-      <ellipse cx="${cx - 10 * s}" cy="${stemTop + 20 * s}" rx="${9 * s}" ry="${4.5 * s}" fill="${tc.leaf}" transform="rotate(-30 ${cx - 10 * s} ${stemTop + 20 * s})"/>
-      <ellipse cx="${cx + 10 * s}" cy="${stemTop + 16 * s}" rx="${9 * s}" ry="${4.5 * s}" fill="${tc.leafLight}" transform="rotate(30 ${cx + 10 * s} ${stemTop + 16 * s})"/>
-      <ellipse cx="${cx - 8 * s}" cy="${stemTop + 28 * s}" rx="${7 * s}" ry="${3.5 * s}" fill="${tc.leafLight}" transform="rotate(-40 ${cx - 8 * s} ${stemTop + 28 * s})"/>
-      ${[0,45,90,135,180,225,270,315].map(a =>
-        `<ellipse cx="${cx}" cy="${stemTop + 2 * s}" rx="${3 * s}" ry="${7 * s}" fill="${tc.petal}" opacity="0.75" transform="rotate(${a} ${cx} ${stemTop + 7 * s})"/>`
-      ).join('')}
-      <circle cx="${cx}" cy="${stemTop + 7 * s}" r="${5.5 * s}" fill="${tc.petalDark}"/>
-      <circle cx="${cx}" cy="${stemTop + 7 * s}" r="${3 * s}" fill="${tc.glow}"/>
+      <path d="M${cx} ${baseY} C${cx + 1.5 * s} ${baseY - sprH * 0.3} ${cx - 1 * s} ${top + 14 * s} ${cx} ${top + 8 * s}" stroke="${tc.stem}" stroke-width="${3 * s}" fill="none" stroke-linecap="round"/>
+      <path d="M${cx - 1 * s} ${top + 18 * s} C${cx - 14 * s} ${top + 12 * s} ${cx - 18 * s} ${top + 18 * s} ${cx - 7 * s} ${top + 23 * s}" fill="${tc.leaf}" opacity="0.7"/>
+      <path d="M${cx + 1 * s} ${top + 14 * s} C${cx + 12 * s} ${top + 8 * s} ${cx + 17 * s} ${top + 13 * s} ${cx + 7 * s} ${top + 18 * s}" fill="${tc.leafLight}" opacity="0.65"/>
+      <path d="M${cx - 1 * s} ${top + 26 * s} C${cx - 11 * s} ${top + 21 * s} ${cx - 14 * s} ${top + 26 * s} ${cx - 5 * s} ${top + 30 * s}" fill="${tc.leafLight}" opacity="0.55"/>
+      <path d="M${cx - 5 * s} ${ty + 10 * s} C${cx - 8 * s} ${ty + 4 * s} ${cx - 7 * s} ${ty - 4 * s} ${cx - 2 * s} ${ty - 6 * s} C${cx} ${ty - 7 * s} ${cx} ${ty - 7 * s} ${cx} ${ty - 7 * s}" fill="${tc.petal}" opacity="0.8"/>
+      <path d="M${cx + 5 * s} ${ty + 10 * s} C${cx + 8 * s} ${ty + 4 * s} ${cx + 7 * s} ${ty - 4 * s} ${cx + 2 * s} ${ty - 6 * s} C${cx} ${ty - 7 * s} ${cx} ${ty - 7 * s} ${cx} ${ty - 7 * s}" fill="${tc.petalDark}" opacity="0.75"/>
+      <path d="M${cx - 3 * s} ${ty + 8 * s} C${cx - 4 * s} ${ty} ${cx - 1 * s} ${ty - 5 * s} ${cx} ${ty - 6 * s} C${cx + 1 * s} ${ty - 5 * s} ${cx + 4 * s} ${ty} ${cx + 3 * s} ${ty + 8 * s}" fill="${tc.petal}" opacity="0.6"/>
+      <ellipse cx="${cx}" cy="${ty - 3 * s}" rx="${2 * s}" ry="${2.5 * s}" fill="${tc.glow}" opacity="0.5"/>
+      <circle cx="${cx}" cy="${ty + 8 * s}" r="${8 * s}" fill="${tc.glow}" opacity="0.06" class="glow-pulse"/>
     </g>`;
+
   } else if (i === 4) {
-    // Blooming — flowers opening, sparkles appear
-    const stemH = 42 * s;
-    const stemTop = baseY - stemH;
+    // ── Blooming: flower opens wide, sparkles appear ──
+    const sprH = 46 * s;
+    const top = baseY - sprH;
+    const fy = top + 4 * s; // flower center
     plant = `<g ${anim}>
-      <line x1="${cx}" y1="${baseY}" x2="${cx}" y2="${stemTop + 8 * s}" stroke="${tc.stem}" stroke-width="${3.5 * s}" stroke-linecap="round"/>
-      <ellipse cx="${cx - 12 * s}" cy="${stemTop + 22 * s}" rx="${10 * s}" ry="${5 * s}" fill="${tc.leaf}" transform="rotate(-28 ${cx - 12 * s} ${stemTop + 22 * s})"/>
-      <ellipse cx="${cx + 12 * s}" cy="${stemTop + 18 * s}" rx="${10 * s}" ry="${5 * s}" fill="${tc.leafLight}" transform="rotate(28 ${cx + 12 * s} ${stemTop + 18 * s})"/>
-      <ellipse cx="${cx - 10 * s}" cy="${stemTop + 32 * s}" rx="${8 * s}" ry="${3.5 * s}" fill="${tc.leafLight}" transform="rotate(-42 ${cx - 10 * s} ${stemTop + 32 * s})"/>
-      ${[0,36,72,108,144,180,216,252,288,324].map(a =>
-        `<ellipse cx="${cx}" cy="${stemTop + 1 * s}" rx="${3.5 * s}" ry="${8 * s}" fill="${tc.petal}" opacity="0.7" transform="rotate(${a} ${cx} ${stemTop + 7 * s})"/>`
-      ).join('')}
-      <circle cx="${cx}" cy="${stemTop + 7 * s}" r="${6 * s}" fill="${tc.petalDark}" opacity="0.9"/>
-      <circle cx="${cx}" cy="${stemTop + 7 * s}" r="${3.5 * s}" fill="${tc.glow}"/>
-      ${[0,1,2].map(j => {
-        const ax = cx - 12 * s + j * 12 * s;
-        const ay = stemTop - 2 * s + (j % 2) * 4 * s;
-        return `<circle cx="${ax}" cy="${ay}" r="${1.2 * s}" fill="#fff" opacity="${0.5 + j * 0.15}" class="sparkle" style="animation-delay:${j * 0.5}s"/>`;
+      <path d="M${cx} ${baseY} C${cx + 2 * s} ${baseY - sprH * 0.3} ${cx - 1.5 * s} ${top + 16 * s} ${cx} ${top + 10 * s}" stroke="${tc.stem}" stroke-width="${3.2 * s}" fill="none" stroke-linecap="round"/>
+      <path d="M${cx - 1 * s} ${top + 20 * s} C${cx - 15 * s} ${top + 13 * s} ${cx - 20 * s} ${top + 19 * s} ${cx - 8 * s} ${top + 25 * s}" fill="${tc.leaf}" opacity="0.65"/>
+      <path d="M${cx + 1 * s} ${top + 16 * s} C${cx + 14 * s} ${top + 9 * s} ${cx + 19 * s} ${top + 15 * s} ${cx + 8 * s} ${top + 20 * s}" fill="${tc.leafLight}" opacity="0.6"/>
+      <path d="M${cx - 1 * s} ${top + 30 * s} C${cx - 12 * s} ${top + 24 * s} ${cx - 15 * s} ${top + 29 * s} ${cx - 5 * s} ${top + 33 * s}" fill="${tc.leafLight}" opacity="0.5"/>
+      <circle cx="${cx}" cy="${fy + 6 * s}" r="${14 * s}" fill="${tc.glow}" opacity="0.08" class="glow-pulse"/>
+      ${[0,36,72,108,144,180,216,252,288,324].map(function(a) {
+        return '<ellipse cx="' + cx + '" cy="' + (fy - 1 * s) + '" rx="' + (3.5 * s) + '" ry="' + (9 * s) + '" fill="' + tc.petal + '" opacity="0.6" transform="rotate(' + a + ' ' + cx + ' ' + (fy + 6 * s) + ')"/>';
+      }).join('')}
+      <circle cx="${cx}" cy="${fy + 6 * s}" r="${6.5 * s}" fill="${tc.petalDark}" opacity="0.85"/>
+      <circle cx="${cx}" cy="${fy + 6 * s}" r="${3.5 * s}" fill="${tc.glow}" opacity="0.7"/>
+      <circle cx="${cx - 1.5 * s}" cy="${fy + 5 * s}" r="${1.5 * s}" fill="#fff" opacity="0.2"/>
+      ${[0,1,2,3].map(function(j) {
+        var ax = cx - 14 * s + j * 10 * s + (j % 2) * 3 * s;
+        var ay = fy - 4 * s + (j % 3) * 5 * s;
+        return '<circle cx="' + ax + '" cy="' + ay + '" r="' + ((1 + (j % 2) * 0.4) * s) + '" fill="#fff" opacity="' + (0.3 + j * 0.1) + '" class="sparkle" style="animation-delay:' + (j * 0.5) + 's"/>';
       }).join('')}
     </g>`;
+
   } else if (i === 5) {
     // Flowering — magnificent full bloom, golden glow
     const stemH = 48 * s;
@@ -5767,110 +5818,72 @@ function buildEcosystemSVG(levelIdx, opts = {}) {
       }).join('')}
     </g>`;
   } else if (i >= 7) {
-    // Levels 7-13: Tree stages — trunk thickens, canopy grows, ecosystem enriches
+    // Levels 7-13: Tree stages
     const trunkW = (3 + (i - 7) * 0.5) * s;
     const treeH = (55 + (i - 7) * 6) * s;
     const stemTop = baseY - treeH;
     const canopyR = (18 + (i - 7) * 4) * s;
     const canopyY = stemTop + 10 * s;
-
-    // Trunk with organic curve
     const tl = cx - trunkW;
     const tr = cx + trunkW;
     plant = `<g ${anim}>
       <path d="M${tl + 1 * s} ${baseY} Q${tl - 1 * s} ${baseY - treeH * 0.5} ${tl} ${stemTop + 14 * s} L${cx - 1 * s} ${stemTop + 8 * s} L${cx + 1 * s} ${stemTop + 8 * s} L${tr} ${stemTop + 14 * s} Q${tr + 1 * s} ${baseY - treeH * 0.5} ${tr - 1 * s} ${baseY} Z" fill="${tc.bark}"/>`;
-
-    // Roots
     plant += `<line x1="${tl}" y1="${baseY}" x2="${tl - 8 * s}" y2="${baseY + 4 * s}" stroke="${tc.bark}" stroke-width="${2 * s}" stroke-linecap="round" opacity="0.6"/>`;
     plant += `<line x1="${tr}" y1="${baseY}" x2="${tr + 8 * s}" y2="${baseY + 4 * s}" stroke="${tc.bark}" stroke-width="${2 * s}" stroke-linecap="round" opacity="0.6"/>`;
     if (i >= 9) {
       plant += `<line x1="${tl + 1 * s}" y1="${baseY + 1 * s}" x2="${tl - 4 * s}" y2="${baseY + 5 * s}" stroke="${tc.bark}" stroke-width="${1.5 * s}" stroke-linecap="round" opacity="0.4"/>`;
-      // Shared root network (grove+)
       if (i >= 11) {
         plant += `<path d="M${tl - 6 * s} ${baseY + 2 * s} Q${cx} ${baseY + 6 * s} ${tr + 6 * s} ${baseY + 2 * s}" stroke="${tc.bark}" stroke-width="${1.5 * s}" fill="none" opacity="0.2"/>`;
       }
     }
-
-    // Glow halos (increase with level)
     if (i >= 8) {
       const glowR = canopyR + 8 * s;
       plant += `<circle cx="${cx}" cy="${canopyY}" r="${glowR}" fill="${tc.glow}" opacity="0.08" class="glow-pulse"/>`;
-      if (i >= 10) {
-        plant += `<circle cx="${cx}" cy="${canopyY}" r="${glowR + 6 * s}" fill="${tc.glow}" opacity="0.05" class="glow-pulse" style="animation-delay:0.5s"/>`;
-      }
-      if (i >= 13) {
-        plant += `<circle cx="${cx}" cy="${canopyY}" r="${glowR + 12 * s}" fill="${tc.glow}" opacity="0.03" class="glow-pulse" style="animation-delay:1s"/>`;
-      }
+      if (i >= 10) plant += `<circle cx="${cx}" cy="${canopyY}" r="${glowR + 6 * s}" fill="${tc.glow}" opacity="0.05" class="glow-pulse" style="animation-delay:0.5s"/>`;
+      if (i >= 13) plant += `<circle cx="${cx}" cy="${canopyY}" r="${glowR + 12 * s}" fill="${tc.glow}" opacity="0.03" class="glow-pulse" style="animation-delay:1s"/>`;
     }
-
-    // Canopy — layered ellipses for depth
-    const cd = tc.stem;       // dark canopy
-    const cm = tc.leaf;       // mid canopy
-    const cl = tc.leafLight;  // light canopy
+    const cd = tc.stem; const cm = tc.leaf; const cl = tc.leafLight;
     plant += `<ellipse cx="${cx}" cy="${canopyY + 4 * s}" rx="${canopyR}" ry="${canopyR * 0.7}" fill="${cd}"/>`;
     plant += `<ellipse cx="${cx - 6 * s}" cy="${canopyY}" rx="${canopyR * 0.75}" ry="${canopyR * 0.6}" fill="${cm}"/>`;
     plant += `<ellipse cx="${cx + 6 * s}" cy="${canopyY + 2 * s}" rx="${canopyR * 0.7}" ry="${canopyR * 0.55}" fill="${cm}"/>`;
     plant += `<ellipse cx="${cx}" cy="${canopyY - 3 * s}" rx="${canopyR * 0.6}" ry="${canopyR * 0.5}" fill="${cl}"/>`;
-
-    // Dappled light patches (high levels)
     if (i >= 10) {
       plant += `<ellipse cx="${cx - 5 * s}" cy="${canopyY - 4 * s}" rx="${5 * s}" ry="${4 * s}" fill="${tc.glow}" opacity="0.15"/>`;
-      if (i >= 12) {
-        plant += `<ellipse cx="${cx + 6 * s}" cy="${canopyY - 2 * s}" rx="${4 * s}" ry="${3 * s}" fill="${tc.glow}" opacity="0.12"/>`;
-      }
+      if (i >= 12) plant += `<ellipse cx="${cx + 6 * s}" cy="${canopyY - 2 * s}" rx="${4 * s}" ry="${3 * s}" fill="${tc.glow}" opacity="0.12"/>`;
     }
-
-    // Secondary trees (Grove 11+)
     if (i >= 11) {
-      const t2x = cx - 28 * s;
-      const t2h = treeH * 0.7;
-      const t2top = baseY - t2h;
-      const t2r = canopyR * 0.6;
+      const t2x = cx - 28 * s; const t2h = treeH * 0.7; const t2top = baseY - t2h; const t2r = canopyR * 0.6;
       plant += `<path d="M${t2x - 2 * s} ${baseY} Q${t2x - 2 * s} ${baseY - t2h * 0.5} ${t2x - 1 * s} ${t2top + 12 * s} L${t2x} ${t2top + 8 * s} L${t2x + 1 * s} ${t2top + 8 * s} L${t2x + 2 * s} ${t2top + 12 * s} Q${t2x + 2 * s} ${baseY - t2h * 0.5} ${t2x + 2 * s} ${baseY} Z" fill="${tc.barkLight}" opacity="0.8"/>`;
       plant += `<ellipse cx="${t2x}" cy="${t2top + 10 * s}" rx="${t2r}" ry="${t2r * 0.7}" fill="${cd}" opacity="0.7"/>`;
       plant += `<ellipse cx="${t2x}" cy="${t2top + 7 * s}" rx="${t2r * 0.7}" ry="${t2r * 0.5}" fill="${cm}" opacity="0.6"/>`;
     }
     if (i >= 12) {
-      const t3x = cx + 26 * s;
-      const t3h = treeH * 0.55;
-      const t3top = baseY - t3h;
-      const t3r = canopyR * 0.45;
+      const t3x = cx + 26 * s; const t3h = treeH * 0.55; const t3top = baseY - t3h; const t3r = canopyR * 0.45;
       plant += `<path d="M${t3x - 1.5 * s} ${baseY} Q${t3x - 1 * s} ${baseY - t3h * 0.5} ${t3x - 1 * s} ${t3top + 10 * s} L${t3x} ${t3top + 7 * s} L${t3x + 1 * s} ${t3top + 10 * s} Q${t3x + 1 * s} ${baseY - t3h * 0.5} ${t3x + 1.5 * s} ${baseY} Z" fill="${tc.bark}" opacity="0.6"/>`;
       plant += `<ellipse cx="${t3x}" cy="${t3top + 8 * s}" rx="${t3r}" ry="${t3r * 0.7}" fill="${cd}" opacity="0.55"/>`;
       plant += `<ellipse cx="${t3x}" cy="${t3top + 6 * s}" rx="${t3r * 0.7}" ry="${t3r * 0.5}" fill="${cm}" opacity="0.45"/>`;
     }
-
-    // Crown flower for flowering stages (7-9)
     if (i <= 9) {
       plant += `${[0,60,120,180,240,300].map(a =>
         `<ellipse cx="${cx}" cy="${canopyY - canopyR * 0.4}" rx="${2.5 * s}" ry="${6 * s}" fill="${tc.petal}" opacity="0.5" transform="rotate(${a} ${cx} ${canopyY - canopyR * 0.4 + 4 * s})"/>`
       ).join('')}`;
       plant += `<circle cx="${cx}" cy="${canopyY - canopyR * 0.4 + 4 * s}" r="${4 * s}" fill="${tc.glow}" opacity="0.6"/>`;
     }
-
-    // Sparkles
     const sparkleCount = 4 + Math.min(i - 7, 6);
     for (let j = 0; j < sparkleCount; j++) {
       const ax = cx - canopyR + (j * 17 + j * j * 3) % (canopyR * 2);
       const ay = canopyY - canopyR * 0.5 + (j * 11 + j * j * 5) % (canopyR * 1.2);
-      const goldish = j % 4 === 0;
-      plant += `<circle cx="${ax}" cy="${ay}" r="${(0.8 + (j % 3) * 0.4) * s}" fill="${goldish ? tc.glow : '#fff'}" opacity="${0.25 + j * 0.04}" class="sparkle" style="animation-delay:${j * 0.25}s"/>`;
+      plant += `<circle cx="${ax}" cy="${ay}" r="${(0.8 + (j % 3) * 0.4) * s}" fill="${j % 4 === 0 ? tc.glow : '#fff'}" opacity="${0.25 + j * 0.04}" class="sparkle" style="animation-delay:${j * 0.25}s"/>`;
     }
-
     plant += `</g>`;
   }
 
-  // ── Interactive slots for garden visitors ───────────────────
+  // ── Interactive slots ──────────────────────────────────────
   let slots = '';
   if (interactive) {
-    // Main plant slot (always)
     slots += `<g data-garden-slot="plant" data-slot-x="${cx}" data-slot-y="${gTop - 20 * s}" style="cursor:pointer"></g>`;
-    // Soil slot (always)
     slots += `<g data-garden-slot="soil" data-slot-x="${cx}" data-slot-y="${gTop + 14 * s}" style="cursor:pointer"></g>`;
-    // Creature slots — positions vary by level
-    if (i >= 1) {
-      slots += `<g data-garden-slot="firefly" data-slot-x="${cx + 25 * s}" data-slot-y="${gTop - 15 * s}"></g>`;
-    }
+    if (i >= 1) slots += `<g data-garden-slot="firefly" data-slot-x="${cx + 25 * s}" data-slot-y="${gTop - 15 * s}"></g>`;
     if (i >= 3) {
       slots += `<g data-garden-slot="butterfly1" data-slot-x="${cx - 22 * s}" data-slot-y="${gTop - 30 * s}"></g>`;
       slots += `<g data-garden-slot="flower1" data-slot-x="${cx + 30 * s}" data-slot-y="${gTop + 4 * s}"></g>`;
@@ -5890,8 +5903,9 @@ function buildEcosystemSVG(levelIdx, opts = {}) {
     }
   }
 
-  // ── Assemble layers ────────────────────────────────────────
+  // ── Assemble ───────────────────────────────────────────────
   return `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Growth level: ${stageName}" style="width:100%;max-width:${maxW};height:auto;display:block;margin:0 auto">
+    ${defs}
     ${sky}
     ${mountains}
     ${ground}
@@ -5901,6 +5915,7 @@ function buildEcosystemSVG(levelIdx, opts = {}) {
     ${slots}
   </svg>`;
 }
+
 
 // ============================================================
 //  GARDEN VIEW — The Memory Palace
