@@ -114,10 +114,10 @@
    RESET + BASE
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { height: 100%; overflow: hidden; touch-action: manipulation; }
+html { height: 100%; overflow: hidden; touch-action: manipulation; background: var(--bg); }
 body {
   font-family: 'Instrument Sans', sans-serif;
-  background: var(--bg);
+  background: transparent;
   color: var(--text-primary);
   height: 100%;
   overflow: hidden;
@@ -7190,7 +7190,7 @@ function applyTheme(themeKey) {
   r.setProperty('--pride-active',   t.pride ? '1' : '0');
   r.setProperty('--theme-accent',   t.accent);
   r.setProperty('--theme-accent-height', t.pride ? '3px' : '2px');
-  document.body.style.background = t.bg;
+  document.documentElement.style.background = t.bg;
   // Set theme class on body for per-theme CSS signatures
   document.body.className = document.body.className.replace(/\btheme-\w+/g, '');
   document.body.classList.add('theme-' + themeKey);
