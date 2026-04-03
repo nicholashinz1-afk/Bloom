@@ -10206,15 +10206,15 @@ function renderTodayTab() {
     html += '<div id="today-deferred"></div>';
     scroll.innerHTML = html;
     renderTodayTop();
-    requestAnimationFrame(() => { renderTodayTabRest(scroll, prefs, td, t, userWeek); });
+    requestAnimationFrame(() => { renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowMoodDay); });
     return;
   }
 
   // Subsequent renders: build everything inline (user is already on page)
-  renderTodayTabRest(scroll, prefs, td, t, userWeek, html);
+  renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowMoodDay, html);
 }
 
-function renderTodayTabRest(scroll, prefs, td, t, userWeek, aboveFoldHtml) {
+function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowMoodDay, aboveFoldHtml) {
   let html = '';
 
   // --- FOUNDATIONS: Water + Food (compact combined card) ---
