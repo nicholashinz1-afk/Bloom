@@ -13997,8 +13997,6 @@ function renderProgressTab() {
   scroll.innerHTML = html;
 
   // Living feedback: persistent breathing glow on level card at Flowering+ (idx >= 5)
-  const scaled = getScaledLevels();
-  const lvlIdx = scaled.findIndex(l => l.name === level.name);
   if (lvlIdx >= 5) {
     const levelCard = scroll.querySelector('.card');
     if (levelCard) levelCard.classList.add('living-breathe-persistent');
