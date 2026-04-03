@@ -52,6 +52,7 @@
   --bg:          #0d1610;
   --bg-mid:      #111a13;
   --bg-card:     #162019;
+  --bg-card-rgb: 22,32,25;
   --bg-elevated: #1c2a1f;
   --bg-overlay:  rgba(13,22,16,0.93);
 
@@ -835,11 +836,13 @@ body.theme-pride .ambient-wisp {
    CARDS
    ============================================================ */
 .card {
-  background: var(--bg-card);
+  background: rgba(var(--bg-card-rgb), 0.82);
   border-radius: var(--r-lg);
   padding: 16px;
   margin-bottom: 12px;
   border: 1px solid rgba(255,255,255,0.04);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 .card-title {
   font-family: 'Fraunces', serif;
@@ -3291,21 +3294,24 @@ body.theme-pastel .card {
 }
 
 /* Gradient card borders — all themes (background-clip trick preserves border-radius) */
+/* Cards are slightly translucent so ambient particles show through as soft light */
 .card {
   border: 1px solid transparent;
   background:
-    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    linear-gradient(rgba(var(--bg-card-rgb),0.82), rgba(var(--bg-card-rgb),0.82)) padding-box,
     linear-gradient(135deg,
       rgba(var(--sage-rgb),0.3) 0%,
       rgba(var(--sage-light-rgb),0.15) 50%,
       rgba(var(--sage-rgb),0.3) 100%
     ) border-box;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 
 /* Pride — rainbow gradient override */
 body.theme-pride .card {
   background:
-    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    linear-gradient(rgba(var(--bg-card-rgb),0.82), rgba(var(--bg-card-rgb),0.82)) padding-box,
     linear-gradient(135deg,
       rgba(224,64,80,0.35), rgba(232,112,48,0.35), rgba(232,200,64,0.35),
       rgba(80,184,104,0.35), rgba(64,128,208,0.35), rgba(144,80,200,0.35)
@@ -7170,6 +7176,7 @@ function applyTheme(themeKey) {
   r.setProperty('--bg',             t.bg);
   r.setProperty('--bg-mid',         t.bgMid);
   r.setProperty('--bg-card',        t.bgCard);
+  r.setProperty('--bg-card-rgb',   hexToRgb(t.bgCard));
   r.setProperty('--bg-elevated',    t.bgElevated);
   r.setProperty('--bg-overlay',     t.bgOverlay);
   r.setProperty('--sage',           t.primary);
