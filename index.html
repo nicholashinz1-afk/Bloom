@@ -4031,6 +4031,7 @@ const PRODUCTION_DOMAIN = 'bloomselfcare.app';
 // Fetches the live page, compares VERSION, and reloads if newer.
 // Runs on app open and when returning from background.
 async function checkForUpdate() {
+  if (window._updateReloading) return;
   try {
     // Bypass service worker cache with cache-busting query param
     const url = window.location.href.split('?')[0] + '?_v=' + Date.now();
@@ -4039,6 +4040,7 @@ async function checkForUpdate() {
     const html = await res.text();
     const match = html.match(/const VERSION\s*=\s*'([^']+)'/);
     if (match && match[1] !== VERSION) {
+      window._updateReloading = true;
       // Clear service worker caches before reloading
       if ('caches' in window) {
         const names = await caches.keys();
@@ -16007,6 +16009,8 @@ function markBackupDone() {
 }
 
 function silentBackupDownload() {
+  // Skip on Safari/iOS — unexpected .json download confuses users, especially in PWA mode
+  if (isSafariBrowser()) return;
   try {
     const data = gatherFullBackupData();
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
@@ -20253,20 +20257,15 @@ function checkSafariDataWarning() {
   const warned = load('bloom_safari_warned', false);
   if (warned) return;
 
+  save('bloom_safari_warned', true);
+
   setTimeout(() => {
     const isPWA = isSafariPWA();
     const msg = isPWA
-      ? 'Important: Safari on iOS may delete app data after 7 days of inactivity. Since you\'re using Bloom as an installed app, we strongly recommend saving a backup link now to protect your data.'
-      : 'Important: Safari may delete website data after 7 days of inactivity. We strongly recommend saving a backup link to protect your journal entries, mood history, and habits.';
+      ? 'Safari on iOS may delete app data after 7 days of inactivity. We recommend saving a backup link to protect your data.'
+      : 'Safari may delete website data after 7 days of inactivity. Save a backup link to protect your journal entries and habits.';
 
-    if (confirm(msg + '\n\nWant to save a backup link now?')) {
-      switchTab('settings');
-      setTimeout(() => {
-        toggleSettingsSection('data');
-        showBackupSheet();
-      }, 400);
-    }
-    save('bloom_safari_warned', true);
+    showBackupNudge(msg, true);
   }, 3000);
 }
 
@@ -20324,7 +20323,7 @@ function showBackupNudge(message, isFirst) {
 
   banner.querySelector('#backup-nudge-dismiss').addEventListener('click', () => {
     banner.remove();
-    save('bloom_backup_date', Date.now());
+    if (!isFirst) save('bloom_backup_date', Date.now());
   });
   banner.querySelector('#backup-nudge-go').addEventListener('click', () => {
     banner.remove();
