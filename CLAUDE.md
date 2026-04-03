@@ -253,23 +253,9 @@ Uses `applyLivingFeedback(el, type, duration)` helper. Respects `prefers-reduced
 - Purely decorative. No layout shifts. No interaction blocking. Screen readers unaffected.
 - Organic feel (light through leaves), not gamified.
 
-### Phase B: The Garden View (v4.0.0) -- IMPLEMENTED
+### Phase B: Evolving SVG Growth Illustrations (Future)
 
-Full-screen immersive garden view and evolving ecosystem SVG illustrations. Design spec: `docs/PHASE_B_GARDEN_VIEW.md`.
-
-**`buildEcosystemSVG(levelIdx, opts)`**: Replaces `buildFlowerSVG()`. Renders layered ecosystem scenes (sky, mountains, ground, water, flora, main plant) that accumulate and mature across all 14 growth stages. No pot. Options: `{ animated, fullscreen, interactive }`. Thumbnail mode for Progress tab, fullscreen mode for garden view. Theme colors drive all fills via extended `getThemeSVGColors()`.
-
-**`openGardenView()` / `closeGardenView()`**: Full-screen overlay (z-index 998) with the ecosystem SVG. Entry from tapping the thumbnail on Progress tab. Close via swipe-down, X button, or Escape. Plays gentle ascending chord on open.
-
-**`populateGardenVisitors(levelIdx)`**: Queries user data (journal, mood history, affirmations, small wins, breath sessions, AI insights, monthly reflections) and randomly selects 3-7 visitors based on level. Different every visit. Level-gated: Seed gets 1 firefly, Ecosystem gets 5-7 visitors including water features and sky elements. Hard day mode favors affirmations over stats.
-
-**Visitor types**: Butterflies (journal excerpts), fireflies (affirmations), birds (mood memories), base flowers (milestones), stones (small wins), mushrooms (breath stats), water features (AI insights, level 9+), clouds (lifetime stats, level 12+).
-
-**Tap interaction**: Tap a visitor for a warm tone + glow + bottom text card with backdrop-blur. Auto-dismisses after 4.5s. Main plant and soil are always tappable (show level info and days shown up).
-
-**Discovery**: "Tap your garden to step inside" hint on Progress tab (shown once). Garden auto-opens after What's New tour for users above Seed level. FEATURE_HIGHLIGHTS entry for users who haven't found the gesture.
-
-**Rules**: All animations respect `prefers-reduced-motion`. All use `transform` + `opacity`. Visitors have `role="button"` + `aria-label`. Garden overlay has `role="dialog"`. Focus trap with Escape to close. `aria-live="polite"` region for text cards.
+Not yet implemented. Vision: refactor `buildFlowerSVG()` into `buildEcosystemSVG(levelIdx)` where each growth stage adds environmental richness to the scene. Seed starts as dark soil with a single seed. By Ecosystem, it's a full landscape with trees, water, mountains, diverse wildlife. Each level composites SVG layers: ground, plants, creatures, atmosphere, light effects. Think nature illustration/Studio Ghibli, not cartoon. Elements never disappear as you level up, they mature. Theme colors drive all SVG fills via `getThemeSVGColors()`.
 
 ## Known Issues / Fixes Needed
 
