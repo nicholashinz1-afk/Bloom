@@ -6259,7 +6259,7 @@ function placeGardenVisitors(overlay, visitors) {
     const svgW = 400; const gTop = Math.round(600 * 0.62);
     rect.setAttribute('x', svgW / 2 - 60); rect.setAttribute('y', gTop - 100);
     rect.setAttribute('width', 120); rect.setAttribute('height', 100);
-    rect.setAttribute('fill', 'transparent'); rect.style.cursor = 'pointer';
+    rect.setAttribute('fill', 'rgba(0,0,0,0)'); rect.setAttribute('stroke', 'none'); rect.style.cursor = 'pointer';
     plantSlot.appendChild(rect);
     plantSlot.addEventListener('click', () => handleGardenTap(plantSlot));
     plantSlot.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleGardenTap(plantSlot); }});
@@ -6277,7 +6277,7 @@ function placeGardenVisitors(overlay, visitors) {
     const svgW = 400; const gTop = Math.round(600 * 0.62);
     rect.setAttribute('x', svgW / 2 - 50); rect.setAttribute('y', gTop);
     rect.setAttribute('width', 100); rect.setAttribute('height', 40);
-    rect.setAttribute('fill', 'transparent'); rect.style.cursor = 'pointer';
+    rect.setAttribute('fill', 'rgba(0,0,0,0)'); rect.setAttribute('stroke', 'none'); rect.style.cursor = 'pointer';
     soilSlot.appendChild(rect);
     soilSlot.addEventListener('click', () => handleGardenTap(soilSlot));
     soilSlot.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleGardenTap(soilSlot); }});
@@ -6338,8 +6338,8 @@ function handleGardenTap(el) {
   card.addEventListener('click', dismissGardenCard);
   region.appendChild(card);
 
-  // Auto-dismiss after 4.5s
-  _gardenCardTimer = setTimeout(dismissGardenCard, 4500);
+  // Auto-dismiss after 8s (long enough to read journal excerpts)
+  _gardenCardTimer = setTimeout(dismissGardenCard, 8000);
 }
 
 function dismissGardenCard() {
