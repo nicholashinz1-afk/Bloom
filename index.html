@@ -6029,7 +6029,7 @@ function openGardenView() {
   document.body.appendChild(overlay);
   requestAnimationFrame(() => { requestAnimationFrame(() => overlay.classList.add('garden-visible')); });
   playSound('garden_open');
-  setTimeout(() => populateGardenVisitors(lvlIdx, gentle), 400);
+  setTimeout(() => { try { populateGardenVisitors(lvlIdx, gentle); } catch(e) { console.error('Garden visitors error:', e); } }, 400);
 
   // Swipe down to close
   let touchStartY = 0;
@@ -6151,6 +6151,12 @@ function populateGardenVisitors(lvlIdx, gentle) {
       const g = ['firefly', 'flower'];
       return (g.includes(a.type) ? 0 : 1) - (g.includes(b.type) ? 0 : 1);
     });
+  }
+
+  // Guaranteed fallback — always at least one visitor
+  if (pool.length === 0) {
+    const fallbackAffs = ['You are enough.', 'You showed up. That matters.', 'Gentle is also a form of strong.', 'Being here counts.', 'Growth happens quietly.'];
+    pool.push({ type: 'firefly', emoji: '✨', content: fallbackAffs[Math.floor(Math.random() * fallbackAffs.length)] });
   }
 
   const maxVisitors = Math.min(pool.length, 3 + Math.min(Math.floor(lvlIdx / 2), 4));
