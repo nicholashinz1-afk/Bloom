@@ -5576,6 +5576,2137 @@ function getThemeSVGColors() {
   };
 }
 
+// ── Garden Stage Illustrations (Figma designs) ──────────────
+// Garden stage SVG illustrations (generated from Figma designs)
+const GARDEN_STAGE_SVGS = [
+  // Stage 0
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        
+        <linearGradient id="s0-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#070b19" />
+          <stop offset="35%" stop-color="#0e152b" />
+          <stop offset="70%" stop-color="#161c33" />
+          <stop offset="100%" stop-color="#1e253c" />
+        </linearGradient>
+
+        <radialGradient id="s0-moonGlow" cx="80%" cy="20%" r="50%">
+          <stop offset="0%" stop-color="#4a5578" stop-opacity="0.4" />
+          <stop offset="50%" stop-color="#252b48" stop-opacity="0.1" />
+          <stop offset="100%" stop-color="#161c33" stop-opacity="0" />
+        </radialGradient>
+
+        <radialGradient id="s0-starG" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#e2e8f0" stop-opacity="0.6" />
+          <stop offset="100%" stop-color="#e2e8f0" stop-opacity="0" />
+        </radialGradient>
+
+        <linearGradient id="s0-soilA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2e2528" />
+          <stop offset="50%" stop-color="#221b1e" />
+          <stop offset="100%" stop-color="#181315" />
+        </linearGradient>
+        <linearGradient id="s0-soilB" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1e1719" />
+          <stop offset="100%" stop-color="#100c0d" />
+        </linearGradient>
+
+        <radialGradient id="s0-seedOuter" cx="45%" cy="35%" r="60%">
+          <stop offset="0%" stop-color="#7a5a40" />
+          <stop offset="50%" stop-color="#4a3220" />
+          <stop offset="100%" stop-color="#2a1810" />
+        </radialGradient>
+
+        <radialGradient id="s0-seedInnerGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#88e0a0" stop-opacity="1" />
+          <stop offset="40%" stop-color="#50a068" stop-opacity="0.6" />
+          <stop offset="100%" stop-color="#285034" stop-opacity="0" />
+        </radialGradient>
+
+        <radialGradient id="s0-magicGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#60d090" stop-opacity="0.3" />
+          <stop offset="50%" stop-color="#40a068" stop-opacity="0.1" />
+          <stop offset="100%" stop-color="#40a068" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <g id="bg-static">
+        
+        <rect width={w} height={h} fill="url(#s0-sky)" />
+        <rect width={w} height={h} fill="url(#s0-moonGlow)" />
+
+        <path d="M 0 \${115*s} Q \${15*s} \${108*s} \${35*s} \${112*s} T \${75*s} \${105*s} T \${120*s} \${110*s} T \${165*s} \${102*s} T \${200*s} \${108*s} L \${200*s} \${140*s} L 0 \${140*s} Z" fill="#121626" opacity="0.8" />
+        <path d="M 0 \${125*s} Q \${40*s} \${118*s} \${90*s} \${125*s} T \${180*s} \${118*s} T \${200*s} \${122*s} L \${200*s} \${150*s} L 0 \${150*s} Z" fill="#0e111c" opacity="0.9" />
+
+        <path d="M \${160*s} \${0*s} L \${60*s} \${135*s} L \${120*s} \${135*s} Z" fill="#88a0d0" opacity="0.04" />
+        <path d="M \${180*s} \${0*s} L \${100*s} \${135*s} L \${170*s} \${135*s} Z" fill="#88a0d0" opacity="0.03" />
+
+        <path d="M 0 \${135*s} Q \${50*s} \${130*s} \${100*s} \${134*s} T \${200*s} \${132*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s0-soilA)" />
+        <path d="M 0 \${165*s} Q \${80*s} \${158*s} \${200*s} \${168*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s0-soilB)" />
+
+        <g stroke="#3a2a2e" stroke-width={0.8*s} fill="none" stroke-linecap="round" opacity="0.6">
+          <path d="M \${20*s} \${150*s} Q \${25*s} \${160*s} \${35*s} \${165*s} T \${45*s} \${180*s}" />
+          <path d="M \${180*s} \${155*s} Q \${175*s} \${165*s} \${165*s} \${170*s} T \${155*s} \${185*s}" />
+          <path d="M \${40*s} \${200*s} Q \${50*s} \${210*s} \${65*s} \${205*s} T \${85*s} \${220*s}" />
+          <path d="M \${160*s} \${210*s} Q \${150*s} \${220*s} \${135*s} \${215*s} T \${115*s} \${230*s}" />
+        </g>
+        <g stroke="#504045" stroke-width={0.4*s} fill="none" stroke-linecap="round" opacity="0.4">
+          <path d="M \${28*s} \${163*s} Q \${32*s} \${170*s} \${28*s} \${175*s}" />
+          <path d="M \${170*s} \${167*s} Q \${166*s} \${172*s} \${172*s} \${178*s}" />
+        </g>
+
+        <path d="M \${145*s} \${140*s} C \${146*s} \${135*s} \${148*s} \${133*s} \${150*s} \${134*s}" stroke="#4a6860" stroke-width={0.8*s} fill="none" stroke-linecap="round" />
+        <path d="M \${146*s} \${134*s} Q \${150*s} \${130*s} \${154*s} \${135*s} Q \${150*s} \${133*s} \${146*s} \${134*s} Z" fill="#88e0c0" opacity="0.8" />
+        <circle cx={150*s} cy={133*s} r={4*s} fill="#88e0c0" opacity="0.2" />
+
+        <path d="M \${45*s} \${142*s} C \${44*s} \${138*s} \${42*s} \${136*s} \${40*s} \${137*s}" stroke="#4a6860" stroke-width={0.6*s} fill="none" stroke-linecap="round" />
+        <path d="M \${37*s} \${138*s} Q \${40*s} \${135*s} \${43*s} \${138*s} Q \${40*s} \${137*s} \${37*s} \${138*s} Z" fill="#88e0c0" opacity="0.7" />
+        <circle cx={40*s} cy={137*s} r={3*s} fill="#88e0c0" opacity="0.2" />
+
+        <ellipse cx={60*s} cy={145*s} rx={6*s} ry={3*s} fill="#241e20" transform="rotate(10 \${60*s} \${145*s})" />
+        <ellipse cx={58*s} cy={144*s} rx={3*s} ry={1.5*s} fill="#3a3034" opacity="0.6" transform="rotate(10 \${58*s} \${144*s})" />
+        
+        <ellipse cx={130*s} cy={165*s} rx={8*s} ry={4*s} fill="#181315" transform="rotate(-15 \${130*s} \${165*s})" />
+        <ellipse cx={128*s} cy={163*s} rx={4*s} ry={2*s} fill="#2a2225" opacity="0.5" transform="rotate(-15 \${128*s} \${163*s})" />
+      </g>
+
+      <g id="glow">
+
+        <circle cx={100*s} cy={180*s} r={35*s} fill="url(#s0-magicGlow)" />
+        <circle cx={100*s} cy={180*s} r={18*s} fill="url(#s0-magicGlow)" opacity="0.6" />
+      </g>
+
+      <g id="seed" style={{ transformOrigin: \`\${100*s}px \${180*s}px\` }}>
+        
+        <path d="M \${100*s} \${168*s} 
+                   C \${106*s} \${168*s} \${112*s} \${174*s} \${114*s} \${182*s} 
+                   C \${116*s} \${190*s} \${108*s} \${198*s} \${100*s} \${200*s} 
+                   C \${92*s} \${198*s} \${84*s} \${190*s} \${86*s} \${182*s} 
+                   C \${88*s} \${174*s} \${94*s} \${168*s} \${100*s} \${168*s} Z" 
+              fill="url(#s0-seedOuter)" />
+
+        <path d="M \${95*s} \${172*s} C \${98*s} \${170*s} \${102*s} \${172*s} \${105*s} \${170*s}" stroke="#3a2214" stroke-width={0.6*s} fill="none" opacity="0.5" stroke-linecap="round" />
+        <path d="M \${92*s} \${178*s} C \${96*s} \${175*s} \${104*s} \${178*s} \${108*s} \${175*s}" stroke="#3a2214" stroke-width={0.8*s} fill="none" opacity="0.4" stroke-linecap="round" />
+        <path d="M \${90*s} \${186*s} C \${95*s} \${182*s} \${105*s} \${186*s} \${110*s} \${182*s}" stroke="#2a140a" stroke-width={0.8*s} fill="none" opacity="0.4" stroke-linecap="round" />
+        <path d="M \${94*s} \${194*s} C \${98*s} \${191*s} \${102*s} \${194*s} \${106*s} \${191*s}" stroke="#2a140a" stroke-width={0.6*s} fill="none" opacity="0.4" stroke-linecap="round" />
+
+        <path d="M \${100*s} \${174*s} 
+                   C \${102*s} \${180*s} \${98*s} \${188*s} \${100*s} \${194*s} 
+                   C \${101*s} \${188*s} \${104*s} \${180*s} \${100*s} \${174*s} Z" 
+              fill="url(#s0-seedInnerGlow)" opacity="0.9" />
+        <path d="M \${100*s} \${174*s} C \${101.5*s} \${180*s} \${98.5*s} \${188*s} \${100*s} \${194*s}" 
+              stroke="#aaffcc" stroke-width={0.6*s} fill="none" opacity="0.8" />
+
+        <path d="M \${90*s} \${182*s} C \${88*s} \${176*s} \${92*s} \${170*s} \${98*s} \${169*s}" 
+              stroke="#a07a58" stroke-width={1*s} fill="none" stroke-linecap="round" opacity="0.4" />
+      </g>
+          <!-- Stars -->
+        <circle cx="25" cy="20" r="1" fill="url(#s0-starG)" opacity="0.8"/>
+        <circle cx="25" cy="20" r="0.3" fill="#e2e8f0" opacity="0.6400000000000001"/>
+        <circle cx="75" cy="15" r="1.5" fill="url(#s0-starG)" opacity="0.9"/>
+        <circle cx="75" cy="15" r="0.44999999999999996" fill="#e2e8f0" opacity="0.7200000000000001"/>
+        <circle cx="165" cy="25" r="1.2" fill="url(#s0-starG)" opacity="0.7"/>
+        <circle cx="165" cy="25" r="0.36" fill="#e2e8f0" opacity="0.5599999999999999"/>
+        <circle cx="130" cy="40" r="0.8" fill="url(#s0-starG)" opacity="0.5"/>
+        <circle cx="130" cy="40" r="0.24" fill="#e2e8f0" opacity="0.4"/>
+        <circle cx="95" cy="50" r="0.7" fill="url(#s0-starG)" opacity="0.4"/>
+        <circle cx="95" cy="50" r="0.21" fill="#e2e8f0" opacity="0.32000000000000006"/>
+        <circle cx="150" cy="60" r="0.6" fill="url(#s0-starG)" opacity="0.3"/>
+        <circle cx="150" cy="60" r="0.18" fill="#e2e8f0" opacity="0.24"/>
+        <circle cx="40" cy="55" r="0.9" fill="url(#s0-starG)" opacity="0.6"/>
+        <circle cx="40" cy="55" r="0.27" fill="#e2e8f0" opacity="0.48"/>
+        <circle cx="180" cy="45" r="1" fill="url(#s0-starG)" opacity="0.5"/>
+        <circle cx="180" cy="45" r="0.3" fill="#e2e8f0" opacity="0.4"/>
+        <circle cx="110" cy="20" r="1.2" fill="url(#s0-starG)" opacity="0.8"/>
+        <circle cx="110" cy="20" r="0.36" fill="#e2e8f0" opacity="0.6400000000000001"/>
+        <circle cx="10" cy="35" r="0.8" fill="url(#s0-starG)" opacity="0.4"/>
+        <circle cx="10" cy="35" r="0.24" fill="#e2e8f0" opacity="0.32000000000000006"/>
+        <circle cx="60" cy="30" r="0.7" fill="url(#s0-starG)" opacity="0.5"/>
+        <circle cx="60" cy="30" r="0.21" fill="#e2e8f0" opacity="0.4"/>
+        <circle cx="190" cy="15" r="0.9" fill="url(#s0-starG)" opacity="0.6"/>
+        <circle cx="190" cy="15" r="0.27" fill="#e2e8f0" opacity="0.48"/>
+          <!-- Motes -->
+        <circle cx="85" cy="150" r="1.2" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="115" cy="145" r="0.8" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="70" cy="160" r="1" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+        <circle cx="130" cy="155" r="1.4" fill="#c8e0a8" opacity="0.7" class="sparkle"/>
+        <circle cx="90" cy="135" r="0.9" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="110" cy="165" r="1.1" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+    </svg>`,
+
+  // Stage 1
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        
+        <linearGradient id="s1-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0a1020" />
+          <stop offset="40%" stop-color="#141a2e" />
+          <stop offset="70%" stop-color="#1c2842" />
+          <stop offset="100%" stop-color="#2c3a55" />
+        </linearGradient>
+
+        <radialGradient id="s1-dawnGlow" cx="60%" cy="85%" r="60%">
+          <stop offset="0%" stop-color="#3b2c45" stop-opacity="0.4" />
+          <stop offset="50%" stop-color="#242845" stop-opacity="0.1" />
+          <stop offset="100%" stop-color="#1c2842" stop-opacity="0" />
+        </radialGradient>
+
+        <radialGradient id="s1-starG" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#c0d0e0" stop-opacity="0.4" />
+          <stop offset="100%" stop-color="#c0d0e0" stop-opacity="0" />
+        </radialGradient>
+
+        <linearGradient id="s1-soilA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2e3828" />
+          <stop offset="50%" stop-color="#22281e" />
+          <stop offset="100%" stop-color="#161814" />
+        </linearGradient>
+        <linearGradient id="s1-soilB" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1a2016" />
+          <stop offset="100%" stop-color="#0e120c" />
+        </linearGradient>
+
+        <radialGradient id="s1-seedOuter" cx="45%" cy="35%" r="60%">
+          <stop offset="0%" stop-color="#6a5440" />
+          <stop offset="50%" stop-color="#453225" />
+          <stop offset="100%" stop-color="#281a14" />
+        </radialGradient>
+
+        <linearGradient id="s1-stem" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#45603a" />
+          <stop offset="50%" stop-color="#609055" />
+          <stop offset="100%" stop-color="#80bc75" />
+        </linearGradient>
+
+        <radialGradient id="s1-leafL" cx="20%" cy="20%" r="90%">
+          <stop offset="0%" stop-color="#a0df80" />
+          <stop offset="60%" stop-color="#60a545" />
+          <stop offset="100%" stop-color="#356525" />
+        </radialGradient>
+
+        <radialGradient id="s1-leafR" cx="80%" cy="20%" r="90%">
+          <stop offset="0%" stop-color="#a8e588" />
+          <stop offset="60%" stop-color="#6aa84c" />
+          <stop offset="100%" stop-color="#3c6a28" />
+        </radialGradient>
+      </defs>
+
+      <g id="bg-static">
+        
+        <rect width={w} height={h} fill="url(#s1-sky)" />
+        <rect width={w} height={h} fill="url(#s1-dawnGlow)" />
+
+        <path d="M 0 \${120*s} Q \${25*s} \${112*s} \${50*s} \${120*s} T \${110*s} \${116*s} T \${160*s} \${110*s} T \${200*s} \${118*s} L \${200*s} \${145*s} L 0 \${145*s} Z" fill="#141c28" opacity="0.85" />
+        <path d="M 0 \${128*s} Q \${45*s} \${122*s} \${95*s} \${130*s} T \${185*s} \${125*s} T \${200*s} \${130*s} L \${200*s} \${155*s} L 0 \${155*s} Z" fill="#18222c" opacity="0.9" />
+
+        <path d="M 0 \${138*s} Q \${50*s} \${134*s} \${100*s} \${140*s} T \${200*s} \${136*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s1-soilA)" />
+        <path d="M 0 \${160*s} Q \${75*s} \${155*s} \${200*s} \${165*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s1-soilB)" />
+
+        <circle cx={48*s} cy={134*s} r={1.0*s} fill="#6a95a8" opacity="0.4" />
+        <circle cx={47.7*s} cy={133.7*s} r={0.4*s} fill="#88b5c8" opacity="0.5" />
+        <circle cx={152*s} cy={135*s} r={0.8*s} fill="#6a95a8" opacity="0.3" />
+
+        <ellipse cx={55*s} cy={148*s} rx={4.5*s} ry={2.5*s} fill="#24282a" transform="rotate(8 \${55*s} \${148*s})" />
+        <ellipse cx={54*s} cy={147*s} rx={2*s} ry={1*s} fill="#353b3e" opacity="0.5" transform="rotate(8 \${54*s} \${147*s})" />
+        <ellipse cx={145*s} cy={155*s} rx={6*s} ry={3*s} fill="#1e2224" transform="rotate(-12 \${145*s} \${155*s})" />
+        <ellipse cx={144*s} cy={154*s} rx={3*s} ry={1.5*s} fill="#2c3234" opacity="0.4" transform="rotate(-12 \${144*s} \${154*s})" />
+
+      </g>
+
+      <g id="seed" style={{ transformOrigin: \`\${100*s}px \${168*s}px\` }}>
+        
+        <path d="M \${100*s} \${174*s} 
+                   C \${96*s} \${176*s} \${88*s} \${172*s} \${85*s} \${165*s} 
+                   C \${82*s} \${158*s} \${90*s} \${154*s} \${96*s} \${156*s} 
+                   C \${97*s} \${158*s} \${96*s} \${162*s} \${99*s} \${165*s} 
+                   C \${97*s} \${168*s} \${96*s} \${172*s} \${100*s} \${174*s} Z" 
+              fill="url(#s1-seedOuter)" />
+        
+        <path d="M \${100*s} \${174*s} 
+                   C \${104*s} \${176*s} \${112*s} \${172*s} \${115*s} \${165*s} 
+                   C \${118*s} \${158*s} \${110*s} \${154*s} \${104*s} \${156*s} 
+                   C \${103*s} \${158*s} \${104*s} \${162*s} \${101*s} \${165*s} 
+                   C \${103*s} \${168*s} \${104*s} \${172*s} \${100*s} \${174*s} Z" 
+              fill="url(#s1-seedOuter)" />
+
+        <path d="M \${100*s} \${174*s} C \${96*s} \${168*s} \${99*s} \${164*s} \${96*s} \${158*s} C \${100*s} \${162*s} \${100*s} \${168*s} \${100*s} \${174*s} Z" fill="#160e0a" opacity="0.6" />
+        <path d="M \${100*s} \${174*s} C \${104*s} \${168*s} \${101*s} \${164*s} \${104*s} \${158*s} C \${100*s} \${162*s} \${100*s} \${168*s} \${100*s} \${174*s} Z" fill="#160e0a" opacity="0.6" />
+
+        <path d="M \${90*s} \${160*s} C \${93*s} \${158*s} \${95*s} \${160*s} \${98*s} \${159*s}" stroke="#352215" stroke-width={0.5*s} fill="none" opacity="0.5" />
+        <path d="M \${88*s} \${165*s} C \${92*s} \${163*s} \${94*s} \${166*s} \${97*s} \${164*s}" stroke="#352215" stroke-width={0.6*s} fill="none" opacity="0.4" />
+        <path d="M \${110*s} \${160*s} C \${107*s} \${158*s} \${105*s} \${160*s} \${102*s} \${159*s}" stroke="#352215" stroke-width={0.5*s} fill="none" opacity="0.5" />
+        <path d="M \${112*s} \${165*s} C \${108*s} \${163*s} \${106*s} \${166*s} \${103*s} \${164*s}" stroke="#352215" stroke-width={0.6*s} fill="none" opacity="0.4" />
+
+        <path d="M \${97*s} \${174*s} C \${93*s} \${178*s} \${90*s} \${185*s} \${85*s} \${192*s}" stroke="#352518" stroke-width={0.8*s} fill="none" stroke-linecap="round" opacity="0.4" />
+        <path d="M \${103*s} \${174*s} C \${107*s} \${178*s} \${110*s} \${185*s} \${115*s} \${192*s}" stroke="#352518" stroke-width={0.8*s} fill="none" stroke-linecap="round" opacity="0.4" />
+      </g>
+
+      <g id="stem-1" style={{ transformOrigin: \`\${100*s}px \${165*s}px\` }}>
+        <path d="M \${100*s} \${166*s} 
+                   C \${98*s} \${152*s} \${104*s} \${138*s} \${100*s} \${120*s}" 
+              stroke="url(#s1-stem)" stroke-width={2.4*s} fill="none" stroke-linecap="round" />
+        <path d="M \${99.3*s} \${165*s} 
+                   C \${97*s} \${152*s} \${103*s} \${138*s} \${99.2*s} \${120*s}" 
+              stroke="#a0df80" stroke-width={0.5*s} fill="none" stroke-linecap="round" opacity="0.4" />
+      </g>
+
+      <g id="leaves-1" style={{ transformOrigin: \`\${100*s}px \${122*s}px\` }}>
+        
+        <path d="M \${100*s} \${122*s} 
+                   C \${94*s} \${120*s} \${84*s} \${112*s} \${82*s} \${104*s} 
+                   C \${80*s} \${96*s} \${84*s} \${92*s} \${90*s} \${94*s} 
+                   C \${96*s} \${96*s} \${98*s} \${108*s} \${100*s} \${122*s} Z" 
+              fill="url(#s1-leafL)" />
+        <path d="M \${100*s} \${122*s} C \${94*s} \${116*s} \${88*s} \${106*s} \${82*s} \${104*s}" 
+              stroke="#3a6a28" stroke-width={0.6*s} fill="none" opacity="0.6" stroke-linecap="round" />
+        <path d="M \${82*s} \${104*s} C \${84*s} \${108*s} \${86*s} \${112*s} \${88*s} \${114*s}" 
+              stroke="#ccffa8" stroke-width={0.4*s} fill="none" opacity="0.3" stroke-linecap="round" />
+
+        <path d="M \${100*s} \${122*s} 
+                   C \${106*s} \${120*s} \${116*s} \${112*s} \${118*s} \${104*s} 
+                   C \${120*s} \${96*s} \${116*s} \${92*s} \${110*s} \${94*s} 
+                   C \${104*s} \${96*s} \${102*s} \${108*s} \${100*s} \${122*s} Z" 
+              fill="url(#s1-leafR)" />
+        <path d="M \${100*s} \${122*s} C \${106*s} \${116*s} \${112*s} \${106*s} \${118*s} \${104*s}" 
+              stroke="#3a6a28" stroke-width={0.6*s} fill="none" opacity="0.6" stroke-linecap="round" />
+        <path d="M \${118*s} \${104*s} C \${116*s} \${108*s} \${114*s} \${112*s} \${112*s} \${114*s}" 
+              stroke="#ccffa8" stroke-width={0.4*s} fill="none" opacity="0.25" stroke-linecap="round" />
+      </g>
+          <!-- Stars -->
+        <circle cx="30" cy="20" r="0.8" fill="url(#s1-starG)" opacity="0.4"/>
+        <circle cx="30" cy="20" r="0.24" fill="#e2e8f0" opacity="0.32000000000000006"/>
+        <circle cx="75" cy="15" r="1.2" fill="url(#s1-starG)" opacity="0.5"/>
+        <circle cx="75" cy="15" r="0.36" fill="#e2e8f0" opacity="0.4"/>
+        <circle cx="165" cy="25" r="1" fill="url(#s1-starG)" opacity="0.4"/>
+        <circle cx="165" cy="25" r="0.3" fill="#e2e8f0" opacity="0.32000000000000006"/>
+        <circle cx="130" cy="40" r="0.6" fill="url(#s1-starG)" opacity="0.3"/>
+        <circle cx="130" cy="40" r="0.18" fill="#e2e8f0" opacity="0.24"/>
+        <circle cx="95" cy="50" r="0.5" fill="url(#s1-starG)" opacity="0.2"/>
+        <circle cx="95" cy="50" r="0.15" fill="#e2e8f0" opacity="0.16000000000000003"/>
+        <circle cx="40" cy="55" r="0.7" fill="url(#s1-starG)" opacity="0.3"/>
+        <circle cx="40" cy="55" r="0.21" fill="#e2e8f0" opacity="0.24"/>
+        <circle cx="180" cy="45" r="0.8" fill="url(#s1-starG)" opacity="0.4"/>
+        <circle cx="180" cy="45" r="0.24" fill="#e2e8f0" opacity="0.32000000000000006"/>
+        <circle cx="110" cy="20" r="1" fill="url(#s1-starG)" opacity="0.5"/>
+        <circle cx="110" cy="20" r="0.3" fill="#e2e8f0" opacity="0.4"/>
+        <circle cx="10" cy="35" r="0.6" fill="url(#s1-starG)" opacity="0.2"/>
+        <circle cx="10" cy="35" r="0.18" fill="#e2e8f0" opacity="0.16000000000000003"/>
+          <!-- Motes -->
+        <circle cx="50" cy="100" r="1" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+        <circle cx="130" cy="80" r="1.2" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="80" cy="110" r="0.8" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="160" cy="120" r="1.1" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="30" cy="130" r="0.9" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+          <!-- Grass -->
+        <path d="M15 138 Q14 135 13 133" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M45 136 Q46 132.4 47 130" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M85 138 Q84.5 135.6 84 134" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M115 137 Q116 134 117 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M155 138 Q153.5 134.4 152 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M185 136 Q185.5 133 186 131" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+    </svg>`,
+
+  // Stage 2
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        
+        <linearGradient id="s2-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0d1428" />
+          <stop offset="35%" stop-color="#1a2035" />
+          <stop offset="65%" stop-color="#282c42" />
+          <stop offset="100%" stop-color="#35304a" />
+        </linearGradient>
+
+        <radialGradient id="s2-horizonGlow" cx="65%" cy="85%" r="60%">
+          <stop offset="0%" stop-color="#5e4555" stop-opacity="0.45" />
+          <stop offset="40%" stop-color="#35304a" stop-opacity="0.1" />
+          <stop offset="100%" stop-color="#282c42" stop-opacity="0" />
+        </radialGradient>
+
+        <radialGradient id="s2-starG" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#d0d0d0" stop-opacity="0.4" />
+          <stop offset="100%" stop-color="#d0d0d0" stop-opacity="0" />
+        </radialGradient>
+
+        <radialGradient id="s2-mist" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#68788a" stop-opacity="0.15" />
+          <stop offset="100%" stop-color="#68788a" stop-opacity="0" />
+        </radialGradient>
+
+        <linearGradient id="s2-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#243828" />
+          <stop offset="100%" stop-color="#18241c" />
+        </linearGradient>
+        <linearGradient id="s2-soilA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1e1814" />
+          <stop offset="100%" stop-color="#100b08" />
+        </linearGradient>
+
+        <radialGradient id="s2-seedOuter" cx="45%" cy="35%" r="60%">
+          <stop offset="0%" stop-color="#554232" />
+          <stop offset="50%" stop-color="#38281e" />
+          <stop offset="100%" stop-color="#1e120e" />
+        </radialGradient>
+
+        <linearGradient id="s2-stem" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#3a5c2e" />
+          <stop offset="50%" stop-color="#528842" />
+          <stop offset="100%" stop-color="#75b25e" />
+        </linearGradient>
+
+        <radialGradient id="s2-leafL" cx="20%" cy="20%" r="90%">
+          <stop offset="0%" stop-color="#9ad572" />
+          <stop offset="60%" stop-color="#589a38" />
+          <stop offset="100%" stop-color="#2d5e1a" />
+        </radialGradient>
+
+        <radialGradient id="s2-leafR" cx="80%" cy="20%" r="90%">
+          <stop offset="0%" stop-color="#a4db7a" />
+          <stop offset="60%" stop-color="#62a23e" />
+          <stop offset="100%" stop-color="#32621e" />
+        </radialGradient>
+
+        <radialGradient id="s2-leafUpperL" cx="20%" cy="30%" r="80%">
+          <stop offset="0%" stop-color="#aeea88" />
+          <stop offset="100%" stop-color="#4a852c" />
+        </radialGradient>
+        
+        <radialGradient id="s2-leafUpperR" cx="80%" cy="30%" r="80%">
+          <stop offset="0%" stop-color="#b2ed8e" />
+          <stop offset="100%" stop-color="#528c30" />
+        </radialGradient>
+      </defs>
+
+      <g id="bg-static">
+        
+        <rect width={w} height={h} fill="url(#s2-sky)" />
+        <rect width={w} height={h} fill="url(#s2-horizonGlow)" />
+
+        <g id="clouds" opacity="0.6">
+          <path d="M \${140*s} \${35*s} Q \${150*s} \${25*s} \${165*s} \${30*s} T \${190*s} \${28*s} L \${190*s} \${40*s} L \${140*s} \${40*s} Z" fill="#4a4055" opacity="0.4" />
+          <path d="M \${20*s} \${45*s} Q \${35*s} \${35*s} \${55*s} \${42*s} T \${80*s} \${38*s} L \${80*s} \${50*s} L \${20*s} \${50*s} Z" fill="#403850" opacity="0.3" />
+        </g>
+
+        <path d="M 0 \${110*s} Q \${25*s} \${102*s} \${60*s} \${112*s} T \${130*s} \${106*s} T \${180*s} \${112*s} T \${200*s} \${108*s} L \${200*s} \${140*s} L 0 \${140*s} Z" fill="#1c2432" opacity="0.8" />
+        <path d="M 0 \${120*s} Q \${45*s} \${114*s} \${100*s} \${122*s} T \${200*s} \${120*s} L \${200*s} \${150*s} L 0 \${150*s} Z" fill="#222d38" opacity="0.9" />
+
+        <path d="M 0 \${138*s} Q \${60*s} \${132*s} \${120*s} \${140*s} T \${200*s} \${136*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s2-ground)" />
+        <path d="M 0 \${165*s} Q \${80*s} \${158*s} \${200*s} \${168*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s2-soilA)" />
+
+        <ellipse cx={50*s} cy={135*s} rx={45*s} ry={8*s} fill="url(#s2-mist)" />
+        <ellipse cx={150*s} cy={138*s} rx={55*s} ry={10*s} fill="url(#s2-mist)" />
+
+        <circle cx={42*s} cy={135*s} r={1.2*s} fill="#7a9eb5" opacity="0.5" />
+        <circle cx={41.6*s} cy={134.6*s} r={0.5*s} fill="#a4c6d6" opacity="0.6" />
+        <circle cx={145*s} cy={138*s} r={1.0*s} fill="#7a9eb5" opacity="0.4" />
+
+        <ellipse cx={50*s} cy={172*s} rx={4*s} ry={2*s} fill="#242220" />
+        <ellipse cx={160*s} cy={175*s} rx={5.5*s} ry={3*s} fill="#1a1816" transform="rotate(-10 \${160*s} \${175*s})" />
+      </g>
+
+      <g id="seed" style={{ transformOrigin: \`\${100*s}px \${170*s}px\` }}>
+        <path d="M \${100*s} \${175*s} C \${95*s} \${178*s} \${85*s} \${172*s} \${82*s} \${165*s} C \${79*s} \${158*s} \${88*s} \${154*s} \${95*s} \${156*s} C \${96*s} \${158*s} \${95*s} \${162*s} \${98*s} \${165*s} C \${96*s} \${168*s} \${95*s} \${173*s} \${100*s} \${175*s} Z" fill="url(#s2-seedOuter)" opacity="0.8" />
+        <path d="M \${100*s} \${175*s} C \${105*s} \${178*s} \${115*s} \${172*s} \${118*s} \${165*s} C \${121*s} \${158*s} \${112*s} \${154*s} \${105*s} \${156*s} C \${104*s} \${158*s} \${105*s} \${162*s} \${102*s} \${165*s} C \${104*s} \${168*s} \${105*s} \${173*s} \${100*s} \${175*s} Z" fill="url(#s2-seedOuter)" opacity="0.8" />
+        <path d="M \${100*s} \${175*s} C \${95*s} \${168*s} \${98*s} \${164*s} \${95*s} \${158*s} C \${100*s} \${162*s} \${100*s} \${168*s} \${100*s} \${175*s} Z" fill="#0d0a08" opacity="0.6" />
+        <path d="M \${100*s} \${175*s} C \${105*s} \${168*s} \${102*s} \${164*s} \${105*s} \${158*s} C \${100*s} \${162*s} \${100*s} \${168*s} \${100*s} \${175*s} Z" fill="#0d0a08" opacity="0.6" />
+      </g>
+
+      <g id="stem-1" style={{ transformOrigin: \`\${100*s}px \${168*s}px\` }}>
+        <path d="M \${100*s} \${168*s} 
+                   C \${98*s} \${145*s} \${104*s} \${125*s} \${100*s} \${98*s} 
+                   Q \${98*s} \${85*s} \${100*s} \${70*s}" 
+              stroke="url(#s2-stem)" stroke-width={2.8*s} fill="none" stroke-linecap="round" />
+        <path d="M \${99.2*s} \${167*s} 
+                   C \${97*s} \${145*s} \${103*s} \${125*s} \${99.2*s} \${98*s} 
+                   Q \${97.2*s} \${85*s} \${99.2*s} \${70*s}" 
+              stroke="#aeea88" stroke-width={0.6*s} fill="none" stroke-linecap="round" opacity="0.3" />
+      </g>
+
+      <g id="leaves-1" style={{ transformOrigin: \`\${100*s}px \${135*s}px\` }}>
+        
+        <path d="M \${99*s} \${135*s} 
+                   C \${88*s} \${138*s} \${72*s} \${125*s} \${68*s} \${112*s} 
+                   C \${65*s} \${102*s} \${70*s} \${98*s} \${78*s} \${102*s} 
+                   C \${86*s} \${106*s} \${92*s} \${118*s} \${99*s} \${135*s} Z" 
+              fill="url(#s2-leafL)" />
+        <path d="M \${99*s} \${135*s} C \${87*s} \${128*s} \${75*s} \${115*s} \${68*s} \${112*s}" 
+              stroke="#3a6828" stroke-width={0.6*s} fill="none" opacity="0.6" stroke-linecap="round" />
+        <path d="M \${88*s} \${126*s} Q \${82*s} \${120*s} \${80*s} \${115*s}" stroke="#4a7838" stroke-width={0.4*s} fill="none" opacity="0.4" stroke-linecap="round" />
+        <path d="M \${78*s} \${118*s} Q \${72*s} \${115*s} \${70*s} \${110*s}" stroke="#4a7838" stroke-width={0.3*s} fill="none" opacity="0.4" stroke-linecap="round" />
+
+        <path d="M \${101*s} \${135*s} 
+                   C \${112*s} \${138*s} \${128*s} \${125*s} \${132*s} \${112*s} 
+                   C \${135*s} \${102*s} \${130*s} \${98*s} \${122*s} \${102*s} 
+                   C \${114*s} \${106*s} \${108*s} \${118*s} \${101*s} \${135*s} Z" 
+              fill="url(#s2-leafR)" />
+        <path d="M \${101*s} \${135*s} C \${113*s} \${128*s} \${125*s} \${115*s} \${132*s} \${112*s}" 
+              stroke="#3a6828" stroke-width={0.6*s} fill="none" opacity="0.6" stroke-linecap="round" />
+        <path d="M \${112*s} \${126*s} Q \${118*s} \${120*s} \${120*s} \${115*s}" stroke="#4a7838" stroke-width={0.4*s} fill="none" opacity="0.4" stroke-linecap="round" />
+        <path d="M \${122*s} \${118*s} Q \${128*s} \${115*s} \${130*s} \${110*s}" stroke="#4a7838" stroke-width={0.3*s} fill="none" opacity="0.4" stroke-linecap="round" />
+      </g>
+
+      <g id="leaves-2" style={{ transformOrigin: \`\${100*s}px \${105*s}px\` }}>
+        
+        <path d="M \${99*s} \${105*s} 
+                   C \${94*s} \${106*s} \${82*s} \${98*s} \${78*s} \${88*s} 
+                   C \${76*s} \${80*s} \${80*s} \${76*s} \${86*s} \${80*s} 
+                   C \${92*s} \${84*s} \${96*s} \${95*s} \${99*s} \${105*s} Z" 
+              fill="url(#s2-leafUpperL)" />
+        <path d="M \${99*s} \${105*s} C \${92*s} \${98*s} \${84*s} \${90*s} \${78*s} \${88*s}" 
+              stroke="#3a6828" stroke-width={0.5*s} fill="none" opacity="0.5" stroke-linecap="round" />
+        <path d="M \${90*s} \${97*s} Q \${85*s} \${92*s} \${83*s} \${88*s}" stroke="#4a7838" stroke-width={0.3*s} fill="none" opacity="0.4" stroke-linecap="round" />
+
+        <path d="M \${101*s} \${105*s} 
+                   C \${106*s} \${106*s} \${118*s} \${98*s} \${122*s} \${88*s} 
+                   C \${124*s} \${80*s} \${120*s} \${76*s} \${114*s} \${80*s} 
+                   C \${108*s} \${84*s} \${104*s} \${95*s} \${101*s} \${105*s} Z" 
+              fill="url(#s2-leafUpperR)" />
+        <path d="M \${101*s} \${105*s} C \${108*s} \${98*s} \${116*s} \${90*s} \${122*s} \${88*s}" 
+              stroke="#3a6828" stroke-width={0.5*s} fill="none" opacity="0.5" stroke-linecap="round" />
+        <path d="M \${110*s} \${97*s} Q \${115*s} \${92*s} \${117*s} \${88*s}" stroke="#4a7838" stroke-width={0.3*s} fill="none" opacity="0.4" stroke-linecap="round" />
+      </g>
+
+      <g id="leaves-3" style={{ transformOrigin: \`\${100*s}px \${72*s}px\` }}>
+        <path d="M \${100*s} \${72*s} C \${96*s} \${70*s} \${88*s} \${62*s} \${86*s} \${55*s} C \${88*s} \${50*s} \${94*s} \${55*s} \${100*s} \${72*s} Z" fill="url(#s2-leafUpperL)" />
+        <path d="M \${100*s} \${72*s} C \${104*s} \${70*s} \${112*s} \${62*s} \${114*s} \${55*s} C \${112*s} \${50*s} \${106*s} \${55*s} \${100*s} \${72*s} Z" fill="url(#s2-leafUpperR)" />
+      </g>
+
+      <g id="glow">
+        
+      </g>
+          <!-- Stars -->
+        <circle cx="30" cy="20" r="0.6" fill="url(#s2-starG)" opacity="0.25"/>
+        <circle cx="30" cy="20" r="0.18" fill="#e2e8f0" opacity="0.2"/>
+        <circle cx="75" cy="15" r="0.8" fill="url(#s2-starG)" opacity="0.3"/>
+        <circle cx="75" cy="15" r="0.24" fill="#e2e8f0" opacity="0.24"/>
+        <circle cx="165" cy="25" r="0.7" fill="url(#s2-starG)" opacity="0.2"/>
+        <circle cx="165" cy="25" r="0.21" fill="#e2e8f0" opacity="0.16000000000000003"/>
+        <circle cx="130" cy="40" r="0.5" fill="url(#s2-starG)" opacity="0.15"/>
+        <circle cx="130" cy="40" r="0.15" fill="#e2e8f0" opacity="0.12"/>
+        <circle cx="40" cy="55" r="0.6" fill="url(#s2-starG)" opacity="0.2"/>
+        <circle cx="40" cy="55" r="0.18" fill="#e2e8f0" opacity="0.16000000000000003"/>
+        <circle cx="180" cy="45" r="0.7" fill="url(#s2-starG)" opacity="0.25"/>
+        <circle cx="180" cy="45" r="0.21" fill="#e2e8f0" opacity="0.2"/>
+          <!-- Motes -->
+        <circle cx="30" cy="100" r="1.2" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+        <circle cx="50" cy="75" r="0.8" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="80" cy="60" r="1.5" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="120" cy="80" r="1" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="170" cy="90" r="1.4" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="140" cy="110" r="0.9" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+          <!-- Grass -->
+        <path d="M10 138 Q9 134.4 8 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M15 139 Q16 136 17 134" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M35 137 Q33.5 132.8 32 130" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M42 138 Q43 134.4 44 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M75 139 Q74.5 136 74 134" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M82 140 Q82.5 137.6 83 136" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M120 140 Q119 135.8 118 133" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M128 141 Q129.5 137.4 131 135" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M165 138 Q163.5 135 162 133" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M172 139 Q173 135.4 174 133" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M190 137 Q189.5 132.8 189 130" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+    </svg>`,
+
+  // Stage 3
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        
+        <linearGradient id="s3-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#181838" />
+          <stop offset="35%" stop-color="#302040" />
+          <stop offset="60%" stop-color="#552c48" />
+          <stop offset="85%" stop-color="#8a4450" />
+          <stop offset="100%" stop-color="#c86b5c" />
+        </linearGradient>
+
+        <radialGradient id="s3-sunGlow" cx="50%" cy="85%" r="60%">
+          <stop offset="0%" stop-color="#ffb078" stop-opacity="0.8" />
+          <stop offset="30%" stop-color="#e86060" stop-opacity="0.3" />
+          <stop offset="100%" stop-color="#8a4450" stop-opacity="0" />
+        </radialGradient>
+
+        <linearGradient id="s3-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#324828" />
+          <stop offset="100%" stop-color="#1c2c1a" />
+        </linearGradient>
+        <linearGradient id="s3-soilA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#251a14" />
+          <stop offset="100%" stop-color="#120c08" />
+        </linearGradient>
+
+        <linearGradient id="s3-stem" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#3a5c2e" />
+          <stop offset="50%" stop-color="#528842" />
+          <stop offset="100%" stop-color="#68a855" />
+        </linearGradient>
+
+        <radialGradient id="s3-leafL" cx="15%" cy="15%" r="100%">
+          <stop offset="0%" stop-color="#9cdb72" />
+          <stop offset="60%" stop-color="#5a9c38" />
+          <stop offset="100%" stop-color="#2e6018" />
+        </radialGradient>
+        <radialGradient id="s3-leafR" cx="85%" cy="15%" r="100%">
+          <stop offset="0%" stop-color="#a5e07a" />
+          <stop offset="60%" stop-color="#64a53e" />
+          <stop offset="100%" stop-color="#32621e" />
+        </radialGradient>
+
+        <radialGradient id="s3-budOuter" cx="40%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#f8a0d0" />
+          <stop offset="40%" stop-color="#e84078" />
+          <stop offset="100%" stop-color="#a01840" />
+        </radialGradient>
+        <radialGradient id="s3-budInner" cx="50%" cy="25%" r="65%">
+          <stop offset="0%" stop-color="#fac8e0" />
+          <stop offset="40%" stop-color="#f06090" />
+          <stop offset="100%" stop-color="#b02050" />
+        </radialGradient>
+        
+        <radialGradient id="s3-budGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ff4080" stop-opacity="0.3" />
+          <stop offset="50%" stop-color="#ff70a0" stop-opacity="0.1" />
+          <stop offset="100%" stop-color="#ff70a0" stop-opacity="0" />
+        </radialGradient>
+
+        <linearGradient id="s3-sepal" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#3a6828" />
+          <stop offset="100%" stop-color="#7aae5a" />
+        </linearGradient>
+      </defs>
+
+      <g id="bg-static">
+        
+        <rect width={w} height={h} fill="url(#s3-sky)" />
+        <rect width={w} height={h} fill="url(#s3-sunGlow)" />
+
+        <path d="M \${100*s} \${130*s} L \${20*s} \${0*s} L \${80*s} \${0*s} Z" fill="#ffc090" opacity="0.04" />
+        <path d="M \${100*s} \${130*s} L \${120*s} \${0*s} L \${180*s} \${0*s} Z" fill="#ffc090" opacity="0.03" />
+
+        <g id="clouds" opacity="0.75">
+          <path d="M \${20*s} \${65*s} Q \${35*s} \${55*s} \${55*s} \${60*s} T \${80*s} \${58*s} L \${80*s} \${70*s} L \${20*s} \${70*s} Z" fill="#8a4450" opacity="0.4" />
+          <path d="M \${22*s} \${65*s} Q \${35*s} \${58*s} \${53*s} \${62*s} T \${78*s} \${61*s} L \${78*s} \${70*s} L \${22*s} \${70*s} Z" fill="#a8555c" opacity="0.5" />
+          <line x1={20*s} y1={70*s} x2={80*s} y2={70*s} stroke="#ffb078" stroke-width={0.8*s} stroke-linecap="round" opacity="0.8" />
+
+          <path d="M \${140*s} \${50*s} Q \${155*s} \${42*s} \${170*s} \${48*s} T \${195*s} \${45*s} L \${195*s} \${55*s} L \${140*s} \${55*s} Z" fill="#8a4450" opacity="0.3" />
+          <path d="M \${142*s} \${50*s} Q \${155*s} \${45*s} \${168*s} \${50*s} T \${193*s} \${48*s} L \${193*s} \${55*s} L \${142*s} \${55*s} Z" fill="#a8555c" opacity="0.4" />
+          <line x1={140*s} y1={55*s} x2={195*s} y2={55*s} stroke="#ffb078" stroke-width={0.8*s} stroke-linecap="round" opacity="0.7" />
+        </g>
+
+        <path d="M 0 \${105*s} Q \${35*s} \${95*s} \${70*s} \${102*s} T \${140*s} \${98*s} T \${200*s} \${105*s} L \${200*s} \${140*s} L 0 \${140*s} Z" fill="#2d2232" opacity="0.7" />
+        <path d="M 0 \${115*s} Q \${45*s} \${108*s} \${90*s} \${116*s} T \${180*s} \${110*s} T \${200*s} \${115*s} L \${200*s} \${145*s} L 0 \${145*s} Z" fill="#382830" opacity="0.8" />
+
+        <path d="M 0 \${130*s} Q \${60*s} \${124*s} \${120*s} \${132*s} T \${200*s} \${128*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s3-ground)" />
+        <path d="M 0 \${160*s} Q \${80*s} \${154*s} \${200*s} \${162*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s3-soilA)" />
+
+        <ellipse cx={48*s} cy={168*s} rx={4.5*s} ry={2.5*s} fill="#2e2522" transform="rotate(5 \${48*s} \${168*s})" />
+        <ellipse cx={155*s} cy={172*s} rx={6*s} ry={3.5*s} fill="#241c18" transform="rotate(-8 \${155*s} \${172*s})" />
+      </g>
+
+      <g id="stem-1" style={{ transformOrigin: \`\${100*s}px \${160*s}px\` }}>
+        <path d="M \${100*s} \${162*s} 
+                   C \${97*s} \${135*s} \${103*s} \${105*s} \${100*s} \${65*s}" 
+              stroke="url(#s3-stem)" stroke-width={3.2*s} fill="none" stroke-linecap="round" />
+        <path d="M \${99*s} \${160*s} 
+                   C \${96*s} \${135*s} \${102*s} \${105*s} \${99*s} \${65*s}" 
+              stroke="#80c865" stroke-width={0.6*s} fill="none" stroke-linecap="round" opacity="0.4" />
+      </g>
+
+      <g id="leaves-1" style={{ transformOrigin: \`\${100*s}px \${142*s}px\` }}>
+        
+        <path d="M \${99*s} \${142*s} 
+                   C \${86*s} \${146*s} \${68*s} \${134*s} \${60*s} \${118*s} 
+                   C \${66*s} \${122*s} \${82*s} \${128*s} \${99*s} \${142*s} Z" 
+              fill="url(#s3-leafL)" />
+        <path d="M \${99*s} \${142*s} C \${85*s} \${138*s} \${70*s} \${126*s} \${60*s} \${118*s}" stroke="#3a6828" stroke-width={0.6*s} fill="none" opacity="0.6" stroke-linecap="round" />
+        <path d="M \${90*s} \${135*s} Q \${84*s} \${130*s} \${82*s} \${124*s}" stroke="#4a7838" stroke-width={0.4*s} fill="none" opacity="0.4" stroke-linecap="round" />
+
+        <path d="M \${101*s} \${142*s} 
+                   C \${114*s} \${146*s} \${132*s} \${134*s} \${140*s} \${118*s} 
+                   C \${134*s} \${122*s} \${118*s} \${128*s} \${101*s} \${142*s} Z" 
+              fill="url(#s3-leafR)" />
+        <path d="M \${101*s} \${142*s} C \${115*s} \${138*s} \${130*s} \${126*s} \${140*s} \${118*s}" stroke="#3a6828" stroke-width={0.6*s} fill="none" opacity="0.6" stroke-linecap="round" />
+        <path d="M \${110*s} \${135*s} Q \${116*s} \${130*s} \${118*s} \${124*s}" stroke="#4a7838" stroke-width={0.4*s} fill="none" opacity="0.4" stroke-linecap="round" />
+      </g>
+
+      <g id="leaves-2" style={{ transformOrigin: \`\${100*s}px \${115*s}px\` }}>
+        
+        <path d="M \${99*s} \${115*s} C \${88*s} \${118*s} \${72*s} \${108*s} \${66*s} \${94*s} C \${74*s} \${100*s} \${86*s} \${106*s} \${99*s} \${115*s} Z" fill="url(#s3-leafL)" />
+        <path d="M \${99*s} \${115*s} C \${88*s} \${112*s} \${75*s} \${104*s} \${66*s} \${94*s}" stroke="#3a6828" stroke-width={0.5*s} fill="none" opacity="0.5" stroke-linecap="round" />
+
+        <path d="M \${101*s} \${115*s} C \${112*s} \${118*s} \${128*s} \${108*s} \${134*s} \${94*s} C \${126*s} \${100*s} \${114*s} \${106*s} \${101*s} \${115*s} Z" fill="url(#s3-leafR)" />
+        <path d="M \${101*s} \${115*s} C \${112*s} \${112*s} \${125*s} \${104*s} \${134*s} \${94*s}" stroke="#3a6828" stroke-width={0.5*s} fill="none" opacity="0.5" stroke-linecap="round" />
+      </g>
+
+      <g id="leaves-3" style={{ transformOrigin: \`\${100*s}px \${88*s}px\` }}>
+        <path d="M \${99*s} \${88*s} C \${92*s} \${90*s} \${84*s} \${82*s} \${80*s} \${72*s} C \${86*s} \${78*s} \${94*s} \${84*s} \${99*s} \${88*s} Z" fill="url(#s3-leafL)" />
+        <path d="M \${99*s} \${88*s} C \${92*s} \${86*s} \${85*s} \${78*s} \${80*s} \${72*s}" stroke="#3a6828" stroke-width={0.4*s} fill="none" opacity="0.4" stroke-linecap="round" />
+
+        <path d="M \${101*s} \${88*s} C \${108*s} \${90*s} \${116*s} \${82*s} \${120*s} \${72*s} C \${114*s} \${78*s} \${106*s} \${84*s} \${101*s} \${88*s} Z" fill="url(#s3-leafR)" />
+        <path d="M \${101*s} \${88*s} C \${108*s} \${86*s} \${115*s} \${78*s} \${120*s} \${72*s}" stroke="#3a6828" stroke-width={0.4*s} fill="none" opacity="0.4" stroke-linecap="round" />
+      </g>
+
+      <g id="bud" style={{ transformOrigin: \`\${100*s}px \${60*s}px\` }}>
+        <circle cx={100*s} cy={55*s} r={28*s} fill="url(#s3-budGlow)" />
+
+        <path d="M \${100*s} \${66*s} 
+                   C \${86*s} \${64*s} \${80*s} \${48*s} \${86*s} \${36*s} 
+                   C \${92*s} \${28*s} \${100*s} \${25*s} \${100*s} \${25*s} 
+                   C \${100*s} \${25*s} \${108*s} \${28*s} \${114*s} \${36*s} 
+                   C \${120*s} \${48*s} \${114*s} \${64*s} \${100*s} \${66*s} Z" 
+              fill="url(#s3-budOuter)" />
+
+        <path d="M \${100*s} \${65*s} 
+                   C \${90*s} \${62*s} \${86*s} \${48*s} \${90*s} \${38*s} 
+                   C \${94*s} \${32*s} \${100*s} \${28*s} \${100*s} \${28*s} 
+                   L \${100*s} \${65*s} Z" 
+              fill="url(#s3-budInner)" />
+
+        <path d="M \${100*s} \${65*s} 
+                   C \${110*s} \${62*s} \${114*s} \${48*s} \${110*s} \${38*s} 
+                   C \${106*s} \${32*s} \${100*s} \${28*s} \${100*s} \${28*s} 
+                   L \${100*s} \${65*s} Z" 
+              fill="#e84078" opacity="0.8" />
+
+        <path d="M \${100*s} \${65*s} C \${98*s} \${50*s} \${98*s} \${40*s} \${100*s} \${28*s}" stroke="#ff80b0" stroke-width={0.8*s} fill="none" stroke-linecap="round" opacity="0.6" />
+
+        <path d="M \${95*s} \${62*s} C \${91*s} \${52*s} \${90*s} \${44*s} \${92*s} \${36*s}" stroke="#801030" stroke-width={0.4*s} fill="none" opacity="0.3" />
+        <path d="M \${105*s} \${62*s} C \${109*s} \${52*s} \${110*s} \${44*s} \${108*s} \${36*s}" stroke="#801030" stroke-width={0.4*s} fill="none" opacity="0.3" />
+
+        <path d="M \${100*s} \${68*s} C \${92*s} \${66*s} \${84*s} \${58*s} \${86*s} \${48*s} C \${88*s} \${44*s} \${90*s} \${45*s} \${92*s} \${48*s} C \${94*s} \${54*s} \${96*s} \${62*s} \${100*s} \${68*s} Z" fill="url(#s3-sepal)" />
+        <path d="M \${97*s} \${65*s} C \${92*s} \${60*s} \${88*s} \${54*s} \${88*s} \${48*s}" stroke="#26481a" stroke-width={0.3*s} fill="none" opacity="0.5" />
+
+        <path d="M \${100*s} \${68*s} C \${108*s} \${66*s} \${116*s} \${58*s} \${114*s} \${48*s} C \${112*s} \${44*s} \${110*s} \${45*s} \${108*s} \${48*s} C \${106*s} \${54*s} \${104*s} \${62*s} \${100*s} \${68*s} Z" fill="url(#s3-sepal)" />
+        <path d="M \${103*s} \${65*s} C \${108*s} \${60*s} \${112*s} \${54*s} \${112*s} \${48*s}" stroke="#26481a" stroke-width={0.3*s} fill="none" opacity="0.5" />
+      </g>
+
+      <g id="glow">
+        
+      </g>
+          <!-- Motes -->
+        <circle cx="30" cy="90" r="1.2" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+        <circle cx="50" cy="55" r="0.8" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="80" cy="40" r="1.5" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="120" cy="60" r="1" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="170" cy="70" r="1.4" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="140" cy="100" r="0.9" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+          <!-- Grass -->
+        <path d="M10 138 Q9 134.4 8 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M15 139 Q16 136 17 134" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M35 137 Q33.5 132.8 32 130" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M42 138 Q43 134.4 44 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M75 139 Q74.5 136 74 134" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M82 140 Q82.5 137.6 83 136" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M120 140 Q119 135.8 118 133" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M128 141 Q129.5 137.4 131 135" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M165 138 Q163.5 135 162 133" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M172 139 Q173 135.4 174 133" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M190 137 Q189.5 132.8 189 130" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+          <!-- Wild Flowers -->
+        <circle cx="25" cy="145" r="1.2" fill="#e06898" opacity="0.7"/>
+        <circle cx="25" cy="145" r="0.48" fill="#fff" opacity="0.3"/>
+        <circle cx="150" cy="148" r="1" fill="#d05888" opacity="0.7"/>
+        <circle cx="150" cy="148" r="0.4" fill="#fff" opacity="0.3"/>
+        <circle cx="85" cy="152" r="1.4" fill="#e06898" opacity="0.7"/>
+        <circle cx="85" cy="152" r="0.5599999999999999" fill="#fff" opacity="0.3"/>
+    </svg>`,
+
+  // Stage 4
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        
+        <linearGradient id="s4-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1c1b3d" />
+          <stop offset="25%" stop-color="#30234f" />
+          <stop offset="50%" stop-color="#54315f" />
+          <stop offset="70%" stop-color="#8a4460" />
+          <stop offset="85%" stop-color="#b36257" />
+          <stop offset="100%" stop-color="#d99868" />
+        </linearGradient>
+
+        <radialGradient id="s4-sun" cx="50%" cy="85%" r="60%">
+          <stop offset="0%" stop-color="#ffe6a0" stop-opacity="1" />
+          <stop offset="10%" stop-color="#ffc478" stop-opacity="0.8" />
+          <stop offset="30%" stop-color="#e87070" stop-opacity="0.4" />
+          <stop offset="100%" stop-color="#8a4460" stop-opacity="0" />
+        </radialGradient>
+
+        <radialGradient id="s4-petalOuter" cx="50%" cy="80%" r="90%">
+          <stop offset="0%" stop-color="#e84078" />
+          <stop offset="50%" stop-color="#f878a8" />
+          <stop offset="100%" stop-color="#f4b8d0" />
+        </radialGradient>
+
+        <radialGradient id="s4-petalInner" cx="50%" cy="75%" r="80%">
+          <stop offset="0%" stop-color="#d02860" />
+          <stop offset="45%" stop-color="#f06090" />
+          <stop offset="100%" stop-color="#fac8e0" />
+        </radialGradient>
+
+        <radialGradient id="s4-flowerGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ff4080" stop-opacity="0.4" />
+          <stop offset="50%" stop-color="#ff70a0" stop-opacity="0.15" />
+          <stop offset="100%" stop-color="#ff70a0" stop-opacity="0" />
+        </radialGradient>
+
+        <radialGradient id="s4-leafL" cx="10%" cy="10%" r="100%">
+          <stop offset="0%" stop-color="#95d058" />
+          <stop offset="60%" stop-color="#589535" />
+          <stop offset="100%" stop-color="#2c5418" />
+        </radialGradient>
+
+        <radialGradient id="s4-leafR" cx="90%" cy="10%" r="100%">
+          <stop offset="0%" stop-color="#a0d860" />
+          <stop offset="60%" stop-color="#64a53c" />
+          <stop offset="100%" stop-color="#325e1a" />
+        </radialGradient>
+
+        <linearGradient id="s4-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#38542c" />
+          <stop offset="100%" stop-color="#1a2e15" />
+        </linearGradient>
+
+        <linearGradient id="s4-soil" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2c221a" />
+          <stop offset="100%" stop-color="#120c08" />
+        </linearGradient>
+
+        <linearGradient id="s4-stem" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#3a5830" />
+          <stop offset="100%" stop-color="#5a8a48" />
+        </linearGradient>
+      </defs>
+
+      <g id="bg-static">
+        
+        <rect width={w} height={h} fill="url(#s4-sky)" />
+        <rect width={w} height={h} fill="url(#s4-sun)" />
+
+        <path d="M \${100*s} \${115*s} L \${0*s} \${40*s} L \${0*s} \${0*s} Z" fill="#ffea90" opacity="0.03" />
+        <path d="M \${100*s} \${115*s} L \${60*s} \${0*s} L \${120*s} \${0*s} Z" fill="#ffea90" opacity="0.04" />
+        <path d="M \${100*s} \${115*s} L \${200*s} \${20*s} L \${200*s} \${60*s} Z" fill="#ffea90" opacity="0.03" />
+
+        <g id="clouds" opacity="0.85">
+          
+          <path d="M \${20*s} \${50*s} Q \${20*s} \${40*s} \${30*s} \${40*s} Q \${35*s} \${30*s} \${45*s} \${32*s} Q \${55*s} \${25*s} \${65*s} \${35*s} Q \${75*s} \${35*s} \${75*s} \${45*s} L \${75*s} \${50*s} Z" fill="#c86b72" opacity="0.3" />
+          <path d="M \${22*s} \${50*s} Q \${22*s} \${42*s} \${30*s} \${42*s} Q \${35*s} \${34*s} \${44*s} \${36*s} Q \${52*s} \${30*s} \${60*s} \${38*s} Q \${68*s} \${38*s} \${68*s} \${46*s} L \${68*s} \${50*s} Z" fill="#d9827c" opacity="0.4" />
+          <path d="M \${25*s} \${50*s} Q \${25*s} \${45*s} \${31*s} \${45*s} Q \${35*s} \${38*s} \${42*s} \${40*s} Q \${48*s} \${35*s} \${55*s} \${41*s} Q \${60*s} \${41*s} \${60*s} \${47*s} L \${60*s} \${50*s} Z" fill="#eba494" opacity="0.6" />
+          <line x1={20*s} y1={50*s} x2={75*s} y2={50*s} stroke="#ffe6a0" stroke-width={1*s} stroke-linecap="round" opacity="0.8" />
+
+          <path d="M \${130*s} \${40*s} Q \${130*s} \${32*s} \${140*s} \${32*s} Q \${148*s} \${22*s} \${160*s} \${26*s} Q \${172*s} \${20*s} \${182*s} \${28*s} Q \${192*s} \${28*s} \${192*s} \${36*s} L \${192*s} \${40*s} Z" fill="#c86b72" opacity="0.25" />
+          <path d="M \${132*s} \${40*s} Q \${132*s} \${35*s} \${140*s} \${35*s} Q \${146*s} \${26*s} \${158*s} \${30*s} Q \${168*s} \${25*s} \${176*s} \${31*s} Q \${184*s} \${31*s} \${184*s} \${37*s} L \${184*s} \${40*s} Z" fill="#d9827c" opacity="0.35" />
+          <path d="M \${135*s} \${40*s} Q \${135*s} \${37*s} \${141*s} \${37*s} Q \${146*s} \${30*s} \${155*s} \${33*s} Q \${162*s} \${29*s} \${168*s} \${34*s} Q \${174*s} \${34*s} \${174*s} \${38*s} L \${174*s} \${40*s} Z" fill="#eba494" opacity="0.5" />
+          <line x1={130*s} y1={40*s} x2={192*s} y2={40*s} stroke="#ffe6a0" stroke-width={1*s} stroke-linecap="round" opacity="0.7" />
+        </g>
+
+        <path d="M 0 \${95*s} Q \${15*s} \${85*s} \${30*s} \${92*s} T \${65*s} \${88*s} T \${100*s} \${95*s} T \${135*s} \${85*s} T \${170*s} \${92*s} T \${200*s} \${88*s} L \${200*s} \${130*s} L 0 \${130*s} Z" fill="#3a2545" opacity="0.6"/>
+        <path d="M 0 \${105*s} Q \${40*s} \${95*s} \${80*s} \${108*s} T \${160*s} \${102*s} T \${200*s} \${110*s} L \${200*s} \${140*s} L 0 \${140*s} Z" fill="#4d3248" opacity="0.8"/>
+        <path d="M 0 \${118*s} Q \${50*s} \${108*s} \${100*s} \${115*s} T \${200*s} \${112*s} L \${200*s} \${150*s} L 0 \${150*s} Z" fill="#603e45" opacity="0.9"/>
+
+        <path d="M 0 \${128*s} Q \${60*s} \${124*s} \${120*s} \${130*s} T \${200*s} \${126*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s4-ground)" />
+        <path d="M 0 \${155*s} Q \${80*s} \${148*s} \${200*s} \${158*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s4-soil)" />
+
+        <ellipse cx={45*s} cy={165*s} rx={4*s} ry={2*s} fill="#302824" />
+        <ellipse cx={44*s} cy={164*s} rx={2*s} ry={1*s} fill="#4a4038" opacity="0.6"/>
+        <ellipse cx={160*s} cy={175*s} rx={5*s} ry={2.5*s} fill="#241e1a" />
+        <ellipse cx={159*s} cy={174*s} rx={2.5*s} ry={1*s} fill="#38302a" opacity="0.5"/>
+      </g>
+
+      <g id="stem-1" style={{ transformOrigin: \`\${100*s}px \${155*s}px\` }}>
+        <path d="M \${100*s} \${155*s} C \${97*s} \${125*s} \${103*s} \${95*s} \${100*s} \${42*s}" 
+              stroke="url(#s4-stem)" stroke-width={3.5*s} fill="none" stroke-linecap="round" />
+        <path d="M \${99*s} \${155*s} C \${96*s} \${125*s} \${102*s} \${95*s} \${99*s} \${42*s}" 
+              stroke="#80b860" stroke-width={0.8*s} fill="none" opacity="0.4" stroke-linecap="round" />
+      </g>
+
+      <g id="leaves-1" style={{ transformOrigin: \`\${100*s}px \${136*s}px\` }}>
+        
+        <path d="M \${99*s} \${136*s} C \${85*s} \${142*s} \${65*s} \${130*s} \${55*s} \${112*s} C \${62*s} \${118*s} \${78*s} \${124*s} \${99*s} \${136*s} Z" fill="url(#s4-leafL)" />
+        <path d="M \${99*s} \${136*s} C \${84*s} \${134*s} \${66*s} \${124*s} \${55*s} \${112*s}" stroke="#3a6828" stroke-width={0.6*s} fill="none" opacity="0.6" stroke-linecap="round" />
+        <path d="M \${88*s} \${131*s} Q \${82*s} \${126*s} \${80*s} \${120*s}" stroke="#4a7838" stroke-width={0.4*s} fill="none" opacity="0.4" stroke-linecap="round" />
+        <path d="M \${78*s} \${126*s} Q \${72*s} \${120*s} \${70*s} \${115*s}" stroke="#4a7838" stroke-width={0.3*s} fill="none" opacity="0.4" stroke-linecap="round" />
+        <path d="M \${68*s} \${120*s} Q \${62*s} \${116*s} \${60*s} \${113*s}" stroke="#4a7838" stroke-width={0.25*s} fill="none" opacity="0.4" stroke-linecap="round" />
+
+        <path d="M \${101*s} \${135*s} C \${115*s} \${140*s} \${135*s} \${126*s} \${145*s} \${108*s} C \${138*s} \${116*s} \${122*s} \${122*s} \${101*s} \${135*s} Z" fill="url(#s4-leafR)" />
+        <path d="M \${101*s} \${135*s} C \${116*s} \${134*s} \${134*s} \${121*s} \${145*s} \${108*s}" stroke="#3a6828" stroke-width={0.6*s} fill="none" opacity="0.6" stroke-linecap="round" />
+        <path d="M \${113*s} \${129*s} Q \${118*s} \${124*s} \${120*s} \${118*s}" stroke="#4a7838" stroke-width={0.4*s} fill="none" opacity="0.4" stroke-linecap="round" />
+        <path d="M \${123*s} \${124*s} Q \${128*s} \${118*s} \${130*s} \${112*s}" stroke="#4a7838" stroke-width={0.3*s} fill="none" opacity="0.4" stroke-linecap="round" />
+        <path d="M \${133*s} \${118*s} Q \${138*s} \${113*s} \${140*s} \${110*s}" stroke="#4a7838" stroke-width={0.25*s} fill="none" opacity="0.4" stroke-linecap="round" />
+      </g>
+
+      <g id="leaves-2" style={{ transformOrigin: \`\${100*s}px \${108*s}px\` }}>
+        
+        <path d="M \${99*s} \${108*s} C \${88*s} \${112*s} \${72*s} \${102*s} \${65*s} \${88*s} C \${72*s} \${94*s} \${85*s} \${100*s} \${99*s} \${108*s} Z" fill="url(#s4-leafL)" />
+        <path d="M \${99*s} \${108*s} C \${87*s} \${106*s} \${74*s} \${98*s} \${65*s} \${88*s}" stroke="#3a6828" stroke-width={0.5*s} fill="none" opacity="0.5" stroke-linecap="round" />
+        <path d="M \${88*s} \${103*s} Q \${83*s} \${98*s} \${80*s} \${93*s}" stroke="#4a7838" stroke-width={0.3*s} fill="none" opacity="0.4" stroke-linecap="round" />
+        <path d="M \${78*s} \${98*s} Q \${74*s} \${93*s} \${72*s} \${89*s}" stroke="#4a7838" stroke-width={0.25*s} fill="none" opacity="0.4" stroke-linecap="round" />
+
+        <path d="M \${101*s} \${105*s} C \${112*s} \${108*s} \${128*s} \${96*s} \${138*s} \${82*s} C \${130*s} \${88*s} \${116*s} \${96*s} \${101*s} \${105*s} Z" fill="url(#s4-leafR)" />
+        <path d="M \${101*s} \${105*s} C \${113*s} \${104*s} \${128*s} \${92*s} \${138*s} \${82*s}" stroke="#3a6828" stroke-width={0.5*s} fill="none" opacity="0.5" stroke-linecap="round" />
+        <path d="M \${112*s} \${99*s} Q \${118*s} \${94*s} \${120*s} \${89*s}" stroke="#4a7838" stroke-width={0.3*s} fill="none" opacity="0.4" stroke-linecap="round" />
+        <path d="M \${122*s} \${93*s} Q \${128*s} \${88*s} \${130*s} \${84*s}" stroke="#4a7838" stroke-width={0.25*s} fill="none" opacity="0.4" stroke-linecap="round" />
+      </g>
+
+      <g id="leaves-3" style={{ transformOrigin: \`\${100*s}px \${78*s}px\` }}>
+        
+        <path d="M \${99*s} \${78*s} C \${92*s} \${80*s} \${84*s} \${72*s} \${82*s} \${60*s} C \${88*s} \${66*s} \${94*s} \${72*s} \${99*s} \${78*s} Z" fill="url(#s4-leafL)" />
+        <path d="M \${99*s} \${78*s} C \${91*s} \${75*s} \${84*s} \${66*s} \${82*s} \${60*s}" stroke="#3a6828" stroke-width={0.4*s} fill="none" opacity="0.4" stroke-linecap="round" />
+
+        <path d="M \${101*s} \${74*s} C \${108*s} \${76*s} \${116*s} \${68*s} \${120*s} \${56*s} C \${114*s} \${62*s} \${107*s} \${68*s} \${101*s} \${74*s} Z" fill="url(#s4-leafR)" />
+        <path d="M \${101*s} \${74*s} C \${109*s} \${71*s} \${116*s} \${62*s} \${120*s} \${56*s}" stroke="#3a6828" stroke-width={0.4*s} fill="none" opacity="0.4" stroke-linecap="round" />
+      </g>
+
+      <g id="petals" style={{ transformOrigin: \`\${100*s}px \${42*s}px\` }}>
+        
+        <circle cx={100*s} cy={42*s} r={32*s} fill="url(#s4-flowerGlow)" />
+
+        {[36, 108, 180, 252, 324].map((angle, i) => (
+          <g key="sepal\${i}" transform="rotate(\${angle} \${100*s} \${42*s})">
+            <path d="M \${100*s} \${42*s} L \${95*s} \${16*s} L \${100*s} \${10*s} L \${105*s} \${16*s} Z" fill="#3a6828" />
+            <path d="M \${100*s} \${42*s} L \${100*s} \${10*s} L \${105*s} \${16*s} Z" fill="#588a3a" />
+          </g>
+        ))}
+
+        {[0, 72, 144, 216, 288].map((angle, i) => (
+          <g key="petal\${i}" transform="rotate(\${angle} \${100*s} \${42*s})">
+            
+            <path d="M \${100*s} \${42*s} 
+                       C \${96*s} \${36*s} \${88*s} \${26*s} \${92*s} \${14*s} 
+                       C \${94*s} \${8*s} \${97*s} \${10*s} \${100*s} \${14*s} 
+                       C \${103*s} \${10*s} \${106*s} \${8*s} \${108*s} \${14*s} 
+                       C \${112*s} \${26*s} \${104*s} \${36*s} \${100*s} \${42*s} Z" 
+                  fill="url(#s4-petalOuter)" />
+            
+            <path d="M \${100*s} \${40*s} 
+                       C \${97*s} \${35*s} \${91*s} \${26*s} \${94*s} \${16*s} 
+                       C \${96*s} \${11*s} \${98*s} \${12*s} \${100*s} \${15*s} 
+                       C \${102*s} \${12*s} \${104*s} \${11*s} \${106*s} \${16*s} 
+                       C \${109*s} \${26*s} \${103*s} \${35*s} \${100*s} \${40*s} Z" 
+                  fill="url(#s4-petalInner)" />
+            
+            <path d="M \${100*s} \${38*s} Q \${96*s} \${28*s} \${95*s} \${18*s}" stroke="#c82060" stroke-width={0.5*s} fill="none" opacity="0.4" />
+            <path d="M \${100*s} \${38*s} Q \${104*s} \${28*s} \${105*s} \${18*s}" stroke="#c82060" stroke-width={0.5*s} fill="none" opacity="0.4" />
+            <path d="M \${100*s} \${39*s} L \${100*s} \${20*s}" stroke="#d01850" stroke-width={0.6*s} fill="none" opacity="0.5" />
+          </g>
+        ))}
+
+        {Array.from({length: 15}).map((_, i) => {
+          const a = (Math.PI / 180) * (i * 24);
+          const r1 = 3;
+          const r2 = 10;
+          const x1 = 100 + Math.cos(a) * r1;
+          const y1 = 42 + Math.sin(a) * r1;
+          const x2 = 100 + Math.cos(a) * r2;
+          const y2 = 42 + Math.sin(a) * r2;
+          return (
+            <g key="st\${i}">
+              <line x1={x1*s} y1={y1*s} x2={x2*s} y2={y2*s} stroke="#ffb8d8" stroke-width={0.4*s} opacity="0.8" />
+              <circle cx={x2*s} cy={y2*s} r={1.2*s} fill="#ffd860" />
+              <circle cx={x2*s} cy={y2*s} r={0.6*s} fill="#ffffff" />
+            </g>
+          )
+        })}
+
+        <circle cx={100*s} cy={42*s} r={4.5*s} fill="#d83060" opacity="0.8" />
+        <circle cx={100*s} cy={42*s} r={2.5*s} fill="#a01840" />
+        <circle cx={100*s} cy={42*s} r={1.2*s} fill="#500010" />
+      </g>
+
+      <g id="glow">
+        
+      </g>
+          <!-- Motes -->
+        <circle cx="30" cy="80" r="1.2" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+        <circle cx="50" cy="45" r="0.8" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="80" cy="20" r="1.5" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="120" cy="30" r="1" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="170" cy="60" r="1.4" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="140" cy="95" r="0.9" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="85" cy="70" r="1.8" fill="#c8e0a8" opacity="0.2" class="sparkle"/>
+        <circle cx="110" cy="60" r="0.7" fill="#c8e0a8" opacity="0.7" class="sparkle"/>
+        <circle cx="65" cy="100" r="1.1" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+          <!-- Grass -->
+        <path d="M10 128 Q9 124.4 8 122" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M12 129 Q12.5 126.6 13 125" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M15 128 Q16 125 17 123" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M35 127 Q33.5 122.8 32 120" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M38 128 Q38 125 38 123" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M42 127 Q43 123.4 44 121" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M75 129 Q74.5 126 74 124" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M78 129 Q79.5 124.2 81 121" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M82 130 Q82.5 127.6 83 126" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M120 130 Q119 125.8 118 123" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M124 131 Q124.5 128 125 126" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M128 130 Q129.5 126.4 131 124" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M165 128 Q163.5 125 162 123" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M168 127 Q168 122.2 168 119" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M172 128 Q173 124.4 174 122" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M190 127 Q189.5 122.8 189 120" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M195 126 Q196 123 197 121" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+          <!-- Wild Flowers -->
+        <circle cx="25" cy="135" r="1.5" fill="#e86090" opacity="0.7"/>
+        <circle cx="25" cy="135" r="0.6000000000000001" fill="#fff" opacity="0.3"/>
+        <circle cx="28" cy="137" r="1.2" fill="#f080a8" opacity="0.7"/>
+        <circle cx="28" cy="137" r="0.48" fill="#fff" opacity="0.3"/>
+        <circle cx="22" cy="138" r="1.8" fill="#c84070" opacity="0.7"/>
+        <circle cx="22" cy="138" r="0.7200000000000001" fill="#fff" opacity="0.3"/>
+        <circle cx="150" cy="140" r="1.6" fill="#e86090" opacity="0.7"/>
+        <circle cx="150" cy="140" r="0.6400000000000001" fill="#fff" opacity="0.3"/>
+        <circle cx="155" cy="138" r="1.3" fill="#f080a8" opacity="0.7"/>
+        <circle cx="155" cy="138" r="0.52" fill="#fff" opacity="0.3"/>
+        <circle cx="146" cy="142" r="1.1" fill="#c84070" opacity="0.7"/>
+        <circle cx="146" cy="142" r="0.44000000000000006" fill="#fff" opacity="0.3"/>
+        <circle cx="85" cy="145" r="1.4" fill="#e86090" opacity="0.7"/>
+        <circle cx="85" cy="145" r="0.5599999999999999" fill="#fff" opacity="0.3"/>
+        <circle cx="90" cy="148" r="1.7" fill="#f080a8" opacity="0.7"/>
+        <circle cx="90" cy="148" r="0.68" fill="#fff" opacity="0.3"/>
+    </svg>`,
+
+  // Stage 5
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        <linearGradient id="s5-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#47688c" />
+          <stop offset="40%" stop-color="#7b9ba6" />
+          <stop offset="100%" stop-color="#e6dfb3" />
+        </linearGradient>
+        <radialGradient id="s5-sunGlow" cx="50%" cy="80%" r="60%">
+          <stop offset="0%" stop-color="#fff2c8" stop-opacity="0.8" />
+          <stop offset="40%" stop-color="#f0d3a8" stop-opacity="0.3" />
+          <stop offset="100%" stop-color="#e6dfb3" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient id="s5-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3c5a32" />
+          <stop offset="100%" stop-color="#1e321c" />
+        </linearGradient>
+        <linearGradient id="s5-soilA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2c221a" />
+          <stop offset="100%" stop-color="#18120e" />
+        </linearGradient>
+        <linearGradient id="s5-stem" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#355828" />
+          <stop offset="50%" stop-color="#558c42" />
+          <stop offset="100%" stop-color="#75b85a" />
+        </linearGradient>
+        <radialGradient id="s5-leaf" cx="30%" cy="20%" r="90%">
+          <stop offset="0%" stop-color="#a8e578" />
+          <stop offset="60%" stop-color="#62a83e" />
+          <stop offset="100%" stop-color="#2d621c" />
+        </radialGradient>
+        <radialGradient id="s5-petalOuter" cx="50%" cy="80%" r="90%">
+          <stop offset="0%" stop-color="#e84078" />
+          <stop offset="50%" stop-color="#f880b0" />
+          <stop offset="100%" stop-color="#fcd8e8" />
+        </radialGradient>
+        <radialGradient id="s5-petalInner" cx="50%" cy="75%" r="80%">
+          <stop offset="0%" stop-color="#d02860" />
+          <stop offset="45%" stop-color="#f06090" />
+          <stop offset="100%" stop-color="#fac8e0" />
+        </radialGradient>
+        <radialGradient id="s5-flowerGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ff70a0" stop-opacity="0.4" />
+          <stop offset="100%" stop-color="#ff70a0" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <g id="bg-static">
+        <rect width={w} height={h} fill="url(#s5-sky)" />
+        <rect width={w} height={h} fill="url(#s5-sunGlow)" />
+
+        <g id="clouds" opacity="0.8">
+          <path d="M \${30*s} \${50*s} Q \${45*s} \${40*s} \${65*s} \${45*s} T \${100*s} \${42*s} L \${100*s} \${55*s} L \${30*s} \${55*s} Z" fill="#c5cfd4" opacity="0.6" />
+          <path d="M \${120*s} \${60*s} Q \${140*s} \${50*s} \${160*s} \${55*s} T \${190*s} \${52*s} L \${190*s} \${65*s} L \${120*s} \${65*s} Z" fill="#c5cfd4" opacity="0.5" />
+          <line x1={30*s} y1={55*s} x2={100*s} y2={55*s} stroke="#fff2c8" stroke-width={0.8*s} stroke-linecap="round" opacity="0.9" />
+          <line x1={120*s} y1={65*s} x2={190*s} y2={65*s} stroke="#fff2c8" stroke-width={0.8*s} stroke-linecap="round" opacity="0.8" />
+        </g>
+
+        <path d="M 0 \${110*s} Q \${40*s} \${100*s} \${80*s} \${112*s} T \${160*s} \${108*s} T \${200*s} \${115*s} L \${200*s} \${140*s} L 0 \${140*s} Z" fill="#5a7a6c" opacity="0.8" />
+        <path d="M 0 \${120*s} Q \${50*s} \${114*s} \${100*s} \${122*s} T \${180*s} \${118*s} T \${200*s} \${122*s} L \${200*s} \${150*s} L 0 \${150*s} Z" fill="#48685a" opacity="0.9" />
+
+        <path d="M 0 \${135*s} Q \${60*s} \${130*s} \${120*s} \${136*s} T \${200*s} \${132*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s5-ground)" />
+        <path d="M 0 \${162*s} Q \${80*s} \${156*s} \${200*s} \${165*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s5-soilA)" />
+
+      </g>
+
+      <g id="stem-1" style={{ transformOrigin: \`\${100*s}px \${160*s}px\` }}>
+        <path d="M \${100*s} \${165*s} C \${95*s} \${130*s} \${105*s} \${90*s} \${100*s} \${40*s}" stroke="url(#s5-stem)" stroke-width={4.5*s} fill="none" stroke-linecap="round" />
+        <path d="M \${98.5*s} \${165*s} C \${93.5*s} \${130*s} \${103.5*s} \${90*s} \${98.5*s} \${40*s}" stroke="#a8e578" stroke-width={0.8*s} fill="none" stroke-linecap="round" opacity="0.4" />
+      </g>
+      <g id="branch-1" style={{ transformOrigin: \`\${98*s}px \${110*s}px\` }}>
+        <path d="M \${98*s} \${110*s} Q \${70*s} \${100*s} \${55*s} \${80*s}" stroke="url(#s5-stem)" stroke-width={2.5*s} fill="none" stroke-linecap="round" />
+      </g>
+      <g id="branch-2" style={{ transformOrigin: \`\${102*s}px \${85*s}px\` }}>
+        <path d="M \${102*s} \${85*s} Q \${130*s} \${75*s} \${145*s} \${55*s}" stroke="url(#s5-stem)" stroke-width={2.5*s} fill="none" stroke-linecap="round" />
+      </g>
+
+      <g id="leaves-1" style={{ transformOrigin: \`\${100*s}px \${140*s}px\` }}>
+        <path d="M \${98*s} \${140*s} C \${80*s} \${145*s} \${60*s} \${130*s} \${50*s} \${110*s} C \${60*s} \${115*s} \${80*s} \${120*s} \${98*s} \${140*s} Z" fill="url(#s5-leaf)" />
+        <path d="M \${102*s} \${135*s} C \${120*s} \${140*s} \${140*s} \${125*s} \${150*s} \${105*s} C \${140*s} \${110*s} \${120*s} \${115*s} \${102*s} \${135*s} Z" fill="url(#s5-leaf)" />
+      </g>
+      <g id="leaves-2" style={{ transformOrigin: \`\${60*s}px \${90*s}px\` }}>
+        <path d="M \${60*s} \${90*s} C \${45*s} \${92*s} \${30*s} \${80*s} \${25*s} \${65*s} C \${35*s} \${70*s} \${50*s} \${75*s} \${60*s} \${90*s} Z" fill="url(#s5-leaf)" />
+        <path d="M \${65*s} \${85*s} C \${75*s} \${88*s} \${90*s} \${75*s} \${95*s} \${60*s} C \${85*s} \${65*s} \${75*s} \${70*s} \${65*s} \${85*s} Z" fill="url(#s5-leaf)" />
+      </g>
+      <g id="leaves-3" style={{ transformOrigin: \`\${135*s}px \${65*s}px\` }}>
+        <path d="M \${135*s} \${65*s} C \${120*s} \${68*s} \${105*s} \${55*s} \${100*s} \${40*s} C \${110*s} \${45*s} \${125*s} \${50*s} \${135*s} \${65*s} Z" fill="url(#s5-leaf)" />
+        <path d="M \${140*s} \${60*s} C \${155*s} \${62*s} \${170*s} \${50*s} \${175*s} \${35*s} C \${165*s} \${40*s} \${150*s} \${45*s} \${140*s} \${60*s} Z" fill="url(#s5-leaf)" />
+      </g>
+
+      {renderFlower(100, 40, 1.0, "flower-1", 15)}
+      {renderFlower(55, 80, 0.8, "flower-2", -20)}
+      {renderFlower(145, 55, 0.85, "flower-3", 35)}
+
+      <g id="glow">
+        
+      </g>
+          <!-- Motes -->
+        <circle cx="40" cy="80" r="1.2" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+        <circle cx="70" cy="45" r="0.8" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="90" cy="30" r="1.5" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="130" cy="50" r="1" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="160" cy="80" r="1.4" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="110" cy="90" r="0.9" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+          <!-- Grass -->
+        <path d="M10 138 Q9 134.4 8 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M25 137 Q26 134 27 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M45 139 Q43.5 134.8 42 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M75 138 Q76 134.4 77 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M110 140 Q109.5 137 109 135" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M140 139 Q141.5 134.8 143 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M170 138 Q169 134.4 168 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M190 137 Q190.5 134 191 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+          <!-- Wild Flowers -->
+        <circle cx="35" cy="145" r="1.2" fill="#f06090" opacity="0.7"/>
+        <circle cx="35" cy="145" r="0.48" fill="#fff" opacity="0.3"/>
+        <circle cx="160" cy="148" r="1" fill="#f06090" opacity="0.7"/>
+        <circle cx="160" cy="148" r="0.4" fill="#fff" opacity="0.3"/>
+        <circle cx="85" cy="150" r="1.4" fill="#f06090" opacity="0.7"/>
+        <circle cx="85" cy="150" r="0.5599999999999999" fill="#fff" opacity="0.3"/>
+        <circle cx="120" cy="142" r="1.1" fill="#f06090" opacity="0.7"/>
+        <circle cx="120" cy="142" r="0.44000000000000006" fill="#fff" opacity="0.3"/>
+    </svg>`,
+
+  // Stage 6
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        <linearGradient id="s6-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#5282a1" />
+          <stop offset="50%" stop-color="#9cc2b5" />
+          <stop offset="100%" stop-color="#f2ebd9" />
+        </linearGradient>
+        <radialGradient id="s6-sunGlow" cx="50%" cy="80%" r="60%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6" />
+          <stop offset="50%" stop-color="#f2ebd9" stop-opacity="0.2" />
+          <stop offset="100%" stop-color="#9cc2b5" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient id="s6-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#4c6a3c" />
+          <stop offset="100%" stop-color="#2c4224" />
+        </linearGradient>
+        <linearGradient id="s6-soilA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#261c16" />
+          <stop offset="100%" stop-color="#140f0c" />
+        </linearGradient>
+        <linearGradient id="s6-stem" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#355828" />
+          <stop offset="50%" stop-color="#5c9a48" />
+          <stop offset="100%" stop-color="#85d268" />
+        </linearGradient>
+        <radialGradient id="s6-leaf" cx="30%" cy="20%" r="90%">
+          <stop offset="0%" stop-color="#b5f285" />
+          <stop offset="60%" stop-color="#6cb844" />
+          <stop offset="100%" stop-color="#357222" />
+        </radialGradient>
+        <radialGradient id="s6-petalOuter" cx="50%" cy="80%" r="90%">
+          <stop offset="0%" stop-color="#e83870" />
+          <stop offset="50%" stop-color="#fa7ba8" />
+          <stop offset="100%" stop-color="#ffe4f0" />
+        </radialGradient>
+        <radialGradient id="s6-petalInner" cx="50%" cy="75%" r="80%">
+          <stop offset="0%" stop-color="#c82055" />
+          <stop offset="45%" stop-color="#f25588" />
+          <stop offset="100%" stop-color="#fcd2e5" />
+        </radialGradient>
+        <radialGradient id="s6-flowerGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ff7ba8" stop-opacity="0.45" />
+          <stop offset="100%" stop-color="#ff7ba8" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <g id="bg-static">
+        <rect width={w} height={h} fill="url(#s6-sky)" />
+        <rect width={w} height={h} fill="url(#s6-sunGlow)" />
+
+        <g id="clouds" opacity="0.85">
+          <path d="M \${15*s} \${45*s} Q \${30*s} \${35*s} \${50*s} \${40*s} T \${85*s} \${37*s} L \${85*s} \${50*s} L \${15*s} \${50*s} Z" fill="#dce6e2" opacity="0.7" />
+          <path d="M \${130*s} \${35*s} Q \${150*s} \${25*s} \${170*s} \${30*s} T \${200*s} \${27*s} L \${200*s} \${40*s} L \${130*s} \${40*s} Z" fill="#dce6e2" opacity="0.6" />
+        </g>
+
+        <path d="M 0 \${115*s} Q \${50*s} \${105*s} \${90*s} \${117*s} T \${170*s} \${113*s} T \${200*s} \${120*s} L \${200*s} \${145*s} L 0 \${145*s} Z" fill="#668a7a" opacity="0.8" />
+        <path d="M 0 \${125*s} Q \${60*s} \${119*s} \${110*s} \${127*s} T \${190*s} \${123*s} T \${200*s} \${127*s} L \${200*s} \${155*s} L 0 \${155*s} Z" fill="#547866" opacity="0.9" />
+
+        <path d="M 0 \${140*s} Q \${70*s} \${135*s} \${130*s} \${141*s} T \${200*s} \${137*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s6-ground)" />
+        <path d="M 0 \${165*s} Q \${90*s} \${159*s} \${200*s} \${168*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s6-soilA)" />
+
+      </g>
+
+      <g id="stem-1" style={{ transformOrigin: \`\${100*s}px \${160*s}px\` }}>
+        <path d="M \${100*s} \${165*s} C \${92*s} \${130*s} \${108*s} \${80*s} \${100*s} \${30*s}" stroke="url(#s6-stem)" stroke-width={6*s} fill="none" stroke-linecap="round" />
+        <path d="M \${98*s} \${165*s} C \${90*s} \${130*s} \${106*s} \${80*s} \${98*s} \${30*s}" stroke="#b5f285" stroke-width={1.2*s} fill="none" stroke-linecap="round" opacity="0.4" />
+      </g>
+      
+      <g id="branch-1" style={{ transformOrigin: \`\${98*s}px \${120*s}px\` }}>
+        <path d="M \${98*s} \${120*s} Q \${60*s} \${105*s} \${45*s} \${85*s}" stroke="url(#s6-stem)" stroke-width={3*s} fill="none" stroke-linecap="round" />
+      </g>
+      <g id="branch-2" style={{ transformOrigin: \`\${103*s}px \${100*s}px\` }}>
+        <path d="M \${103*s} \${100*s} Q \${140*s} \${90*s} \${155*s} \${65*s}" stroke="url(#s6-stem)" stroke-width={3*s} fill="none" stroke-linecap="round" />
+      </g>
+      <g id="branch-3" style={{ transformOrigin: \`\${99*s}px \${75*s}px\` }}>
+        <path d="M \${99*s} \${75*s} Q \${70*s} \${65*s} \${55*s} \${45*s}" stroke="url(#s6-stem)" stroke-width={2.5*s} fill="none" stroke-linecap="round" />
+      </g>
+      <g id="branch-4" style={{ transformOrigin: \`\${102*s}px \${60*s}px\` }}>
+        <path d="M \${102*s} \${60*s} Q \${125*s} \${50*s} \${135*s} \${35*s}" stroke="url(#s6-stem)" stroke-width={2.5*s} fill="none" stroke-linecap="round" />
+      </g>
+
+      <g id="leaves">
+        {[
+          [100, 140, 80, 110, -1], [100, 140, 120, 110, 1],
+          [60, 95, 40, 65, -1], [60, 95, 80, 65, 1],
+          [140, 80, 120, 50, -1], [140, 80, 160, 50, 1],
+          [75, 55, 55, 25, -1], [75, 55, 95, 25, 1],
+          [125, 45, 105, 15, -1], [125, 45, 145, 15, 1]
+        ].map(([cx, cy, tx, ty, dir], i) => (
+          <path key="l\${i}" d="M \${cx*s} \${cy*s} C \${(cx+(tx-cx)*0.2 + dir*15)*s} \${(cy+(ty-cy)*0.2)*s} \${(cx+(tx-cx)*0.8 + dir*10)*s} \${(cy+(ty-cy)*0.8)*s} \${tx*s} \${ty*s} C \${(cx+(tx-cx)*0.8 - dir*5)*s} \${(cy+(ty-cy)*0.8 - dir*10)*s} \${(cx+(tx-cx)*0.2 - dir*10)*s} \${(cy+(ty-cy)*0.2 - dir*10)*s} \${cx*s} \${cy*s} Z" fill="url(#s6-leaf)" />
+        ))}
+      </g>
+
+      {renderFlower(100, 30, 1.1, "flower-1", 0)}
+      {renderFlower(45, 85, 0.9, "flower-2", -15)}
+      {renderFlower(155, 65, 0.95, "flower-3", 25)}
+      {renderFlower(55, 45, 0.8, "flower-4", -30)}
+      {renderFlower(135, 35, 0.85, "flower-5", 40)}
+
+      <g id="glow">
+        {butterflies.map(([x, y, sc], i) => (
+          <g key="b\${i}" transform="translate(\${x*s}, \${y*s}) scale(\${sc as number})">
+            <path d="M 0 0 Q \${-5*s} \${-8*s} \${-10*s} \${-2*s} Q \${-5*s} \${2*s} 0 0 Z" fill="#fff" opacity="0.8" />
+            <path d="M 0 0 Q \${5*s} \${-8*s} \${10*s} \${-2*s} Q \${5*s} \${2*s} 0 0 Z" fill="#fff" opacity="0.8" />
+            <circle cx="0" cy="0" r={2*s} fill="#fff" />
+          </g>
+        ))}
+      </g>
+          <!-- Grass -->
+        <path d="M15 138 Q14 134.4 13 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M35 137 Q36 134 37 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M65 139 Q63.5 134.8 62 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M95 138 Q96 134.4 97 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M130 140 Q129.5 137 129 135" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M160 139 Q161.5 134.8 163 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M185 137 Q185.5 134 186 132" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+          <!-- Wild Flowers -->
+        <circle cx="25" cy="145" r="1.2" fill="#f06090" opacity="0.7"/>
+        <circle cx="25" cy="145" r="0.48" fill="#fff" opacity="0.3"/>
+        <circle cx="50" cy="148" r="1" fill="#f06090" opacity="0.7"/>
+        <circle cx="50" cy="148" r="0.4" fill="#fff" opacity="0.3"/>
+        <circle cx="150" cy="150" r="1.4" fill="#f06090" opacity="0.7"/>
+        <circle cx="150" cy="150" r="0.5599999999999999" fill="#fff" opacity="0.3"/>
+        <circle cx="175" cy="142" r="1.1" fill="#f06090" opacity="0.7"/>
+        <circle cx="175" cy="142" r="0.44000000000000006" fill="#fff" opacity="0.3"/>
+    </svg>`,
+
+  // Stage 7
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        <linearGradient id="s7-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#4185c7" />
+          <stop offset="50%" stop-color="#93c4d1" />
+          <stop offset="100%" stop-color="#e0ebd5" />
+        </linearGradient>
+        <linearGradient id="s7-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#548245" />
+          <stop offset="100%" stop-color="#2c5525" />
+        </linearGradient>
+        <linearGradient id="s7-soilA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#30241b" />
+          <stop offset="100%" stop-color="#1a120c" />
+        </linearGradient>
+
+        <linearGradient id="s7-trunk" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#4a362a" />
+          <stop offset="50%" stop-color="#5c4835" />
+          <stop offset="100%" stop-color="#688a45" />
+        </linearGradient>
+
+        <radialGradient id="s7-canopyShadow" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stop-color="#1a4218" />
+          <stop offset="100%" stop-color="#112e10" />
+        </radialGradient>
+        <radialGradient id="s7-canopyBase" cx="40%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="#4c8a32" />
+          <stop offset="100%" stop-color="#2c5a1a" />
+        </radialGradient>
+        <radialGradient id="s7-canopyHighlight" cx="30%" cy="30%" r="50%">
+          <stop offset="0%" stop-color="#8bd258" />
+          <stop offset="100%" stop-color="#4c8a32" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient id="s7-canopyRim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#c5f298" />
+          <stop offset="100%" stop-color="#8bd258" stop-opacity="0" />
+        </linearGradient>
+
+        <radialGradient id="s7-petalOuter" cx="50%" cy="80%" r="90%">
+          <stop offset="0%" stop-color="#e83870" />
+          <stop offset="50%" stop-color="#f86298" />
+          <stop offset="100%" stop-color="#ffd1e5" />
+        </radialGradient>
+        <radialGradient id="s7-petalInner" cx="50%" cy="75%" r="80%">
+          <stop offset="0%" stop-color="#c82055" />
+          <stop offset="45%" stop-color="#f24a80" />
+          <stop offset="100%" stop-color="#fcbcdb" />
+        </radialGradient>
+        <radialGradient id="s7-flowerGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ff7ba8" stop-opacity="0.4" />
+          <stop offset="100%" stop-color="#ff7ba8" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <g id="bg-static">
+        <rect width={w} height={h} fill="url(#s7-sky)" />
+
+        <g id="clouds" opacity="0.9">
+          <path d="M \${10*s} \${40*s} Q \${25*s} \${30*s} \${55*s} \${38*s} T \${95*s} \${34*s} L \${95*s} \${50*s} L \${10*s} \${50*s} Z" fill="#ffffff" opacity="0.6" />
+          <path d="M \${140*s} \${30*s} Q \${160*s} \${20*s} \${185*s} \${25*s} T \${200*s} \${22*s} L \${200*s} \${35*s} L \${140*s} \${35*s} Z" fill="#ffffff" opacity="0.5" />
+        </g>
+
+        <path d="M 0 \${120*s} Q \${45*s} \${110*s} \${95*s} \${122*s} T \${180*s} \${116*s} T \${200*s} \${122*s} L \${200*s} \${150*s} L 0 \${150*s} Z" fill="#729c88" opacity="0.75" />
+        <path d="M 0 \${130*s} Q \${55*s} \${122*s} \${115*s} \${132*s} T \${195*s} \${126*s} T \${200*s} \${130*s} L \${200*s} \${160*s} L 0 \${160*s} Z" fill="#5e8870" opacity="0.85" />
+
+        <path d="M 0 \${142*s} Q \${60*s} \${136*s} \${125*s} \${144*s} T \${200*s} \${138*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s7-ground)" />
+        <path d="M 0 \${168*s} Q \${85*s} \${162*s} \${200*s} \${170*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s7-soilA)" />
+
+      </g>
+
+      <g id="trunk" style={{ transformOrigin: \`\${100*s}px \${165*s}px\` }}>
+        <path d="M \${100*s} \${165*s} C \${90*s} \${140*s} \${105*s} \${100*s} \${100*s} \${60*s}" stroke="url(#s7-trunk)" stroke-width={10*s} fill="none" stroke-linecap="round" />
+        <path d="M \${96*s} \${165*s} C \${86*s} \${140*s} \${101*s} \${100*s} \${96*s} \${60*s}" stroke="#705642" stroke-width={1.5*s} fill="none" stroke-linecap="round" opacity="0.4" />
+      </g>
+
+      <g id="roots" style={{ transformOrigin: \`\${100*s}px \${165*s}px\` }}>
+        <path d="M \${98*s} \${160*s} Q \${80*s} \${168*s} \${75*s} \${175*s}" stroke="url(#s7-trunk)" stroke-width={3*s} fill="none" stroke-linecap="round" />
+        <path d="M \${102*s} \${162*s} Q \${120*s} \${166*s} \${125*s} \${178*s}" stroke="url(#s7-trunk)" stroke-width={4*s} fill="none" stroke-linecap="round" />
+        <path d="M \${99*s} \${164*s} Q \${95*s} \${172*s} \${105*s} \${185*s}" stroke="url(#s7-trunk)" stroke-width={2.5*s} fill="none" stroke-linecap="round" />
+      </g>
+
+      <g id="canopy-bg" style={{ transformOrigin: \`\${100*s}px \${75*s}px\` }}>
+        {canopyClusters.map(([x,y,r], i) => (
+          <g key={i}>
+            <circle cx={x*s} cy={y*s} r={r*s} fill="url(#s7-canopyShadow)" />
+            <circle cx={(x-r*0.1)*s} cy={(y-r*0.1)*s} r={r*0.85*s} fill="url(#s7-canopyBase)" />
+            <circle cx={(x-r*0.2)*s} cy={(y-r*0.25)*s} r={r*0.6*s} fill="url(#s7-canopyHighlight)" />
+            <path d="M \${(x-r*0.6)*s} \${(y-r*0.4)*s} Q \${x*s} \${(y-r*0.9)*s} \${(x+r*0.4)*s} \${(y-r*0.6)*s}" stroke="url(#s7-canopyRim)" stroke-width={r*0.12*s} stroke-linecap="round" fill="none" opacity="0.85" />
+          </g>
+        ))}
+      </g>
+
+      {renderFlower(100, 45, 1.2, "flower-1", 5)}
+      {renderFlower(65, 80, 0.9, "flower-2", -15)}
+      {renderFlower(135, 75, 1.0, "flower-3", 25)}
+      {renderFlower(50, 105, 0.8, "flower-4", -30)}
+      {renderFlower(150, 100, 0.85, "flower-5", 35)}
+      {renderFlower(85, 95, 0.75, "flower-6", 10)}
+      {renderFlower(115, 90, 0.8, "flower-7", -10)}
+
+      <g id="glow">
+        
+      </g>
+          <!-- Motes -->
+        <circle cx="30" cy="70" r="1.2" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+        <circle cx="60" cy="40" r="0.8" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="80" cy="25" r="1.5" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="120" cy="45" r="1" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="170" cy="75" r="1.4" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="140" cy="85" r="0.9" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+          <!-- Grass -->
+        <path d="M10 140 Q9 136.4 8 134" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M30 139 Q31 136 32 134" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M55 141 Q53.5 136.8 52 134" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M85 140 Q86 136.4 87 134" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M115 142 Q114.5 139 114 137" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M145 141 Q146.5 136.8 148 134" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M165 140 Q164 136.4 163 134" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M185 139 Q185.5 136 186 134" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+    </svg>`,
+
+  // Stage 8
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        <linearGradient id="s8-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#387cbd" />
+          <stop offset="50%" stop-color="#81b9c9" />
+          <stop offset="100%" stop-color="#d6e3c5" />
+        </linearGradient>
+        <radialGradient id="s8-sunGlow" cx="60%" cy="30%" r="50%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8" />
+          <stop offset="50%" stop-color="#f0fae6" stop-opacity="0.3" />
+          <stop offset="100%" stop-color="#f0fae6" stop-opacity="0" />
+        </radialGradient>
+
+        <linearGradient id="s8-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#457038" />
+          <stop offset="100%" stop-color="#25451a" />
+        </linearGradient>
+        <linearGradient id="s8-soilA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#281e15" />
+          <stop offset="100%" stop-color="#140f0a" />
+        </linearGradient>
+
+        <linearGradient id="s8-trunk" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#453225" />
+          <stop offset="50%" stop-color="#554232" />
+          <stop offset="100%" stop-color="#4c6a32" />
+        </linearGradient>
+
+        <radialGradient id="s8-canopyShadow" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stop-color="#123512" />
+          <stop offset="100%" stop-color="#0b220b" />
+        </radialGradient>
+        <radialGradient id="s8-canopyBase" cx="40%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="#3a7525" />
+          <stop offset="100%" stop-color="#1c4810" />
+        </radialGradient>
+        <radialGradient id="s8-canopyHighlight" cx="30%" cy="30%" r="50%">
+          <stop offset="0%" stop-color="#7ac245" />
+          <stop offset="100%" stop-color="#3a7525" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient id="s8-canopyRim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#b4ed82" />
+          <stop offset="100%" stop-color="#7ac245" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+
+      <g id="bg-static">
+        <rect width={w} height={h} fill="url(#s8-sky)" />
+        <rect width={w} height={h} fill="url(#s8-sunGlow)" />
+
+        <g id="clouds" opacity="0.95">
+          <path d="M \${15*s} \${35*s} Q \${35*s} \${20*s} \${60*s} \${28*s} T \${100*s} \${25*s} L \${100*s} \${45*s} L \${15*s} \${45*s} Z" fill="#ffffff" opacity="0.8" />
+          <path d="M \${150*s} \${20*s} Q \${175*s} \${10*s} \${200*s} \${18*s} L \${200*s} \${30*s} L \${150*s} \${30*s} Z" fill="#ffffff" opacity="0.7" />
+        </g>
+
+        <path d="M 0 \${125*s} Q \${50*s} \${115*s} \${100*s} \${127*s} T \${185*s} \${121*s} T \${200*s} \${127*s} L \${200*s} \${155*s} L 0 \${155*s} Z" fill="#7aa892" opacity="0.8" />
+        <path d="M 0 \${135*s} Q \${60*s} \${127*s} \${120*s} \${137*s} T \${195*s} \${131*s} T \${200*s} \${135*s} L \${200*s} \${165*s} L 0 \${165*s} Z" fill="#64947c" opacity="0.9" />
+
+        <path d="M 0 \${147*s} Q \${65*s} \${141*s} \${130*s} \${149*s} T \${200*s} \${143*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s8-ground)" />
+        <path d="M 0 \${173*s} Q \${90*s} \${167*s} \${200*s} \${175*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s8-soilA)" />
+
+      </g>
+
+      <g id="trunk" style={{ transformOrigin: \`\${100*s}px \${170*s}px\` }}>
+        <path d="M \${100*s} \${170*s} C \${88*s} \${140*s} \${108*s} \${90*s} \${100*s} \${50*s}" stroke="url(#s8-trunk)" stroke-width={15*s} fill="none" stroke-linecap="round" />
+        <path d="M \${94*s} \${170*s} C \${82*s} \${140*s} \${102*s} \${90*s} \${94*s} \${50*s}" stroke="#685040" stroke-width={2*s} fill="none" stroke-linecap="round" opacity="0.5" />
+        <path d="M \${106*s} \${170*s} C \${94*s} \${140*s} \${114*s} \${90*s} \${106*s} \${50*s}" stroke="#322218" stroke-width={2.5*s} fill="none" stroke-linecap="round" opacity="0.6" />
+      </g>
+
+      <g id="roots" style={{ transformOrigin: \`\${100*s}px \${170*s}px\` }}>
+        <path d="M \${97*s} \${162*s} Q \${75*s} \${172*s} \${70*s} \${180*s}" stroke="url(#s8-trunk)" stroke-width={4.5*s} fill="none" stroke-linecap="round" />
+        <path d="M \${103*s} \${165*s} Q \${125*s} \${170*s} \${135*s} \${185*s}" stroke="url(#s8-trunk)" stroke-width={5.5*s} fill="none" stroke-linecap="round" />
+        <path d="M \${100*s} \${168*s} Q \${95*s} \${180*s} \${105*s} \${195*s}" stroke="url(#s8-trunk)" stroke-width={3.5*s} fill="none" stroke-linecap="round" />
+        <path d="M \${108*s} \${162*s} Q \${140*s} \${165*s} \${150*s} \${175*s}" stroke="url(#s8-trunk)" stroke-width={3*s} fill="none" stroke-linecap="round" />
+      </g>
+
+      <g id="canopy-bg" style={{ transformOrigin: \`\${100*s}px \${85*s}px\` }}>
+        {canopyClusters.map(([x,y,r], i) => (
+          <g key={i}>
+            <circle cx={x*s} cy={y*s} r={r*s} fill="url(#s8-canopyShadow)" />
+            <circle cx={(x-r*0.1)*s} cy={(y-r*0.1)*s} r={r*0.85*s} fill="url(#s8-canopyBase)" />
+            <circle cx={(x-r*0.2)*s} cy={(y-r*0.25)*s} r={r*0.6*s} fill="url(#s8-canopyHighlight)" />
+            <path d="M \${(x-r*0.6)*s} \${(y-r*0.4)*s} Q \${x*s} \${(y-r*0.9)*s} \${(x+r*0.4)*s} \${(y-r*0.6)*s}" stroke="url(#s8-canopyRim)" stroke-width={r*0.15*s} stroke-linecap="round" fill="none" opacity="0.9" />
+          </g>
+        ))}
+      </g>
+
+      <g id="glow">
+        
+      </g>
+          <!-- Motes -->
+        <circle cx="30" cy="90" r="1.2" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+        <circle cx="60" cy="60" r="0.8" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="80" cy="45" r="1.5" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="120" cy="65" r="1" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="170" cy="95" r="1.4" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="140" cy="105" r="0.9" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+          <!-- Grass -->
+        <path d="M10 145 Q9 141.4 8 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M30 144 Q31 141 32 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M55 146 Q53.5 141.8 52 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M85 145 Q86 141.4 87 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M115 147 Q114.5 144 114 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M145 146 Q146.5 141.8 148 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M165 145 Q164 141.4 163 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M185 144 Q185.5 141 186 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+    </svg>`,
+
+  // Stage 9
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        <linearGradient id="s9-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#306ba8" />
+          <stop offset="50%" stop-color="#6ba6bd" />
+          <stop offset="100%" stop-color="#f0d3a8" />
+        </linearGradient>
+        <radialGradient id="s9-sunGlow" cx="40%" cy="40%" r="50%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.7" />
+          <stop offset="50%" stop-color="#ffebb5" stop-opacity="0.3" />
+          <stop offset="100%" stop-color="#ffebb5" stop-opacity="0" />
+        </radialGradient>
+
+        <linearGradient id="s9-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#4c7538" />
+          <stop offset="100%" stop-color="#2a4a1c" />
+        </linearGradient>
+        <linearGradient id="s9-soilA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2e2216" />
+          <stop offset="100%" stop-color="#160f09" />
+        </linearGradient>
+
+        <linearGradient id="s9-trunk" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#453225" />
+          <stop offset="50%" stop-color="#554232" />
+          <stop offset="100%" stop-color="#6c5040" />
+        </linearGradient>
+
+        <radialGradient id="s9-canopyShadow" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stop-color="#a8204b" />
+          <stop offset="100%" stop-color="#660e28" />
+        </radialGradient>
+        <radialGradient id="s9-canopyBase" cx="40%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="#e84078" />
+          <stop offset="100%" stop-color="#b0204d" />
+        </radialGradient>
+        <radialGradient id="s9-canopyHighlight" cx="30%" cy="30%" r="50%">
+          <stop offset="0%" stop-color="#ff85b3" />
+          <stop offset="100%" stop-color="#e84078" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient id="s9-canopyRim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffcce0" />
+          <stop offset="100%" stop-color="#ff85b3" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+
+      <g id="bg-static">
+        <rect width={w} height={h} fill="url(#s9-sky)" />
+        <rect width={w} height={h} fill="url(#s9-sunGlow)" />
+
+        <g id="clouds" opacity="0.8">
+          <path d="M \${10*s} \${40*s} Q \${30*s} \${25*s} \${55*s} \${35*s} T \${90*s} \${30*s} L \${90*s} \${50*s} L \${10*s} \${50*s} Z" fill="#ffffff" opacity="0.9" />
+          <path d="M \${160*s} \${30*s} Q \${180*s} \${20*s} \${200*s} \${28*s} L \${200*s} \${45*s} L \${160*s} \${45*s} Z" fill="#ffffff" opacity="0.8" />
+        </g>
+
+        <path d="M 0 \${125*s} Q \${50*s} \${115*s} \${100*s} \${127*s} T \${185*s} \${121*s} T \${200*s} \${127*s} L \${200*s} \${155*s} L 0 \${155*s} Z" fill="#82a688" opacity="0.85" />
+        <path d="M 0 \${135*s} Q \${60*s} \${127*s} \${120*s} \${137*s} T \${195*s} \${131*s} T \${200*s} \${135*s} L \${200*s} \${165*s} L 0 \${165*s} Z" fill="#6b9278" opacity="0.9" />
+
+        <path d="M 0 \${147*s} Q \${65*s} \${141*s} \${130*s} \${149*s} T \${200*s} \${143*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s9-ground)" />
+        <path d="M 0 \${173*s} Q \${90*s} \${167*s} \${200*s} \${175*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s9-soilA)" />
+
+      </g>
+
+      <g id="trunk" style={{ transformOrigin: \`\${100*s}px \${170*s}px\` }}>
+        <path d="M \${100*s} \${170*s} C \${88*s} \${140*s} \${108*s} \${90*s} \${100*s} \${50*s}" stroke="url(#s9-trunk)" stroke-width={15*s} fill="none" stroke-linecap="round" />
+        <path d="M \${94*s} \${170*s} C \${82*s} \${140*s} \${102*s} \${90*s} \${94*s} \${50*s}" stroke="#725545" stroke-width={2*s} fill="none" stroke-linecap="round" opacity="0.5" />
+        <path d="M \${106*s} \${170*s} C \${94*s} \${140*s} \${114*s} \${90*s} \${106*s} \${50*s}" stroke="#2c1a10" stroke-width={2.5*s} fill="none" stroke-linecap="round" opacity="0.6" />
+      </g>
+
+      <g id="roots" style={{ transformOrigin: \`\${100*s}px \${170*s}px\` }}>
+        <path d="M \${97*s} \${162*s} Q \${75*s} \${172*s} \${70*s} \${180*s}" stroke="url(#s9-trunk)" stroke-width={4.5*s} fill="none" stroke-linecap="round" />
+        <path d="M \${103*s} \${165*s} Q \${125*s} \${170*s} \${135*s} \${185*s}" stroke="url(#s9-trunk)" stroke-width={5.5*s} fill="none" stroke-linecap="round" />
+        <path d="M \${100*s} \${168*s} Q \${95*s} \${180*s} \${105*s} \${195*s}" stroke="url(#s9-trunk)" stroke-width={3.5*s} fill="none" stroke-linecap="round" />
+      </g>
+
+      <g id="canopy-bg" style={{ transformOrigin: \`\${100*s}px \${85*s}px\` }}>
+        {canopyClusters.map(([x,y,r], i) => (
+          <g key={i}>
+            <circle cx={x*s} cy={y*s} r={r*s} fill="url(#s9-canopyShadow)" />
+            <circle cx={(x-r*0.1)*s} cy={(y-r*0.1)*s} r={r*0.85*s} fill="url(#s9-canopyBase)" />
+            <circle cx={(x-r*0.2)*s} cy={(y-r*0.25)*s} r={r*0.6*s} fill="url(#s9-canopyHighlight)" />
+            <path d="M \${(x-r*0.6)*s} \${(y-r*0.4)*s} Q \${x*s} \${(y-r*0.9)*s} \${(x+r*0.4)*s} \${(y-r*0.6)*s}" stroke="url(#s9-canopyRim)" stroke-width={r*0.15*s} stroke-linecap="round" fill="none" opacity="0.9" />
+          </g>
+        ))}
+      </g>
+
+      <g id="falling-petals">
+        {fallingPetals.map(([x, y, rot], i) => (
+          <path key="fp\${i}" d="M \${x*s} \${y*s} C \${(x-3)*s} \${(y-6)*s} \${(x+2)*s} \${(y-8)*s} \${(x+4)*s} \${(y-4)*s} C \${(x+6)*s} \${(y)*s} \${(x+3)*s} \${(y+2)*s} \${x*s} \${y*s} Z" fill="#ff85b3" opacity="0.8" transform="rotate(\${rot} \${x*s} \${y*s})" />
+        ))}
+        {fallingPetals.map(([x, y, rot], i) => (
+           <path key="fph\${i}" d="M \${(x+15)*s} \${(y-10)*s} C \${(x+12)*s} \${(y-16)*s} \${(x+17)*s} \${(y-18)*s} \${(x+19)*s} \${(y-14)*s} C \${(x+21)*s} \${(y-10)*s} \${(x+18)*s} \${(y-8)*s} \${(x+15)*s} \${(y-10)*s} Z" fill="#ffcce0" opacity="0.7" transform="rotate(\${rot-20} \${(x+15)*s} \${(y-10)*s})" />
+        ))}
+      </g>
+
+      <g id="glow">
+        
+      </g>
+          <!-- Motes -->
+        <circle cx="30" cy="90" r="1.2" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+        <circle cx="60" cy="60" r="0.8" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="80" cy="45" r="1.5" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="120" cy="65" r="1" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="170" cy="95" r="1.4" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="140" cy="105" r="0.9" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+          <!-- Grass -->
+        <path d="M10 145 Q9 141.4 8 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M30 144 Q31 141 32 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M55 146 Q53.5 141.8 52 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M85 145 Q86 141.4 87 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M115 147 Q114.5 144 114 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M145 146 Q146.5 141.8 148 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M165 145 Q164 141.4 163 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M185 144 Q185.5 141 186 139" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+    </svg>`,
+
+  // Stage 10
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        <linearGradient id="s10-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#42588c" />
+          <stop offset="50%" stop-color="#a67c76" />
+          <stop offset="100%" stop-color="#f2b679" />
+        </linearGradient>
+        <radialGradient id="s10-sunGlow" cx="60%" cy="80%" r="50%">
+          <stop offset="0%" stop-color="#ffebc2" stop-opacity="0.8" />
+          <stop offset="50%" stop-color="#f2b679" stop-opacity="0.3" />
+          <stop offset="100%" stop-color="#a67c76" stop-opacity="0" />
+        </radialGradient>
+
+        <linearGradient id="s10-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#426636" />
+          <stop offset="100%" stop-color="#253a1a" />
+        </linearGradient>
+        <linearGradient id="s10-soilA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2c221a" />
+          <stop offset="100%" stop-color="#140f0a" />
+        </linearGradient>
+
+        <linearGradient id="s10-trunk" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#3a2b22" />
+          <stop offset="50%" stop-color="#4a362a" />
+          <stop offset="100%" stop-color="#554432" />
+        </linearGradient>
+
+        <radialGradient id="s10-canopyShadow" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stop-color="#183618" />
+          <stop offset="100%" stop-color="#0e240e" />
+        </radialGradient>
+        <radialGradient id="s10-canopyBase" cx="40%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="#356622" />
+          <stop offset="100%" stop-color="#1a3d12" />
+        </radialGradient>
+        <radialGradient id="s10-canopyHighlight" cx="30%" cy="30%" r="50%">
+          <stop offset="0%" stop-color="#6ea838" />
+          <stop offset="100%" stop-color="#356622" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient id="s10-canopyRim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffc085" />
+          <stop offset="100%" stop-color="#6ea838" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+
+      <g id="bg-static">
+        <rect width={w} height={h} fill="url(#s10-sky)" />
+        <rect width={w} height={h} fill="url(#s10-sunGlow)" />
+
+        <g id="clouds" opacity="0.9">
+          <path d="M \${10*s} \${50*s} Q \${30*s} \${35*s} \${60*s} \${45*s} T \${110*s} \${40*s} L \${110*s} \${60*s} L \${10*s} \${60*s} Z" fill="#d6a698" opacity="0.8" />
+          <path d="M \${140*s} \${45*s} Q \${160*s} \${35*s} \${180*s} \${40*s} T \${200*s} \${38*s} L \${200*s} \${55*s} L \${140*s} \${55*s} Z" fill="#d6a698" opacity="0.7" />
+          <path d="M \${10*s} \${60*s} L \${110*s} \${60*s}" stroke="#ffebc2" stroke-width={1*s} stroke-linecap="round" opacity="0.8" />
+        </g>
+
+        <path d="M 0 \${125*s} Q \${50*s} \${115*s} \${100*s} \${127*s} T \${185*s} \${121*s} T \${200*s} \${127*s} L \${200*s} \${155*s} L 0 \${155*s} Z" fill="#827d78" opacity="0.8" />
+        <path d="M 0 \${135*s} Q \${60*s} \${127*s} \${120*s} \${137*s} T \${195*s} \${131*s} T \${200*s} \${135*s} L \${200*s} \${165*s} L 0 \${165*s} Z" fill="#6b645c" opacity="0.9" />
+
+        <path d="M 0 \${150*s} Q \${65*s} \${144*s} \${130*s} \${152*s} T \${200*s} \${146*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s10-ground)" />
+        <path d="M 0 \${175*s} Q \${90*s} \${169*s} \${200*s} \${177*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s10-soilA)" />
+
+      </g>
+
+      <g id="trunk" style={{ transformOrigin: \`\${100*s}px \${175*s}px\` }}>
+        <path d="M \${100*s} \${175*s} C \${85*s} \${145*s} \${110*s} \${90*s} \${100*s} \${45*s}" stroke="url(#s10-trunk)" stroke-width={24*s} fill="none" stroke-linecap="round" />
+        <path d="M \${92*s} \${175*s} C \${77*s} \${145*s} \${102*s} \${90*s} \${92*s} \${45*s}" stroke="#5c4535" stroke-width={3*s} fill="none" stroke-linecap="round" opacity="0.5" />
+        <path d="M \${108*s} \${175*s} C \${93*s} \${145*s} \${118*s} \${90*s} \${108*s} \${45*s}" stroke="#221812" stroke-width={4*s} fill="none" stroke-linecap="round" opacity="0.6" />
+        
+        <path d="M \${94*s} \${172*s} C \${82*s} \${145*s} \${98*s} \${110*s} \${96*s} \${80*s}" stroke="#4a6828" stroke-width={4*s} fill="none" stroke-linecap="round" opacity="0.7" />
+        <path d="M \${92*s} \${172*s} C \${80*s} \${145*s} \${96*s} \${110*s} \${94*s} \${80*s}" stroke="#5c8a38" stroke-width={2*s} fill="none" stroke-linecap="round" opacity="0.6" />
+      </g>
+
+      <g id="roots" style={{ transformOrigin: \`\${100*s}px \${175*s}px\` }}>
+        <path d="M \${95*s} \${165*s} Q \${65*s} \${175*s} \${60*s} \${185*s}" stroke="url(#s10-trunk)" stroke-width={6*s} fill="none" stroke-linecap="round" />
+        <path d="M \${105*s} \${168*s} Q \${135*s} \${175*s} \${145*s} \${190*s}" stroke="url(#s10-trunk)" stroke-width={7*s} fill="none" stroke-linecap="round" />
+        <path d="M \${100*s} \${170*s} Q \${95*s} \${185*s} \${110*s} \${200*s}" stroke="url(#s10-trunk)" stroke-width={5*s} fill="none" stroke-linecap="round" />
+        <path d="M \${112*s} \${165*s} Q \${150*s} \${165*s} \${165*s} \${180*s}" stroke="url(#s10-trunk)" stroke-width={4.5*s} fill="none" stroke-linecap="round" />
+        <path d="M \${88*s} \${168*s} Q \${50*s} \${165*s} \${40*s} \${175*s}" stroke="url(#s10-trunk)" stroke-width={4*s} fill="none" stroke-linecap="round" />
+      </g>
+
+      <g id="canopy-bg" style={{ transformOrigin: \`\${100*s}px \${85*s}px\` }}>
+        {canopyClusters.map(([x,y,r], i) => (
+          <g key={i}>
+            <circle cx={x*s} cy={y*s} r={r*s} fill="url(#s10-canopyShadow)" />
+            <circle cx={(x-r*0.1)*s} cy={(y-r*0.1)*s} r={r*0.85*s} fill="url(#s10-canopyBase)" />
+            <circle cx={(x-r*0.2)*s} cy={(y-r*0.25)*s} r={r*0.6*s} fill="url(#s10-canopyHighlight)" />
+            <path d="M \${(x-r*0.6)*s} \${(y-r*0.4)*s} Q \${x*s} \${(y-r*0.9)*s} \${(x+r*0.4)*s} \${(y-r*0.6)*s}" stroke="url(#s10-canopyRim)" stroke-width={r*0.15*s} stroke-linecap="round" fill="none" opacity="0.9" />
+          </g>
+        ))}
+      </g>
+
+      <g id="glow">
+        
+      </g>
+          <!-- Motes -->
+        <circle cx="30" cy="100" r="1.2" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+        <circle cx="60" cy="70" r="0.8" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="80" cy="55" r="1.5" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="120" cy="75" r="1" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="170" cy="105" r="1.4" fill="#c8e0a8" opacity="0.3" class="sparkle"/>
+        <circle cx="140" cy="115" r="0.9" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+          <!-- Grass -->
+        <path d="M5 148 Q4 144.4 3 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M25 147 Q26 144 27 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M50 149 Q48.5 144.8 47 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M80 148 Q81 144.4 82 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M110 150 Q109.5 147 109 145" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M140 149 Q141.5 144.8 143 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M160 148 Q159 144.4 158 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M180 147 Q180.5 144 181 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M195 148 Q196 144.4 197 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+    </svg>`,
+
+  // Stage 11
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        <linearGradient id="s11-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#363266" />
+          <stop offset="50%" stop-color="#944b5c" />
+          <stop offset="100%" stop-color="#f28f5c" />
+        </linearGradient>
+        <radialGradient id="s11-sunGlow" cx="50%" cy="85%" r="60%">
+          <stop offset="0%" stop-color="#ffd8a8" stop-opacity="0.9" />
+          <stop offset="50%" stop-color="#f28f5c" stop-opacity="0.4" />
+          <stop offset="100%" stop-color="#944b5c" stop-opacity="0" />
+        </radialGradient>
+
+        <linearGradient id="s11-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#4a422e" />
+          <stop offset="100%" stop-color="#2a2216" />
+        </linearGradient>
+        <linearGradient id="s11-soilA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2c1a16" />
+          <stop offset="100%" stop-color="#140a08" />
+        </linearGradient>
+
+        <linearGradient id="s11-trunk" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#221816" />
+          <stop offset="50%" stop-color="#35221c" />
+          <stop offset="100%" stop-color="#4a3028" />
+        </linearGradient>
+
+        <radialGradient id="s11-canopyShadow" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stop-color="#2a1622" />
+          <stop offset="100%" stop-color="#140a12" />
+        </radialGradient>
+        <radialGradient id="s11-canopyBase" cx="40%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="#662233" />
+          <stop offset="100%" stop-color="#33111c" />
+        </radialGradient>
+        <radialGradient id="s11-canopyHighlight" cx="30%" cy="30%" r="50%">
+          <stop offset="0%" stop-color="#a83a48" />
+          <stop offset="100%" stop-color="#662233" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient id="s11-canopyRim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffb885" />
+          <stop offset="100%" stop-color="#a83a48" stop-opacity="0" />
+        </linearGradient>
+
+        <radialGradient id="s11-groveShadow" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stop-color="#1c1622" />
+          <stop offset="100%" stop-color="#0c0a12" />
+        </radialGradient>
+        <radialGradient id="s11-groveBase" cx="40%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="#4a2233" />
+          <stop offset="100%" stop-color="#22111c" />
+        </radialGradient>
+      </defs>
+
+      <g id="bg-static">
+        <rect width={w} height={h} fill="url(#s11-sky)" />
+        <rect width={w} height={h} fill="url(#s11-sunGlow)" />
+
+        <path d="M \${100*s} \${130*s} L \${-20*s} \${0*s} L \${40*s} \${0*s} Z" fill="#ffebc2" opacity="0.08" />
+        <path d="M \${100*s} \${130*s} L \${160*s} \${0*s} L \${220*s} \${0*s} Z" fill="#ffebc2" opacity="0.06" />
+
+        <g id="clouds" opacity="0.9">
+          <path d="M \${20*s} \${50*s} Q \${40*s} \${40*s} \${70*s} \${48*s} T \${130*s} \${42*s} L \${130*s} \${60*s} L \${20*s} \${60*s} Z" fill="#a65862" opacity="0.8" />
+          <path d="M \${150*s} \${45*s} Q \${170*s} \${35*s} \${190*s} \${42*s} T \${220*s} \${38*s} L \${220*s} \${55*s} L \${150*s} \${55*s} Z" fill="#a65862" opacity="0.7" />
+          <path d="M \${20*s} \${60*s} L \${130*s} \${60*s}" stroke="#ffb885" stroke-width={0.8*s} stroke-linecap="round" opacity="0.9" />
+        </g>
+
+        <path d="M 0 \${125*s} Q \${50*s} \${115*s} \${100*s} \${127*s} T \${185*s} \${121*s} T \${200*s} \${127*s} L \${200*s} \${155*s} L 0 \${155*s} Z" fill="#6c4a4e" opacity="0.85" />
+        <path d="M 0 \${135*s} Q \${60*s} \${127*s} \${120*s} \${137*s} T \${195*s} \${131*s} T \${200*s} \${135*s} L \${200*s} \${165*s} L 0 \${165*s} Z" fill="#54383c" opacity="0.9" />
+
+        <path d="M 0 \${150*s} Q \${65*s} \${144*s} \${130*s} \${152*s} T \${200*s} \${146*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s11-ground)" />
+        <path d="M 0 \${175*s} Q \${90*s} \${169*s} \${200*s} \${177*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s11-soilA)" />
+
+      </g>
+
+      <g id="grove-bg">
+        
+        <path d="M \${20*s} \${155*s} Q \${15*s} \${130*s} \${20*s} \${100*s}" stroke="#22111c" stroke-width={6*s} fill="none" opacity="0.8" />
+        {groveClustersL.map(([x,y,r], i) => (
+          <g key="gl\${i}">
+            <circle cx={x*s} cy={y*s} r={r*s} fill="url(#s11-groveShadow)" />
+            <circle cx={(x-r*0.1)*s} cy={(y-r*0.1)*s} r={r*0.8*s} fill="url(#s11-groveBase)" />
+          </g>
+        ))}
+        
+        <path d="M \${180*s} \${155*s} Q \${185*s} \${130*s} \${180*s} \${100*s}" stroke="#22111c" stroke-width={6*s} fill="none" opacity="0.8" />
+        {groveClustersR.map(([x,y,r], i) => (
+          <g key="gr\${i}">
+            <circle cx={x*s} cy={y*s} r={r*s} fill="url(#s11-groveShadow)" />
+            <circle cx={(x-r*0.1)*s} cy={(y-r*0.1)*s} r={r*0.8*s} fill="url(#s11-groveBase)" />
+          </g>
+        ))}
+      </g>
+
+      <g id="trunk" style={{ transformOrigin: \`\${100*s}px \${175*s}px\` }}>
+        <path d="M \${100*s} \${175*s} C \${85*s} \${145*s} \${110*s} \${90*s} \${100*s} \${45*s}" stroke="url(#s11-trunk)" stroke-width={24*s} fill="none" stroke-linecap="round" />
+        <path d="M \${92*s} \${175*s} C \${77*s} \${145*s} \${102*s} \${90*s} \${92*s} \${45*s}" stroke="#4a3028" stroke-width={3*s} fill="none" stroke-linecap="round" opacity="0.4" />
+        <path d="M \${108*s} \${175*s} C \${93*s} \${145*s} \${118*s} \${90*s} \${108*s} \${45*s}" stroke="#140a08" stroke-width={4*s} fill="none" stroke-linecap="round" opacity="0.6" />
+      </g>
+
+      <g id="roots" style={{ transformOrigin: \`\${100*s}px \${175*s}px\` }}>
+        <path d="M \${95*s} \${165*s} Q \${65*s} \${175*s} \${60*s} \${185*s}" stroke="url(#s11-trunk)" stroke-width={6*s} fill="none" stroke-linecap="round" />
+        <path d="M \${105*s} \${168*s} Q \${135*s} \${175*s} \${145*s} \${190*s}" stroke="url(#s11-trunk)" stroke-width={7*s} fill="none" stroke-linecap="round" />
+        <path d="M \${100*s} \${170*s} Q \${95*s} \${185*s} \${110*s} \${200*s}" stroke="url(#s11-trunk)" stroke-width={5*s} fill="none" stroke-linecap="round" />
+        <path d="M \${112*s} \${165*s} Q \${150*s} \${165*s} \${165*s} \${180*s}" stroke="url(#s11-trunk)" stroke-width={4.5*s} fill="none" stroke-linecap="round" />
+        <path d="M \${88*s} \${168*s} Q \${50*s} \${165*s} \${40*s} \${175*s}" stroke="url(#s11-trunk)" stroke-width={4*s} fill="none" stroke-linecap="round" />
+      </g>
+
+      <g id="canopy-bg" style={{ transformOrigin: \`\${100*s}px \${85*s}px\` }}>
+        {canopyClusters.map(([x,y,r], i) => (
+          <g key={i}>
+            <circle cx={x*s} cy={y*s} r={r*s} fill="url(#s11-canopyShadow)" />
+            <circle cx={(x-r*0.1)*s} cy={(y-r*0.1)*s} r={r*0.85*s} fill="url(#s11-canopyBase)" />
+            <circle cx={(x-r*0.2)*s} cy={(y-r*0.25)*s} r={r*0.6*s} fill="url(#s11-canopyHighlight)" />
+            <path d="M \${(x-r*0.6)*s} \${(y-r*0.4)*s} Q \${x*s} \${(y-r*0.9)*s} \${(x+r*0.4)*s} \${(y-r*0.6)*s}" stroke="url(#s11-canopyRim)" stroke-width={r*0.15*s} stroke-linecap="round" fill="none" opacity="0.95" />
+          </g>
+        ))}
+      </g>
+
+      <g id="glow">
+        
+      </g>
+          <!-- Motes -->
+        <circle cx="30" cy="100" r="1.2" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="60" cy="70" r="0.8" fill="#c8e0a8" opacity="0.8" class="sparkle"/>
+        <circle cx="80" cy="55" r="1.5" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="120" cy="75" r="1" fill="#c8e0a8" opacity="0.7" class="sparkle"/>
+        <circle cx="170" cy="105" r="1.4" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="140" cy="115" r="0.9" fill="#c8e0a8" opacity="0.7" class="sparkle"/>
+        <circle cx="20" cy="130" r="1" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="180" cy="135" r="1.2" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="100" cy="120" r="0.8" fill="#c8e0a8" opacity="0.8" class="sparkle"/>
+          <!-- Grass -->
+        <path d="M5 148 Q4 144.4 3 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M25 147 Q26 144 27 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M50 149 Q48.5 144.8 47 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M80 148 Q81 144.4 82 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M110 150 Q109.5 147 109 145" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M140 149 Q141.5 144.8 143 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M160 148 Q159 144.4 158 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M180 147 Q180.5 144 181 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M195 148 Q196 144.4 197 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+    </svg>`,
+
+  // Stage 12
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        <linearGradient id="s12-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#261a42" />
+          <stop offset="40%" stop-color="#6e2a4a" />
+          <stop offset="100%" stop-color="#d95c4e" />
+        </linearGradient>
+        <radialGradient id="s12-sunGlow" cx="50%" cy="80%" r="50%">
+          <stop offset="0%" stop-color="#ffb885" stop-opacity="0.8" />
+          <stop offset="50%" stop-color="#d95c4e" stop-opacity="0.3" />
+          <stop offset="100%" stop-color="#6e2a4a" stop-opacity="0" />
+        </radialGradient>
+
+        <linearGradient id="s12-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#382a22" />
+          <stop offset="100%" stop-color="#1c1214" />
+        </linearGradient>
+        <linearGradient id="s12-soilA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#221216" />
+          <stop offset="100%" stop-color="#0c0608" />
+        </linearGradient>
+
+        <linearGradient id="s12-trunk" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#181014" />
+          <stop offset="50%" stop-color="#2a181e" />
+          <stop offset="100%" stop-color="#3c2226" />
+        </linearGradient>
+
+        <radialGradient id="s12-canopyShadow" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stop-color="#120c18" />
+          <stop offset="100%" stop-color="#0a040c" />
+        </radialGradient>
+        <radialGradient id="s12-canopyBase" cx="40%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="#3a1c2a" />
+          <stop offset="100%" stop-color="#1c0c18" />
+        </radialGradient>
+        <radialGradient id="s12-canopyHighlight" cx="30%" cy="30%" r="50%">
+          <stop offset="0%" stop-color="#6e2a4a" />
+          <stop offset="100%" stop-color="#3a1c2a" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient id="s12-canopyRim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffb885" />
+          <stop offset="100%" stop-color="#6e2a4a" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+
+      <g id="bg-static">
+        <rect width={w} height={h} fill="url(#s12-sky)" />
+        <rect width={w} height={h} fill="url(#s12-sunGlow)" />
+
+        <g id="clouds" opacity="0.7">
+          <path d="M \${10*s} \${60*s} Q \${30*s} \${50*s} \${60*s} \${55*s} T \${120*s} \${52*s} L \${120*s} \${75*s} L \${10*s} \${75*s} Z" fill="#5e263d" opacity="0.6" />
+          <path d="M \${140*s} \${55*s} Q \${160*s} \${45*s} \${180*s} \${50*s} T \${220*s} \${48*s} L \${220*s} \${65*s} L \${140*s} \${65*s} Z" fill="#5e263d" opacity="0.5" />
+          <path d="M \${10*s} \${75*s} L \${120*s} \${75*s}" stroke="#d95c4e" stroke-width={1*s} stroke-linecap="round" opacity="0.7" />
+        </g>
+
+        <path d="M 0 \${125*s} Q \${50*s} \${115*s} \${100*s} \${127*s} T \${185*s} \${121*s} T \${200*s} \${127*s} L \${200*s} \${155*s} L 0 \${155*s} Z" fill="#4c2e36" opacity="0.8" />
+        <path d="M 0 \${135*s} Q \${60*s} \${127*s} \${120*s} \${137*s} T \${195*s} \${131*s} T \${200*s} \${135*s} L \${200*s} \${165*s} L 0 \${165*s} Z" fill="#3a2228" opacity="0.9" />
+
+        <path d="M 0 \${150*s} Q \${65*s} \${144*s} \${130*s} \${152*s} T \${200*s} \${146*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s12-ground)" />
+        <path d="M 0 \${175*s} Q \${90*s} \${169*s} \${200*s} \${177*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s12-soilA)" />
+
+      </g>
+
+      <g id="trunk" style={{ transformOrigin: \`\${100*s}px \${175*s}px\` }}>
+        <path d="M \${100*s} \${175*s} C \${85*s} \${120*s} \${115*s} \${70*s} \${100*s} \${0*s}" stroke="url(#s12-trunk)" stroke-width={35*s} fill="none" stroke-linecap="round" />
+        <path d="M \${85*s} \${175*s} C \${70*s} \${120*s} \${100*s} \${70*s} \${85*s} \${0*s}" stroke="#3c2226" stroke-width={4*s} fill="none" stroke-linecap="round" opacity="0.4" />
+        <path d="M \${115*s} \${175*s} C \${100*s} \${120*s} \${130*s} \${70*s} \${115*s} \${0*s}" stroke="#0c0608" stroke-width={6*s} fill="none" stroke-linecap="round" opacity="0.7" />
+        <path d="M \${95*s} \${175*s} C \${80*s} \${120*s} \${110*s} \${70*s} \${95*s} \${0*s}" stroke="#2a181e" stroke-width={3*s} fill="none" stroke-linecap="round" opacity="0.5" />
+      </g>
+
+      <g id="roots" style={{ transformOrigin: \`\${100*s}px \${175*s}px\` }}>
+        <path d="M \${90*s} \${160*s} Q \${50*s} \${170*s} \${35*s} \${185*s}" stroke="url(#s12-trunk)" stroke-width={10*s} fill="none" stroke-linecap="round" />
+        <path d="M \${110*s} \${165*s} Q \${150*s} \${170*s} \${170*s} \${185*s}" stroke="url(#s12-trunk)" stroke-width={12*s} fill="none" stroke-linecap="round" />
+        <path d="M \${100*s} \${168*s} Q \${90*s} \${190*s} \${110*s} \${210*s}" stroke="url(#s12-trunk)" stroke-width={8*s} fill="none" stroke-linecap="round" />
+        <path d="M \${118*s} \${160*s} Q \${170*s} \${160*s} \${190*s} \${175*s}" stroke="url(#s12-trunk)" stroke-width={7*s} fill="none" stroke-linecap="round" />
+        <path d="M \${82*s} \${165*s} Q \${30*s} \${160*s} \${15*s} \${170*s}" stroke="url(#s12-trunk)" stroke-width={6*s} fill="none" stroke-linecap="round" />
+      </g>
+
+      <g id="canopy-massive" style={{ transformOrigin: \`\${100*s}px \${50*s}px\` }}>
+        {canopyClusters.map(([x,y,r], i) => (
+          <g key={i}>
+            <circle cx={x*s} cy={y*s} r={r*s} fill="url(#s12-canopyShadow)" />
+            <circle cx={(x-r*0.1)*s} cy={(y-r*0.1)*s} r={r*0.85*s} fill="url(#s12-canopyBase)" />
+            <circle cx={(x-r*0.2)*s} cy={(y-r*0.25)*s} r={r*0.6*s} fill="url(#s12-canopyHighlight)" />
+            <path d="M \${(x-r*0.6)*s} \${(y-r*0.4)*s} Q \${x*s} \${(y-r*0.9)*s} \${(x+r*0.4)*s} \${(y-r*0.6)*s}" stroke="url(#s12-canopyRim)" stroke-width={r*0.1*s} stroke-linecap="round" fill="none" opacity="0.9" />
+          </g>
+        ))}
+      </g>
+
+      <g id="glow">
+        <path d="M \${100*s} \${50*s} L \${20*s} \${150*s} L \${60*s} \${150*s} Z" fill="#ffb885" opacity="0.08" />
+        <path d="M \${100*s} \${50*s} L \${140*s} \${150*s} L \${180*s} \${150*s} Z" fill="#ffb885" opacity="0.06" />
+
+      </g>
+          <!-- Motes -->
+        <circle cx="30" cy="150" r="1.2" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="60" cy="120" r="0.8" fill="#c8e0a8" opacity="0.7" class="sparkle"/>
+        <circle cx="80" cy="135" r="1.5" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+        <circle cx="120" cy="145" r="1" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="170" cy="160" r="1.4" fill="#c8e0a8" opacity="0.4" class="sparkle"/>
+        <circle cx="140" cy="115" r="0.9" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="20" cy="130" r="1" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="180" cy="135" r="1.2" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="100" cy="120" r="0.8" fill="#c8e0a8" opacity="0.7" class="sparkle"/>
+          <!-- Grass -->
+        <path d="M5 148 Q4 144.4 3 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M25 147 Q26 144 27 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M50 149 Q48.5 144.8 47 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M80 148 Q81 144.4 82 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M110 150 Q109.5 147 109 145" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M140 149 Q141.5 144.8 143 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M160 148 Q159 144.4 158 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M180 147 Q180.5 144 181 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+        <path d="M195 148 Q196 144.4 197 142" stroke="#4a6a38" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+    </svg>`,
+
+  // Stage 13
+  `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" >
+      <defs>
+        <linearGradient id="s13-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#10142b" />
+          <stop offset="40%" stop-color="#2a1d40" />
+          <stop offset="70%" stop-color="#5c2a52" />
+          <stop offset="100%" stop-color="#10142b" />
+        </linearGradient>
+        <radialGradient id="s13-moonGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#b382e6" stop-opacity="0.4" />
+          <stop offset="50%" stop-color="#5c2a52" stop-opacity="0.1" />
+          <stop offset="100%" stop-color="#2a1d40" stop-opacity="0" />
+        </radialGradient>
+        <radialGradient id="s13-starG" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#e2e8f0" stop-opacity="0.8" />
+          <stop offset="100%" stop-color="#e2e8f0" stop-opacity="0" />
+        </radialGradient>
+
+        <linearGradient id="s13-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1c1622" />
+          <stop offset="100%" stop-color="#0c0812" />
+        </linearGradient>
+        <linearGradient id="s13-soilA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#120c16" />
+          <stop offset="100%" stop-color="#060408" />
+        </linearGradient>
+
+        <linearGradient id="s13-trunk" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#120a16" />
+          <stop offset="50%" stop-color="#22142a" />
+          <stop offset="100%" stop-color="#331c3a" />
+        </linearGradient>
+
+        <radialGradient id="s13-canopyShadow" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stop-color="#0c0612" />
+          <stop offset="100%" stop-color="#060208" />
+        </radialGradient>
+        <radialGradient id="s13-canopyBase" cx="40%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="#2a1426" />
+          <stop offset="100%" stop-color="#140812" />
+        </radialGradient>
+        <radialGradient id="s13-canopyHighlight" cx="30%" cy="30%" r="50%">
+          <stop offset="0%" stop-color="#4a223c" />
+          <stop offset="100%" stop-color="#2a1426" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient id="s13-canopyRim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#b382e6" />
+          <stop offset="100%" stop-color="#4a223c" stop-opacity="0" />
+        </linearGradient>
+        
+        <radialGradient id="s13-magicGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#82e6d9" stop-opacity="0.8" />
+          <stop offset="50%" stop-color="#4a8c99" stop-opacity="0.2" />
+          <stop offset="100%" stop-color="#4a8c99" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <g id="bg-static">
+        <rect width={w} height={h} fill="url(#s13-sky)" />
+        <rect width={w} height={h} fill="url(#s13-moonGlow)" />
+
+        <path d="M 0 \${125*s} Q \${50*s} \${115*s} \${100*s} \${127*s} T \${185*s} \${121*s} T \${200*s} \${127*s} L \${200*s} \${155*s} L 0 \${155*s} Z" fill="#22162a" opacity="0.8" />
+        <path d="M 0 \${135*s} Q \${60*s} \${127*s} \${120*s} \${137*s} T \${195*s} \${131*s} T \${200*s} \${135*s} L \${200*s} \${165*s} L 0 \${165*s} Z" fill="#1a1022" opacity="0.9" />
+
+        <path d="M 0 \${150*s} Q \${65*s} \${144*s} \${130*s} \${152*s} T \${200*s} \${146*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s13-ground)" />
+        <path d="M 0 \${175*s} Q \${90*s} \${169*s} \${200*s} \${177*s} L \${200*s} \${260*s} L 0 \${260*s} Z" fill="url(#s13-soilA)" />
+      </g>
+
+      <g id="trunk" style={{ transformOrigin: \`\${100*s}px \${175*s}px\` }}>
+        <path d="M \${100*s} \${175*s} C \${80*s} \${120*s} \${120*s} \${70*s} \${100*s} \${0*s}" stroke="url(#s13-trunk)" stroke-width={40*s} fill="none" stroke-linecap="round" />
+        <path d="M \${80*s} \${175*s} C \${60*s} \${120*s} \${100*s} \${70*s} \${80*s} \${0*s}" stroke="#22142a" stroke-width={5*s} fill="none" stroke-linecap="round" opacity="0.4" />
+        <path d="M \${120*s} \${175*s} C \${100*s} \${120*s} \${140*s} \${70*s} \${120*s} \${0*s}" stroke="#060208" stroke-width={8*s} fill="none" stroke-linecap="round" opacity="0.7" />
+        <path d="M \${95*s} \${175*s} C \${75*s} \${120*s} \${115*s} \${70*s} \${95*s} \${0*s}" stroke="#b382e6" stroke-width={1*s} fill="none" stroke-linecap="round" opacity="0.5" />
+      </g>
+
+      <g id="roots" style={{ transformOrigin: \`\${100*s}px \${175*s}px\` }}>
+        <path d="M \${85*s} \${160*s} Q \${40*s} \${170*s} \${25*s} \${185*s}" stroke="url(#s13-trunk)" stroke-width={12*s} fill="none" stroke-linecap="round" />
+        <path d="M \${115*s} \${165*s} Q \${160*s} \${170*s} \${180*s} \${185*s}" stroke="url(#s13-trunk)" stroke-width={14*s} fill="none" stroke-linecap="round" />
+        <path d="M \${100*s} \${168*s} Q \${85*s} \${190*s} \${110*s} \${220*s}" stroke="url(#s13-trunk)" stroke-width={10*s} fill="none" stroke-linecap="round" />
+        <path d="M \${125*s} \${160*s} Q \${180*s} \${160*s} \${200*s} \${175*s}" stroke="url(#s13-trunk)" stroke-width={8*s} fill="none" stroke-linecap="round" />
+        <path d="M \${75*s} \${165*s} Q \${20*s} \${160*s} \${5*s} \${170*s}" stroke="url(#s13-trunk)" stroke-width={7*s} fill="none" stroke-linecap="round" />
+      </g>
+
+      <g id="canopy-massive" style={{ transformOrigin: \`\${100*s}px \${50*s}px\` }}>
+        {canopyClusters.map(([x,y,r], i) => (
+          <g key={i}>
+            <circle cx={x*s} cy={y*s} r={r*s} fill="url(#s13-canopyShadow)" />
+            <circle cx={(x-r*0.1)*s} cy={(y-r*0.1)*s} r={r*0.85*s} fill="url(#s13-canopyBase)" />
+            <circle cx={(x-r*0.2)*s} cy={(y-r*0.25)*s} r={r*0.6*s} fill="url(#s13-canopyHighlight)" />
+            <path d="M \${(x-r*0.6)*s} \${(y-r*0.4)*s} Q \${x*s} \${(y-r*0.9)*s} \${(x+r*0.4)*s} \${(y-r*0.6)*s}" stroke="url(#s13-canopyRim)" stroke-width={r*0.1*s} stroke-linecap="round" fill="none" opacity="0.9" />
+          </g>
+        ))}
+      </g>
+
+      <g id="magic-flora">
+        {glowingLotuses.map(([x, y, r, rot], i) => (
+          <g key="ml\${i}" transform="translate(\${x*s}, \${y*s}) rotate(\${rot}) scale(\${r})">
+            <path d="M 0 0 C -2 \${-10*s} -8 \${-15*s} 0 \${-20*s} C 8 \${-15*s} 2 \${-10*s} 0 0 Z" fill="#82e6d9" opacity="0.9" />
+            <path d="M 0 0 C -5 \${-5*s} -12 \${-8*s} -10 \${-12*s} C -5 \${-10*s} -2 \${-5*s} 0 0 Z" fill="#82e6d9" opacity="0.7" />
+            <path d="M 0 0 C 5 \${-5*s} 12 \${-8*s} 10 \${-12*s} C 5 \${-10*s} 2 \${-5*s} 0 0 Z" fill="#82e6d9" opacity="0.7" />
+            <circle cx="0" cy={-10*s} r={15*s} fill="url(#s13-magicGlow)" />
+            <path d="M 0 0 Q 0 \${-20*s} 0 \${-40*s}" stroke="#4a8c99" stroke-width={0.5*s} fill="none" opacity="0.5" />
+          </g>
+        ))}
+      </g>
+
+      <g id="spirits">
+        <path d="M \${110*s} \${170*s} Q \${112*s} \${165*s} \${115*s} \${168*s} Q \${113*s} \${172*s} \${110*s} \${170*s} Z" fill="#e2e8f0" opacity="0.9" />
+        <circle cx={112*s} cy={167*s} r={0.5*s} fill="#1a1022" />
+        <circle cx={114*s} cy={167.5*s} r={0.5*s} fill="#1a1022" />
+        <circle cx={112.5*s} cy={168.5*s} r={6*s} fill="url(#s13-starG)" />
+
+        <path d="M \${85*s} \${175*s} Q \${83*s} \${170*s} \${80*s} \${173*s} Q \${82*s} \${177*s} \${85*s} \${175*s} Z" fill="#e2e8f0" opacity="0.9" />
+        <circle cx={83*s} cy={172*s} r={0.4*s} fill="#1a1022" />
+        <circle cx={81*s} cy={172.5*s} r={0.4*s} fill="#1a1022" />
+        <circle cx={82.5*s} cy={173.5*s} r={5*s} fill="url(#s13-starG)" />
+      </g>
+
+      <g id="glow">
+        
+      </g>
+          <!-- Stars -->
+        <circle cx="25" cy="20" r="1" fill="url(#s13-starG)" opacity="0.8"/>
+        <circle cx="25" cy="20" r="0.3" fill="#e2e8f0" opacity="0.6400000000000001"/>
+        <circle cx="75" cy="15" r="1.5" fill="url(#s13-starG)" opacity="0.9"/>
+        <circle cx="75" cy="15" r="0.44999999999999996" fill="#e2e8f0" opacity="0.7200000000000001"/>
+        <circle cx="165" cy="25" r="1.2" fill="url(#s13-starG)" opacity="0.7"/>
+        <circle cx="165" cy="25" r="0.36" fill="#e2e8f0" opacity="0.5599999999999999"/>
+        <circle cx="130" cy="40" r="0.8" fill="url(#s13-starG)" opacity="0.5"/>
+        <circle cx="130" cy="40" r="0.24" fill="#e2e8f0" opacity="0.4"/>
+        <circle cx="95" cy="50" r="0.7" fill="url(#s13-starG)" opacity="0.4"/>
+        <circle cx="95" cy="50" r="0.21" fill="#e2e8f0" opacity="0.32000000000000006"/>
+        <circle cx="150" cy="60" r="0.6" fill="url(#s13-starG)" opacity="0.3"/>
+        <circle cx="150" cy="60" r="0.18" fill="#e2e8f0" opacity="0.24"/>
+        <circle cx="40" cy="55" r="0.9" fill="url(#s13-starG)" opacity="0.6"/>
+        <circle cx="40" cy="55" r="0.27" fill="#e2e8f0" opacity="0.48"/>
+        <circle cx="180" cy="45" r="1" fill="url(#s13-starG)" opacity="0.5"/>
+        <circle cx="180" cy="45" r="0.3" fill="#e2e8f0" opacity="0.4"/>
+        <circle cx="110" cy="20" r="1.2" fill="url(#s13-starG)" opacity="0.8"/>
+        <circle cx="110" cy="20" r="0.36" fill="#e2e8f0" opacity="0.6400000000000001"/>
+          <!-- Motes -->
+        <circle cx="30" cy="150" r="1.5" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="60" cy="120" r="1" fill="#c8e0a8" opacity="0.8" class="sparkle"/>
+        <circle cx="80" cy="135" r="1.8" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="120" cy="145" r="1.2" fill="#c8e0a8" opacity="0.7" class="sparkle"/>
+        <circle cx="170" cy="160" r="1.6" fill="#c8e0a8" opacity="0.5" class="sparkle"/>
+        <circle cx="140" cy="115" r="1" fill="#c8e0a8" opacity="0.8" class="sparkle"/>
+        <circle cx="20" cy="130" r="1.2" fill="#c8e0a8" opacity="0.6" class="sparkle"/>
+        <circle cx="180" cy="135" r="1.5" fill="#c8e0a8" opacity="0.7" class="sparkle"/>
+        <circle cx="100" cy="120" r="1" fill="#c8e0a8" opacity="0.9" class="sparkle"/>
+    </svg>`,
+
+];
+
+function buildGardenSVG(levelIdx) {
+  const i = Math.min(Math.max(levelIdx, 0), 13);
+  const stageNames = ['Seed','Seedling','Sprout','Budding','Blooming','Flowering','Flourishing','Rooted','Evergreen','Full Bloom','Perennial','Grove','Canopy','Ecosystem'];
+  let svg = GARDEN_STAGE_SVGS[i] || GARDEN_STAGE_SVGS[0];
+  // Add aria label and responsive sizing for garden view
+  svg = svg.replace('<svg ', `<svg role="img" aria-label="Growth level: ${stageNames[i]}" style="width:100%;height:100%;display:block" `);
+  return svg;
+}
+
+
 function buildFlowerSVG(levelIdx, animated = false) {
   const i = Math.min(levelIdx, 13);
   const stageNames = ['Seed','Seedling','Sprout','Budding','Blooming','Flowering','Flourishing','Rooted','Evergreen','Full Bloom','Perennial','Grove','Canopy','Ecosystem'];
@@ -6014,11 +8145,8 @@ function openGardenView() {
 
   overlay.innerHTML = `
     <div class="garden-scene">
-      <div class="garden-sky"></div>
-      ${orbsHTML}
-      <div class="garden-haze"></div>
+      ${buildGardenSVG(lvlIdx)}
     </div>
-    <div class="garden-emoji">${level.emoji}</div>
     <div class="garden-stage-name">${level.name}</div>
     <div class="garden-stage-sub">${subText}</div>
     <button class="garden-close" onclick="closeGardenView()" aria-label="Close garden">✕</button>
