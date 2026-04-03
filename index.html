@@ -17472,7 +17472,10 @@ function applyRestoreData(data) {
   if (data.onesignalPid) save('bloom_onesignal_pid', data.onesignalPid);
   if (data.wallFp) save('bloom_wall_fp', data.wallFp);
   if (data.wallHearted) save('bloom_wall_hearted', data.wallHearted);
-  if (data.version) save('bloom_version', data.version);
+  // Save current version so What's New doesn't fire on top of restore flow
+  save('bloom_version', VERSION);
+  // If the user was onboarded, they've already seen the tutorial
+  if (data.prefs?.onboarded) save('bloom_tutorial_done', true);
 }
 
 async function tryRestoreFromURL() {
@@ -20613,8 +20616,13 @@ function endTutorial() {
 
 function checkShowTutorial() {
   if (!load('bloom_tutorial_done')) {
-    // First-time user — show tutorial, skip What's New
-    setTimeout(startTutorial, 700);
+    // Don't launch tutorial if a sheet is already open (e.g. backup restore)
+    if (document.querySelector('.bottom-sheet.open')) {
+      save('bloom_tutorial_done', true);
+    } else {
+      // First-time user — show tutorial, skip What's New
+      setTimeout(startTutorial, 700);
+    }
   } else {
     // Returning user — show What's New if version is new
     showWhatsNew();
