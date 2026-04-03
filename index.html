@@ -6073,7 +6073,7 @@ function populateGardenVisitors(lvlIdx, gentle) {
 
   // Firefly (affirmations) — level 1+
   if (lvlIdx >= 1) {
-    const affs = getAffirmations();
+    const affs = getAffirmationLines();
     const todayAffs = state.todayData?.affirmations || [];
     const affPool = todayAffs.length > 0 ? todayAffs : affs;
     pool.push({ type: 'firefly', emoji: '✨', content: affPool[Math.floor(Math.random() * affPool.length)] });
