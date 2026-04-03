@@ -180,6 +180,42 @@ Progress tab → tap flower → openGardenView()
 
 ## Implementation Phases
 
+### B0: Evolving Ambient Background (passive, no interaction)
+
+The app background itself evolves as the user levels up. This is separate from the Garden View. You don't tap anything, you don't open anything. You just notice one day that there are trees now.
+
+**What it is:** Layered SVG silhouettes rendered inside or behind the `#ambient-particles` container, visible in the gaps between cards and softly through translucent cards. Theme-colored, low-opacity, purely atmospheric.
+
+**How it grows:**
+
+| Level Range | Background Elements |
+|---|---|
+| Seed-Sprout (0-2) | Nothing. Just the ambient particles and dark ground. Bare. |
+| Budding-Blooming (3-4) | A faint ground line. A few grass blades at the bottom edge. Subtle. |
+| Flowering-Flourishing (5-6) | Low hills in the distance. Small bushes. Ground cover getting richer. |
+| Rooted-Evergreen (7-8) | Tree silhouettes appearing at the edges. A treeline forming. Distant canopy. |
+| Full Bloom-Grove (9-11) | Full treeline. Rolling hills. Maybe a faint stream or path. The forest is real now. |
+| Canopy-Ecosystem (12-13) | Rich layered landscape. Mountains in the far distance. Multiple tree layers with parallax-like depth (different opacity layers). Light rays filtering through canopy. A complete natural world behind your daily habits. |
+
+**Implementation approach:**
+- New function `buildAmbientBackground(levelIdx)` returns an SVG string
+- SVG uses `position: fixed; inset: 0; z-index: 0` (same layer as or just behind ambient particles)
+- All fills use theme colors via `getThemeSVGColors()` at very low opacity (0.06-0.15) so they're atmospheric, not distracting
+- Silhouettes are simple paths (treelines, hills, ground) not detailed illustrations. Think fog layers, not paintings.
+- Updates when level changes (called from `checkLevelUp()`) or theme switches
+- Respects `prefers-reduced-motion` (still shows the static background, just no animated light rays)
+- **Performance:** 10-30 SVG path elements max. No animation loops. Static or CSS-animated only.
+
+**Why B0 comes first:** It's simpler than the Garden View (no interaction, no data queries, no tap handlers), but it fundamentally changes how the app feels. The user's world literally grows around them as they show up. When they eventually open the Garden View (B1+), it feels like stepping INTO a world they've already been watching form.
+
+**Theme-specific character:**
+- **Forest**: Pine and deciduous treeline silhouettes, rolling hills, moss-covered ground
+- **Ocean**: Underwater landscape. Coral silhouettes, seabed contours, distant kelp forests, light from above
+- **Rose**: Garden silhouettes. Flower bed edges, trellis shapes, soft hedge lines
+- **Amber**: Desert/savanna. Distant mesa silhouettes, scrub brush, warm horizon glow
+- **Pastel**: Dreamscape. Soft cloud layers, gentle rolling hills, cotton-like formations
+- **Pride**: Aurora-lit landscape. Silhouettes with subtle rainbow gradient fills at the edges
+
 ### B1: The View (foundation)
 - `openGardenView()` / `closeGardenView()` with smooth transitions
 - `buildGardenSVG()` for all 14 levels (extending current `buildFlowerSVG` vocabulary into fuller scenes)
