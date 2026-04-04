@@ -4305,7 +4305,7 @@ function listenForSWUpdate() {
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
   { text: '<strong>Settings redesigned</strong> — Settings now has five category tabs (Profile, Routine, Medications, Community, About) so you can find what you need without scrolling through everything.', spotlight: null, tab: 'settings', tourIcon: '⚙️', tourTitle: 'Settings got a makeover', tourText: 'Settings is now organized into five tabs at the top: Profile, Routine, Medications, Community, and About. Same options, much easier to find. Tap the tab for what you need.' },
-  { text: '<strong>Medications in their own section</strong> — Meds now have a dedicated card on the Today tab, separate from habits. Weekly medication scheduling is here too.', spotlight: null, tab: 'today', tourIcon: '💊', tourTitle: 'Medications got their own home', tourText: 'Your medications now appear in their own card on the Today tab, separate from habits. You can also set medications to a weekly schedule and pick specific days. Find it all in Settings > Medications.' },
+  { text: '<strong>Medications settings redesigned</strong> — Meds have their own Settings tab now, with weekly scheduling so you can pick specific days for each medication.', spotlight: null, tab: 'settings', tourIcon: '💊', tourTitle: 'Medication settings improved', tourText: 'Medications now have their own tab in Settings. You can set medications to a weekly schedule and pick specific days. Your meds still show up in their usual time slots on the Today tab.' },
   { text: '<strong>Warmer hard days</strong> — Hard Day Mode now feels like golden hour instead of overcast. Quieter and warmer, never gloomy. Cards are more translucent everywhere so you can see the world breathing behind them.', spotlight: null, tab: null, tourIcon: '🌤️', tourTitle: 'Hard days feel warmer now', tourText: 'When you activate Hard Day Mode, the app shifts to a warm, golden-hour feel instead of dimming. The world gets quieter, not darker. Cards are also more translucent now so you can see the ambient particles moving behind them.' },
   { text: '<strong>Thought reframe and journal editing fixed</strong> — The cognitive reframe tool is working again, and editing a journal entry now shows your existing text.', spotlight: null, tab: 'wellness', tourIcon: '🪞', tourTitle: 'Bug fixes', tourText: 'The cognitive reframe tool now connects properly and gives you a warm perspective on difficult thoughts. Journal editing also works correctly, showing your existing text when you tap Edit.' },
 ];
@@ -10975,52 +10975,32 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
     </div>`;
   }
 
-  // --- MEDICATIONS SECTION (dedicated card) ---
-  if (medEnabled) {
-    const medSlots = [];
-    if (medInAm || medHasDetailedAm) medSlots.push({ slot: 'am', label: 'Morning', meds: medMedsAm, detailed: medHasDetailedAm });
-    if (medInAfternoon || medHasDetailedAfternoon) medSlots.push({ slot: 'afternoon', label: 'Afternoon', meds: medMedsAfternoon, detailed: medHasDetailedAfternoon });
-    if (medInPm || medHasDetailedPm) medSlots.push({ slot: 'pm', label: 'Evening', meds: medMedsPm, detailed: medHasDetailedPm });
-    if (medInAny || medHasDetailedAny) medSlots.push({ slot: 'any', label: 'Daily', meds: medMedsAny, detailed: medHasDetailedAny });
-    if (medSlots.length > 0 || prnMedsList.length > 0) {
-      html += `<div class="card" id="medication-card">
-        <div class="card-title" style="margin-bottom:10px">💊 Medications</div>`;
-      medSlots.forEach((ms, si) => {
-        if (si > 0) html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0"></div>`;
-        if (medSlots.length > 1) html += `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;margin-top:2px">${ms.label}</div>`;
-        if (ms.detailed) html += renderMedGroup(ms.slot, ms.meds, td);
-        else html += medHabitRow(ms.slot, medMuted);
-      });
-      if (prnMedsList.length > 0) {
-        if (medSlots.length > 0) html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0"></div>`;
-        const countLabel = prnTodayCount > 0 ? ` (${prnTodayCount} logged today)` : '';
-        html += `<div onclick="openPrnSheet()" style="font-size:12px;color:var(--sky-light);padding:6px 0;cursor:pointer;display:flex;align-items:center;gap:4px">
-          <span style="font-size:14px">💊</span> Log as-needed med${countLabel}
-        </div>`;
-      }
-      html += `</div>`;
-    }
-  }
-
   // --- MORNING SECTION ---
-  if (amHabits.length > 0 || customAm.length > 0) {
+  if (amHabits.length > 0 || medInAm || medHasDetailedAm || customAm.length > 0) {
     html += `<div class="section-label">🌅 Morning</div><div class="card mb-0">`;
+    if (medHasDetailedAm) html += renderMedGroup('am', medMedsAm, td);
+    else if (medInAm) html += medHabitRow('am', medMuted);
     amHabits.forEach(h => { html += dailyHabitRow(h, 'am', isMuted(h)); });
     customAm.forEach(ch => { html += customDailyHabitRow(ch, 'am'); });
     html += `</div>`;
+    html += prnLink();
   }
 
   // --- AFTERNOON SECTION ---
-  if (afternoonHabits.length > 0 || customAfternoon.length > 0) {
+  if (afternoonHabits.length > 0 || medInAfternoon || medHasDetailedAfternoon || customAfternoon.length > 0) {
     html += `<div class="section-label">🌤️ Afternoon</div><div class="card mb-0">`;
+    if (medHasDetailedAfternoon) html += renderMedGroup('afternoon', medMedsAfternoon, td);
+    else if (medInAfternoon) html += medHabitRow('afternoon', medMuted);
     afternoonHabits.forEach(h => { html += dailyHabitRow(h, 'afternoon', isMuted(h)); });
     customAfternoon.forEach(ch => { html += customDailyHabitRow(ch, 'afternoon'); });
     html += `</div>`;
   }
 
   // --- EVENING SECTION ---
-  if (pmHabits.length > 0 || customPm.length > 0) {
+  if (pmHabits.length > 0 || medInPm || medHasDetailedPm || customPm.length > 0) {
     html += `<div class="section-label">🌙 Evening</div><div class="card mb-0">`;
+    if (medHasDetailedPm) html += renderMedGroup('pm', medMedsPm, td);
+    else if (medInPm) html += medHabitRow('pm', medMuted);
     pmHabits.forEach(h => { html += dailyHabitRow(h, 'pm', isMuted(h)); });
     customPm.forEach(ch => { html += customDailyHabitRow(ch, 'pm'); });
     html += `</div>`;
@@ -11052,10 +11032,12 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
 
   const customSCForAnytime = getCustomSelfCare();
   const hasPrnMeds = medMeds.some(m => m.time === 'prn');
-  const hasAnytime = anyHabits.length > 0 || customAny.length > 0 || todayWeeklyHabits.length > 0 || promotedWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled || customSCForAnytime.length > 0;
+  const hasAnytime = anyHabits.length > 0 || medInAny || medHasDetailedAny || customAny.length > 0 || todayWeeklyHabits.length > 0 || promotedWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled || customSCForAnytime.length > 0;
 
   if (hasAnytime) {
     html += `<div class="section-label"><span style="color:#f0c040">☀️</span> Anytime today</div><div class="card mb-0">`;
+    if (medHasDetailedAny) html += renderMedGroup('any', medMedsAny, td);
+    else if (medInAny) html += medHabitRow('any', medMuted);
     anyHabits.forEach(h => { html += dailyHabitRow(h, 'any', isMuted(h)); });
     customAny.forEach(ch => { html += customDailyHabitRow(ch, 'any'); });
 
@@ -11171,6 +11153,7 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
     }
 
     html += `</div>`; // close Anytime card
+    if (medInAny || medHasDetailedAny) html += prnLink();
   }
 
   // --- Legacy support: show old teeth habits if user hasn't migrated yet ---
