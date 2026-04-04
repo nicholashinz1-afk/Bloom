@@ -4305,7 +4305,7 @@ function listenForSWUpdate() {
 // Items without spotlight just appear in the list
 const WHATS_NEW = [
   { text: '<strong>Settings redesigned</strong> — Settings now has five category tabs (Profile, Routine, Medications, Community, About) so you can find what you need without scrolling through everything.', spotlight: null, tab: 'settings', tourIcon: '⚙️', tourTitle: 'Settings got a makeover', tourText: 'Settings is now organized into five tabs at the top: Profile, Routine, Medications, Community, and About. Same options, much easier to find. Tap the tab for what you need.' },
-  { text: '<strong>Medications settings redesigned</strong> — Meds have their own Settings tab now, with weekly scheduling so you can pick specific days for each medication.', spotlight: null, tab: 'settings', tourIcon: '💊', tourTitle: 'Medication settings improved', tourText: 'Medications now have their own tab in Settings. You can set medications to a weekly schedule and pick specific days. Your meds still show up in their usual time slots on the Today tab.' },
+  { text: '<strong>Medications have their own settings tab</strong> — All medication config lives in one place now. Mode, scheduling, reminders, and your med list.', spotlight: null, tab: 'settings', tourIcon: '💊', tourTitle: 'Medication settings moved', tourText: 'All medication settings now live under their own Meds tab in Settings. Mode selection, your med list, scheduling, reminders, and the doctor reference card are all in one place.' },
   { text: '<strong>Warmer hard days</strong> — Hard Day Mode now feels like golden hour instead of overcast. Quieter and warmer, never gloomy. Cards are more translucent everywhere so you can see the world breathing behind them.', spotlight: null, tab: null, tourIcon: '🌤️', tourTitle: 'Hard days feel warmer now', tourText: 'When you activate Hard Day Mode, the app shifts to a warm, golden-hour feel instead of dimming. The world gets quieter, not darker. Cards are also more translucent now so you can see the ambient particles moving behind them.' },
   { text: '<strong>Thought reframe and journal editing fixed</strong> — The cognitive reframe tool is working again, and editing a journal entry now shows your existing text.', spotlight: null, tab: 'wellness', tourIcon: '🪞', tourTitle: 'Bug fixes', tourText: 'The cognitive reframe tool now connects properly and gives you a warm perspective on difficult thoughts. Journal editing also works correctly, showing your existing text when you tap Edit.' },
 ];
@@ -14282,11 +14282,11 @@ function renderSettingsTab() {
     dailyHtml += `</div>`;
   }
 
-  // Medication — visually separated, multi-medication support
+  // Medication — built as separate HTML for the Meds settings tab
   const medMode = prefs.medicationMode || 'off';
   const medList = prefs.medications || [];
-  dailyHtml += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(106,154,176,0.15)">
-    <div style="font-size:12px;color:var(--sky-light);font-weight:500;margin-bottom:8px">💊 Medication</div>
+  let _medHtml = '';
+  _medHtml += `<div>
     <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">A private, judgment-free nudge. Track your medications however works for you.</div>`;
 
   // Mode selector
@@ -14295,21 +14295,21 @@ function renderSettingsTab() {
     { id: 'simple', label: 'Simple', desc: 'One check per time slot' },
     { id: 'detailed', label: 'Detailed', desc: 'Track each medication' },
   ];
-  dailyHtml += `<div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap">`;
+  _medHtml += `<div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap">`;
   _medModes.forEach(mm => {
     const sel = medMode === mm.id;
-    dailyHtml += `<div onclick="setMedicationMode('${mm.id}')" style="
+    _medHtml += `<div onclick="setMedicationMode('${mm.id}')" style="
       padding:6px 12px;border-radius:99px;cursor:pointer;font-size:12px;min-height:44px;display:flex;align-items:center;
       background:${sel ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};
       border:1px solid ${sel ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};
       color:${sel ? 'var(--sky-light)' : 'var(--text-muted)'}" role="radio" aria-checked="${sel}" aria-label="${mm.desc}">${mm.label}</div>`;
   });
-  dailyHtml += `</div>`;
+  _medHtml += `</div>`;
 
   if (medMode !== 'off') {
     // Collapsible details toggle
     const medExpanded = state._medSettingsExpanded !== false;
-    dailyHtml += `<div onclick="state._medSettingsExpanded = !state._medSettingsExpanded; reRenderSettingsPreservingScroll()" style="
+    _medHtml += `<div onclick="state._medSettingsExpanded = !state._medSettingsExpanded; reRenderSettingsPreservingScroll()" style="
       display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:6px 0;margin-bottom:8px">
       <div style="font-size:11px;color:var(--sky-light)">${medList.length} medication${medList.length !== 1 ? 's' : ''}${medList.length > 0 ? ' configured' : ''}</div>
       <div style="font-size:11px;color:var(--text-muted)">${medExpanded ? 'Hide details ▴' : 'Show details ▾'}</div>
@@ -14317,7 +14317,7 @@ function renderSettingsTab() {
 
     if (medExpanded) {
     // Medication list editor
-    dailyHtml += `<div style="margin-bottom:12px">
+    _medHtml += `<div style="margin-bottom:12px">
       <div style="font-size:11px;color:var(--sky-light);margin-bottom:8px">Your medications</div>`;
 
     const _timeOptions = [
@@ -14331,7 +14331,7 @@ function renderSettingsTab() {
     ];
 
     medList.forEach((med, idx) => {
-      dailyHtml += `<div style="background:rgba(106,154,176,0.04);border:1px solid rgba(106,154,176,0.12);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px">
+      _medHtml += `<div style="background:rgba(106,154,176,0.04);border:1px solid rgba(106,154,176,0.12);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
           <input type="text" value="${med.name}" onchange="editMedication('${med.id}','name',this.value)"
             placeholder="Medication name" aria-label="Medication name"
@@ -14422,7 +14422,7 @@ function renderSettingsTab() {
 
     // Add medication button + paste list
     if (medList.length < 20) {
-      dailyHtml += `<div style="display:flex;gap:8px;align-items:center">
+      _medHtml += `<div style="display:flex;gap:8px;align-items:center">
         <input type="text" id="new-med-name" placeholder="Add a medication" aria-label="New medication name"
           style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-sm);padding:6px 10px;font-size:13px;color:var(--text-primary);min-height:44px"
           onkeydown="if(event.key==='Enter'){const i=this;addMedication(i.value,'any','');i.value='';}">
@@ -14437,7 +14437,7 @@ function renderSettingsTab() {
         📋 Paste a list
       </div>`;
     }
-    dailyHtml += `</div>`;
+    _medHtml += `</div>`;
 
     // Reference card — for doctor visits
     if (medList.length > 0) {
@@ -14450,16 +14450,16 @@ function renderSettingsTab() {
         if (t & 4) parts.push('Evening');
         return parts.join(', ') || 'Daily';
       }
-      dailyHtml += `<div style="background:rgba(158,196,216,0.06);border:1px solid rgba(158,196,216,0.15);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:12px">
+      _medHtml += `<div style="background:rgba(158,196,216,0.06);border:1px solid rgba(158,196,216,0.15);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:12px">
         <div style="font-size:11px;color:var(--sky-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">My Medications</div>`;
       medList.forEach(m => {
-        dailyHtml += `<div style="display:flex;align-items:baseline;gap:6px;padding:3px 0;font-size:13px">
+        _medHtml += `<div style="display:flex;align-items:baseline;gap:6px;padding:3px 0;font-size:13px">
           <span style="color:var(--text-primary)">${m.name}</span>
           <span style="color:var(--text-muted);font-size:11px">${_medTimeLabel(m.time)}</span>
           ${m.note ? `<span style="color:var(--text-muted);font-size:11px">· ${m.note}</span>` : ''}
         </div>`;
       });
-      dailyHtml += `<div style="margin-top:10px;border-top:1px solid rgba(158,196,216,0.1);padding-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+      _medHtml += `<div style="margin-top:10px;border-top:1px solid rgba(158,196,216,0.1);padding-top:8px;display:flex;gap:8px;flex-wrap:wrap">
         <div onclick="copyMedList()" id="copy-med-list-btn" style="
           display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:99px;cursor:pointer;
           background:rgba(106,154,176,0.1);border:1px solid rgba(106,154,176,0.2);
@@ -14479,9 +14479,9 @@ function renderSettingsTab() {
     const medTime = ht.medication || 'any';
     // Inline cue inputs for medication
     if (medTime === 'any') {
-      dailyHtml += inlineCueInput('medication', null);
+      _medHtml += inlineCueInput('medication', null);
     } else {
-      getSlotsForTime(medTime).forEach(s => { dailyHtml += inlineCueInput('medication', s); });
+      getSlotsForTime(medTime).forEach(s => { _medHtml += inlineCueInput('medication', s); });
     }
     // Inline medication reminder config
     const _medRemindMode = (prefs.notifications || {}).medicationReminders || 'auto';
@@ -14490,7 +14490,7 @@ function renderSettingsTab() {
     const _timeDesc = medTime === 'any' ? 'noon' : _medSlots.map(s => _medSlotTimes[s][0]).join(', ');
     const _followDesc = medTime === 'any' ? '2pm' : _medSlots.map(s => _medSlotTimes[s][1]).join(', ');
     const _remindLabels = { auto: '🔔 Auto — ' + _timeDesc + ', follow-up at ' + _followDesc, gentle: '🔕 Once — ' + _timeDesc + ' only', off: '❌ Off' };
-    dailyHtml += `<div style="margin-top:8px">
+    _medHtml += `<div style="margin-top:8px">
       <div style="font-size:11px;color:var(--sky-light);margin-bottom:6px">Reminders</div>
       <div style="display:flex;gap:4px;flex-wrap:wrap">
         ${['auto','gentle','off'].map(m => `<div onclick="setMedRemindMode('${m}')" style="
@@ -14503,7 +14503,7 @@ function renderSettingsTab() {
     </div>`;
     } // end medExpanded
   }
-  dailyHtml += `</div>`;
+  _medHtml += `</div>`;
 
   // Water & Nourishment tracking
   const waterGoal = prefs.waterGoal || 3;
@@ -15006,32 +15006,8 @@ function renderSettingsTab() {
   html += `</div>`; // close routine category
 
   // ══════ MEDS CATEGORY ══════
-  // Show medication settings as a standalone section (same content as in daily habits)
   html += `<div data-scat="meds"${_settingsCat !== 'meds' ? ' style="display:none"' : ''}>`;
-  html += settingsSection('medications', '💊 Medications', dailyHtml.substring(dailyHtml.indexOf('💊 Medication')).length > 0 ? (() => {
-    // Extract medication HTML from dailyHtml for standalone display
-    let medSettingsHtml = `<div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">A private, judgment-free nudge. Track your medications however works for you.</div>`;
-    medSettingsHtml += `<div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap">`;
-    const _medModesStandalone = [
-      { id: 'off', label: 'Off', desc: "I don't track medication" },
-      { id: 'simple', label: 'Simple', desc: 'One check per time slot' },
-      { id: 'detailed', label: 'Detailed', desc: 'Track each medication' },
-    ];
-    const _medModeVal = prefs.medicationMode || 'off';
-    _medModesStandalone.forEach(mm => {
-      const sel = _medModeVal === mm.id;
-      medSettingsHtml += `<div onclick="setMedicationMode('${mm.id}')" style="
-        padding:6px 12px;border-radius:99px;cursor:pointer;font-size:12px;min-height:44px;display:flex;align-items:center;
-        background:${sel ? 'rgba(106,154,176,0.2)' : 'rgba(255,255,255,0.04)'};
-        border:1px solid ${sel ? 'rgba(106,154,176,0.4)' : 'rgba(255,255,255,0.08)'};
-        color:${sel ? 'var(--sky-light)' : 'var(--text-muted)'}" role="radio" aria-checked="${sel}" aria-label="${mm.desc}">${mm.label}</div>`;
-    });
-    medSettingsHtml += `</div>`;
-    if (_medModeVal !== 'off') {
-      medSettingsHtml += `<div style="font-size:12px;color:var(--sky-light);margin-bottom:8px">Configure your medications in the <span onclick="state._settingsCategory='routine';renderSettingsTab()" style="cursor:pointer;text-decoration:underline">Routine tab</span> under Daily habits.</div>`;
-    }
-    return medSettingsHtml;
-  })() : '');
+  html += settingsSection('medications', '💊 Medications', _medHtml);
   html += `</div>`; // close meds category
 
   // ══════ COMMUNITY CATEGORY ══════
