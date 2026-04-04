@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Bloom</string>
+    <string name="title_activity_main">Bloom</string>
+    <string name="package_name">app.bloomselfcare.bloom</string>
+    <string name="custom_url_scheme">app.bloomselfcare.bloom</string>
+    <string name="widget_description">See your streak, mood, and growth stage at a glance</string>
+</resources>

@@ -1,1 +1,12 @@
 node_modules/
+
+# Android build artifacts
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+*.apk
+*.aab
+
+# Capacitor web copy (generated via npx cap sync)
+www/

@@ -15,6 +15,13 @@
   "author": "",
   "license": "AGPL-3.0-only",
   "dependencies": {
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
     "redis": "^5.11.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5",
+    "typescript": "^6.0.2"
   }
 }
