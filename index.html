@@ -11953,8 +11953,11 @@ function renderWellnessTab() {
       const answer = refData[qi];
       html += `<div class="reflection-q">
         <div class="reflection-q-text">${q}</div>`;
-      if (answer && !state.editingReflection) {
-        html += `<div style="font-size:14px;color:var(--text-secondary);line-height:1.6">${answer.text}</div>`;
+      if (answer && !state._editingReflectionQ?.[qi]) {
+        html += `<div style="display:flex;align-items:flex-start;gap:8px">
+          <div style="flex:1;font-size:14px;color:var(--text-secondary);line-height:1.6">${answer.text}</div>
+          <button class="btn btn-ghost btn-sm" onclick="editReflection(${qi})" style="flex-shrink:0;font-size:11px;padding:2px 8px">Edit</button>
+        </div>`;
       } else {
         html += `<textarea id="reflect-${qi}" aria-label="Reflection response" placeholder="Your thoughts..." rows="3" style="margin-bottom:6px">${answer?.text || ''}</textarea>
         <button class="btn btn-ghost btn-sm" onclick="saveReflection(${qi})">Save</button>`;
@@ -11967,7 +11970,7 @@ function renderWellnessTab() {
     const isLoadingRef = state.loadingCombinedReflection;
     if (hasAnyAnswer) {
       html += `<div style="text-align:center;margin-top:16px">
-        <button class="btn" onclick="generateCombinedReflection(event)" ${isLoadingRef ? 'disabled' : ''}>
+        <button class="btn btn-primary" onclick="generateCombinedReflection(event)" ${isLoadingRef ? 'disabled' : ''}>
           ${isLoadingRef ? '...' : (hasCombined ? 'Regenerate reflection' : 'Generate reflection')}
         </button>
       </div>`;
@@ -12264,6 +12267,16 @@ function cancelEditJournal() {
   renderWellnessTab();
 }
 
+function editReflection(qi) {
+  if (!state._editingReflectionQ) state._editingReflectionQ = {};
+  state._editingReflectionQ[qi] = true;
+  renderWellnessTab();
+  setTimeout(() => {
+    const ta = document.getElementById(`reflect-${qi}`);
+    if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+  }, 50);
+}
+
 function saveReflection(qi) {
   const ta = document.getElementById(`reflect-${qi}`);
   if (!ta || !ta.value.trim()) return;
@@ -12273,6 +12286,7 @@ function saveReflection(qi) {
   if (!state.wellnessData.reflections) state.wellnessData.reflections = {};
   if (!state.wellnessData.reflections[ws]) state.wellnessData.reflections[ws] = {};
   state.wellnessData.reflections[ws][qi] = { text };
+  if (state._editingReflectionQ) delete state._editingReflectionQ[qi];
   saveState();
   renderWellnessTab();
 }
