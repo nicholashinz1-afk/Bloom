@@ -12455,6 +12455,26 @@ async function generateWeeklyInsight(e) {
   const btn = e?.target;
   if (btn) { btn.disabled = true; btn.textContent = '...'; }
 
+  // Show loading state on the insight card
+  state._insightLoading = true;
+  const insightCard = document.querySelector('.insight-card');
+  const insightBody = document.getElementById('wc-body-insight');
+  if (insightCard) {
+    insightCard.style.transition = 'filter 0.4s ease, opacity 0.4s ease';
+    insightCard.style.filter = 'blur(4px)';
+    insightCard.style.opacity = '0.5';
+    // Add thinking dots overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'insight-loading-overlay';
+    overlay.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:2';
+    overlay.innerHTML = `<div class="ai-thinking" style="justify-content:center"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div><div style="font-size:13px;color:var(--text-secondary);font-style:italic">Reading your week...</div>`;
+    insightCard.parentElement.style.position = 'relative';
+    insightCard.parentElement.appendChild(overlay);
+  } else if (insightBody) {
+    // No existing insight — show thinking state in the body
+    insightBody.innerHTML = `<div style="text-align:center;padding:20px 0"><div class="ai-thinking" style="justify-content:center"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div><div style="font-size:13px;color:var(--text-secondary);font-style:italic;margin-top:8px">Reading your week...</div></div>`;
+  }
+
   const ws = weekStart();
   const weekDates = getWeekDates();
   const moodLabels = ['rough','low','okay','good','great'];
@@ -12577,6 +12597,9 @@ async function generateWeeklyInsight(e) {
     syncToVault();
     celebrate('insight', document.querySelector('.tab-scroll'));
   } finally {
+    state._insightLoading = false;
+    const loadingOverlay = document.getElementById('insight-loading-overlay');
+    if (loadingOverlay) loadingOverlay.remove();
     if (btn) { btn.disabled = false; btn.textContent = 'Refresh'; }
     renderWellnessTab();
   }
