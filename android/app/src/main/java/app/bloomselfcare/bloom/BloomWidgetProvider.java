@@ -26,7 +26,7 @@ public class BloomWidgetProvider extends AppWidgetProvider {
             String growthEmoji = prefs.getString("growthEmoji", "\uD83C\uDF31"); // 🌱
 
             // Update text views
-            views.setTextViewText(R.id.widget_streak,
+            views.setTextViewText(R.id.widget_days,
                     "\uD83C\uDF31 " + daysShownUp + (daysShownUp == 1 ? " day shown up" : " days shown up"));
 
             if (mood.isEmpty()) {

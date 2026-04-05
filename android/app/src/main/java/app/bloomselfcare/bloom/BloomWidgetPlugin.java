@@ -34,18 +34,47 @@ public class BloomWidgetPlugin extends Plugin {
         if (call.hasOption("growthEmoji")) {
             editor.putString("growthEmoji", call.getString("growthEmoji", "\uD83C\uDF31"));
         }
+        if (call.hasOption("voicePreference")) {
+            editor.putString("voicePreference", call.getString("voicePreference", "reflective"));
+        }
 
         editor.apply();
 
-        // Trigger widget refresh
+        // Refresh all widget types
         AppWidgetManager widgetManager = AppWidgetManager.getInstance(context);
-        ComponentName widgetComponent = new ComponentName(context, BloomWidgetProvider.class);
-        int[] widgetIds = widgetManager.getAppWidgetIds(widgetComponent);
-        if (widgetIds.length > 0) {
-            BloomWidgetProvider provider = new BloomWidgetProvider();
-            provider.onUpdate(context, widgetManager, widgetIds);
+
+        // Quick Glance widget
+        ComponentName glanceComponent = new ComponentName(context, BloomWidgetProvider.class);
+        int[] glanceIds = widgetManager.getAppWidgetIds(glanceComponent);
+        if (glanceIds.length > 0) {
+            new BloomWidgetProvider().onUpdate(context, widgetManager, glanceIds);
+        }
+
+        // Nudge widget
+        ComponentName nudgeComponent = new ComponentName(context, NudgeWidgetProvider.class);
+        int[] nudgeIds = widgetManager.getAppWidgetIds(nudgeComponent);
+        if (nudgeIds.length > 0) {
+            new NudgeWidgetProvider().onUpdate(context, widgetManager, nudgeIds);
         }
 
         call.resolve();
+    }
+
+    @PluginMethod
+    public void checkPendingMood(PluginCall call) {
+        Context context = getContext();
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+
+        JSObject result = new JSObject();
+        boolean hasPending = prefs.getBoolean("hasPendingMood", false);
+        result.put("hasPendingMood", hasPending);
+
+        if (hasPending) {
+            result.put("moodValue", prefs.getInt("pendingMoodValue", -1));
+            // Clear the pending flag
+            prefs.edit().putBoolean("hasPendingMood", false).apply();
+        }
+
+        call.resolve(result);
     }
 }

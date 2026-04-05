@@ -4,5 +4,7 @@
     <string name="title_activity_main">Bloom</string>
     <string name="package_name">app.bloomselfcare.bloom</string>
     <string name="custom_url_scheme">app.bloomselfcare.bloom</string>
-    <string name="widget_description">See your streak, mood, and growth stage at a glance</string>
+    <string name="widget_description">See your days shown up, mood, and growth stage</string>
+    <string name="mood_widget_description">Log your mood with one tap</string>
+    <string name="nudge_widget_description">A gentle daily affirmation</string>
 </resources>

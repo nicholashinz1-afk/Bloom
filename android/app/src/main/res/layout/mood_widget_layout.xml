@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mood_widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <!-- Low -->
+    <TextView
+        android:id="@+id/mood_0"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="😔"
+        android:textSize="24sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Low" />
+
+    <!-- Rough -->
+    <TextView
+        android:id="@+id/mood_1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="😕"
+        android:textSize="24sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Rough" />
+
+    <!-- Okay -->
+    <TextView
+        android:id="@+id/mood_2"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="😐"
+        android:textSize="24sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Okay" />
+
+    <!-- Good -->
+    <TextView
+        android:id="@+id/mood_3"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="🙂"
+        android:textSize="24sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Good" />
+
+    <!-- Great -->
+    <TextView
+        android:id="@+id/mood_4"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="😊"
+        android:textSize="24sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Great" />
+
+    <!-- Unsure -->
+    <TextView
+        android:id="@+id/mood_unsure"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="🤷"
+        android:textSize="24sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Unsure" />
+
+</LinearLayout>

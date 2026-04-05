@@ -24,16 +24,44 @@
 
         </activity>
 
+        <!-- Quick Glance widget: days shown up, mood, growth stage -->
         <receiver
             android:name=".BloomWidgetProvider"
             android:exported="true"
-            android:label="Bloom">
+            android:label="Bloom - Quick Glance">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/bloom_widget_info" />
+        </receiver>
+
+        <!-- One Tap Check-In widget: mood emoji row -->
+        <receiver
+            android:name=".MoodWidgetProvider"
+            android:exported="true"
+            android:label="Bloom - Check In">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="app.bloomselfcare.bloom.ACTION_MOOD" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/mood_widget_info" />
+        </receiver>
+
+        <!-- Gentle Nudge widget: daily affirmation -->
+        <receiver
+            android:name=".NudgeWidgetProvider"
+            android:exported="true"
+            android:label="Bloom - Gentle Nudge">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/nudge_widget_info" />
         </receiver>
 
         <provider

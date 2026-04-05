@@ -19,9 +19,9 @@
         android:textStyle="bold"
         android:fontFamily="sans-serif-medium" />
 
-    <!-- Streak / days shown up -->
+    <!-- Days shown up -->
     <TextView
-        android:id="@+id/widget_streak"
+        android:id="@+id/widget_days"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
