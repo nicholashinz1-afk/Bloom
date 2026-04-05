@@ -6752,8 +6752,9 @@ async function saveOpenJournal() {
   if (currentMood !== undefined && currentMood >= 0 && currentMood <= 1) {
     ai = getScriptedResponse();
   } else {
+    const hdFeelings = (state.todayData?.feelings || []).length > 0 ? ` They're feeling ${state.todayData.feelings.join(', ')}.` : '';
     ai = await callClaude(
-      `Someone is having a hard day and wrote: "${text}". Respond with just 1-2 sentences of warm, human presence. No advice. No silver linings. Just witness what they said and remind them they're not alone.`,
+      `Someone wrote: "${text}"${hdFeelings} Respond with 1-2 sentences. Witness what they said. No advice, no silver linings.`,
       'hard_day'
     );
   }
@@ -6900,20 +6901,108 @@ async function showMonthlyReflectionPrompt() {
   const prevMonth = new Date();
   prevMonth.setMonth(prevMonth.getMonth() - 1);
   const monthName = prevMonth.toLocaleDateString('en-US', { month: 'long' });
+  const moodLabels = ['rough','low','okay','good','great'];
 
-  // Get last month's data
+  // Get last month's dates
   const prevMonthStr = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth()+1).padStart(2,'0')}`;
-  const prevDates = Object.keys(state.historyData).filter(d => d.startsWith(prevMonthStr));
-  const moods = prevDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined && m >= 0);
-  const avgMood = moods.length ? (moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1) : 'unknown';
-  const journalCount = prevDates.filter(d => state.historyData[d]?.journal).length;
+  const prevDates = Object.keys(state.historyData).filter(d => d.startsWith(prevMonthStr)).sort();
+
+  // Mood arc: week-by-week summary with feelings
+  const moodWeeks = [];
+  const allFeelings = [];
+  for (let w = 0; w < 5; w++) {
+    const weekDates = prevDates.slice(w * 7, (w + 1) * 7);
+    const moods = weekDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined && m >= 0);
+    if (!moods.length) continue;
+    const avg = moods.reduce((a, b) => a + b, 0) / moods.length;
+    const feelings = weekDates.flatMap(d => state.historyData[d]?.feelings || []);
+    feelings.forEach(f => allFeelings.push(f));
+    const topFeelings = [...new Set(feelings)].slice(0, 4);
+    moodWeeks.push(`Week ${w + 1}: ${moodLabels[Math.round(avg)]}${topFeelings.length ? ` (${topFeelings.join(', ')})` : ''}`);
+  }
+
+  // Sleep pattern
+  const sleepVals = prevDates.map(d => state.historyData[d]?.sleep).filter(s => s !== undefined);
+  const sleepLabels = ['terrible','poor','okay','good','great'];
+  const avgSleep = sleepVals.length ? sleepLabels[Math.round(sleepVals.reduce((a, b) => a + b, 0) / sleepVals.length)] : null;
+
+  // Hard days
+  const hardDays = prevDates.filter(d => state.historyData[d]?.gentleMode).length;
+
+  // Journal excerpts: pick up to 5 spread across the month
+  const journalDates = prevDates.filter(d => getLatestJournalText(d));
+  const journalSample = [];
+  if (journalDates.length > 0) {
+    const step = Math.max(1, Math.floor(journalDates.length / 5));
+    for (let i = 0; i < journalDates.length && journalSample.length < 5; i += step) {
+      const d = journalDates[i];
+      const text = getLatestJournalText(d);
+      const label = new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      journalSample.push(`${label}: "${text.substring(0, 150)}${text.length > 150 ? '...' : ''}"`);
+    }
+  }
+
+  // Wins across the month
+  const monthWins = prevDates.flatMap(d => state.wellnessData?.wins?.[d] || []);
+
+  // Self-care: aggregate habits completed
+  const habitsCompleted = prevDates.reduce((sum, d) => {
+    const hd = state.historyData[d]?.habits || {};
+    return sum + Object.keys(hd).filter(k => hd[k] === true).length;
+  }, 0);
+  const daysTracked = prevDates.filter(d => state.historyData[d]?.mood !== undefined).length;
+
+  // Recurring feelings (what kept coming up)
+  const feelingCounts = {};
+  allFeelings.forEach(f => { feelingCounts[f] = (feelingCounts[f] || 0) + 1; });
+  const recurringFeelings = Object.entries(feelingCounts)
+    .filter(([, c]) => c >= 3)
+    .sort((a, b) => b[1] - a[1])
+    .map(([f]) => f)
+    .slice(0, 5);
+
+  // Previous monthly reflection for anti-repetition
+  const prevReflection = (state.wellnessData?.monthlyReflections || []).slice(-1)[0]?.text || '';
 
   trackFeature('monthly_reflection');
-  const ai = await callClaude(
-    `Write a warm monthly reflection for a wellness app user. Month: ${monthName}. Mood this month: ${avgMood !== null ? ['rough','low','okay','good','great'][Math.round(avgMood)] : 'not tracked'}. Journal entries: ${journalCount}. Write 3-4 sentences that feel like a caring friend reflecting on their month — personal, encouraging, honest. Never reference numbers or scores. Never shame.`,
-    'monthly',
-    { model: 'claude-sonnet-4-20250514', noFallback: true }
-  );
+
+  let prompt = `Here is everything this person did and felt in ${monthName}. Read it all before writing.\n\n`;
+
+  if (moodWeeks.length > 0) {
+    prompt += `MOOD ARC (week by week):\n${moodWeeks.join('\n')}\n\n`;
+  }
+
+  if (recurringFeelings.length > 0) {
+    prompt += `FEELINGS THAT KEPT COMING UP: ${recurringFeelings.join(', ')}\n\n`;
+  }
+
+  if (avgSleep) {
+    prompt += `SLEEP: ${avgSleep} overall\n\n`;
+  }
+
+  if (journalSample.length > 0) {
+    prompt += `JOURNAL ENTRIES (sampled across the month):\n${journalSample.join('\n')}\n\n`;
+  }
+
+  if (monthWins.length > 0) {
+    prompt += `WINS THEY LOGGED: ${monthWins.slice(0, 10).join(', ')}\n\n`;
+  }
+
+  if (daysTracked > 0) {
+    prompt += `ENGAGEMENT: Tracked ${daysTracked} days. ${habitsCompleted > 0 ? `Completed daily habits ${habitsCompleted} times.` : ''}\n\n`;
+  }
+
+  if (hardDays > 0) {
+    prompt += `Used hard day / gentle mode on ${hardDays} day${hardDays > 1 ? 's' : ''}.\n\n`;
+  }
+
+  prompt += `Write 4-6 sentences reflecting on their ${monthName}. Your job is to show them the shape of their month: where it started emotionally, what shifted, what they kept returning to, what they carried through. Reference specific journal entries and wins by name. Name the recurring feelings and what they might mean. This should feel like a letter from someone who watched their whole month unfold. Never reference numbers, scores, or how many days. Never start with their name. Never shame, never clinical.`;
+
+  if (prevReflection) {
+    prompt += `\n\nYOUR LAST MONTHLY REFLECTION (use completely different structure and phrasing): "${prevReflection.substring(0, 250)}"`;
+  }
+
+  const ai = await callClaude(prompt, 'monthly', { model: 'claude-sonnet-4-20250514', noFallback: true });
 
   if (!ai) {
     showToast('Couldn\u2019t generate your monthly reflection right now. It\u2019ll try again next time.');
@@ -12191,11 +12280,28 @@ async function saveJournal() {
   // Capture direct reference before async gap to avoid stale index
   const entry = state.wellnessData.journal[t][entryIndex];
 
+  // Gather recent journal context so Haiku can notice recurring themes
+  const recentDates = Object.keys(state.wellnessData?.journal || {}).sort().reverse().filter(d => d !== t).slice(0, 4);
+  const recentExcerpts = recentDates.map(d => {
+    const jText = getLatestJournalText(d);
+    return jText ? jText.substring(0, 80) : null;
+  }).filter(Boolean);
+
+  const moodNow = state.todayData?.mood;
+  const moodWord = moodNow !== undefined && moodNow >= 0 ? ['rough','low','okay','good','great'][moodNow] : null;
+  const feelings = (state.todayData?.feelings || []).length > 0 ? state.todayData.feelings.join(', ') : null;
+
+  let journalPrompt = `TODAY'S ENTRY: "${text}"`;
+  if (moodWord || feelings) {
+    journalPrompt += `\nCONTEXT: mood is ${moodWord || 'not logged'}${feelings ? `, feeling ${feelings}` : ''}`;
+  }
+  if (recentExcerpts.length > 0) {
+    journalPrompt += `\nRECENT ENTRIES (for recurring themes only): ${recentExcerpts.map(e => `"${e}"`).join(' | ')}`;
+  }
+  journalPrompt += `\n\nWrite 2-3 sentences. Acknowledge what they shared. If you notice a theme that keeps appearing across entries, gently name it. No advice. No silver linings unless they expressed something positive. Be a warm witness.`;
+
   try {
-    const ai = await callClaude(
-      `The user wrote in their journal: "${text}". Write a warm, brief (2-3 sentence) response that acknowledges what they shared without offering unsolicited advice. Be human and compassionate.`,
-      'journal'
-    );
+    const ai = await callClaude(journalPrompt, 'journal');
 
     if (ai && entry) {
       entry.ai = ai;
