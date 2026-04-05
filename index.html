@@ -6912,14 +6912,19 @@ async function showMonthlyReflectionPrompt() {
   const ai = await callClaude(
     `Write a warm monthly reflection for a wellness app user. Month: ${monthName}. Mood this month: ${avgMood !== null ? ['rough','low','okay','good','great'][Math.round(avgMood)] : 'not tracked'}. Journal entries: ${journalCount}. Write 3-4 sentences that feel like a caring friend reflecting on their month — personal, encouraging, honest. Never reference numbers or scores. Never shame.`,
     'monthly',
-    { model: 'claude-sonnet-4-20250514' }
+    { model: 'claude-sonnet-4-20250514', noFallback: true }
   );
+
+  if (!ai) {
+    showToast('Couldn\u2019t generate your monthly reflection right now. It\u2019ll try again next time.');
+    return;
+  }
 
   // Store it
   if (!state.wellnessData.monthlyReflections) state.wellnessData.monthlyReflections = [];
   state.wellnessData.monthlyReflections.push({
     month: monthName,
-    text: ai || `${monthName} is behind you. Whatever it held, you made it through.`,
+    text: ai,
     date: today(),
   });
   if (state.wellnessData.monthlyReflections.length > 12) state.wellnessData.monthlyReflections.shift();
@@ -9968,13 +9973,18 @@ async function callClaude(prompt, context, options) {
       body: JSON.stringify(body)
     });
     const data = await res.json();
-    return filterAIResponse(data.text || getFallbackResponse(prompt), prompt);
+    const aiText = data.text ? filterAIResponse(data.text, prompt) : null;
+    // If noFallback requested, return null on failure so caller can handle it
+    if (options?.noFallback) return aiText;
+    return aiText || getFallbackResponse(prompt);
   } catch(e) {
+    if (options?.noFallback) return null;
     return getFallbackResponse(prompt);
   }
 }
 
 // Safety filter for AI-generated text — catches clinical/diagnostic/medication language
+// Returns null if text is unsafe, so callers can distinguish filtered from real responses
 function filterAIResponse(text, userInput) {
   const unsafePatterns = [
     /\b(diagnos(e[ds]?|ing|is)|disorder|syndrome|patholog)\b/i,
@@ -9985,7 +9995,7 @@ function filterAIResponse(text, userInput) {
     /\b(therapist recommends|clinical(ly)?|psychiatric|psychologist says)\b/i,
   ];
   for (const pat of unsafePatterns) {
-    if (pat.test(text)) return getFallbackResponse(userInput);
+    if (pat.test(text)) return null;
   }
   return text;
 }
@@ -12341,47 +12351,110 @@ async function generateWeeklyInsight(e) {
 
   const ws = weekStart();
   const weekDates = getWeekDates();
+  const moodLabels = ['rough','low','okay','good','great'];
 
-  // Mood data
-  const moodData = weekDates.map(d => state.historyData[d]?.mood).filter(m => m !== undefined && m >= 0);
-  const avgMood = moodData.length > 0 ? (moodData.reduce((a,b) => a+b, 0) / moodData.length).toFixed(1) : null;
-  const lowDays = moodData.filter(m => m <= 1).length;
-  const goodDays = moodData.filter(m => m >= 3).length;
+  // Day-by-day mood narrative with feelings
+  const moodDays = [];
+  weekDates.forEach(d => {
+    const hd = state.historyData[d];
+    if (!hd || hd.mood === undefined || hd.mood < 0) return;
+    const dayLabel = new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+    const feelings = (hd.feelings || []).length > 0 ? ` (feeling ${hd.feelings.join(', ')})` : '';
+    const sleep = hd.sleep !== undefined ? `, sleep: ${['terrible','poor','okay','good','great'][hd.sleep]}` : '';
+    moodDays.push(`${dayLabel}: ${moodLabels[hd.mood]}${feelings}${sleep}`);
+  });
 
-  // Self-care data
+  // Self-care activities
   const wd = state.weekData || {};
-  const exerciseCount = wd.w_exercise || 0;
-  const showerCount = wd.w_shower || 0;
-  const outsideCount = wd.w_outside || 0;
-  const therapyCount = wd.w_therapy || 0;
-  const journalDays = weekDates.filter(d => getJournalEntries(d).length > 0).length;
-  const waterDays = weekDates.filter(d => (state.historyData[d]?.habits?.waterXPGiven)).length;
+  const selfCare = [
+    wd.w_exercise > 0 ? `exercised ${wd.w_exercise}x` : null,
+    wd.w_shower > 0 ? `showered ${wd.w_shower}x` : null,
+    wd.w_outside > 0 ? `went outside ${wd.w_outside}x` : null,
+    wd.w_therapy > 0 ? `therapy ${wd.w_therapy}x` : null,
+  ].filter(Boolean);
+
+  // Breathing/grounding sessions
   const breathSessions = weekDates.reduce((sum, d) => sum + (state.historyData[d]?.habits?.breathCount || 0), 0);
+  if (breathSessions > 0) selfCare.push(`${breathSessions} breathing session${breathSessions > 1 ? 's' : ''}`);
 
-  // Journal excerpts
-  const journals = weekDates.map(d => getLatestJournalText(d)).filter(Boolean);
+  // Journal entries (longer excerpts, dated)
+  const journalEntries = [];
+  weekDates.forEach(d => {
+    const text = getLatestJournalText(d);
+    if (!text) return;
+    const dayLabel = new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+    journalEntries.push(`${dayLabel}: "${text.substring(0, 200)}${text.length > 200 ? '...' : ''}"`);
+  });
 
-  // Small wins this week
+  // Small wins
   const weekWins = weekDates.flatMap(d => state.wellnessData?.wins?.[d] || []);
 
-  const selfCareContext = [
-    exerciseCount > 0 ? `exercised ${exerciseCount} time${exerciseCount > 1 ? 's' : ''}` : null,
-    showerCount > 0 ? `showered ${showerCount} time${showerCount > 1 ? 's' : ''}` : null,
-    outsideCount > 0 ? `went outside ${outsideCount} time${outsideCount > 1 ? 's' : ''}` : null,
-    therapyCount > 0 ? `went to therapy ${therapyCount} time${therapyCount > 1 ? 's' : ''}` : null,
-    journalDays > 0 ? `journaled ${journalDays} day${journalDays > 1 ? 's' : ''}` : null,
-    breathSessions > 0 ? `did ${breathSessions} breathing session${breathSessions > 1 ? 's' : ''}` : null,
-  ].filter(Boolean).join(', ');
+  // Habit completion context
+  const habitsCompleted = weekDates.reduce((sum, d) => {
+    const hd = state.historyData[d]?.habits || {};
+    return sum + Object.keys(hd).filter(k => hd[k] === true).length;
+  }, 0);
+  const daysTracked = weekDates.filter(d => state.historyData[d]?.mood !== undefined).length;
+
+  // Gentle/hard day usage
+  const hardDays = weekDates.filter(d => state.historyData[d]?.gentleMode).length;
+
+  // Structural lenses to rotate through for variety
+  const lenses = [
+    'Lead with the most emotionally vivid thing from their journal, then connect it to how they cared for themselves.',
+    'Start with what their self-care pattern reveals about where they are right now.',
+    'Open with the tension or contrast in their week, then reflect what it means that they held both.',
+    'Begin with something small they might not realize mattered, and show them why it did.',
+    'Start with how their mood moved through the week, and what that arc says about their resilience.',
+    'Lead with what shifted or emerged this week, even if it was subtle.',
+    'Open by reflecting back a specific phrase or idea from their journal that deserves to be witnessed.',
+  ];
+  const lensIdx = (weekDates[0] || '').split('-').reduce((s, n) => s + parseInt(n, 10), 0) % lenses.length;
+  const lens = lenses[lensIdx];
+
+  // Previous insight for anti-repetition
+  const prevInsight = (state.wellnessData?.insights || []).slice(-1)[0]?.text || '';
 
   trackFeature('weekly_insight');
   try {
-    const ai = await callClaude(
-      `Write a weekly insight for a mental wellness app user. This week: ${avgMood !== null ? `mood has been ${['rough','low','okay','good','great'][Math.round(avgMood)]} overall` : 'mood not tracked'}${lowDays > 0 ? `, ${lowDays} hard day${lowDays > 1 ? 's' : ''}` : ''}${goodDays > 0 ? `, ${goodDays} good day${goodDays > 1 ? 's' : ''}` : ''}. Self-care: ${selfCareContext || 'limited this week'}. Journal excerpts: ${journals.slice(0,2).map(j => j.substring(0,100)).join(' | ') || 'none this week'}. Small wins they logged: ${weekWins.length > 0 ? weekWins.slice(0,5).join(', ') : 'none this week'}.
+    let prompt = `Here is everything this person did and felt this week. Read it all before writing.\n\n`;
 
-Write 3-4 sentences from an emotional lens — how they showed up for themselves this week. IMPORTANT: Never reference numbers, scores, or scales. Use natural emotional language only. If they logged small wins, reflect specific ones back to them as evidence of progress. If it was a hard week emotionally but they still did self-care, reflect that back as evidence of resilience. Celebrate specific acts of self-care as emotional wins. Never shame, never clinical. End with something genuinely encouraging about the week ahead.`,
-      'weekly',
-      { model: 'claude-sonnet-4-20250514' }
-    );
+    if (moodDays.length > 0) {
+      prompt += `MOOD & FEELINGS (day by day):\n${moodDays.join('\n')}\n\n`;
+    } else {
+      prompt += `MOOD: Not tracked this week.\n\n`;
+    }
+
+    if (journalEntries.length > 0) {
+      prompt += `JOURNAL ENTRIES (their actual words):\n${journalEntries.join('\n')}\n\n`;
+    }
+
+    if (weekWins.length > 0) {
+      prompt += `WINS THEY LOGGED: ${weekWins.slice(0, 8).join(', ')}\n\n`;
+    }
+
+    if (selfCare.length > 0 || habitsCompleted > 0) {
+      prompt += `SELF-CARE: ${selfCare.length > 0 ? selfCare.join(', ') : 'No weekly activities tracked'}. ${habitsCompleted > 0 ? `Completed daily habits ${habitsCompleted} times across ${daysTracked} days.` : ''}\n\n`;
+    }
+
+    if (hardDays > 0) {
+      prompt += `Used hard day / gentle mode on ${hardDays} day${hardDays > 1 ? 's' : ''} this week.\n\n`;
+    }
+
+    prompt += `APPROACH: ${lens}\n\n`;
+
+    prompt += `Write 3-5 sentences. Your job is to be a thoughtful witness to their week. Reference specific details from their journal entries and wins by name. Weave together what they felt, what they did, and what it reveals about them right now. Never reference numbers, scores, scales, or how many days they did something. Never start with their name. Never open with "What a week." Never use the phrase "showed up for yourself." Each weekly insight should feel like a different letter from a perceptive friend, not a recurring template. Never shame, never clinical.`;
+
+    if (prevInsight) {
+      prompt += `\n\nYOUR LAST INSIGHT (use a completely different structure, opening, and phrasing): "${prevInsight.substring(0, 250)}"`;
+    }
+
+    const ai = await callClaude(prompt, 'weekly', { model: 'claude-sonnet-4-20250514', noFallback: true });
+
+    if (!ai) {
+      showToast('Couldn\u2019t reach bloom\u2019s reflection service. Tap Refresh to try again.');
+      return;
+    }
 
     const d = new Date();
     const wl = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -12389,7 +12462,7 @@ Write 3-4 sentences from an emotional lens — how they showed up for themselves
 
     // Replace existing insight for this week or add new
     const existingIdx = state.wellnessData.insights.findIndex(i => i.weekKey === ws);
-    const insightEntry = { weekLabel: wl, weekKey: ws, text: ai || 'You showed up for yourself this week. Every single act of care mattered.', date: today() };
+    const insightEntry = { weekLabel: wl, weekKey: ws, text: ai, date: today() };
     if (existingIdx > -1) state.wellnessData.insights[existingIdx] = insightEntry;
     else state.wellnessData.insights.push(insightEntry);
     if (state.wellnessData.insights.length > 8) state.wellnessData.insights.shift();
@@ -12398,7 +12471,7 @@ Write 3-4 sentences from an emotional lens — how they showed up for themselves
     syncToVault();
     celebrate('insight', document.querySelector('.tab-scroll'));
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Generate insight'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Refresh'; }
     renderWellnessTab();
   }
 }
