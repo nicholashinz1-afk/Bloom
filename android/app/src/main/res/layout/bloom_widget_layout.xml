@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- App name -->
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Bloom"
+        android:textColor="#a8c5ab"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium" />
+
+    <!-- Days shown up -->
+    <TextView
+        android:id="@+id/widget_days"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="🌱 0 days shown up"
+        android:textColor="#CCFFFFFF"
+        android:textSize="14sp" />
+
+    <!-- Today's mood -->
+    <TextView
+        android:id="@+id/widget_mood"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="No mood logged yet"
+        android:textColor="#99FFFFFF"
+        android:textSize="13sp" />
+
+    <!-- Growth stage -->
+    <TextView
+        android:id="@+id/widget_stage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="🌱 Seed"
+        android:textColor="#99FFFFFF"
+        android:textSize="13sp" />
+
+</LinearLayout>
