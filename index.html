@@ -11936,9 +11936,10 @@ function renderWellnessTab() {
   if (dow === 6 || dow === 0) {
     const refData = state.wellnessData?.reflections?.[ws] || {};
     const answeredCount = REFLECTION_QUESTIONS.filter((_,i) => refData[i]?.text).length;
-    const refCollapsed = answeredCount > 0 && (state._wellnessCollapsed?.reflection ?? true);
-    const refSummary = answeredCount === REFLECTION_QUESTIONS.length
-      ? `Reflection complete — ${answeredCount}/${REFLECTION_QUESTIONS.length} answered ✓`
+    const refCollapsed = answeredCount > 0 && (state._wellnessCollapsed?.reflection ?? false);
+    const hasGeneratedRef = !!refData._combined?.text;
+    const refSummary = hasGeneratedRef
+      ? `Reflection complete ✓`
       : `${answeredCount}/${REFLECTION_QUESTIONS.length} answered — tap to continue`;
     html += `<div class="card" id="reflection-card">
       <div class="wellness-collapse-header${refCollapsed ? ' collapsed' : ''}" id="wc-header-reflection" onclick="toggleWellnessCard('reflection')">
@@ -11947,29 +11948,42 @@ function renderWellnessTab() {
       </div>
       ${answeredCount > 0 ? `<div class="wellness-collapse-summary" id="wc-summary-reflection" style="display:${refCollapsed ? 'block' : 'none'}">${refSummary}</div>` : ''}
       <div class="wellness-collapse-body${refCollapsed ? ' collapsed' : ''}" id="wc-body-reflection">
-        <div style="font-size:12px;color:var(--text-muted);margin:10px 0 14px;line-height:1.5">Available Saturday & Sunday — bloom will respond to each answer.</div>`;
+        <div style="font-size:12px;color:var(--text-muted);margin:10px 0 14px;line-height:1.5">Available Saturday & Sunday. Answer the prompts below, then generate your reflection.</div>`;
     REFLECTION_QUESTIONS.forEach((q, qi) => {
       const answer = refData[qi];
       html += `<div class="reflection-q">
         <div class="reflection-q-text">${q}</div>`;
       if (answer && !state.editingReflection) {
         html += `<div style="font-size:14px;color:var(--text-secondary);line-height:1.6">${answer.text}</div>`;
-        if (answer.ai) {
-          html += `<div class="ai-response" style="margin-top:8px"><div class="ai-response-text">${answer.ai}</div></div>`;
-        } else if (state.loadingReflectionAI?.[qi]) {
-          html += `<div class="ai-response" style="margin-top:8px;display:flex;align-items:center;gap:10px">
-            <div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
-            <div style="font-size:12px;color:var(--sky);font-style:italic">bloom is reflecting...</div>
-          </div>`;
-        }
       } else {
         html += `<textarea id="reflect-${qi}" aria-label="Reflection response" placeholder="Your thoughts..." rows="3" style="margin-bottom:6px">${answer?.text || ''}</textarea>
-        <button class="btn btn-ghost btn-sm" onclick="saveReflection(${qi})">Save</button>
-        <div id="reflect-ai-${qi}" style="display:none;margin-top:8px"></div>`;
+        <button class="btn btn-ghost btn-sm" onclick="saveReflection(${qi})">Save</button>`;
       }
       html += `</div>`;
       if (qi < REFLECTION_QUESTIONS.length - 1) html += '<div class="divider"></div>';
     });
+    const hasAnyAnswer = answeredCount > 0;
+    const hasCombined = refData._combined?.text;
+    const isLoadingRef = state.loadingCombinedReflection;
+    if (hasAnyAnswer) {
+      html += `<div style="text-align:center;margin-top:16px">
+        <button class="btn" onclick="generateCombinedReflection(event)" ${isLoadingRef ? 'disabled' : ''}>
+          ${isLoadingRef ? '...' : (hasCombined ? 'Regenerate reflection' : 'Generate reflection')}
+        </button>
+      </div>`;
+    }
+    if (isLoadingRef) {
+      html += `<div class="ai-response" style="margin-top:16px;display:flex;align-items:center;gap:10px">
+        <div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
+        <div style="font-size:12px;color:var(--sky);font-style:italic">bloom is reflecting on your week...</div>
+      </div>`;
+    }
+    if (hasCombined) {
+      html += `<div class="ai-response" style="margin-top:16px">
+        <div class="ai-response-text">${refData._combined.text}</div>
+        <div class="ai-disclaimer">This is a reflection, not professional advice.</div>
+      </div>`;
+    }
     html += `</div></div>`;
   } else {
     html += `<div class="card" style="opacity:0.5">
@@ -12250,7 +12264,7 @@ function cancelEditJournal() {
   renderWellnessTab();
 }
 
-async function saveReflection(qi) {
+function saveReflection(qi) {
   const ta = document.getElementById(`reflect-${qi}`);
   if (!ta || !ta.value.trim()) return;
   const text = ta.value.trim();
@@ -12258,32 +12272,51 @@ async function saveReflection(qi) {
 
   if (!state.wellnessData.reflections) state.wellnessData.reflections = {};
   if (!state.wellnessData.reflections[ws]) state.wellnessData.reflections[ws] = {};
-  state.wellnessData.reflections[ws][qi] = { text, ai: null };
-  if (!state.loadingReflectionAI) state.loadingReflectionAI = {};
-  state.loadingReflectionAI[qi] = true;
+  state.wellnessData.reflections[ws][qi] = { text };
   saveState();
-  celebrate('reflection', document.getElementById('reflection-card'));
+  renderWellnessTab();
+}
+
+async function generateCombinedReflection(e) {
+  const btn = e?.target;
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+  const ws = weekStart();
+  const refData = state.wellnessData?.reflections?.[ws] || {};
+
+  const answered = REFLECTION_QUESTIONS
+    .map((q, i) => refData[i]?.text ? { q, a: refData[i].text } : null)
+    .filter(Boolean);
+  if (!answered.length) return;
+
+  state.loadingCombinedReflection = true;
   renderWellnessTab();
 
-  if (!state.todayData.reflectionXPGiven) {
-    state.todayData.reflectionXPGiven = true;
-    addXP(15, null);
-  }
+  const promptParts = answered.map((item, i) =>
+    `${i + 1}. "${item.q}"\n   → "${item.a}"`
+  ).join('\n\n');
 
-  const q = REFLECTION_QUESTIONS[qi];
+  const voiceNote = state.prefs?.voice === 'real'
+    ? ' Use a direct, honest tone. No softening language, no sugarcoating.'
+    : '';
+
+  const prompt = `The user completed their weekly reflection (${answered.length} of ${REFLECTION_QUESTIONS.length} prompts answered). Here are their answers:\n\n${promptParts}\n\nWrite a warm, thoughtful combined reflection that weaves together all their answers. Acknowledge what went well, validate what was hard, and affirm what they want to carry forward. Be specific — reference details from their actual words. No bullet points, no headers.${voiceNote}`;
+
   try {
-    const ai = await callClaude(
-      `The reflection question was: "${q}". The user answered: "${text}". Write a thoughtful 1-2 sentence response that acknowledges their reflection with warmth.`,
-      'reflection'
-    );
-
+    const ai = await callClaude(prompt, 'reflection_combined', { model: 'claude-sonnet-4-20250514' });
     if (ai) {
-      state.wellnessData.reflections[ws][qi].ai = ai;
+      state.wellnessData.reflections[ws]._combined = { text: ai };
+      if (!state.todayData.reflectionXPGiven) {
+        state.todayData.reflectionXPGiven = true;
+        addXP(15, null);
+      }
+      celebrate('reflection', document.getElementById('reflection-card'));
       saveState();
       syncToVault();
     }
   } finally {
-    state.loadingReflectionAI[qi] = false;
+    state.loadingCombinedReflection = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Generate reflection'; }
     renderWellnessTab();
   }
 }
