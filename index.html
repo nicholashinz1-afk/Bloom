@@ -6912,14 +6912,19 @@ async function showMonthlyReflectionPrompt() {
   const ai = await callClaude(
     `Write a warm monthly reflection for a wellness app user. Month: ${monthName}. Mood this month: ${avgMood !== null ? ['rough','low','okay','good','great'][Math.round(avgMood)] : 'not tracked'}. Journal entries: ${journalCount}. Write 3-4 sentences that feel like a caring friend reflecting on their month — personal, encouraging, honest. Never reference numbers or scores. Never shame.`,
     'monthly',
-    { model: 'claude-sonnet-4-20250514' }
+    { model: 'claude-sonnet-4-20250514', noFallback: true }
   );
+
+  if (!ai) {
+    showToast('Couldn\u2019t generate your monthly reflection right now. It\u2019ll try again next time.');
+    return;
+  }
 
   // Store it
   if (!state.wellnessData.monthlyReflections) state.wellnessData.monthlyReflections = [];
   state.wellnessData.monthlyReflections.push({
     month: monthName,
-    text: ai || `${monthName} is behind you. Whatever it held, you made it through.`,
+    text: ai,
     date: today(),
   });
   if (state.wellnessData.monthlyReflections.length > 12) state.wellnessData.monthlyReflections.shift();
@@ -9968,13 +9973,18 @@ async function callClaude(prompt, context, options) {
       body: JSON.stringify(body)
     });
     const data = await res.json();
-    return filterAIResponse(data.text || getFallbackResponse(prompt), prompt);
+    const aiText = data.text ? filterAIResponse(data.text, prompt) : null;
+    // If noFallback requested, return null on failure so caller can handle it
+    if (options?.noFallback) return aiText;
+    return aiText || getFallbackResponse(prompt);
   } catch(e) {
+    if (options?.noFallback) return null;
     return getFallbackResponse(prompt);
   }
 }
 
 // Safety filter for AI-generated text — catches clinical/diagnostic/medication language
+// Returns null if text is unsafe, so callers can distinguish filtered from real responses
 function filterAIResponse(text, userInput) {
   const unsafePatterns = [
     /\b(diagnos(e[ds]?|ing|is)|disorder|syndrome|patholog)\b/i,
@@ -9985,7 +9995,7 @@ function filterAIResponse(text, userInput) {
     /\b(therapist recommends|clinical(ly)?|psychiatric|psychologist says)\b/i,
   ];
   for (const pat of unsafePatterns) {
-    if (pat.test(text)) return getFallbackResponse(userInput);
+    if (pat.test(text)) return null;
   }
   return text;
 }
@@ -12380,8 +12390,13 @@ async function generateWeeklyInsight(e) {
 
 Write 3-4 sentences from an emotional lens — how they showed up for themselves this week. IMPORTANT: Never reference numbers, scores, or scales. Use natural emotional language only. If they logged small wins, reflect specific ones back to them as evidence of progress. If it was a hard week emotionally but they still did self-care, reflect that back as evidence of resilience. Celebrate specific acts of self-care as emotional wins. Never shame, never clinical. End with something genuinely encouraging about the week ahead.`,
       'weekly',
-      { model: 'claude-sonnet-4-20250514' }
+      { model: 'claude-sonnet-4-20250514', noFallback: true }
     );
+
+    if (!ai) {
+      showToast('Couldn\u2019t reach bloom\u2019s reflection service. Tap Refresh to try again.');
+      return;
+    }
 
     const d = new Date();
     const wl = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -12389,7 +12404,7 @@ Write 3-4 sentences from an emotional lens — how they showed up for themselves
 
     // Replace existing insight for this week or add new
     const existingIdx = state.wellnessData.insights.findIndex(i => i.weekKey === ws);
-    const insightEntry = { weekLabel: wl, weekKey: ws, text: ai || 'You showed up for yourself this week. Every single act of care mattered.', date: today() };
+    const insightEntry = { weekLabel: wl, weekKey: ws, text: ai, date: today() };
     if (existingIdx > -1) state.wellnessData.insights[existingIdx] = insightEntry;
     else state.wellnessData.insights.push(insightEntry);
     if (state.wellnessData.insights.length > 8) state.wellnessData.insights.shift();
@@ -12398,7 +12413,7 @@ Write 3-4 sentences from an emotional lens — how they showed up for themselves
     syncToVault();
     celebrate('insight', document.querySelector('.tab-scroll'));
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Generate insight'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Refresh'; }
     renderWellnessTab();
   }
 }
