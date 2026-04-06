@@ -4844,21 +4844,136 @@ async function restoreFromDB() {
 }
 
 // ============================================================
-//  DATE HELPERS
+//  DATE HELPERS (timezone-resilient)
 // ============================================================
-function today() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+// Returns the user's home timezone, anchored on first use so that
+// traveling across zones doesn't accidentally shift daily resets.
+function getHomeTimezone() {
+  const current = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const stored = localStorage.getItem('bloom_home_tz');
+  if (!stored) {
+    localStorage.setItem('bloom_home_tz', current);
+    return current;
+  }
+  return stored;
 }
 
-function dayOfWeek() { return new Date().getDay(); } // 0=Sun
+// Allows the user to update their home timezone (e.g. after a permanent move).
+function updateHomeTimezone() {
+  const current = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  localStorage.setItem('bloom_home_tz', current);
+  localStorage.removeItem('bloom_tz_drift');
+  return current;
+}
+
+// Checks if the device timezone has drifted from the stored home timezone.
+// After 3 consecutive days of mismatch, shows a gentle prompt to update.
+function checkTimezoneDrift() {
+  const current = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const stored = localStorage.getItem('bloom_home_tz');
+  if (!stored || current === stored) {
+    localStorage.removeItem('bloom_tz_drift');
+    return;
+  }
+  const drift = JSON.parse(localStorage.getItem('bloom_tz_drift') || '{}');
+  const t = new Date().toISOString().slice(0, 10); // UTC date for drift tracking only
+  if (drift.tz === current && drift.since && drift.lastCheck !== t) {
+    drift.days = (drift.days || 1) + 1;
+    drift.lastCheck = t;
+  } else if (drift.tz !== current) {
+    drift.tz = current;
+    drift.since = t;
+    drift.lastCheck = t;
+    drift.days = 1;
+  }
+  localStorage.setItem('bloom_tz_drift', JSON.stringify(drift));
+  if (drift.days >= 3 && !drift.prompted) {
+    drift.prompted = true;
+    localStorage.setItem('bloom_tz_drift', JSON.stringify(drift));
+    showTimezoneDriftPrompt(stored, current);
+  }
+}
+
+function showTimezoneDriftPrompt(oldTz, newTz) {
+  const friendly = tz => tz.replace(/_/g, ' ').replace(/\//g, ' / ');
+  const sheet = document.createElement('div');
+  sheet.id = 'tz-drift-sheet';
+  sheet.style.cssText = `
+    position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+    max-width:430px;width:100%;z-index:700;
+    background:var(--card-bg);border-radius:18px 18px 0 0;
+    padding:28px 24px calc(env(safe-area-inset-bottom,0px) + 20px);
+    box-shadow:0 -4px 24px rgba(0,0,0,0.15);
+    animation:sheetUp 0.3s ease forwards;
+  `;
+  const isReal = typeof state !== 'undefined' && state.prefs?.voice === 'real';
+  const heading = isReal ? 'New timezone detected' : 'Looks like you might have moved';
+  const body = isReal
+    ? `Your device is in ${friendly(newTz)} now, but your daily reset is still anchored to ${friendly(oldTz)}. Want to update it?`
+    : `Your daily rhythm is still set to ${friendly(oldTz)}, but you've been in ${friendly(newTz)} for a few days. Would you like to update your home timezone?`;
+  sheet.innerHTML = `
+    <div style="text-align:center;margin-bottom:6px;">
+      <div style="width:36px;height:4px;background:var(--text-secondary);opacity:0.3;border-radius:2px;margin:0 auto 16px;"></div>
+      <div style="font-family:Fraunces,serif;font-size:17px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">${heading}</div>
+      <div style="font-size:14px;color:var(--text-secondary);line-height:1.5;margin-bottom:20px;">${body}</div>
+    </div>
+    <button id="tz-update-btn" style="
+      width:100%;padding:14px;border:none;border-radius:12px;
+      background:var(--accent);color:var(--text-on-accent,#fff);
+      font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;
+    ">${isReal ? 'Update timezone' : 'Yes, update it'}</button>
+    <button id="tz-keep-btn" style="
+      width:100%;padding:12px;border:none;border-radius:12px;
+      background:transparent;color:var(--text-secondary);
+      font-size:14px;cursor:pointer;
+    ">${isReal ? 'Keep current setting' : 'No, I\'m just traveling'}</button>
+  `;
+  document.body.appendChild(sheet);
+  document.getElementById('tz-update-btn').onclick = () => {
+    updateHomeTimezone();
+    sheet.remove();
+  };
+  document.getElementById('tz-keep-btn').onclick = () => {
+    sheet.remove();
+  };
+}
+
+// Returns a Date-like object with year/month/date in the home timezone.
+function homeDate(d) {
+  d = d || new Date();
+  const tz = getHomeTimezone();
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(d);
+  const get = type => parts.find(p => p.type === type).value;
+  return { year: get('year'), month: get('month'), day: get('day') };
+}
+
+function today() {
+  const h = homeDate();
+  return `${h.year}-${h.month}-${h.day}`;
+}
+
+function dayOfWeek() {
+  const tz = getHomeTimezone();
+  // Get the day of week in the home timezone
+  const dow = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'short' }).format(new Date());
+  const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return map[dow];
+}
 
 function weekStart() {
-  const d = new Date();
-  const day = d.getDay();
+  const tz = getHomeTimezone();
+  const now = new Date();
+  // Get current date components in home timezone
+  const h = homeDate(now);
+  // Build a date at noon in UTC from those components to avoid DST edge cases
+  const local = new Date(`${h.year}-${h.month}-${h.day}T12:00:00`);
+  const day = local.getDay();
   const diff = day === 0 ? -6 : 1 - day;
-  const mon = new Date(d);
-  mon.setDate(d.getDate() + diff);
+  const mon = new Date(local);
+  mon.setDate(local.getDate() + diff);
   return `${mon.getFullYear()}-${String(mon.getMonth()+1).padStart(2,'0')}-${String(mon.getDate()).padStart(2,'0')}`;
 }
 
@@ -4868,13 +4983,16 @@ function formatDateLabel(dateStr) {
 }
 
 function getDayIndex() {
-  const d = new Date();
+  // Consistent day index based on home timezone date
+  const h = homeDate();
+  const d = new Date(`${h.year}-${h.month}-${h.day}T12:00:00Z`);
   return Math.floor(d.getTime() / 86400000);
 }
 
 function getWeekDates() {
   const dates = [];
-  const d = new Date();
+  const h = homeDate();
+  const d = new Date(`${h.year}-${h.month}-${h.day}T12:00:00`);
   const day = d.getDay();
   const monOffset = day === 0 ? -6 : 1 - day;
   for (let i = 0; i < 7; i++) {
@@ -5956,9 +6074,11 @@ function updateStreak() {
   if (!xp.daysShowedUp) xp.daysShowedUp = 0;
   if (!xp.currentRun) xp.currentRun = xp.streak || 0;
 
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+  // Compute yesterday in the home timezone
+  const h = homeDate();
+  const yDate = new Date(`${h.year}-${h.month}-${h.day}T12:00:00`);
+  yDate.setDate(yDate.getDate() - 1);
+  const yStr = `${yDate.getFullYear()}-${String(yDate.getMonth()+1).padStart(2,'0')}-${String(yDate.getDate()).padStart(2,'0')}`;
 
   const anySelfCare = td.selfCare && Object.values(td.selfCare).some(Boolean);
   const anyDailyHabit = Object.keys(td).some(k => (k.endsWith('_am') || k.endsWith('_afternoon') || k.endsWith('_pm') || k.endsWith('_any')) && td[k]);
@@ -10593,9 +10713,10 @@ function renderTodayTop() {
 }
 
 function checkYesterdayLowMood() {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+  const h = homeDate();
+  const yDate = new Date(`${h.year}-${h.month}-${h.day}T12:00:00`);
+  yDate.setDate(yDate.getDate() - 1);
+  const yStr = `${yDate.getFullYear()}-${String(yDate.getMonth()+1).padStart(2,'0')}-${String(yDate.getDate()).padStart(2,'0')}`;
   const yData = state.historyData[yStr];
   return yData && yData.mood !== undefined && yData.mood >= 0 && yData.mood <= 2;
 }
@@ -24984,6 +25105,7 @@ function initApp() {
     checkAutoGenerateInsight();
     checkStorageQuota();
     checkMilestones();
+    checkTimezoneDrift();
   });
   // One-time service worker cleanup for existing users with broken registrations.
   // Waits for cleanup to finish before initializing OneSignal to avoid race conditions.
