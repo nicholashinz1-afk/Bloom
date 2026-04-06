@@ -7921,6 +7921,17 @@ function isMedSlotDone(slot, td, isDetailed) {
   return slotMeds.every(m => td[m.id + ':' + slot]);
 }
 
+// Check if any med in a time slot has been taken (for suppressing reminders on partial completion)
+function isMedSlotStarted(slot, td, isDetailed) {
+  if (!td) td = state.todayData;
+  if (isDetailed === undefined) isDetailed = state.prefs?.medicationMode === 'detailed';
+  if (td['medication_' + slot]) return true;
+  if (!isDetailed) return false;
+  const slotMeds = getMedsForSlot(slot);
+  if (slotMeds.length === 0) return false;
+  return slotMeds.some(m => td[m.id + ':' + slot]);
+}
+
 // Bridge detailed mode completion to simple keys (for checkAllDone/getCompletionRate)
 function bridgeDetailedMedSlot(slot) {
   const td = state.todayData;
@@ -7949,21 +7960,21 @@ function checkMedicationReminders() {
   // Build schedule: { slotKey, firstHour, followupHour, checkFn }
   const schedule = [];
   if (hasTimeSlot(medTime, TIME_AM)) {
-    schedule.push({ slot: 'am', firstHour: 9, followupHour: 11, done: () => isMedSlotDone('am', td) });
+    schedule.push({ slot: 'am', firstHour: 9, followupHour: 11, started: () => isMedSlotStarted('am', td) });
   }
   if (hasTimeSlot(medTime, TIME_AFTERNOON)) {
-    schedule.push({ slot: 'afternoon', firstHour: 14, followupHour: 16, done: () => isMedSlotDone('afternoon', td) });
+    schedule.push({ slot: 'afternoon', firstHour: 14, followupHour: 16, started: () => isMedSlotStarted('afternoon', td) });
   }
   if (hasTimeSlot(medTime, TIME_PM)) {
-    schedule.push({ slot: 'pm', firstHour: 20, followupHour: 22, done: () => isMedSlotDone('pm', td) });
+    schedule.push({ slot: 'pm', firstHour: 20, followupHour: 22, started: () => isMedSlotStarted('pm', td) });
   }
   if (medTime === 'any') {
-    schedule.push({ slot: 'any', firstHour: 12, followupHour: 14, done: () => isMedSlotDone('any', td) });
+    schedule.push({ slot: 'any', firstHour: 12, followupHour: 14, started: () => isMedSlotStarted('any', td) });
   }
 
   const slotDisplayName = { am: 'AM', afternoon: 'Afternoon', pm: 'PM' };
   schedule.forEach(s => {
-    if (s.done()) return;
+    if (s.started()) return;
     const msg = MED_REMINDER_MESSAGES[Math.floor(Math.random() * MED_REMINDER_MESSAGES.length)];
 
     // First reminder
@@ -8309,19 +8320,19 @@ async function scheduleAllPushNotifications() {
     const isDetailed = state.prefs?.medicationMode === 'detailed';
     const schedule = [];
     if (hasTimeSlot(medTime, TIME_AM)) {
-      schedule.push({ slot: 'am', firstHour: 9, done: () => isMedSlotDone('am', td, isDetailed) });
+      schedule.push({ slot: 'am', firstHour: 9, started: () => isMedSlotStarted('am', td, isDetailed) });
     }
     if (hasTimeSlot(medTime, TIME_AFTERNOON)) {
-      schedule.push({ slot: 'afternoon', firstHour: 14, done: () => isMedSlotDone('afternoon', td, isDetailed) });
+      schedule.push({ slot: 'afternoon', firstHour: 14, started: () => isMedSlotStarted('afternoon', td, isDetailed) });
     }
     if (hasTimeSlot(medTime, TIME_PM)) {
-      schedule.push({ slot: 'pm', firstHour: 20, done: () => isMedSlotDone('pm', td, isDetailed) });
+      schedule.push({ slot: 'pm', firstHour: 20, started: () => isMedSlotStarted('pm', td, isDetailed) });
     }
     if (medTime === 'any') {
-      schedule.push({ slot: 'any', firstHour: 12, done: () => isMedSlotDone('any', td, isDetailed) });
+      schedule.push({ slot: 'any', firstHour: 12, started: () => isMedSlotStarted('any', td, isDetailed) });
     }
     schedule.forEach(s => {
-      if (s.firstHour > hour && !s.done() && !sent[`med_first_${s.slot}`]) {
+      if (s.firstHour > hour && !s.started() && !sent[`med_first_${s.slot}`]) {
         const msg = MED_REMINDER_MESSAGES[Math.floor(Math.random() * MED_REMINDER_MESSAGES.length)];
         notifications.push({
           title: msg.title,
