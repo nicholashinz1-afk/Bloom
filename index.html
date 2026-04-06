@@ -6109,8 +6109,8 @@ function updateStreak() {
         xp.currentRun = 1;
       }
 
-      // Keep legacy streak field in sync for buddy display
-      xp.streak = xp.currentRun;
+      // Keep legacy streak field in sync for buddy display (total days, not run)
+      xp.streak = xp.daysShowedUp;
       xp.lastStreakDate = t;
 
       // Living feedback: flag streak milestones for glow
@@ -21995,7 +21995,7 @@ async function syncBuddyStatus() {
     action: 'sync',
     buddyId: id,
     mood: shareMood ? state.todayData?.mood : undefined,
-    streak: state.xpData?.streak || 0,
+    streak: state.xpData?.daysShowedUp || state.xpData?.streak || 0,
     habitPct: getHabitPct(),
     oneSignalId: playerId,
     level: currentLevel?.name || null,
