@@ -60,9 +60,9 @@ async function addToSet(key, value) {
   }
 }
 
-// Get today's date key
+// Get today's date key in US Eastern time (matches admin's local perspective)
 function todayKey() {
-  return new Date().toISOString().slice(0, 10);
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 }
 
 // Atomically update daily stats using Redis WATCH/MULTI/EXEC
@@ -307,15 +307,24 @@ export default async function handler(req, res) {
         kvGet(KEYS.events),
       ]);
 
-      // Get last 30 days of daily stats
+      // Get last 30 days of daily stats (Eastern time keys)
       const dailyStats = {};
       const now = new Date();
       for (let i = 0; i < 30; i++) {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
-        const key = d.toISOString().slice(0, 10);
+        const key = d.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
         const stats = await kvGet(KEYS.dailyStats(key));
         if (stats) dailyStats[key] = stats;
+      }
+      // Also check old UTC-keyed stats for today/yesterday to migrate stragglers
+      const utcToday = now.toISOString().slice(0, 10);
+      const utcYesterday = new Date(now - 86400000).toISOString().slice(0, 10);
+      for (const utcKey of [utcToday, utcYesterday]) {
+        if (!dailyStats[utcKey]) {
+          const stats = await kvGet(KEYS.dailyStats(utcKey));
+          if (stats) dailyStats[utcKey] = stats;
+        }
       }
 
       // Compute AI feedback summary

@@ -827,8 +827,8 @@ function renderOverview() {
   const helpfulRate7 = totalFb7 > 0 ? Math.round((fb.last7Days.yes / totalFb7) * 100) : null;
   const rateClass = helpfulRate7 === null ? '' : helpfulRate7 >= 70 ? 'good' : helpfulRate7 >= 50 ? 'warn' : 'bad';
 
-  // Calculate today's total events from dailyStats
-  const today = new Date().toISOString().slice(0, 10);
+  // Calculate today's total events from dailyStats (Eastern time to match server)
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
   const todayStats = d.dailyStats[today] || {};
   const todayTotal = Object.entries(todayStats).filter(([k]) => !k.startsWith('_') && k !== 'unique_users').reduce((a, [,b]) => a + (typeof b === 'number' ? b : 0), 0);
   const todayUniqueUsers = todayStats.unique_users || 0;
@@ -900,7 +900,7 @@ function renderOverview() {
   const allChartDates = [];
   for (let i = 29; i >= 0; i--) {
     const dt = new Date(); dt.setDate(dt.getDate() - i);
-    allChartDates.push(dt.toISOString().slice(0, 10));
+    allChartDates.push(dt.toLocaleDateString('en-CA', { timeZone: 'America/New_York' }));
   }
   const hasAnyData = Object.keys(d.dailyStats).length > 0;
   if (hasAnyData) {
@@ -951,7 +951,7 @@ function renderAIFeedback() {
         const days = [];
         for (let i = 6; i >= 0; i--) {
           const d = new Date(); d.setDate(d.getDate() - i);
-          const key = d.toISOString().slice(0, 10);
+          const key = d.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
           const stats = dashboardData.dailyStats[key] || {};
           days.push({ date: key.slice(5), yes: stats.ai_helpful || 0, no: stats.ai_unhelpful || 0 });
         }
@@ -1003,8 +1003,8 @@ function renderEvents() {
 }
 
 function renderFeatures() {
-  // Today
-  const today = new Date().toISOString().slice(0, 10);
+  // Today (Eastern time to match server)
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
   const todayStats = dashboardData.dailyStats[today] || {};
   const features = Object.entries(todayStats)
     .filter(([k]) => k.startsWith('feature:'))
