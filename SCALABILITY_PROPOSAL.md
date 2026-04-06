@@ -224,10 +224,10 @@ Bloom already links to 988 and Crisis Text Line. Reaching out to these organizat
 ### Phase 1 -- Quick Wins (Week 1-2)
 - [x] Switch to Haiku for daily reflections, keep Sonnet for weekly/monthly
 - [x] Batch telemetry events
-- [ ] Apply for Vercel OSS sponsorship
-- [ ] Apply for Upstash OSS program
-- [ ] Set up GitHub Sponsors
-- [ ] Make the repo public (if not already)
+- [x] Apply for Vercel OSS sponsorship
+- [x] Apply for Upstash OSS program
+- [x] Set up GitHub Sponsors
+- [x] Make the repo public
 
 **Result: ~400 DAU capacity, $0/month additional cost**
 
@@ -282,10 +282,11 @@ One word. One syllable. A period. It works because it means something different 
 **Launch products (Phase 1):**
 1. Heavyweight tee — Comfort Colors 1717, Spruce, soft amber DTG print, right chest. Fraunces Regular. ~$15 base, retail ~$34.99.
 2. Heavyweight hoodie — Cotton Heritage M2580, Forest Green, soft amber DTG print, center chest. Fraunces Regular. ~$27 base, retail ~$49.99.
-3. UPF 50+ sun hoodie — All-Over Print Sports Warmup Hoodie, forest canopy pattern with dappled light, "stay." on chest + right sleeve. ~$42 base, retail ~$69.99.
-4. Fitted hat — Flexfit 6277, Olive, old gold flat embroidery. ~$16 base, retail ~$34.99.
-5. Trucker hat — Richardson 112, Loden, old gold flat embroidery. ~$16 base, retail ~$32.99.
-6. Waffle beanie — Richardson 146R, Rust, old gold flat embroidery. ~$15 base, retail ~$29.99.
+3. UPF 50+ sun hoodie (forest) — All-Over Print Sports Warmup Hoodie, forest canopy pattern with dappled light, "stay." on chest + right sleeve. ~$42 base, retail ~$69.99.
+4. UPF 50+ sun hoodie (sunrise) — All-Over Print Sports Warmup Hoodie, sunrise variant (loud edition). ~$42 base, retail ~$69.99.
+5. Fitted hat — Flexfit 6277, Olive, old gold flat embroidery. ~$16 base, retail ~$34.99.
+6. Trucker hat — Richardson 112, Loden, old gold flat embroidery. ~$16 base, retail ~$32.99.
+7. Waffle beanie — Richardson 146R, Rust, old gold flat embroidery. ~$15 base, retail ~$29.99.
 
 Note: Fraunces Medium weight (500) used for hat embroidery since thin serif strokes need extra weight to hold up in thread.
 
@@ -295,7 +296,7 @@ Note: Fraunces Medium weight (500) used for hat embroidery since thin serif stro
 - [x] Design heavyweight tee and hoodie print files (Fraunces Regular, "stay.")
 - [x] Design all-over print sun hoodie (forest canopy pattern)
 - [x] Design hat embroidery files (Fraunces Medium, black fill for digitization)
-- [x] Set up all six products in Printful
+- [x] Set up all seven products in Printful
 - [x] Draft Etsy listing descriptions
 - [ ] Pay Etsy $29 startup fee and claim SaidGently shop name
 - [ ] Order samples from Printful (20% discount on samples)
@@ -352,17 +353,18 @@ The buddy level-up badge glow is one of the few places in Bloom where the UI fee
 
 **Guiding principle:** The app should feel like it's paying attention. Small ambient cues (a gentle pulse, a soft glow, a brief shimmer) tell the user "I noticed" without demanding attention. These should feel organic, like light moving through leaves, not like a slot machine.
 
-**Candidates for living feedback:**
-- [ ] **Habit completion** — brief soft glow or gentle pulse on the toggle when a habit is checked off. Something that says "noted" without being loud.
-- [ ] **Mood check-in submitted** — the mood emoji or card gets a subtle breathing glow after logging, fading out over a few seconds.
-- [ ] **Journal saved** — warm shimmer or gentle border glow on the journal card after saving. The reflection arriving later could have its own entrance animation.
-- [ ] **XP earned** — the sunlight XP counter could pulse gently when XP is added, drawing the eye without being distracting.
-- [ ] **Level-up badge everywhere** — the growth stage badge on the Progress tab could use the same glow treatment as the buddy level-up badge.
-- [ ] **Streak milestone** — when hitting 7, 14, or 30 day streaks, a brief ambient glow on the streak counter.
-- [ ] **Water/food goal met** — soft completion glow when daily targets are reached.
-- [ ] **All done celebration** — the "all done" state could have a gentle, persistent ambient glow rather than just a static message.
-- [ ] **Breathing exercise completion** — the breathing circle could leave a soft afterglow when a session finishes.
-- [ ] **Community wall post sent** — brief glow on the submitted message card.
+**All 10 living feedback items shipped (plus ambient particle ecosystem):**
+- [x] **Ambient particle ecosystem** — theme-aware, growth-stage density scaling, gentle mode response
+- [x] **Habit completion** — glow on habit row + ambient burst via `toggleHabit()`
+- [x] **Mood check-in submitted** — mood card breathes after check-in via `logMood()`
+- [x] **Journal saved** — light sweep shimmer across journal card via `saveJournal()`
+- [x] **XP earned** — gentle scale bump on XP bar via `addXP()`
+- [x] **Level-up badge everywhere** — persistent breathe at Flowering+ (idx >= 5) via `renderProgressTab()`
+- [x] **Streak milestone** — glow at 7/14/30/60/100 day runs via `updateStreak()`
+- [x] **Water/food goal met** — glow on goal met via `tapWater()`/`tapFood()`
+- [x] **All done celebration** — persistent breathe on Today tab via `checkAllDone()`
+- [x] **Breathing exercise completion** — calm afterglow via `stopBreathing()`/`stopInlineBreathing()`
+- [x] **Community wall post sent** — glow on submitted message via `postToWall()`
 
 **Implementation notes:**
 - Use CSS `box-shadow` with `rgba(var(--sage-rgb), ...)` for glows, matching the existing buddy-level-up-badge pattern.
