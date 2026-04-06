@@ -4258,6 +4258,14 @@ const VERSION = '3.9.0';
 const LEGACY_DOMAINS = ['bloom-zeta-rouge.vercel.app'];
 const PRODUCTION_DOMAIN = 'bloomselfcare.app';
 
+// ── App context detection (gates Google Play promotion) ──
+const isAndroidDevice = /Android/.test(navigator.userAgent);
+const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+const isStandalonePWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+const isCapacitorWebView = /; wv\)/.test(navigator.userAgent);
+const isAndroidWebBrowser = isAndroidDevice && !isStandalonePWA && !isCapacitorWebView;
+const GOOGLE_PLAY_URL = 'https://play.google.com/store/apps/details?id=app.bloomselfcare.bloom';
+
 // ── Auto-update check ────────────────────────────────────────
 // Fetches the live page, compares VERSION, and reloads if newer.
 // Runs on app open and when returning from background.
@@ -9903,6 +9911,7 @@ if (_origDbGet) {
   // Delay to ensure both navigation metrics and IndexedDB are ready
   setTimeout(() => {
     const nav = performance.getEntriesByType('navigation')[0];
+    const appContext = isCapacitorWebView ? 'native_android' : isStandalonePWA ? 'pwa' : 'browser';
     const sessionMeta = {
       loadTime: nav ? Math.round(nav.loadEventEnd - nav.startTime) : null,
       domReady: nav ? Math.round(nav.domContentLoadedEventEnd - nav.startTime) : null,
@@ -9910,6 +9919,9 @@ if (_origDbGet) {
       tabVisible: !document.hidden,
       online: navigator.onLine,
       idbAvailable: !!db,
+      appContext,
+      isAndroid: isAndroidDevice,
+      isIOS: isIOSDevice,
     };
     sendTelemetry('session_diagnostics', { meta: sessionMeta });
   }, 5000);
@@ -15800,6 +15812,17 @@ function renderSettingsTab() {
     <button class="btn btn-primary" onclick="shareApp()" style="background:var(--sage);color:#0a1a0b;padding:12px 32px;font-size:15px">🌿 Share bloom</button>
   </div>`;
 
+  // ── GET THE APP (Android web browser only) ──
+  if (isAndroidWebBrowser) {
+    html += `
+    <div style="margin:8px 0 4px;padding:20px 16px;background:linear-gradient(135deg,rgba(var(--sage-rgb),0.10),rgba(var(--sage-rgb),0.03));border:1px solid rgba(var(--sage-rgb),0.18);border-radius:var(--r-xl);text-align:center">
+      <div style="font-size:28px;margin-bottom:10px">🌿</div>
+      <div style="font-family:Fraunces,serif;font-size:17px;font-weight:300;color:var(--cream);margin-bottom:6px">bloom is on Google Play</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px">Install the app for the best experience. Same bloom, just easier to find.</div>
+      <a href="${GOOGLE_PLAY_URL}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="background:var(--sage);color:#0a1a0b;padding:12px 32px;font-size:15px;text-decoration:none;display:inline-block">🌿 Get bloom on Google Play</a>
+    </div>`;
+  }
+
   // ── SUPPORT BLOOM ──
   const SUPPORT_URL = 'https://ko-fi.com/bloomselfcare';
   if (SUPPORT_URL) {
@@ -18575,13 +18598,26 @@ function showMigrationImportPrompt() {
 }
 
 function showInstallPrompt() {
-  // Don't show if already running as installed PWA
-  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
+  // Don't show if already running as installed PWA or Capacitor
+  if (isStandalonePWA || isCapacitorWebView) return;
 
   const isSafari = isSafariBrowser();
   const instructions = isSafari
     ? 'Tap the <strong>Share</strong> button (the square with an arrow), then tap <strong>"Add to Home Screen"</strong>.'
     : 'Tap the <strong>menu</strong> (three dots in Chrome), then tap <strong>"Add to Home Screen"</strong> or <strong>"Install app"</strong>.';
+
+  // Android web browser users: show Google Play as primary
+  const googlePlaySection = isAndroidWebBrowser ? `
+      <a href="${GOOGLE_PLAY_URL}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,rgba(var(--sage-rgb),0.12),rgba(var(--sage-rgb),0.04));border:1px solid rgba(var(--sage-rgb),0.25);border-radius:12px;text-decoration:none;margin-bottom:12px">
+        <div style="font-size:24px;line-height:1">🌿</div>
+        <div style="flex:1;text-align:left">
+          <div style="font-size:14px;font-weight:600;color:var(--cream)">Get bloom on Google Play</div>
+          <div style="font-size:11px;color:var(--text-secondary)">Free, always.</div>
+        </div>
+        <div style="font-size:16px;color:var(--sage)">→</div>
+      </a>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">or install from your browser:</div>
+  ` : '';
 
   const overlay = document.createElement('div');
   overlay.id = 'install-prompt-overlay';
@@ -18593,6 +18629,7 @@ function showInstallPrompt() {
       <p style="color:var(--text-secondary);font-size:14px;line-height:1.7;margin-bottom:16px">
         Your data made it safely. To get the full experience with notifications, install Bloom on your home screen.
       </p>
+      ${googlePlaySection}
       <div style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:12px;padding:14px 16px;margin-bottom:20px;text-align:left">
         <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0">${instructions}</p>
       </div>
@@ -20773,9 +20810,61 @@ function obToggleSelfCare(id) {
 }
 
 function renderOBInstall(body, footer) {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isAndroid = /Android/.test(navigator.userAgent);
+  const isIOS = isIOSDevice;
+  const isAndroid = isAndroidDevice;
+  const voiceReal = obData.voice === 'real';
 
+  // Android web browser users get Google Play as primary option
+  if (isAndroidWebBrowser) {
+    const sub = voiceReal
+      ? "Bloom's on Google Play. Easiest way to get it."
+      : 'Bloom is on Google Play now. Install it once and it\'s always there for you.';
+
+    body.innerHTML = `
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="font-size:64px;line-height:1;margin-bottom:16px">🌱</div>
+        <div class="ob-title" style="text-align:center">Get bloom on<br>your phone</div>
+        <div class="ob-sub" style="text-align:center;margin-bottom:0">${sub}</div>
+      </div>
+      <a href="${GOOGLE_PLAY_URL}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:14px;padding:18px 20px;background:linear-gradient(135deg,rgba(var(--sage-rgb),0.12),rgba(var(--sage-rgb),0.04));border:1px solid rgba(var(--sage-rgb),0.25);border-radius:20px;text-decoration:none;margin-bottom:16px;transition:border-color 0.2s">
+        <div style="font-size:32px;line-height:1">🌿</div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600;color:var(--cream);margin-bottom:2px">Get bloom on Google Play</div>
+          <div style="font-size:12px;color:var(--text-secondary)">Free, always.</div>
+        </div>
+        <div style="font-size:18px;color:var(--sage)">→</div>
+      </a>
+      <details style="margin-bottom:16px">
+        <summary style="font-size:13px;color:var(--text-muted);cursor:pointer;padding:8px 0;list-style:none;text-align:center">
+          <span style="border-bottom:1px solid rgba(255,255,255,0.15)">Or install from your browser</span>
+        </summary>
+        <div style="background:var(--bg-card);border-radius:16px;padding:4px 16px 4px;margin-top:10px">
+          <div style="font-size:12px;font-weight:600;color:var(--sage);text-transform:uppercase;letter-spacing:0.08em;padding:14px 0 4px">🤖 Android</div>
+          <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(var(--sage-rgb),0.15);border:1px solid rgba(var(--sage-rgb),0.3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--sage-light);flex-shrink:0">1</div>
+            <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;padding-top:6px">Tap the <strong style="color:var(--cream)">menu</strong> in the top-right corner of Chrome</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(var(--sage-rgb),0.15);border:1px solid rgba(var(--sage-rgb),0.3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--sage-light);flex-shrink:0">2</div>
+            <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;padding-top:6px">Tap <strong style="color:var(--cream)">Add to Home screen</strong></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(var(--sage-rgb),0.15);border:1px solid rgba(var(--sage-rgb),0.3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--sage-light);flex-shrink:0">3</div>
+            <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;padding-top:6px">Tap <strong style="color:var(--cream)">Add</strong> to confirm</div>
+          </div>
+        </div>
+      </details>
+    `;
+    footer.innerHTML = `
+      <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
+      <button class="btn btn-primary" id="ob-btn-next" style="flex:1">Continue</button>
+    `;
+    document.getElementById('ob-btn-back').addEventListener('click', obBack);
+    document.getElementById('ob-btn-next').addEventListener('click', obNext);
+    return;
+  }
+
+  // iOS and other platforms: standard PWA install instructions
   const iosSteps = [
     { icon: '↑', label: 'Tap the <strong style="color:var(--cream)">Share</strong> button — the box with an arrow at the bottom of Safari' },
     { icon: '＋', label: 'Scroll down and tap <strong style="color:var(--cream)">Add to Home Screen</strong>' },
