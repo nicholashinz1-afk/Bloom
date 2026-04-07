@@ -400,6 +400,57 @@ h1, h2, .serif { font-family: 'Fraunces', serif; }
   88%  { opacity: var(--ao); }
   100% { transform: translate3d(110%, calc(var(--ay) + var(--wy)), 0); opacity: 0; }
 }
+/* Wave: ocean-specific sinusoidal sway, like floating in a current */
+@keyframes ambientWave {
+  0%   { transform: translate3d(var(--ax), var(--ay), 0) scale(var(--as)); opacity: 0; }
+  10%  { opacity: var(--ao); }
+  25%  { transform: translate3d(calc(var(--ax) + var(--wx)), calc(var(--ay) - 15px), 0) scale(calc(var(--as) * 1.05)); }
+  50%  { transform: translate3d(calc(var(--ax) - var(--wx)), calc(var(--ay) - 35px), 0) scale(calc(var(--as) * 1.12)); }
+  75%  { transform: translate3d(calc(var(--ax) + var(--wx) * 0.6), calc(var(--ay) - 55px), 0) scale(calc(var(--as) * 1.05)); }
+  90%  { opacity: var(--ao); }
+  100% { transform: translate3d(var(--bx), calc(var(--ay) - 70px), 0) scale(var(--as)); opacity: 0; }
+}
+/* Flutter: tumbling petal motion with rotation, like falling through still air */
+@keyframes ambientFlutter {
+  0%   { transform: translate3d(var(--ax), 100vh, 0) rotate(0deg) scaleX(1); opacity: 0; }
+  8%   { opacity: var(--ao); }
+  25%  { transform: translate3d(calc(var(--ax) + 20px), 75vh, 0) rotate(90deg) scaleX(0.6); }
+  50%  { transform: translate3d(calc(var(--ax) - 15px), 50vh, 0) rotate(200deg) scaleX(1); }
+  75%  { transform: translate3d(calc(var(--bx) + 10px), 25vh, 0) rotate(290deg) scaleX(0.5); }
+  92%  { opacity: var(--ao); }
+  100% { transform: translate3d(var(--bx), -20px, 0) rotate(380deg) scaleX(0.8); opacity: 0; }
+}
+/* EmberRise: slow rising embers that flicker in brightness */
+@keyframes ambientEmberRise {
+  0%   { transform: translate3d(var(--ax), 100vh, 0) scale(0.6); opacity: 0; }
+  8%   { opacity: var(--ao); }
+  20%  { opacity: calc(var(--ao) * 1.4); transform: translate3d(calc(var(--ax) + 8px), 80vh, 0) scale(1.1); }
+  35%  { opacity: calc(var(--ao) * 0.5); transform: translate3d(calc(var(--ax) - 5px), 65vh, 0) scale(0.8); }
+  50%  { opacity: calc(var(--ao) * 1.3); transform: translate3d(calc(var(--ax) + 12px), 48vh, 0) scale(1.15); }
+  65%  { opacity: calc(var(--ao) * 0.6); transform: translate3d(calc(var(--bx) - 8px), 32vh, 0) scale(0.75); }
+  80%  { opacity: calc(var(--ao) * 1.2); transform: translate3d(var(--bx), 18vh, 0) scale(1.0); }
+  92%  { opacity: calc(var(--ao) * 0.4); }
+  100% { transform: translate3d(var(--bx), -20px, 0) scale(0.5); opacity: 0; }
+}
+/* Sparkle: twinkle in and out with scale pop, like catching light */
+@keyframes ambientSparkle {
+  0%, 100% { opacity: 0; transform: translate3d(var(--ax), var(--ay), 0) scale(0.3); }
+  15% { opacity: 0.2; transform: translate3d(var(--ax), var(--ay), 0) scale(0.5); }
+  30% { opacity: var(--ao); transform: translate3d(var(--ax), calc(var(--ay) - 5px), 0) scale(1.4); }
+  45% { opacity: 0.15; transform: translate3d(var(--ax), calc(var(--ay) - 8px), 0) scale(0.6); }
+  60% { opacity: calc(var(--ao) * 0.8); transform: translate3d(calc(var(--ax) + 3px), calc(var(--ay) - 12px), 0) scale(1.2); }
+  75% { opacity: 0.1; transform: translate3d(calc(var(--ax) + 3px), calc(var(--ay) - 15px), 0) scale(0.4); }
+  90% { opacity: calc(var(--ao) * 0.5); transform: translate3d(calc(var(--ax) + 5px), calc(var(--ay) - 18px), 0) scale(1.0); }
+}
+/* PrismShift: drifting prismatic particle that rotates through hues */
+@keyframes ambientPrismShift {
+  0%   { transform: translate3d(var(--ax), var(--ay), 0) scale(var(--as)) rotate(0deg); opacity: 0; filter: hue-rotate(0deg); }
+  12%  { opacity: var(--ao); }
+  33%  { transform: translate3d(calc(var(--ax) + var(--wx)), calc(var(--ay) - 20px), 0) scale(calc(var(--as) * 1.2)) rotate(120deg); filter: hue-rotate(60deg); }
+  66%  { transform: translate3d(calc(var(--ax) - var(--wx)), calc(var(--ay) - 45px), 0) scale(var(--as)) rotate(240deg); filter: hue-rotate(180deg); }
+  88%  { opacity: var(--ao); }
+  100% { transform: translate3d(var(--bx), calc(var(--ay) - 65px), 0) scale(calc(var(--as) * 0.8)) rotate(360deg); opacity: 0; filter: hue-rotate(330deg); }
+}
 
 /* ── Theme-specific particle shapes ──────────────────────── */
 
@@ -432,19 +483,26 @@ body.theme-ocean .ambient-plankton {
   background: rgba(var(--sage-light-rgb), 0.65);
   box-shadow: 0 0 10px rgba(var(--sage-light-rgb), 0.45), 0 0 20px rgba(var(--sage-light-rgb), 0.15);
 }
-/* Ocean: current particle */
+/* Ocean: current particle — elongated shimmer like light on water */
 body.theme-ocean .ambient-current {
-  width: 18px; height: 3px;
+  width: 24px; height: 2px;
   border-radius: 2px;
-  background: rgba(var(--sage-light-rgb), 0.25);
-  box-shadow: 0 0 8px rgba(var(--sage-light-rgb), 0.12);
+  background: linear-gradient(90deg, transparent, rgba(var(--sage-light-rgb), 0.35), transparent);
+  box-shadow: 0 0 10px rgba(var(--sage-light-rgb), 0.18), 0 0 20px rgba(var(--sage-light-rgb), 0.06);
 }
-/* Ocean: deep glow */
+/* Ocean: deep glow — bioluminescent pulse from the depths */
 body.theme-ocean .ambient-deepglow {
-  width: 10px; height: 10px;
+  width: 12px; height: 12px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(var(--sage-light-rgb), 0.45), transparent);
-  box-shadow: 0 0 16px rgba(var(--sage-light-rgb), 0.2);
+  background: radial-gradient(circle, rgba(var(--sage-light-rgb), 0.5), rgba(var(--sage-light-rgb), 0.15) 50%, transparent 70%);
+  box-shadow: 0 0 18px rgba(var(--sage-light-rgb), 0.25), 0 0 36px rgba(var(--sage-light-rgb), 0.08);
+}
+/* Ocean: wave shimmer — horizontal light ripple on the surface */
+body.theme-ocean .ambient-shimmer {
+  width: 30px; height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent 0%, rgba(var(--sage-light-rgb), 0.4) 30%, rgba(var(--sage-light-rgb), 0.5) 50%, rgba(var(--sage-light-rgb), 0.4) 70%, transparent 100%);
+  box-shadow: 0 0 12px rgba(var(--sage-light-rgb), 0.2);
 }
 
 /* Rose: falling petals */
@@ -476,56 +534,69 @@ body.theme-amber .ambient-dust {
   background: rgba(var(--sage-light-rgb), 0.55);
   box-shadow: 0 0 10px rgba(var(--sage-light-rgb), 0.3);
 }
-/* Amber: ember */
+/* Amber: ember — warm flickering ember rising like a campfire */
 body.theme-amber .ambient-ember {
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: rgba(224, 160, 80, 0.55);
-  box-shadow: 0 0 12px rgba(224, 160, 80, 0.35), 0 0 24px rgba(224, 160, 80, 0.12);
+  background: rgba(224, 160, 80, 0.6);
+  box-shadow: 0 0 14px rgba(224, 160, 80, 0.45), 0 0 28px rgba(224, 120, 40, 0.15);
 }
-/* Amber: warm ray */
+/* Amber: warm ray — shaft of golden light */
 body.theme-amber .ambient-ray {
-  width: 3px; height: 20px;
+  width: 3px; height: 24px;
   border-radius: 2px;
-  background: rgba(var(--sage-light-rgb), 0.2);
-  box-shadow: 0 0 6px rgba(var(--sage-light-rgb), 0.1);
+  background: linear-gradient(180deg, rgba(var(--sage-light-rgb), 0.3), rgba(var(--sage-light-rgb), 0.05));
+  box-shadow: 0 0 8px rgba(var(--sage-light-rgb), 0.12);
   transform-origin: center;
 }
-
-/* Pastel: cotton orbs */
-body.theme-pastel .ambient-orb {
-  width: 16px; height: 16px;
+/* Amber: heat shimmer — warm rising distortion */
+body.theme-amber .ambient-haze {
+  width: 18px; height: 18px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(var(--sage-light-rgb), 0.3), transparent 70%);
-  box-shadow: 0 0 12px rgba(var(--sage-light-rgb), 0.12);
+  background: radial-gradient(circle, rgba(224, 180, 100, 0.2), transparent 70%);
+  box-shadow: 0 0 20px rgba(224, 180, 100, 0.1);
 }
-/* Pastel: bubble shimmer */
+
+/* Pastel: cotton orbs — soft floating clouds */
+body.theme-pastel .ambient-orb {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--sage-light-rgb), 0.3), rgba(var(--sage-light-rgb), 0.08) 60%, transparent 80%);
+  box-shadow: 0 0 16px rgba(var(--sage-light-rgb), 0.15);
+}
+/* Pastel: bubble — iridescent soap bubble floating up */
 body.theme-pastel .ambient-bubble {
-  width: 10px; height: 10px;
+  width: 12px; height: 12px;
   border-radius: 50%;
   background: transparent;
-  box-shadow: inset 0 0 4px rgba(var(--sage-light-rgb), 0.35), 0 0 8px rgba(var(--sage-light-rgb), 0.1);
+  box-shadow: inset 2px -2px 6px rgba(var(--sage-light-rgb), 0.3), inset -2px 2px 6px rgba(var(--sage-rgb), 0.2), 0 0 10px rgba(var(--sage-light-rgb), 0.1);
 }
-/* Pastel: tiny twinkle */
+/* Pastel: tiny twinkle — catching light like a dust mote in sunbeam */
 body.theme-pastel .ambient-twinkle {
   width: 4px; height: 4px;
   border-radius: 50%;
-  background: rgba(var(--sage-light-rgb), 0.55);
-  box-shadow: 0 0 8px rgba(var(--sage-light-rgb), 0.3);
+  background: rgba(var(--sage-light-rgb), 0.6);
+  box-shadow: 0 0 8px rgba(var(--sage-light-rgb), 0.4), 0 0 16px rgba(var(--sage-light-rgb), 0.12);
 }
 
 /* Pride: prismatic particles (colors set inline per-particle) */
 body.theme-pride .ambient-prism {
-  width: 6px; height: 6px;
+  width: 7px; height: 7px;
   border-radius: 50%;
+  box-shadow: 0 0 12px currentColor, 0 0 24px currentColor;
+}
+/* Pride: aurora wisp — trailing color ribbon */
+body.theme-pride .ambient-wisp {
+  width: 26px; height: 4px;
+  border-radius: 4px;
+  opacity: 0.4;
   box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
 }
-/* Pride: aurora wisp */
-body.theme-pride .ambient-wisp {
-  width: 22px; height: 4px;
-  border-radius: 3px;
-  opacity: 0.35;
-  box-shadow: 0 0 8px currentColor;
+/* Pride: stardust — tiny rotating prismatic sparkle */
+body.theme-pride .ambient-stardust {
+  width: 5px; height: 5px;
+  border-radius: 1px;
+  box-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
 }
 
 /* ── Gentle mode: quieter, warmer ────────────────────────── */
@@ -3225,6 +3296,10 @@ textarea { resize: none; min-height: 100px; line-height: 1.6; }
   .water-bottle.filling { animation: none !important; }
   .water-bottle svg animate { display: none; }
   body.theme-ocean #app-header::after { animation: none !important; background-position: 50% 0; }
+  body.theme-ocean .card::after { animation: none !important; }
+  body.theme-amber .card::after { animation: none !important; }
+  body.theme-pastel .tab-scroll::before { animation: none !important; }
+  body.theme-pride #app-header::after { animation: none !important; }
   #inline-breath-zone,
   #winddown-breath-circle { transition-duration: 0.01ms !important; }
   @keyframes breathCountNum { from, to { transform: none; } }
@@ -3250,6 +3325,27 @@ body.theme-forest .card::after {
   background: radial-gradient(ellipse 120% 80% at 20% 10%, rgba(var(--sage-light-rgb),0.08) 0%, transparent 60%),
               radial-gradient(ellipse 100% 60% at 80% 90%, rgba(var(--sage-rgb),0.06) 0%, transparent 50%);
   pointer-events: none;
+}
+
+/* Ocean — water caustics on cards */
+body.theme-ocean .card {
+  position: relative;
+  overflow: hidden;
+}
+body.theme-ocean .card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 60% 50% at 30% 20%, rgba(var(--sage-light-rgb),0.07) 0%, transparent 50%),
+              radial-gradient(ellipse 50% 60% at 70% 70%, rgba(var(--sage-light-rgb),0.05) 0%, transparent 50%);
+  pointer-events: none;
+  animation: oceanCaustics 15s ease-in-out infinite alternate;
+}
+@keyframes oceanCaustics {
+  0%   { opacity: 0.5; transform: translate3d(0, 0, 0); }
+  50%  { opacity: 1;   transform: translate3d(3px, -2px, 0); }
+  100% { opacity: 0.6; transform: translate3d(-2px, 1px, 0); }
 }
 
 /* Ocean — shimmer wave on header border */
@@ -3286,14 +3382,61 @@ body.theme-rose .tab-scroll::before {
 }
 body.theme-rose .tab-scroll { position: relative; }
 
-/* Amber — warm sunset glow under header */
+/* Amber — warm sunset glow under header + pulsing warmth */
 body.theme-amber #app-header {
   box-shadow: 0 4px 30px rgba(var(--sage-rgb),0.18), 0 1px 0 rgba(var(--sage-rgb),0.15);
 }
+body.theme-amber .card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 100% 80% at 50% 100%, rgba(224,160,80,0.06) 0%, transparent 60%);
+  pointer-events: none;
+  animation: amberWarmth 8s ease-in-out infinite;
+}
+body.theme-amber .card { position: relative; overflow: hidden; }
+@keyframes amberWarmth {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 1; }
+}
 
-/* Pastel — soft inner glow on cards */
+/* Pastel — soft inner glow on cards + gentle breathing luminance */
 body.theme-pastel .card {
   box-shadow: inset 0 1px 30px rgba(var(--sage-rgb),0.1), 0 1px 4px rgba(0,0,0,0.4);
+}
+body.theme-pastel .tab-scroll::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 100px;
+  background: radial-gradient(ellipse 90% 100% at 50% 0%, rgba(var(--sage-light-rgb),0.1) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+  animation: pastelBreath 10s ease-in-out infinite;
+}
+body.theme-pastel .tab-scroll { position: relative; }
+@keyframes pastelBreath {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
+}
+
+/* Pride — rainbow shimmer sweep on header */
+body.theme-pride #app-header {
+  position: relative;
+}
+body.theme-pride #app-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #e04050, #e87030, #e8c840, #50b868, #4080d0, #9050c8, #e04050);
+  background-size: 300% 100%;
+  animation: prideShimmer 8s linear infinite;
+}
+@keyframes prideShimmer {
+  0%   { background-position: 0% 0; }
+  100% { background-position: 300% 0; }
 }
 
 /* Gradient card borders — all themes (background-clip trick preserves border-radius) */
@@ -7434,28 +7577,31 @@ const AMBIENT_PARTICLE_CONFIG = {
     { cls: 'ambient-firefly', anim: 'ambientGlow',    weight: 2 },
   ],
   ocean: [
-    { cls: 'ambient-plankton', anim: 'ambientFloat',   weight: 5 },
-    { cls: 'ambient-current',  anim: 'ambientLateral', weight: 4 },
+    { cls: 'ambient-plankton', anim: 'ambientWave',    weight: 4 },
+    { cls: 'ambient-current',  anim: 'ambientLateral', weight: 3 },
     { cls: 'ambient-deepglow', anim: 'ambientGlow',    weight: 3 },
+    { cls: 'ambient-shimmer',  anim: 'ambientLateral', weight: 3 },
   ],
   rose: [
-    { cls: 'ambient-petal',     anim: 'ambientDrift',  weight: 5 },
-    { cls: 'ambient-pollen',    anim: 'ambientFloat',  weight: 3 },
-    { cls: 'ambient-warmlight', anim: 'ambientGlow',   weight: 2 },
+    { cls: 'ambient-petal',     anim: 'ambientFlutter', weight: 5 },
+    { cls: 'ambient-pollen',    anim: 'ambientFloat',   weight: 3 },
+    { cls: 'ambient-warmlight', anim: 'ambientGlow',    weight: 2 },
   ],
   amber: [
-    { cls: 'ambient-dust',  anim: 'ambientFloat',  weight: 5 },
-    { cls: 'ambient-ember', anim: 'ambientGlow',   weight: 3 },
-    { cls: 'ambient-ray',   anim: 'ambientDrift',  weight: 2 },
+    { cls: 'ambient-dust',  anim: 'ambientFloat',     weight: 4 },
+    { cls: 'ambient-ember', anim: 'ambientEmberRise', weight: 4 },
+    { cls: 'ambient-ray',   anim: 'ambientDrift',     weight: 2 },
+    { cls: 'ambient-haze',  anim: 'ambientFloat',     weight: 2 },
   ],
   pastel: [
-    { cls: 'ambient-orb',     anim: 'ambientFloat', weight: 4 },
-    { cls: 'ambient-bubble',  anim: 'ambientFloat', weight: 3 },
-    { cls: 'ambient-twinkle', anim: 'ambientGlow',  weight: 3 },
+    { cls: 'ambient-orb',     anim: 'ambientFloat',   weight: 4 },
+    { cls: 'ambient-bubble',  anim: 'ambientDrift',   weight: 3 },
+    { cls: 'ambient-twinkle', anim: 'ambientSparkle', weight: 3 },
   ],
   pride: [
-    { cls: 'ambient-prism', anim: 'ambientFloat', weight: 7 },
-    { cls: 'ambient-wisp',  anim: 'ambientLateral', weight: 5 },
+    { cls: 'ambient-prism',    anim: 'ambientPrismShift', weight: 5 },
+    { cls: 'ambient-wisp',     anim: 'ambientLateral',    weight: 4 },
+    { cls: 'ambient-stardust', anim: 'ambientSparkle',    weight: 3 },
   ],
 };
 
@@ -7492,15 +7638,15 @@ function randomParticleProps(anim) {
     '--ar': Math.floor(Math.random() * 360) + 'deg',
   };
 
-  if (anim === 'ambientDrift') {
+  if (anim === 'ambientDrift' || anim === 'ambientFlutter' || anim === 'ambientEmberRise') {
     props['--ax'] = Math.floor(Math.random() * 100) + 'vw';
     props['--bx'] = Math.floor(Math.random() * 100) + 'vw';
-  } else if (anim === 'ambientFloat') {
+  } else if (anim === 'ambientFloat' || anim === 'ambientWave' || anim === 'ambientPrismShift') {
     props['--ax'] = Math.floor(Math.random() * 90) + 5 + 'vw';
     props['--ay'] = Math.floor(Math.random() * 80) + 10 + 'vh';
     props['--bx'] = Math.floor(Math.random() * 90) + 5 + 'vw';
     props['--wx'] = (-20 + Math.random() * 40).toFixed(0) + 'px';
-  } else if (anim === 'ambientGlow') {
+  } else if (anim === 'ambientGlow' || anim === 'ambientSparkle') {
     props['--ax'] = Math.floor(Math.random() * 85) + 5 + 'vw';
     props['--ay'] = Math.floor(Math.random() * 75) + 10 + 'vh';
   } else if (anim === 'ambientLateral') {
