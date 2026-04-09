@@ -8663,7 +8663,7 @@ const DAY_BITS = [DAY_MON, DAY_TUE, DAY_WED, DAY_THU, DAY_FRI, DAY_SAT, DAY_SUN]
 
 function isTodayScheduled(dayMask) {
   if (dayMask === 'any' || typeof dayMask !== 'number') return true;
-  const dow = new Date().getDay(); // 0=Sun, 1=Mon, ...
+  const dow = dayOfWeek(); // 0=Sun, 1=Mon, ... (home timezone aware)
   const bit = dow === 0 ? DAY_SUN : DAY_BITS[dow - 1];
   return (dayMask & bit) !== 0;
 }
@@ -11241,18 +11241,20 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
   const selectedSCTasks = (state.prefs?.selfCareTasks || []).filter(id => !id.startsWith('sc_medication')).filter(id => !_sbOverrides[id] || _sbOverrides[id] === 'selfcare');
   const scEnabled = selectedSCTasks.length > 0 && (userWeek >= 2 || state.prefs?.progressiveDisclosureDisabled);
 
-  // Weekly habits scheduled for today
+  // Weekly habits — split into scheduled-for-today and off-day
   const weeklyHabitDays = state.prefs?.weeklyHabitDays || {};
-  const todayWeeklyHabits = WEEKLY_HABITS.filter(h => {
+  const enabledWeeklyHabits = WEEKLY_HABITS.filter(h => {
     if (_sbOverrides[h.id] && _sbOverrides[h.id] !== 'weekly') return false;
     if (state.prefs?.habits?.[h.id] === false) return false;
-    return isTodayScheduled(weeklyHabitDays[h.id] || 'any');
+    return true;
   });
+  const todayWeeklyHabits = enabledWeeklyHabits.filter(h => isTodayScheduled(weeklyHabitDays[h.id] || 'any'));
+  const offDayWeeklyHabits = enabledWeeklyHabits.filter(h => !isTodayScheduled(weeklyHabitDays[h.id] || 'any'));
 
   // Promoted weekly habits (items moved to weekly from other sections)
-  const promotedWeeklyHabits = (state.prefs?.promotedWeeklyHabits || []).filter(h =>
-    isTodayScheduled(weeklyHabitDays[h.id] || 'any')
-  );
+  const allPromotedWeekly = state.prefs?.promotedWeeklyHabits || [];
+  const promotedWeeklyHabits = allPromotedWeekly.filter(h => isTodayScheduled(weeklyHabitDays[h.id] || 'any'));
+  const offDayPromotedWeekly = allPromotedWeekly.filter(h => !isTodayScheduled(weeklyHabitDays[h.id] || 'any'));
 
   // Household tasks — filter by scheduled day
   const allHouseholdTasks = state.prefs?.householdTasks || [];
@@ -11263,7 +11265,7 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
 
   const customSCForAnytime = getCustomSelfCare();
   const hasPrnMeds = medMeds.some(m => m.time === 'prn');
-  const hasAnytime = anyHabits.length > 0 || medInAny || medHasDetailedAny || customAny.length > 0 || todayWeeklyHabits.length > 0 || promotedWeeklyHabits.length > 0 || householdTasks.length > 0 || scEnabled || customSCForAnytime.length > 0;
+  const hasAnytime = anyHabits.length > 0 || medInAny || medHasDetailedAny || customAny.length > 0 || todayWeeklyHabits.length > 0 || offDayWeeklyHabits.length > 0 || promotedWeeklyHabits.length > 0 || offDayPromotedWeekly.length > 0 || householdTasks.length > 0 || scEnabled || customSCForAnytime.length > 0;
 
   if (hasAnytime) {
     html += `<div class="section-label"><span style="color:#f0c040">☀️</span> Anytime today</div><div class="card mb-0">`;
@@ -11273,7 +11275,7 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
     customAny.forEach(ch => { html += customDailyHabitRow(ch, 'any'); });
 
     // Weekly habits with weekly progress badge
-    if (todayWeeklyHabits.length > 0) {
+    if (todayWeeklyHabits.length > 0 || offDayWeeklyHabits.length > 0 || promotedWeeklyHabits.length > 0 || offDayPromotedWeekly.length > 0) {
       const hasItemsAbove = anyHabits.length > 0;
       if (hasItemsAbove) {
         html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0"></div>`;
@@ -11309,11 +11311,26 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
           ${!done ? `<div class="habit-xp">+${h.xp}</div>` : ''}
         </div>`;
       });
+      // Off-day weekly habits — shown dimmed so they don't disappear
+      [...offDayWeeklyHabits, ...offDayPromotedWeekly].forEach(h => {
+        const goal = state.prefs?.goals?.[h.id] || h.defaultGoal || 3;
+        const weekCount = getWeeklyHabitCount(h.id);
+        const dayMask = weeklyHabitDays[h.id];
+        const scheduledDays = typeof dayMask === 'number' ? DAY_LABELS.filter((_, i) => dayMask & DAY_BITS[i]).join(', ') : '';
+        const isPromoted = offDayPromotedWeekly.includes(h);
+        html += `<div class="habit-row" style="opacity:0.35;" onclick="${isPromoted ? `tapPromotedWeeklyHabit('${h.id}', this)` : `tapWeeklyHabitToday('${h.id}', this)`}">
+          <div class="habit-check">${h.icon}</div>
+          <div class="habit-info">
+            <div class="habit-name">${h.label}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${weekCount}/${goal} this week${scheduledDays ? ' · ' + scheduledDays : ''}</div>
+          </div>
+        </div>`;
+      });
     }
 
     // Household tasks
     if (householdTasks.length > 0) {
-      const hasItemsAbove2 = anyHabits.length > 0 || todayWeeklyHabits.length > 0 || promotedWeeklyHabits.length > 0;
+      const hasItemsAbove2 = anyHabits.length > 0 || todayWeeklyHabits.length > 0 || offDayWeeklyHabits.length > 0 || promotedWeeklyHabits.length > 0 || offDayPromotedWeekly.length > 0;
       if (hasItemsAbove2) {
         html += `<div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0"></div>`;
       }
