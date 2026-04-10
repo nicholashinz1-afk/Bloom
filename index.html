@@ -4713,19 +4713,24 @@ const DB_VERSION = 1;
 let db = null;
 
 function initDB() {
-  return new Promise((resolve) => {
-    try {
-      const req = indexedDB.open(DB_NAME, DB_VERSION);
-      req.onupgradeneeded = (e) => {
-        const d = e.target.result;
-        if (!d.objectStoreNames.contains('kv')) {
-          d.createObjectStore('kv', { keyPath: 'k' });
-        }
-      };
-      req.onsuccess = (e) => { db = e.target.result; resolve(); };
-      req.onerror = () => resolve();
-    } catch(e) { resolve(); }
-  });
+  const IDB_TIMEOUT = 5000;
+  return Promise.race([
+    new Promise((resolve) => {
+      try {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const d = e.target.result;
+          if (!d.objectStoreNames.contains('kv')) {
+            d.createObjectStore('kv', { keyPath: 'k' });
+          }
+        };
+        req.onsuccess = (e) => { db = e.target.result; resolve(); };
+        req.onerror = () => resolve();
+        req.onblocked = () => resolve();
+      } catch(e) { resolve(); }
+    }),
+    new Promise((resolve) => setTimeout(resolve, IDB_TIMEOUT))
+  ]);
 }
 
 async function dbSet(key, value) {
@@ -4762,18 +4767,23 @@ async function dbGet(key) {
 
 async function dbGetAll() {
   if (!db) return {};
-  return new Promise((resolve) => {
-    try {
-      const tx = db.transaction('kv', 'readonly');
-      const req = tx.objectStore('kv').getAll();
-      req.onsuccess = () => {
-        const out = {};
-        (req.result || []).forEach(r => { out[r.k] = r.v; });
-        resolve(out);
-      };
-      req.onerror = () => resolve({});
-    } catch(e) { resolve({}); }
-  });
+  const IDB_TIMEOUT = 5000;
+  return Promise.race([
+    new Promise((resolve) => {
+      try {
+        const tx = db.transaction('kv', 'readonly');
+        const req = tx.objectStore('kv').getAll();
+        req.onsuccess = () => {
+          const out = {};
+          (req.result || []).forEach(r => { out[r.k] = r.v; });
+          resolve(out);
+        };
+        req.onerror = () => resolve({});
+        tx.onabort = () => resolve({});
+      } catch(e) { resolve({}); }
+    }),
+    new Promise((resolve) => setTimeout(() => resolve({}), IDB_TIMEOUT))
+  ]);
 }
 
 // Debounced IndexedDB backup — batches async writes to reduce overhead
@@ -9998,6 +10008,7 @@ function errorBoundary(fn, context) {
 // ── IndexedDB performance metrics ──────────────────────────
 const _origDbSet = typeof dbSet === 'function' ? dbSet : null;
 const _origDbGet = typeof dbGet === 'function' ? dbGet : null;
+const _origDbGetAll = typeof dbGetAll === 'function' ? dbGetAll : null;
 
 if (_origDbSet) {
   dbSet = async function(key, value) {
@@ -10024,6 +10035,21 @@ if (_origDbGet) {
       return result;
     } catch(err) {
       sendTelemetry('idb_error', { meta: { op: 'get', key, error: String(err.message || err).slice(0, 200) } });
+      throw err;
+    }
+  };
+}
+
+if (_origDbGetAll) {
+  dbGetAll = async function() {
+    const start = performance.now();
+    try {
+      const result = await _origDbGetAll();
+      const duration = Math.round(performance.now() - start);
+      if (duration > 500) sendTelemetry('idb_slow', { meta: { op: 'getAll', key: '*', duration } });
+      return result;
+    } catch(err) {
+      sendTelemetry('idb_error', { meta: { op: 'getAll', key: '*', error: String(err.message || err).slice(0, 200) } });
       throw err;
     }
   };
