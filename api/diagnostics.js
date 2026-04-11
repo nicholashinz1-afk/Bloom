@@ -337,6 +337,33 @@ export default async function handler(req, res) {
         }
       }
 
+      // One-time backfill: seed alltime set from all available sources
+      let finalAlltimeCount = (alltimeUids || []).length;
+      if (!alltimeUids || alltimeUids.length === 0) {
+        const seedUids = new Set();
+        // Scan up to 90 days of daily stats for _uids (max Redis TTL window)
+        for (let i = 0; i < 90; i++) {
+          const d = new Date(now);
+          d.setDate(d.getDate() - i);
+          const eastern = d.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+          const utc = d.toISOString().slice(0, 10);
+          for (const dateKey of [eastern, utc]) {
+            const cached = dailyStats[dateKey];
+            const s = cached || await kvGet(KEYS.dailyStats(dateKey));
+            if (s && s._uids) s._uids.split(',').filter(u => u).forEach(u => seedUids.add(u));
+          }
+        }
+        // Also pull from the level user index (tracks level_snapshot senders)
+        const levelIndex = await kvGet('bloom_level_user_index');
+        if (Array.isArray(levelIndex)) levelIndex.forEach(u => seedUids.add(u));
+        // Write seed set to persistent key (no TTL)
+        if (seedUids.size > 0) {
+          const client = await getRedis();
+          await client.set(KEYS.alltimeUids, JSON.stringify([...seedUids]));
+          finalAlltimeCount = seedUids.size;
+        }
+      }
+
       // Compute AI feedback summary
       const fb = aiFeedback || [];
       const fbLast7 = fb.filter(f => f.ts > Date.now() - 7 * 86400000);
@@ -360,7 +387,7 @@ export default async function handler(req, res) {
             recent: (events || []).slice(-50).reverse(),
           },
           dailyStats,
-          alltimeUniqueUsers: (alltimeUids || []).length,
+          alltimeUniqueUsers: finalAlltimeCount,
         },
       });
     }
