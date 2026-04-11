@@ -4618,7 +4618,7 @@ function getJournalEntries(date) {
 }
 
 function getLatestJournalText(date) {
-  return getJournalEntries(date).map(e => e.text).filter(Boolean).join('\n\n');
+  return getJournalEntries(date).filter(e => e.source !== 'reframe').map(e => e.text).filter(Boolean).join('\n\n');
 }
 
 function migrateJournalFormat() {
@@ -12064,7 +12064,12 @@ function renderWellnessTab() {
       html += `</div>`;
     });
     // Entry count transparency
-    html += `<div style="font-size:11px;color:var(--text-muted);margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">${journalEntries.length} entry${journalEntries.length !== 1 ? 'ies' : ''} today · all entries are saved</div>`;
+    const _jCount = journalEntries.filter(e => e.source !== 'reframe').length;
+    const _rCount = journalEntries.filter(e => e.source === 'reframe').length;
+    const _countParts = [];
+    if (_jCount > 0) _countParts.push(`${_jCount} journal entry${_jCount !== 1 ? 'ies' : ''}`);
+    if (_rCount > 0) _countParts.push(`${_rCount} reframe${_rCount !== 1 ? 's' : ''}`);
+    html += `<div style="font-size:11px;color:var(--text-muted);margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">${_countParts.join(', ')} today · all entries are saved</div>`;
     html += `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="newJournalEntry('same')">Same prompt again</button>
       <button class="btn btn-ghost btn-sm" onclick="newJournalEntry('prompt')">New prompt</button>
