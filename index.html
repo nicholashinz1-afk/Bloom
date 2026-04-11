@@ -10894,8 +10894,8 @@ function renderTodayTab() {
   const scroll = document.getElementById('today-scroll');
   if (!scroll) return;
 
-  const prefs = state.prefs;
-  const td = state.todayData;
+  const prefs = state.prefs || {};
+  const td = state.todayData || {};
   const t = today();
   // Progressive disclosure — can be disabled in Settings
   const userWeek = (prefs?.progressiveDisclosure === false) ? 99 : getUserWeekNumber();
@@ -25203,6 +25203,12 @@ function initApp() {
 async function main() {
   await initDB();
   await restoreFromDB();
+
+  // Populate state early so any code that runs before initApp()
+  // (event listeners, visibility handlers, etc.) won't crash on
+  // undefined state.prefs — fixes "Cannot read properties of
+  // undefined (reading 'dailyHabits')" for social-media referrals.
+  loadState();
 
   // Try restore from URL first — if a ?restore= link is present,
   // skip migration banner and just restore the data
