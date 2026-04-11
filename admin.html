@@ -858,6 +858,10 @@ function renderOverview() {
         <span class="stat-label">30-day unique users</span>
         <span style="font-size:14px;color:var(--cream)">${totalUniqueUsers}</span>
       </div>
+      <div class="stat-row">
+        <span class="stat-label">All-time unique users</span>
+        <span style="font-size:14px;color:var(--cream)">${d.alltimeUniqueUsers || 0}</span>
+      </div>
       <div style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">
       ${Object.entries(todayStats).filter(([k]) => !k.startsWith('_') && k !== 'unique_users').sort(([,a],[,b]) => b - a).slice(0, 5).map(([k, v]) => `
         <div class="stat-row">

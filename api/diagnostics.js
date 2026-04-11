@@ -11,6 +11,7 @@ const KEYS = {
   errors: 'bloom_diag:errors',                 // list of {message, stack, url, ts}
   events: 'bloom_diag:events',                 // list of {event, ts, meta}
   dailyStats: (d) => `bloom_diag:daily:${d}`,  // aggregated daily counters
+  alltimeUids: 'bloom_diag:alltime_uids',      // persistent set of all unique user IDs (no TTL)
 };
 
 const NINETY_DAYS = 90 * 24 * 60 * 60;
@@ -39,7 +40,8 @@ async function appendToList(key, item, maxSize = MAX_LIST_SIZE) {
 }
 
 // Atomically add to a set stored as a JSON array using WATCH/MULTI/EXEC
-async function addToSet(key, value) {
+// ttl: seconds for expiry (default NINETY_DAYS). Pass 0 for no expiry.
+async function addToSet(key, value, ttl = NINETY_DAYS) {
   const client = await getRedis();
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
@@ -49,7 +51,11 @@ async function addToSet(key, value) {
       const s = new Set(arr);
       s.add(value);
       const multi = client.multi();
-      multi.set(key, JSON.stringify([...s]), { EX: NINETY_DAYS });
+      if (ttl > 0) {
+        multi.set(key, JSON.stringify([...s]), { EX: ttl });
+      } else {
+        multi.set(key, JSON.stringify([...s]));
+      }
       const results = await multi.exec();
       if (results !== null) return;
     } catch (e) {
@@ -236,15 +242,18 @@ export default async function handler(req, res) {
       case 'session_start': {
         // Track unique users per day + event count in a single atomic write
         const uid = body.uid;
-        const uidTransform = (uid && typeof uid === 'string') ? (stats) => {
+        const trimmedUid = (uid && typeof uid === 'string') ? uid.slice(0, 20) : null;
+        const uidTransform = trimmedUid ? (stats) => {
           // Build uid set from the WATCH-protected stats (always fresh)
           const uidSet = stats._uids ? new Set(stats._uids.split(',')) : new Set();
-          uidSet.add(uid.slice(0, 20));
+          uidSet.add(trimmedUid);
           stats._uids = [...uidSet].join(',');
           stats.unique_users = uidSet.size;
         } : null;
         await appendToList(KEYS.events, { event: 'session_start', ts });
         await incrementDaily('event:session_start', uidTransform);
+        // Track in persistent all-time unique user set (no TTL)
+        if (trimmedUid) await addToSet(KEYS.alltimeUids, trimmedUid, 0);
         if (res) return res.json({ ok: true });
         return;
       }
@@ -301,10 +310,11 @@ export default async function handler(req, res) {
 
     if (view === 'dashboard') {
       // Return aggregated dashboard data
-      const [aiFeedback, errors, events] = await Promise.all([
+      const [aiFeedback, errors, events, alltimeUids] = await Promise.all([
         kvGet(KEYS.aiFeedback),
         kvGet(KEYS.errors),
         kvGet(KEYS.events),
+        kvGet(KEYS.alltimeUids),
       ]);
 
       // Get last 30 days of daily stats (Eastern time keys)
@@ -350,6 +360,7 @@ export default async function handler(req, res) {
             recent: (events || []).slice(-50).reverse(),
           },
           dailyStats,
+          alltimeUniqueUsers: (alltimeUids || []).length,
         },
       });
     }
