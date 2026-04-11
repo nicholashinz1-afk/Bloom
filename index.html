@@ -18526,6 +18526,80 @@ async function tryRestoreFromURL() {
 }
 
 // ============================================================
+//  IN-APP BROWSER DETECTION
+// ============================================================
+
+function isInAppBrowser() {
+  const ua = navigator.userAgent || '';
+  return /FBAN|FBAV|Instagram|BytedanceWebview|TikTok|Snapchat|Twitter|LinkedInApp|Pinterest|Line\//i.test(ua);
+}
+
+function getInAppBrowserName() {
+  const ua = navigator.userAgent || '';
+  if (/FBAN|FBAV/i.test(ua)) return 'Facebook';
+  if (/Instagram/i.test(ua)) return 'Instagram';
+  if (/BytedanceWebview|TikTok/i.test(ua)) return 'TikTok';
+  if (/Snapchat/i.test(ua)) return 'Snapchat';
+  if (/Twitter/i.test(ua)) return 'X';
+  if (/LinkedInApp/i.test(ua)) return 'LinkedIn';
+  if (/Pinterest/i.test(ua)) return 'Pinterest';
+  return 'this app';
+}
+
+function showInAppBrowserBanner() {
+  if (!isInAppBrowser()) return;
+  // Don't show if already running as installed PWA
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
+  // Only show once per session
+  if (sessionStorage.getItem('bloom_iab_dismissed')) return;
+
+  const appName = getInAppBrowserName();
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const browserName = isIOS ? 'Safari' : 'Chrome';
+  const url = location.origin;
+
+  const banner = document.createElement('div');
+  banner.id = 'inapp-browser-banner';
+  banner.setAttribute('role', 'alert');
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10001;background:var(--bg-card);border-bottom:1px solid rgba(var(--sage-rgb),0.25);padding:20px;font-size:14px;line-height:1.6;display:flex;flex-direction:column;gap:10px;animation:slideDown 0.3s ease;backdrop-filter:blur(12px)';
+  banner.innerHTML = `
+    <div style="font-weight:600;font-size:15px;color:var(--cream)">Open in ${browserName} for the full experience</div>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">You're inside ${appName}'s browser, which can't install apps or send reminders. Open this link in ${browserName} to add Bloom to your home screen.</div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button id="iab-dismiss" style="background:transparent;border:1px solid rgba(var(--sage-rgb),0.3);color:var(--text-secondary);padding:10px 16px;border-radius:10px;font-size:13px;cursor:pointer;white-space:nowrap">Continue here</button>
+      <button id="iab-copy" style="background:var(--sage);border:none;color:var(--text-on-sage);padding:10px 16px;border-radius:10px;font-size:13px;cursor:pointer;font-weight:600;flex:1">Copy link to open in ${browserName}</button>
+    </div>`;
+  document.body.appendChild(banner);
+
+  banner.querySelector('#iab-copy').addEventListener('click', () => {
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = banner.querySelector('#iab-copy');
+      btn.textContent = 'Copied! Now open ' + browserName + ' and paste';
+      btn.style.background = 'rgba(var(--sage-rgb),0.6)';
+      setTimeout(() => banner.remove(), 6000);
+    }).catch(() => {
+      // Fallback: select text in a temporary input
+      const input = document.createElement('input');
+      input.value = url;
+      input.style.cssText = 'position:fixed;top:-999px';
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      input.remove();
+      const btn = banner.querySelector('#iab-copy');
+      btn.textContent = 'Copied! Now open ' + browserName + ' and paste';
+      btn.style.background = 'rgba(var(--sage-rgb),0.6)';
+      setTimeout(() => banner.remove(), 6000);
+    });
+  });
+
+  banner.querySelector('#iab-dismiss').addEventListener('click', () => {
+    sessionStorage.setItem('bloom_iab_dismissed', '1');
+    banner.remove();
+  });
+}
+
+// ============================================================
 //  DOMAIN MIGRATION (old Vercel URL -> production domain)
 // ============================================================
 
@@ -25233,6 +25307,10 @@ async function main() {
     save('bloom_pending_buddy_invite', buddyInviteParam.toUpperCase().trim());
     history.replaceState({}, '', location.pathname);
   }
+
+  // Guide users out of in-app browsers (Facebook, Instagram, etc.)
+  // so they can install the PWA and get notifications
+  showInAppBrowserBanner();
 
   const prefs = load('bloom_prefs');
 
