@@ -2,6 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+  // Fast redirect from legacy Vercel URL to production domain.
+  // Runs before fonts, CSS, or the main bundle so new users bounce
+  // immediately. Users with existing localStorage data stay so the
+  // in-app migration banner can offer to move their data over.
+  (function(){
+    if (location.hostname !== 'bloom-zeta-rouge.vercel.app') return;
+    try {
+      var p = localStorage.getItem('bloom_prefs');
+      if (p && JSON.parse(p).onboarded) return;
+    } catch (e) {}
+    location.replace('https://bloomselfcare.app' + location.pathname + location.search + location.hash);
+  })();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
