@@ -18960,16 +18960,27 @@ window.addEventListener('popstate', () => {
 });
 
 // Swipe-down-to-close for all bottom sheets
+// Only arms from the handle area (top ~48px of sheet), never from form controls
+// or content. This prevents iOS rubber-band bounce, keyboard-dismiss scrolls,
+// and inner-container scrolling (e.g. journal history) from accidentally
+// closing the sheet mid-interaction.
 (function initSheetSwipeDismiss() {
-  let startY = 0, startX = 0, currentSheet = null, sheetStartScroll = 0;
+  let startY = 0, startX = 0, currentSheet = null;
 
   document.addEventListener('touchstart', (e) => {
     const sheet = e.target.closest('.bottom-sheet.open');
     if (!sheet) return;
+    // Never start a dismiss drag from inside a form control or button
+    if (e.target.closest('input, textarea, select, button, [contenteditable="true"]')) return;
+    // Only allow the drag from the handle itself or the top of the sheet.
+    // Anywhere else should scroll content normally without risk of dismissing.
+    const handle = e.target.closest('.sheet-handle');
+    const sheetRect = sheet.getBoundingClientRect();
+    const touchFromTop = e.touches[0].clientY - sheetRect.top;
+    if (!handle && touchFromTop > 48) return;
     startY = e.touches[0].clientY;
     startX = e.touches[0].clientX;
     currentSheet = sheet;
-    sheetStartScroll = sheet.scrollTop;
   }, { passive: true });
 
   document.addEventListener('touchmove', (e) => {
@@ -18977,8 +18988,7 @@ window.addEventListener('popstate', () => {
     if (_sheetDismissLocked || currentSheet.hasAttribute('data-sticky')) return;
     const dy = e.touches[0].clientY - startY;
     const dx = Math.abs(e.touches[0].clientX - startX);
-    // Only track vertical swipe down when sheet is scrolled to top
-    if (dy > 0 && sheetStartScroll <= 0 && dy > dx) {
+    if (dy > 0 && dy > dx) {
       const clamped = Math.min(dy, 300);
       currentSheet.style.transform = `translateY(${clamped}px)`;
       currentSheet.style.transition = 'none';
@@ -18990,9 +19000,18 @@ window.addEventListener('popstate', () => {
     const dy = e.changedTouches[0].clientY - startY;
     currentSheet.style.transition = '';
     currentSheet.style.transform = '';
-    if (dy > 80 && sheetStartScroll <= 0 && !_sheetDismissLocked && !currentSheet.hasAttribute('data-sticky')) {
+    if (dy > 80 && !_sheetDismissLocked && !currentSheet.hasAttribute('data-sticky')) {
       closeAllSheets();
     }
+    currentSheet = null;
+  }, { passive: true });
+
+  // If a finger-down sequence is interrupted (iOS context menu, system gesture),
+  // clear state so a stray later touchend doesn't fire a dismiss.
+  document.addEventListener('touchcancel', () => {
+    if (!currentSheet) return;
+    currentSheet.style.transition = '';
+    currentSheet.style.transform = '';
     currentSheet = null;
   }, { passive: true });
 })();
