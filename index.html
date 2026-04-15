@@ -5052,6 +5052,15 @@ function saveState() {
   save('bloom_history', state.historyData);
   save('bloom_xp', state.xpData);
   save('bloom_wellness', state.wellnessData);
+  // Keep the server-side buddy profile fresh (days shown up, habit %, mood,
+  // lastActive) so partners see current numbers. Previously only mood,
+  // habit, and medication taps called scheduleBuddySync, so actions like
+  // journal, water, food, self-care, and wins never pushed to the server
+  // and buddies appeared stuck / inactive. Debounced to one call per 3s
+  // and a no-op when unpaired, so it is safe to piggyback on every save.
+  // Wrapped in try/catch to guard against temporal-dead-zone on early
+  // loads and against any unexpected errors in the sync path.
+  try { scheduleBuddySync(); } catch (_) {}
 }
 
 // ============================================================
@@ -22159,6 +22168,24 @@ function scheduleBuddySync() {
   }, 3000);
 }
 
+// Flush a pending buddy sync immediately. Used when the app is going to
+// the background so the final state (e.g. a habit tapped 1s before close)
+// doesn't get stranded in the 3s debounce and lost.
+function flushBuddySync() {
+  if (buddySyncDebounce) {
+    clearTimeout(buddySyncDebounce);
+    buddySyncDebounce = null;
+  }
+  if (buddyState.status === 'paired' || buddyState.status === 'searching') {
+    syncBuddyStatus();
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushBuddySync();
+});
+window.addEventListener('pagehide', flushBuddySync);
+
 async function fetchBuddyData() {
   if (buddyLoading) return;
   buddyLoading = true;
@@ -25286,14 +25313,20 @@ function initApp() {
     showWhatsNew();
   }
   setTimeout(() => {
-    // Buddy: register once, then sync if paired
+    // Buddy: register once, fetch partner data, then push our own stats.
+    // fetchBuddyData is awaited because it updates local buddyState from
+    // the server. Without awaiting, the status check below read a stale
+    // cached value and skipped the initial sync on sessions where local
+    // state had gotten out of step with the server (e.g. after a data
+    // wipe or reinstall), leaving partners with outdated stats.
     if (!pendingBuddyInvite) {
-      buddyRegisterAndSync().then(() => {
-        fetchBuddyData();
+      (async () => {
+        await buddyRegisterAndSync();
+        await fetchBuddyData();
         if (buddyState.status !== 'none') {
           syncBuddyStatus();
         }
-      });
+      })();
     }
     // Deferred nudges and reminders — none affect first paint
     checkBackupReminder();
