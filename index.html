@@ -8249,10 +8249,10 @@ setInterval(() => {
 }, 15 * 60 * 1000);
 
 // ── OneSignal Push Scheduling (real push notifications) ──────
-// Schedules notifications server-side so they fire even when the app is closed.
-// Local notifications above serve as a fallback when the app is open.
-
-const _scheduledPushIds = Object.assign({}, load('bloom_scheduled_push_ids', {})); // tag → notificationId for cancellation
+// The server owns the scheduling. The client syncs reminder prefs + tz via
+// /api/notify action:sync-prefs; a cron (/api/cron-reminders) runs hourly and
+// schedules the next ~36h of reminders into OneSignal. This way notifications
+// fire even when the app has been closed for days.
 
 async function notifyApi(payload) {
   try {
@@ -8271,214 +8271,66 @@ function getPlayerIdForPush() {
   return load('bloom_onesignal_pid', null);
 }
 
-// Build an ISO datetime string for today at a given hour (local time)
-function todayAtHour(hour, minute) {
-  const d = new Date();
-  d.setHours(hour, minute || 0, 0, 0);
-  return d.toISOString();
+function getPushTimezone() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York'; }
+  catch { return 'America/New_York'; }
 }
 
-// Cancel a previously scheduled push notification by tag
+// Cancel today's scheduled push for a given tag (server-side lookup by tag+date)
 async function cancelScheduledPush(tag) {
-  const nid = _scheduledPushIds[tag];
-  if (!nid) return;
-  delete _scheduledPushIds[tag];
-  // Also remove from persistent storage
-  const stored = load('bloom_scheduled_push_ids', {});
-  delete stored[tag];
-  save('bloom_scheduled_push_ids', stored);
-  await notifyApi({ action: 'cancel', notificationId: nid });
+  const playerId = getPlayerIdForPush();
+  if (!playerId || !tag) return;
+  await notifyApi({ action: 'cancel-by-tag', playerId, tag });
 }
 
-// Cancel multiple scheduled push notifications by tag prefix
+// Cancel today's scheduled pushes matching a tag prefix (server-side lookup)
 async function cancelScheduledPushesByPrefix(prefix) {
-  const tags = Object.keys(_scheduledPushIds).filter(t => t.startsWith(prefix));
-  if (tags.length === 0) return;
-  const ids = tags.map(t => {
-    const nid = _scheduledPushIds[t];
-    delete _scheduledPushIds[t];
-    return nid;
-  }).filter(Boolean);
-  // Update persistent storage
-  const stored = load('bloom_scheduled_push_ids', {});
-  tags.forEach(t => delete stored[t]);
-  save('bloom_scheduled_push_ids', stored);
-  if (ids.length > 0) {
-    await notifyApi({ action: 'cancel-batch', notificationIds: ids });
-  }
+  const playerId = getPlayerIdForPush();
+  if (!playerId || !prefix) return;
+  await notifyApi({ action: 'cancel-by-prefix', playerId, prefix });
 }
 
-// Schedule all of today's push notifications via OneSignal
+// Sync the user's reminder prefs + tz to the server. The cron then schedules
+// notifications into OneSignal on their behalf, independent of app state.
+// This function is called on boot, on pref change, and on subscription change.
+// Name kept for backward compat with existing call sites.
 async function scheduleAllPushNotifications() {
   const playerId = getPlayerIdForPush();
   if (!playerId) return;
-  if (!state.prefs?.notifications?.habitReminders) return;
-  if (Notification.permission !== 'granted') return;
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
 
-  const now = new Date();
-  const hour = now.getHours();
-  const t = today();
-  const sentKey = `bloom_reminders_${t}`;
-  const sent = load(sentKey, {});
-  const notifications = [];
-
-  // ── Habit reminders (teeth brushing) ──
-  HABIT_REMINDERS.forEach(r => {
-    if (r.hour > hour && !sent[r.id] && !r.check()) {
-      notifications.push({
-        title: r.title,
-        message: r.body,
-        sendAt: todayAtHour(r.hour),
-        tag: `habit_${r.id}`,
-      });
-    }
-  });
-
-  // ── Medication reminders ──
-  const medOn = state.prefs?.dailyHabits?.medication;
-  const medRemindMode = state.prefs?.notifications?.medicationReminders || 'auto';
-  if (medOn && medRemindMode !== 'off') {
-    const medTime = state.prefs?.habitTimes?.medication || 'am';
-    const td = state.todayData;
-    const isDetailed = state.prefs?.medicationMode === 'detailed';
-    const schedule = [];
-    if (hasTimeSlot(medTime, TIME_AM)) {
-      schedule.push({ slot: 'am', firstHour: 9, started: () => isMedSlotStarted('am', td, isDetailed) });
-    }
-    if (hasTimeSlot(medTime, TIME_AFTERNOON)) {
-      schedule.push({ slot: 'afternoon', firstHour: 14, started: () => isMedSlotStarted('afternoon', td, isDetailed) });
-    }
-    if (hasTimeSlot(medTime, TIME_PM)) {
-      schedule.push({ slot: 'pm', firstHour: 20, started: () => isMedSlotStarted('pm', td, isDetailed) });
-    }
-    if (medTime === 'any') {
-      schedule.push({ slot: 'any', firstHour: 12, started: () => isMedSlotStarted('any', td, isDetailed) });
-    }
-    schedule.forEach(s => {
-      if (s.firstHour > hour && !s.started() && !sent[`med_first_${s.slot}`]) {
-        const msg = MED_REMINDER_MESSAGES[Math.floor(Math.random() * MED_REMINDER_MESSAGES.length)];
-        notifications.push({
-          title: msg.title,
-          message: msg.body,
-          sendAt: todayAtHour(s.firstHour),
-          tag: `med_${s.slot}`,
-        });
-      }
-    });
+  // If the user has disabled reminders entirely, clear any stored prefs so
+  // the cron stops scheduling and cancels stragglers.
+  if (!state.prefs?.notifications?.habitReminders) {
+    await notifyApi({ action: 'clear-prefs', playerId });
+    return;
   }
 
-  // ── Water reminders ──
-  const waterMode = state.prefs?.notifications?.waterMode || 'smart';
-  if (waterMode !== 'off') {
-    const waterCount = state.todayData.water || 0;
-    if (waterCount < (state.prefs?.waterGoal || 3)) {
-      if (waterMode === 'smart') {
-        [12, 16, 20].forEach(h => {
-          if (h > hour && !sent[`water_s${h}`]) {
-            notifications.push({
-              title: 'Hydration check 💧',
-              message: 'A gentle nudge to drink some water. Even a few sips count.',
-              sendAt: todayAtHour(h),
-              tag: `water_s${h}`,
-            });
-          }
-        });
-      } else if (waterMode === 'hourly') {
-        for (let h = Math.max(12, hour + 1); h <= 21; h++) {
-          if (!sent[`water_h${h}`]) {
-            const msg = WATER_MESSAGES[Math.floor(Math.random() * WATER_MESSAGES.length)];
-            notifications.push({
-              title: msg.title,
-              message: msg.body,
-              sendAt: todayAtHour(h),
-              tag: `water_h${h}`,
-            });
-          }
-        }
-      }
-    }
-  }
+  // Build a skinny hash of the sync payload so we only POST when something
+  // actually changed. Player ID is included so a new subscription re-syncs.
+  const payload = {
+    tz: getPushTimezone(),
+    waterGoal: state.prefs?.waterGoal || 3,
+    habitTimes: { medication: state.prefs?.habitTimes?.medication || 'am' },
+    dailyHabits: { medication: !!state.prefs?.dailyHabits?.medication },
+    notifications: {
+      habitReminders: !!state.prefs?.notifications?.habitReminders,
+      medicationReminders: state.prefs?.notifications?.medicationReminders || 'auto',
+      waterMode: state.prefs?.notifications?.waterMode || 'smart',
+      sundayReminder: state.prefs?.notifications?.sundayReminder !== false,
+      weeklySummary: !!state.prefs?.notifications?.weeklySummary,
+    },
+  };
+  const hash = playerId + '|' + JSON.stringify(payload);
+  if (load('bloom_push_sync_hash', null) === hash) return;
 
-  // ── Evening nudge ──
-  if (hour < 19 && !sent.evening_nudge) {
-    const td = state.todayData || {};
-    const anyActivity = td.m_teeth || td.e_teeth || td.mood !== undefined ||
-      (td.water && td.water > 0) || td.journalXPGiven;
-    if (!anyActivity) {
-      const msg = EVENING_NUDGE_MESSAGES[Math.floor(Math.random() * EVENING_NUDGE_MESSAGES.length)];
-      notifications.push({
-        title: msg.title,
-        message: msg.body,
-        sendAt: todayAtHour(19, 15),
-        tag: 'evening_nudge',
-      });
-    }
-  }
-
-  // ── Weekly reflection (schedule for Saturday 10am if applicable) ──
-  const dow = now.getDay();
-  if ((dow === 5 || dow === 6) && state.prefs?.notifications?.sundayReminder !== false) {
-    // Schedule for Saturday 10am if it's Friday, or now+1h if Saturday
-    const ws = weekStart();
-    const lastNotified = load('bloom_reflection_notif', null);
-    if (lastNotified !== ws) {
-      const reflectDate = new Date();
-      if (dow === 5) { reflectDate.setDate(reflectDate.getDate() + 1); reflectDate.setHours(10, 0, 0, 0); }
-      else { reflectDate.setHours(Math.max(hour + 1, 10), 0, 0, 0); }
-      if (reflectDate > now) {
-        notifications.push({
-          title: 'Time to reflect 🪞',
-          message: 'Your weekly reflection is ready. Take a few minutes for yourself.',
-          sendAt: reflectDate.toISOString(),
-          tag: 'weekly_reflection',
-        });
-      }
-    }
-  }
-
-  // ── Weekly summary (Sunday 6pm) ──
-  if (dow <= 0 || dow === 6) {
-    if (state.prefs?.notifications?.weeklySummary && !sent.weekly_summary) {
-      const summaryDate = new Date();
-      if (dow === 6) { summaryDate.setDate(summaryDate.getDate() + 1); }
-      summaryDate.setHours(18, 0, 0, 0);
-      if (summaryDate > now) {
-        notifications.push({
-          title: 'Your weekly bloom summary 🌿',
-          message: 'See how your week went — check your progress in the app.',
-          sendAt: summaryDate.toISOString(),
-          tag: 'weekly_summary',
-        });
-      }
-    }
-  }
-
-  if (notifications.length === 0) return;
-
-  // Cancel any previously scheduled notifications for today before re-scheduling
-  const prevIds = load('bloom_scheduled_push_ids', {});
-  const prevIdList = Object.values(prevIds).filter(Boolean);
-  if (prevIdList.length > 0) {
-    await notifyApi({ action: 'cancel-batch', notificationIds: prevIdList });
-  }
-
-  // Schedule the batch
   const result = await notifyApi({
-    action: 'schedule-batch',
+    action: 'sync-prefs',
     playerId,
-    notifications,
+    tz: payload.tz,
+    prefs: payload,
   });
-
-  if (result.ok && result.results) {
-    const newIds = {};
-    result.results.forEach(r => {
-      if (r.ok && r.tag && r.notificationId) {
-        newIds[r.tag] = r.notificationId;
-        _scheduledPushIds[r.tag] = r.notificationId;
-      }
-    });
-    save('bloom_scheduled_push_ids', newIds);
-  }
+  if (result && result.ok) save('bloom_push_sync_hash', hash);
 }
 
 // Called when a habit is completed — cancel its scheduled push
@@ -16614,6 +16466,7 @@ function setWaterGoal(amount) {
   save('bloom_prefs', state.prefs);
   reRenderSettingsPreservingScroll();
   renderTodayTab();
+  setTimeout(() => scheduleAllPushNotifications(), 1000);
 }
 
 function saveSettingsName() {
@@ -21368,6 +21221,14 @@ function initOneSignal() {
           save('bloom_onesignal_pid', e.current.id);
           buddyRegisterAndSync();
           setTimeout(() => scheduleAllPushNotifications(), 2000);
+        } else {
+          // User unsubscribed — tell the server to stop scheduling for this player
+          const oldPid = load('bloom_onesignal_pid', null);
+          if (oldPid) {
+            notifyApi({ action: 'clear-prefs', playerId: oldPid });
+            save('bloom_onesignal_pid', null);
+            save('bloom_push_sync_hash', null);
+          }
         }
       });
       const pid = OneSignal.User.PushSubscription.id;
@@ -24022,6 +23883,7 @@ function toggleMedTimeSlot(medId, slotId) {
     syncMedHabitTimes();
     reRenderSettingsPreservingScroll();
     renderTodayTab();
+    setTimeout(() => scheduleAllPushNotifications(), 1000);
     return;
   }
 
@@ -24045,6 +23907,7 @@ function toggleMedTimeSlot(medId, slotId) {
   syncMedHabitTimes();
   reRenderSettingsPreservingScroll();
   renderTodayTab();
+  setTimeout(() => scheduleAllPushNotifications(), 1000);
 }
 
 function toggleMedDay(medId, dayBit) {
@@ -24110,6 +23973,7 @@ function setMedicationMode(mode) {
   if (mode === 'detailed') trackFeature('medication_detailed_mode');
   reRenderSettingsPreservingScroll();
   renderTodayTab();
+  setTimeout(() => scheduleAllPushNotifications(), 1000);
 }
 
 function syncMedHabitTimes() {

@@ -17,12 +17,34 @@ Mental health self-care PWA. Compassionate, no-shame, no-pressure design philoso
 - `api/claude.js` — proxies to Anthropic API (server-side key via `ANTHROPIC_API_KEY`)
 - `api/buddy.js` — buddy pairing, messaging, nudges (Redis/Vercel KV via `REDIS_URL`)
 - `api/wall.js` — community encouragement wall (same Redis backend)
+- `api/notify.js` — OneSignal push actions: `sync-prefs` (client pushes reminder prefs + tz), `clear-prefs`, `cancel-by-tag`, `cancel-by-prefix`, plus legacy `schedule`/`schedule-batch`/`cancel`/`cancel-batch`. The sync-prefs flow is the primary path; client calls it on boot, on pref change, and on subscription change.
+- `api/cron-reminders.js` — **Vercel Cron (hourly).** Iterates `bloom:push_prefs_index` in Redis and ensures the next ~36h of habit/med/water/evening/weekly reminders are scheduled into OneSignal for every opted-in player. Runs independently of the app, so reminders fire even when the app has been closed for days. Reminder copy is mirrored from index.html pools — update both if you change the text. Timezone-aware via IANA tz names in the per-user pref record.
+
+## Push Notification Architecture
+
+Reminders are scheduled **server-side via cron**, not client-side. The client only owns pref sync and same-day cancellations. This is the fix for "notifications don't fire unless I open the app."
+
+Redis keys:
+- `bloom:push_prefs:<playerId>` — pref snapshot (tz, habitTimes, dailyHabits.medication, notifications.*, waterGoal, updatedAt). TTL 60 days, refreshed on each sync. Contains no PII or journal data.
+- `bloom:push_prefs_index` — set of player IDs with active prefs. Cron reads from here.
+- `bloom:push_sched:<playerId>` — map of `<tag>:<YYYY-MM-DD>` → `{ id, sendAt }` tracking notifications already scheduled into OneSignal for idempotency and cancel-by-tag lookup. TTL 7 days.
+
+Client flow:
+1. On pref change (or subscription change), client POSTs `{ action: 'sync-prefs', playerId, tz, prefs }`. Sync is hashed locally (`bloom_push_sync_hash`) so no-op syncs are skipped.
+2. Cron runs every hour, computes reminders for each user's next ~36h in their tz, and schedules any not already in the sched record. Notifications are keyed by `tag:localDate` so re-runs are idempotent.
+3. When the user completes a habit or reaches a water goal, client calls `cancel-by-tag` / `cancel-by-prefix`. The server looks up today's scheduled ID for that tag and cancels it via OneSignal REST.
+4. If the user disables habit reminders or unsubscribes, client calls `clear-prefs` which deletes the Redis keys and cancels outstanding scheduled notifications.
+
+Buddy nudges/messages are separate: they're server-to-server via `sendPush()` in `api/buddy.js` and don't depend on the cron at all.
+
+When editing: if you change a reminder's copy or scheduled hour, update **both** the pool in `index.html` (used by the local in-app fallback) **and** the mirror in `api/cron-reminders.js`. If you add a new reminder type, add it to `computeReminders()` in the cron.
 
 ## Key Environment Variables
 
 - `ANTHROPIC_API_KEY` — Claude API (server-side only)
 - `REDIS_URL` — Vercel KV / Upstash Redis
 - `ONESIGNAL_APP_ID` / `ONESIGNAL_REST_API_KEY` — push notifications
+- `CRON_SECRET` — Vercel Cron authentication (auto-set by Vercel if cron is configured; also accepted as `Authorization: Bearer <secret>` for manual triggering)
 - `ADMIN_BUDDY_ID` — admin buddy for auto-pairing fallback
 
 ## Content Moderation
