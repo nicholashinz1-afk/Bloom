@@ -3,57 +3,26 @@
 //
 // Two flows:
 // 1. Prefs sync flow (preferred): client POSTs sync-prefs once per change.
-//    The cron at /api/cron-reminders takes over and schedules reminders
-//    into OneSignal on the user's behalf, independent of app state.
+//    On sync, this endpoint immediately reconciles the user's scheduled
+//    reminders so pref changes take effect right away. A daily Vercel Cron
+//    at /api/cron-reminders handles the ongoing ~52h lookahead.
 // 2. Direct scheduling actions (legacy): schedule, schedule-batch, cancel,
 //    cancel-batch. Kept for backward compat during rollout.
 
 import { getRedis, kvGet, kvSet, kvDel } from './_redis.js';
+import {
+  PREFS_INDEX_KEY, prefsKey, schedKey, SCHED_TTL,
+  osSchedule, osCancel, reconcileUser,
+} from './_push-scheduler.js';
 
-const PREFS_INDEX_KEY = 'bloom:push_prefs_index';
-const prefsKey = (pid) => `bloom:push_prefs:${pid}`;
-const schedKey = (pid) => `bloom:push_sched:${pid}`;
-const PREFS_TTL = 60 * 86400; // 60 days
-const SCHED_TTL = 7 * 86400;  // 7 days
+const PREFS_TTL = 60 * 86400;
 
-// ── OneSignal REST helpers ──────────────────────────────────
-async function osSchedule(appId, apiKey, playerId, { title, message, sendAt, tag }) {
-  const resp = await fetch('https://onesignal.com/api/v1/notifications', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
-    body: JSON.stringify({
-      app_id: appId,
-      include_subscription_ids: [playerId],
-      headings: { en: title },
-      contents: { en: message },
-      url: 'https://bloomselfcare.app',
-      send_after: sendAt,
-      ...(tag ? { data: { bloom_tag: tag } } : {}),
-    }),
-  });
-  return resp.json();
-}
-
-async function osCancel(appId, apiKey, notificationId) {
-  try {
-    const resp = await fetch(
-      `https://onesignal.com/api/v1/notifications/${notificationId}?app_id=${appId}`,
-      { method: 'DELETE', headers: { 'Authorization': `Basic ${apiKey}` } }
-    );
-    const result = await resp.json();
-    return { ok: result.success !== false };
-  } catch (e) {
-    return { ok: false, error: e.message };
-  }
-}
-
-// Compute "today" in the user's tz as a YYYY-MM-DD string
 function localDateString(tz) {
   try {
     const fmt = new Intl.DateTimeFormat('en-CA', {
       timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
     });
-    return fmt.format(new Date()); // en-CA gives YYYY-MM-DD
+    return fmt.format(new Date());
   } catch {
     return new Date().toISOString().slice(0, 10);
   }
@@ -70,7 +39,6 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Health check
   if (req.method === 'GET' && req.query?.check === 'health') {
     const hasKeys = !!(process.env.ONESIGNAL_APP_ID && process.env.ONESIGNAL_REST_API_KEY);
     return res.json({ ok: hasKeys, service: 'notify', ts: Date.now() });
@@ -95,7 +63,9 @@ export default async function handler(req, res) {
 
   const { action } = body;
 
-  // ── SYNC-PREFS: store reminder prefs for the cron to schedule ──
+  // ── SYNC-PREFS: store reminder prefs AND reconcile inline ──────
+  // Reconciling inline means pref changes take effect immediately instead
+  // of waiting up to 24h for the next cron run.
   if (action === 'sync-prefs') {
     const { playerId, tz, prefs } = body;
     if (!playerId || typeof playerId !== 'string') {
@@ -104,7 +74,6 @@ export default async function handler(req, res) {
     if (!prefs || typeof prefs !== 'object') {
       return res.status(400).json({ error: 'Missing prefs' });
     }
-    // Pluck only the fields the cron needs (no PII, no journal data)
     const clean = {
       tz: typeof tz === 'string' ? tz.slice(0, 64) : 'America/New_York',
       waterGoal: Number.isFinite(+prefs.waterGoal) ? +prefs.waterGoal : 3,
@@ -130,7 +99,11 @@ export default async function handler(req, res) {
       await kvSet(prefsKey(playerId), clean, PREFS_TTL);
       const client = await getRedis();
       await client.sAdd(PREFS_INDEX_KEY, playerId);
-      return res.json({ ok: true });
+      // Reconcile now so changes take effect immediately. resetSchedule:true
+      // cancels any stale reminders (e.g. user changed their med time) before
+      // re-scheduling.
+      const r = await reconcileUser(appId, apiKey, playerId, { resetSchedule: true });
+      return res.json({ ok: true, reconciled: r });
     } catch (e) {
       console.log('[notify] sync-prefs failed:', e.message);
       return res.status(500).json({ error: 'sync failed' });
@@ -138,14 +111,12 @@ export default async function handler(req, res) {
   }
 
   // ── CLEAR-PREFS: user turned off push or unsubscribed ─────────
-  // Cancel all scheduled notifications for this player and drop their prefs.
   if (action === 'clear-prefs') {
     const { playerId } = body;
     if (!playerId) return res.status(400).json({ error: 'Missing playerId' });
     try {
       const sched = (await kvGet(schedKey(playerId))) || {};
       const ids = Object.values(sched).map(v => v && v.id).filter(Boolean);
-      // Fire cancellations in parallel but don't let one failure block others
       await Promise.all(ids.slice(0, 100).map(id => osCancel(appId, apiKey, id)));
       await kvDel(schedKey(playerId));
       await kvDel(prefsKey(playerId));
@@ -161,8 +132,6 @@ export default async function handler(req, res) {
   }
 
   // ── CANCEL-BY-TAG: cancel today's scheduled reminder by tag ────
-  // Called when a user completes a habit and the pending reminder is no
-  // longer relevant (e.g. teeth brushed, med taken, water goal reached).
   if (action === 'cancel-by-tag') {
     const { playerId, tag } = body;
     if (!playerId || !tag) {
@@ -186,8 +155,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── CANCEL-BY-PREFIX: cancel all of today's reminders matching a prefix ──
-  // e.g. cancel all 'water_' reminders when the water goal is reached.
+  // ── CANCEL-BY-PREFIX: cancel all of today's reminders by prefix ──
   if (action === 'cancel-by-prefix') {
     const { playerId, prefix } = body;
     if (!playerId || !prefix) {
@@ -215,40 +183,27 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── SCHEDULE (legacy): schedule a single notification ──────────
+  // ── SCHEDULE (legacy) ──────────────────────────────────────────
   if (action === 'schedule') {
     const { playerId, title, message, sendAt, tag } = body;
     if (!playerId || !title || !message || !sendAt) {
       return res.status(400).json({ error: 'Missing required fields: playerId, title, message, sendAt' });
     }
-
     const sendTime = new Date(sendAt);
-    if (isNaN(sendTime.getTime())) {
-      return res.status(400).json({ error: 'Invalid sendAt datetime' });
-    }
-    if (sendTime.getTime() < Date.now() - 60000) {
-      return res.status(400).json({ error: 'sendAt must be in the future' });
-    }
+    if (isNaN(sendTime.getTime())) return res.status(400).json({ error: 'Invalid sendAt datetime' });
+    if (sendTime.getTime() < Date.now() - 60000) return res.status(400).json({ error: 'sendAt must be in the future' });
 
-    try {
-      const result = await osSchedule(appId, apiKey, playerId, { title, message, sendAt, tag });
-      if (result.errors) {
-        console.log('[notify] schedule error:', JSON.stringify(result.errors));
-        return res.json({ ok: false, errors: result.errors });
-      }
-      return res.json({ ok: true, notificationId: result.id });
-    } catch (e) {
-      console.log('[notify] schedule failed:', e.message);
-      return res.status(500).json({ error: 'Failed to schedule notification' });
-    }
+    const result = await osSchedule(appId, apiKey, playerId, { title, message, sendAt, tag });
+    if (!result.ok) return res.json(result);
+    return res.json({ ok: true, notificationId: result.id });
   }
 
   // ── CANCEL (legacy) ────────────────────────────────────────────
   if (action === 'cancel') {
     const { notificationId } = body;
     if (!notificationId) return res.status(400).json({ error: 'Missing notificationId' });
-    const result = await osCancel(appId, apiKey, notificationId);
-    return res.json(result);
+    await osCancel(appId, apiKey, notificationId);
+    return res.json({ ok: true });
   }
 
   // ── SCHEDULE-BATCH (legacy) ────────────────────────────────────
@@ -257,35 +212,23 @@ export default async function handler(req, res) {
     if (!playerId || !Array.isArray(notifications) || notifications.length === 0) {
       return res.status(400).json({ error: 'Missing playerId or notifications array' });
     }
-
     const batch = notifications.slice(0, 40);
     const results = [];
-
     for (const notif of batch) {
       const { title, message, sendAt, tag } = notif;
       if (!title || !message || !sendAt) {
         results.push({ ok: false, tag, error: 'missing fields' });
         continue;
       }
-
       const sendTime = new Date(sendAt);
       if (isNaN(sendTime.getTime()) || sendTime.getTime() < Date.now() - 60000) {
         results.push({ ok: false, tag, error: 'invalid or past sendAt' });
         continue;
       }
-
-      try {
-        const result = await osSchedule(appId, apiKey, playerId, { title, message, sendAt, tag });
-        if (result.errors) {
-          results.push({ ok: false, tag, errors: result.errors });
-        } else {
-          results.push({ ok: true, tag, notificationId: result.id });
-        }
-      } catch (e) {
-        results.push({ ok: false, tag, error: e.message });
-      }
+      const result = await osSchedule(appId, apiKey, playerId, { title, message, sendAt, tag });
+      if (result.ok) results.push({ ok: true, tag, notificationId: result.id });
+      else results.push({ ok: false, tag, ...(result.errors ? { errors: result.errors } : { error: result.error }) });
     }
-
     return res.json({ ok: true, results });
   }
 
@@ -295,11 +238,10 @@ export default async function handler(req, res) {
     if (!Array.isArray(notificationIds) || notificationIds.length === 0) {
       return res.status(400).json({ error: 'Missing notificationIds array' });
     }
-
     const results = [];
     for (const nid of notificationIds.slice(0, 40)) {
-      const r = await osCancel(appId, apiKey, nid);
-      results.push({ ...r, notificationId: nid });
+      await osCancel(appId, apiKey, nid);
+      results.push({ ok: true, notificationId: nid });
     }
     return res.json({ ok: true, results });
   }

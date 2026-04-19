@@ -17,8 +17,9 @@ Mental health self-care PWA. Compassionate, no-shame, no-pressure design philoso
 - `api/claude.js` — proxies to Anthropic API (server-side key via `ANTHROPIC_API_KEY`)
 - `api/buddy.js` — buddy pairing, messaging, nudges (Redis/Vercel KV via `REDIS_URL`)
 - `api/wall.js` — community encouragement wall (same Redis backend)
-- `api/notify.js` — OneSignal push actions: `sync-prefs` (client pushes reminder prefs + tz), `clear-prefs`, `cancel-by-tag`, `cancel-by-prefix`, plus legacy `schedule`/`schedule-batch`/`cancel`/`cancel-batch`. The sync-prefs flow is the primary path; client calls it on boot, on pref change, and on subscription change.
-- `api/cron-reminders.js` — **Vercel Cron (hourly).** Iterates `bloom:push_prefs_index` in Redis and ensures the next ~36h of habit/med/water/evening/weekly reminders are scheduled into OneSignal for every opted-in player. Runs independently of the app, so reminders fire even when the app has been closed for days. Reminder copy is mirrored from index.html pools — update both if you change the text. Timezone-aware via IANA tz names in the per-user pref record.
+- `api/_push-scheduler.js` — shared helper. Exports `reconcileUser(appId, apiKey, playerId, { resetSchedule })` plus reminder copy pools and OneSignal REST wrappers. Used by both the cron and the sync-prefs action so scheduling logic lives in one place.
+- `api/notify.js` — OneSignal push actions: `sync-prefs` (stores prefs **and** reconciles the user's schedule inline so changes take effect immediately), `clear-prefs`, `cancel-by-tag`, `cancel-by-prefix`, plus legacy `schedule`/`schedule-batch`/`cancel`/`cancel-batch`.
+- `api/cron-reminders.js` — **Vercel Cron (daily at 04:00 UTC).** Hobby plan only allows daily cron, so this runs once per day and each run schedules the next ~52h of reminders for every player in `bloom:push_prefs_index`. The sync-prefs action covers real-time pref changes; the cron is the safety net that keeps notifications flowing for users who don't open the app. Reminder copy lives in `api/_push-scheduler.js` and is mirrored from the index.html pools — update both if you change the text.
 
 ## Push Notification Architecture
 
@@ -30,10 +31,12 @@ Redis keys:
 - `bloom:push_sched:<playerId>` — map of `<tag>:<YYYY-MM-DD>` → `{ id, sendAt }` tracking notifications already scheduled into OneSignal for idempotency and cancel-by-tag lookup. TTL 7 days.
 
 Client flow:
-1. On pref change (or subscription change), client POSTs `{ action: 'sync-prefs', playerId, tz, prefs }`. Sync is hashed locally (`bloom_push_sync_hash`) so no-op syncs are skipped.
-2. Cron runs every hour, computes reminders for each user's next ~36h in their tz, and schedules any not already in the sched record. Notifications are keyed by `tag:localDate` so re-runs are idempotent.
+1. On pref change (or subscription change), client POSTs `{ action: 'sync-prefs', playerId, tz, prefs }`. The sync-prefs handler calls `reconcileUser(..., { resetSchedule: true })` immediately, which cancels stale scheduled notifications and queues fresh ones. Sync is hashed locally (`bloom_push_sync_hash`) so no-op syncs are skipped.
+2. Daily cron runs at 04:00 UTC, computes reminders for each user's next ~52h in their tz, and schedules any not already in the sched record. Notifications are keyed by `tag:localDate` so re-runs are idempotent. The ~52h lookahead gives ~28h of buffer if one cron run fails.
 3. When the user completes a habit or reaches a water goal, client calls `cancel-by-tag` / `cancel-by-prefix`. The server looks up today's scheduled ID for that tag and cancels it via OneSignal REST.
 4. If the user disables habit reminders or unsubscribes, client calls `clear-prefs` which deletes the Redis keys and cancels outstanding scheduled notifications.
+
+Why daily cron + inline reconcile: Vercel Hobby (free) tier caps cron at once per day. Running sync-prefs synchronously on the user's next pref change means we don't need hourly cron runs to pick up changes. The cron's only job is the safety net of keeping reminders queued for users who don't touch the app.
 
 Buddy nudges/messages are separate: they're server-to-server via `sendPush()` in `api/buddy.js` and don't depend on the cron at all.
 
