@@ -4604,10 +4604,19 @@ function getJournalPrompt() {
 // ── Stable prompt for today (caches so Daily + Wellness tabs always match) ──
 function getTodayJournalPrompt() {
   const t = today();
+  // When the user is composing a brand-new entry with "new prompt" intent,
+  // honor the offset cycle instead of pinning to the saved entry's prompt.
+  // "Same prompt again" sets journalSamePrompt; editing an existing entry sets editingJournalSavedAt.
+  const composingNewPrompt = state.editingJournal
+    && !state.editingJournalSavedAt
+    && state.journalMode === 'prompt'
+    && !state.journalSamePrompt;
   // If there are saved entries today, use the first entry's prompt
-  const entries = getJournalEntries(t).filter(e => e.source !== 'community');
-  if (entries.length > 0 && entries[0].prompt) {
-    return entries[0].prompt;
+  if (!composingNewPrompt) {
+    const entries = getJournalEntries(t).filter(e => e.source !== 'community');
+    if (entries.length > 0 && entries[0].prompt) {
+      return entries[0].prompt;
+    }
   }
   // Return cached prompt if still valid for today at current offset
   const offset = state.journalPromptOffset || 0;
