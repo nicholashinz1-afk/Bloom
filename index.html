@@ -6338,6 +6338,12 @@ function checkWelcomeBack() {
   const diffDays = Math.floor((now - lastDate) / 86400000);
 
   if (diffDays >= 2) {
+    // Once the user has dismissed the banner during this absence, don't
+    // re-show it on subsequent app opens until they've actually been gone
+    // again. The banner is meant to land once per gap, not nag daily.
+    const dismissed = xp._welcomeBackLastDismissed;
+    if (dismissed && dismissed > xp.lastStreakDate) return;
+
     state._welcomeBackShown = true;
     state.showWelcomeBack = true;
     state.daysAway = diffDays;
@@ -6585,8 +6591,12 @@ function dismissWelcomeBack(reason) {
   if (reason) {
     if (!state.wellnessData._comebackReasons) state.wellnessData._comebackReasons = [];
     state.wellnessData._comebackReasons.push({ date: today(), reason });
-    saveState();
   }
+  // Persist dismissal so the banner doesn't reappear every day during the
+  // same absence. checkWelcomeBack() compares this against lastStreakDate
+  // to decide whether the user has been away again since.
+  state.xpData._welcomeBackLastDismissed = today();
+  saveState();
   // Give comeback XP bonus
   addXP(25, null);
   haptic('success');
