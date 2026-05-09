@@ -6337,7 +6337,7 @@ function checkWelcomeBack() {
   const now = new Date();
   const diffDays = Math.floor((now - lastDate) / 86400000);
 
-  if (diffDays >= 2) {
+  if (diffDays >= 7) {
     // Once the user has dismissed the banner during this absence, don't
     // re-show it on subsequent app opens until they've actually been gone
     // again. The banner is meant to land once per gap, not nag daily.
@@ -10462,14 +10462,12 @@ function renderTodayTop() {
 
   // Welcome-back re-engagement
   if (state.showWelcomeBack) {
-    const daysAway = state.daysAway || 2;
+    const daysAway = state.daysAway || 7;
     const name = state.prefs?.name ? `, ${state.prefs.name}` : '';
     const wbTitle = daysAway >= 30 ? `Welcome back${name}.`
-      : daysAway >= 7 ? `It's good to see you${name}.`
-      : `Hey${name}.`;
-    const wbText = daysAway >= 30 ? "A lot can change — let's start with just today."
-      : daysAway >= 7 ? 'Whatever happened, today is a fresh start.'
-      : 'You came back. That says something about you.';
+      : `It's good to see you${name}.`;
+    const wbText = daysAway >= 30 ? "A lot can change. Let's start with just today."
+      : 'Whatever happened, today is a fresh start.';
     html += `<div class="banner" style="background:rgba(var(--sage-rgb),0.1);border:1px solid rgba(var(--sage-rgb),0.25)">
       <div class="banner-icon" style="font-size:36px">🌱</div>
       <div class="banner-body">
@@ -13821,17 +13819,37 @@ function renderHistoryTab() {
   const todayStr = today();
   const moodEmojis = ['😔','😕','😐','🙂','😊'];
 
-  const dates = Object.keys(history)
-    .filter(d => d !== todayStr)
-    .sort((a,b) => b.localeCompare(a));
+  // Build the full date range from the user's earliest known activity
+  // (onboarding, history, or journal) up to yesterday, so every day is
+  // visible and tappable for retroactive fill-in. Filling in past days
+  // only works if past days actually appear in the list.
+  const knownDates = new Set(Object.keys(history));
+  Object.keys(state.wellnessData?.journal || {}).forEach(d => knownDates.add(d));
+  const onboardDate = state.prefs?.onboardDate;
+  if (onboardDate) knownDates.add(onboardDate);
+  knownDates.delete(todayStr);
 
-  if (dates.length === 0) {
+  if (knownDates.size === 0) {
     scroll.innerHTML = `<div class="card text-center" style="margin-top:32px">
       <div style="font-size:40px;margin-bottom:12px">📅</div>
       <div class="text-sm text-muted">Your history will appear here after your first full day. Keep going!</div>
     </div>`;
     return;
   }
+
+  const earliest = [...knownDates].sort()[0];
+  const dates = [];
+  const cursor = new Date(earliest + 'T00:00:00');
+  const end = new Date(todayStr + 'T00:00:00');
+  end.setDate(end.getDate() - 1);
+  while (cursor <= end) {
+    const y = cursor.getFullYear();
+    const m = String(cursor.getMonth() + 1).padStart(2, '0');
+    const dd = String(cursor.getDate()).padStart(2, '0');
+    dates.push(`${y}-${m}-${dd}`);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  dates.reverse();
 
   let html = '';
   let lastMonth = '';
@@ -13846,15 +13864,20 @@ function renderHistoryTab() {
     }
 
     const entry = history[d];
-    const mood = entry.mood !== undefined ? (entry.mood === -1 ? '🤷' : moodEmojis[entry.mood]) : '○';
-    const habits = entry.habits || {};
+    const journalEntries = state.wellnessData?.journal?.[d] || [];
+    const hasAnyData = !!entry || journalEntries.length > 0;
+    const mood = entry?.mood !== undefined ? (entry.mood === -1 ? '🤷' : moodEmojis[entry.mood]) : '○';
+    const habits = entry?.habits || {};
     const habitKeys = Object.keys(habits);
     const pips = habitKeys.slice(0,8).map(h =>
       `<div class="history-pip${habits[h] ? ' done' : ' missed'}"></div>`
     ).join('');
-    const preview = entry.journal ? entry.journal.substring(0,50) + (entry.journal.length > 50 ? '...' : '') : '';
+    const journalText = entry?.journal || journalEntries[0]?.text || '';
+    const preview = journalText ? journalText.substring(0,50) + (journalText.length > 50 ? '...' : '') : '';
+    const placeholder = hasAnyData ? 'No journal entry' : 'Tap to fill in';
+    const dimStyle = hasAnyData ? '' : 'opacity:0.55';
 
-    html += `<div class="history-day" onclick="openHistoryDetail('${d}')">
+    html += `<div class="history-day" onclick="openHistoryDetail('${d}')" style="${dimStyle}">
       <div class="history-date-col">
         <div class="history-date-day">${date.getDate()}</div>
         <div class="history-date-month">${date.toLocaleDateString('en-US',{month:'short'})}</div>
@@ -13862,7 +13885,7 @@ function renderHistoryTab() {
       <div class="history-mood">${mood}</div>
       <div class="history-info">
         <div class="history-pips">${pips}</div>
-        <div class="history-journal-preview">${preview || 'No journal entry'}</div>
+        <div class="history-journal-preview">${preview || placeholder}</div>
       </div>
       <div style="color:var(--text-muted);font-size:16px">›</div>
     </div>`;
