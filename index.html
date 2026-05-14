@@ -6514,8 +6514,8 @@ async function renderSpecialDateReflection(dateId, response) {
       : `Today the user is marking a celebration they named "${sd.name}". This is a living, present-tense celebration unless the user says otherwise. Do not treat anyone named as deceased.`;
   } else {
     dateContext = sd._years
-      ? `Today is a difficult day for the user. They named it "${sd.name}". The associated year is ${sd.year} (${sd._years} year${sd._years !== 1 ? 's' : ''} ago).`
-      : `Today is a difficult day for the user. They named it "${sd.name}".`;
+      ? `Today is a difficult day for the user. They named it "${sd.name}". The associated year is ${sd.year} (${sd._years} year${sd._years !== 1 ? 's' : ''} ago). Read the name to infer what kind of difficult day this is — only treat it as a memorial or loss if the name explicitly says so (e.g., contains "death," "passing," "lost," "memorial," "in memory of"). Otherwise speak to the weight of the day without assuming what caused it.`
+      : `Today is a difficult day for the user. They named it "${sd.name}". Read the name to infer what kind of difficult day this is — only treat it as a memorial or loss if the name explicitly says so. Otherwise speak to the weight of the day without assuming what caused it.`;
   }
   const responseMap = {
     hard: 'They said they could use some support.',
@@ -6524,7 +6524,7 @@ async function renderSpecialDateReflection(dateId, response) {
     complicated: 'They said it feels complicated.'
   };
 
-  const prompt = `${dateContext} ${responseMap[response]} Write a warm 2-3 sentence reflection. Engage with the emotional meaning of what this day holds. Do not just echo the name back as a label. Speak to what they are feeling. For celebrations, use present-tense, living-relationship language. Never assume anyone is deceased.`;
+  const prompt = `${dateContext} ${responseMap[response]} Write a warm 2-3 sentence reflection. Engage with the emotional meaning of what this day holds. Do not just echo the name back as a label. Speak to what they are feeling.`;
 
   const aiText = await callClaude(prompt, 'special_date');
 
