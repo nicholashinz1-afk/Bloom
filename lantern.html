@@ -711,7 +711,14 @@ function canvasToPage(source, w, h) {
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, cw, ch);
   ctx.drawImage(source, 0, 0, cw, ch);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+  // Recompress if a pathologically detailed photo lands over the
+  // request size budget; the server caps each image at 2.5MB base64.
+  let quality = 0.8;
+  let dataUrl = canvas.toDataURL('image/jpeg', quality);
+  while (dataUrl.length > 1.6 * 1024 * 1024 && quality > 0.45) {
+    quality -= 0.15;
+    dataUrl = canvas.toDataURL('image/jpeg', quality);
+  }
   return { media_type: 'image/jpeg', data: dataUrl.split(',')[1] };
 }
 
@@ -792,6 +799,23 @@ async function handlePdfFile(file) {
 
 // ── Build pipeline ─────────────────────────────────────────
 let _activeBuild = null;
+let _buildContent = null; // live content object owned by the running build
+const _buildQueue = [];   // guides waiting their turn; one build at a time
+
+// Keep the screen awake during a multi-minute build so the phone
+// doesn't sleep mid-transcription. Released when the queue drains.
+let _wakeLock = null;
+async function acquireWakeLock() {
+  try {
+    if (navigator.wakeLock && _activeBuild && !_wakeLock) {
+      _wakeLock = await navigator.wakeLock.request('screen');
+      _wakeLock.addEventListener('release', () => { _wakeLock = null; });
+    }
+  } catch (e) {}
+}
+function releaseWakeLock() {
+  try { if (_wakeLock) { _wakeLock.release(); _wakeLock = null; } } catch (e) {}
+}
 
 let _buildStarting = false;
 async function startBuild(images, fallbackTitle) {
@@ -823,8 +847,14 @@ async function startBuildInner(images, fallbackTitle) {
 }
 
 async function runBuild(id) {
-  if (_activeBuild) return;
+  if (_activeBuild) {
+    // One build at a time; queue the rest instead of silently dropping
+    // them (a second reading added mid-build used to hang forever).
+    if (_activeBuild !== id && !_buildQueue.includes(id)) _buildQueue.push(id);
+    return;
+  }
   _activeBuild = id;
+  acquireWakeLock();
   try {
     let meta = getMeta(id);
     if (!meta) return;
@@ -837,7 +867,10 @@ async function runBuild(id) {
     // Keep the render cache pointed at this live object so every
     // refreshIfViewing shows stage results as they land, not the
     // empty snapshot loadContent grabbed before the build started.
+    // _buildContent lets loadContent re-attach to this live object if
+    // she navigates away and back mid-build.
     _contentCache = { id, content };
+    _buildContent = { id, content };
     // loadContent is skipped while this cache is live, so make sure
     // any saved highlights and notes for a resumed guide get loaded.
     if (_notesCache.id !== id) {
@@ -922,6 +955,10 @@ async function runBuild(id) {
     refreshIfViewing(id);
   } finally {
     _activeBuild = null;
+    _buildContent = null;
+    const next = _buildQueue.shift();
+    if (next) runBuild(next);
+    else releaseWakeLock();
   }
 }
 
@@ -1311,6 +1348,18 @@ let _contentCache = { id: null, content: null };
 let _loadingContent = null;
 async function loadContent(id) {
   if (_loadingContent === id) return;
+  // While a build owns this guide, always re-attach to its live
+  // object: navigating away and back must not leave the view on a
+  // stale database snapshot that stops updating.
+  if (_buildContent && _buildContent.id === id) {
+    _contentCache = { id, content: _buildContent.content };
+    if (_notesCache.id !== id) {
+      const notes = await dbGet('notes_' + id);
+      if (_notesCache.id !== id) _notesCache = { id, map: notes || {} };
+    }
+    if ((view.name === 'guide' || view.name === 'pages') && view.guideId === id) render();
+    return;
+  }
   _loadingContent = id;
   const [content, notes] = await Promise.all([dbGet('guide_' + id), dbGet('notes_' + id)]);
   _loadingContent = null;
@@ -1433,9 +1482,24 @@ document.addEventListener('paste', (e) => {
   if (files.length) { e.preventDefault(); addImageFiles(files); }
 });
 
+// When she returns to the app: keep the wake lock alive for a running
+// build, and quietly resume a paused, retryable build she's looking
+// at, so the Retry button is a fallback rather than a requirement.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  if (_activeBuild) { acquireWakeLock(); return; }
+  const id = view.guideId;
+  if (!id) return;
+  const m = getMeta(id);
+  if (m && m.status === 'partial' && m.errorRetryable !== false) runBuild(id);
+});
+
 // ── Boot ───────────────────────────────────────────────────
 (async function main() {
   await openDB();
+  // Ask the browser to treat her library as durable storage so it
+  // isn't evicted under storage pressure. Best effort, silent.
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
   applyDial();
   // Mark anything that was mid-build when the app was killed as resumable.
   const lib = getLibrary();
