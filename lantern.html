@@ -585,6 +585,10 @@ async function runBuild(id) {
     refreshIfViewing(id);
 
     const content = (await dbGet('guide_' + id)) || { pages: [] };
+    // Keep the render cache pointed at this live object so every
+    // refreshIfViewing shows stage results as they land, not the
+    // empty snapshot loadContent grabbed before the build started.
+    _contentCache = { id, content };
 
     // Stage 1: identify (first few pages)
     if (!meta.identifyDone) {
@@ -871,8 +875,16 @@ function paragraphs(text) {
 
 // Guide content cache (loaded async from IndexedDB)
 let _contentCache = { id: null, content: null };
+let _loadingContent = null;
 async function loadContent(id) {
+  if (_loadingContent === id) return;
+  _loadingContent = id;
   const content = await dbGet('guide_' + id);
+  _loadingContent = null;
+  // Never clobber the live object a running build is writing into,
+  // and don't replace real cached content with an empty fallback
+  // (a slow dbGet can resolve after the build has already started).
+  if (_contentCache.id === id && _contentCache.content && (_activeBuild === id || !content)) return;
   _contentCache = { id, content: content || { pages: [] } };
   if ((view.name === 'guide' || view.name === 'pages') && view.guideId === id) render();
 }
