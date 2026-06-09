@@ -866,7 +866,7 @@ function render() {
   }
 }
 
-function header(backTo, backLabel, showDial) {
+function header(backTo, backLabel, showDial, extra) {
   let left = '';
   if (backTo) {
     left = `<button class="iconbtn backbtn" onclick="${backTo}" aria-label="${escapeHtml(backLabel)}">‹ ${escapeHtml(backLabel)}</button>`;
@@ -874,7 +874,7 @@ function header(backTo, backLabel, showDial) {
     left = `<span class="lamp" aria-hidden="true">🏮</span><h1>Lantern</h1>`;
   }
   const dialBtn = showDial ? `<button class="iconbtn" onclick="openDial()" aria-label="Reading settings">Aa</button>` : '';
-  return `<div class="top">${left}${backTo ? '<div style="flex:1"></div>' : ''}${dialBtn}</div>`;
+  return `<div class="top">${left}${backTo ? '<div style="flex:1"></div>' : ''}${extra || ''}${dialBtn}</div>`;
 }
 
 function statusChip(g) {
@@ -964,7 +964,10 @@ function renderGuide() {
   const c = _contentCache.id === meta.id ? _contentCache.content : null;
   if (!c) { loadContent(meta.id); }
 
-  let html = header("goLibrary()", 'Library', true);
+  const pagesBtn = meta.pagesDone > 0
+    ? `<button class="iconbtn" onclick="go('pages','${meta.id}')" aria-label="Open readable pages">📖</button>`
+    : '';
+  let html = header("goLibrary()", 'Library', true, pagesBtn);
   html += `<div class="guide-title reading" style="font-size:calc(var(--r-size) * 1.3)">${escapeHtml(meta.title)}</div>`;
   const byline = [meta.author, meta.source].filter(Boolean).join(' · ');
   if (byline) html += `<div class="guide-byline">${escapeHtml(byline)}</div>`;
@@ -1029,7 +1032,11 @@ function renderGuide() {
   }
 
   if (meta.pagesDone > 0) {
-    html += `<button class="btn primary" onclick="go('pages','${meta.id}')">📖 Readable pages${meta.pagesDone < meta.pageCount ? ` (${meta.pagesDone} of ${meta.pageCount} ready)` : ''}</button>`;
+    const pos = LS.get('lantern_pos_' + meta.id, 0);
+    const label = pos > 0
+      ? `📖 Continue reading (page ${Math.min(pos, meta.pagesDone - 1) + 1} of ${meta.pageCount})`
+      : `📖 Readable pages${meta.pagesDone < meta.pageCount ? ` (${meta.pagesDone} of ${meta.pageCount} ready)` : ''}`;
+    html += `<button class="btn primary" onclick="go('pages','${meta.id}')">${label}</button>`;
   }
   return html;
 }
