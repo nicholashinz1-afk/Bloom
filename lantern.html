@@ -797,6 +797,14 @@ async function handlePdfFile(file) {
   }
 }
 
+// Pages can finish transcribing out of order; she reads in order, so
+// "ready" means the unbroken run of finished pages from the start.
+function readyPrefix(pages) {
+  let n = 0;
+  while (typeof (pages || [])[n] === 'string') n++;
+  return n;
+}
+
 // ── Build pipeline ─────────────────────────────────────────
 let _activeBuild = null;
 let _buildContent = null; // live content object owned by the running build
@@ -902,41 +910,73 @@ async function runBuild(id) {
       refreshIfViewing(id);
     }
 
-    // Stage 2: guide body (first page + identify context)
-    if (!meta.guideDone) {
+    // Stages 2 and 3 run concurrently: the guide body needs only the
+    // first page plus identify context, and transcription doesn't
+    // depend on the guide, so neither waits for the other.
+    content.pages = content.pages || [];
+
+    const guideStage = async () => {
+      if (meta.guideDone) return;
       const first = await dbGet('src_' + id + '_0');
-      const imgs = first ? [first] : [];
-      if (!imgs.length) throw Object.assign(new Error('The source pages for this reading are no longer on this device. Delete it and add the reading again.'), { retryable: false });
+      if (!first) throw Object.assign(new Error('The source pages for this reading are no longer on this device. Delete it and add the reading again.'), { retryable: false });
       const r = await api('guide', {
-        images: imgs,
+        images: [first],
         context: { title: meta.title, author: meta.author, source: meta.source, summary: content.summary },
       });
       content.bigIdeas = Array.isArray(r.bigIdeas) ? r.bigIdeas : [];
       content.readingTips = Array.isArray(r.readingTips) ? r.readingTips : [];
       content.questions = Array.isArray(r.questions) ? r.questions : [];
       await dbSet('guide_' + id, content);
-      meta = getMeta(id);
-      if (!meta) return; // deleted mid-build
-      meta.guideDone = true;
-      saveMeta(meta);
+      const m = getMeta(id);
+      if (!m) return;
+      m.guideDone = true;
+      saveMeta(m);
       refreshIfViewing(id);
-    }
+    };
 
-    // Stage 3..n: transcription, one page at a time, resumable
-    content.pages = content.pages || [];
-    for (let p = meta.pagesDone; p < meta.pageCount; p++) {
-      const src = await dbGet('src_' + id + '_' + p);
-      if (!src) throw Object.assign(new Error('Page ' + (p + 1) + '\'s source image is no longer on this device. The pages already transcribed are saved.'), { retryable: false });
-      const r = await api('transcribe', { images: [src] });
-      content.pages[p] = r.text || '';
-      await dbSet('guide_' + id, content);
-      meta = getMeta(id);
-      if (!meta) return; // deleted mid-build
-      meta.pagesDone = p + 1;
-      saveMeta(meta);
-      dbDel('src_' + id + '_' + p);
-      refreshIfViewing(id);
+    // Transcribe a few pages at a time instead of one by one; this is
+    // where most of the build time lives. Completion can land out of
+    // order, so meta.pagesDone tracks the contiguous prefix of pages
+    // that are readable in sequence.
+    const todo = [];
+    for (let p = 0; p < meta.pageCount; p++) {
+      if (typeof content.pages[p] !== 'string') todo.push(p);
     }
+    let nextIdx = 0;
+    let failure = null;
+    let deletedMidBuild = false;
+    const transcribeWorker = async () => {
+      while (!failure && !deletedMidBuild) {
+        const myIdx = nextIdx++;
+        if (myIdx >= todo.length) return;
+        const p = todo[myIdx];
+        try {
+          const src = await dbGet('src_' + id + '_' + p);
+          if (!src) throw Object.assign(new Error('Page ' + (p + 1) + '\'s source image is no longer on this device. The pages already transcribed are saved.'), { retryable: false });
+          const r = await api('transcribe', { images: [src] });
+          content.pages[p] = r.text || '';
+          await dbSet('guide_' + id, content);
+          const m = getMeta(id);
+          if (!m) { deletedMidBuild = true; return; }
+          m.pagesDone = readyPrefix(content.pages);
+          saveMeta(m);
+          dbDel('src_' + id + '_' + p);
+          refreshIfViewing(id);
+        } catch (e) {
+          failure = failure || e;
+          return;
+        }
+      }
+    };
+
+    let guideError = null;
+    const guardedGuide = guideStage().catch(e => { guideError = e; });
+    const POOL = 3;
+    await Promise.all(Array.from({ length: Math.min(POOL, Math.max(todo.length, 1)) }, transcribeWorker));
+    await guardedGuide;
+    if (deletedMidBuild) return;
+    if (failure) throw failure;
+    if (guideError) throw guideError;
 
     meta = getMeta(id);
     if (!meta) return; // deleted mid-build
@@ -1293,7 +1333,7 @@ function speakNext(gen) {
     // Auto-advance to the next ready page, or finish.
     const meta = getMeta(view.guideId);
     const c = _contentCache.id === view.guideId ? _contentCache.content : null;
-    const ready = c && c.pages ? c.pages.filter(p => typeof p === 'string').length : 0;
+    const ready = c && c.pages ? readyPrefix(c.pages) : 0;
     const cur = LS.get('lantern_pos_' + view.guideId, 0);
     if (meta && cur + 1 < ready) {
       LS.set('lantern_pos_' + view.guideId, cur + 1);
@@ -1382,7 +1422,7 @@ function renderPages() {
   html += `<div class="guide-byline" style="margin-bottom:10px">${escapeHtml(meta.title)}</div>`;
 
   if (!c) return html + `<div class="card muted">Opening…</div>`;
-  const ready = (c.pages || []).filter(p => typeof p === 'string').length;
+  const ready = readyPrefix(c.pages);
   if (!ready) return html + `<div class="card muted">No readable pages yet. They appear here as each page finishes.</div>`;
 
   let cur = LS.get('lantern_pos_' + meta.id, 0);
