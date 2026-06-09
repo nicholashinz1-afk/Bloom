@@ -181,6 +181,7 @@ button:focus-visible, [tabindex]:focus-visible, a:focus-visible, select:focus-vi
   background: var(--surface); border-top: 1px solid var(--edge);
   border-radius: 20px 20px 0 0; padding: 16px 20px calc(24px + env(safe-area-inset-bottom));
   transform: translateY(105%); transition: transform 0.25s ease; max-width: 680px; margin: 0 auto;
+  max-height: 86vh; overflow-y: auto;
 }
 .sheet.open { transform: translateY(0); }
 .sheet h2 { font-size: 16px; font-weight: 650; margin-bottom: 16px; }
@@ -222,6 +223,14 @@ body.theme-paper .user-mark { background: rgba(255, 220, 100, 0.5); }
 .note-row .muted { font-size: 13px; }
 .note-quote { font-style: italic; font-family: Georgia, "Times New Roman", serif; font-size: 15px; line-height: 1.5; }
 
+/* ── Ask / explain ──────────────────────────────────────── */
+.explain-box {
+  background: var(--accent-soft); border: 1px solid var(--edge); border-radius: 12px;
+  padding: 12px 14px; margin: 0 0 12px; font-size: 15.5px; line-height: 1.6;
+}
+.readbar { height: 4px; border-radius: 2px; background: var(--edge); margin: 0 0 14px; overflow: hidden; }
+.readbar > div { height: 100%; background: var(--accent); border-radius: 2px; }
+
 /* ── Read-aloud ─────────────────────────────────────────── */
 .tts-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
 .tts-bar .iconbtn { font-size: 15px; }
@@ -244,10 +253,22 @@ a { color: var(--accent); }
 <div class="sheet" id="note-sheet" role="dialog" aria-modal="true" aria-label="Highlight and note">
   <h2 id="note-title">Highlight this sentence</h2>
   <div class="muted note-quote" id="note-quote"></div>
+  <div id="note-explain" style="margin-top:12px"></div>
+  <button class="btn" id="note-explain-btn" onclick="explainSentence(false)" style="margin-top:12px">💡 What does this mean?</button>
   <textarea class="note-input" id="note-text" placeholder="Add a note (optional)" aria-label="Note for this sentence"></textarea>
   <div class="row">
     <button class="btn" id="note-secondary" onclick="removeNote()">Cancel</button>
     <button class="btn primary" id="note-primary" onclick="saveNote()">Highlight</button>
+  </div>
+</div>
+<div class="sheet" id="ask-sheet" role="dialog" aria-modal="true" aria-label="Ask about this reading">
+  <h2>Ask about this reading</h2>
+  <div class="muted">Anything that's confusing or didn't click. Plain answers, no judgment.</div>
+  <textarea class="note-input" id="ask-text" placeholder="What didn't make sense?" aria-label="Your question"></textarea>
+  <div id="ask-answer"></div>
+  <div class="row">
+    <button class="btn" onclick="closeSheets()">Done</button>
+    <button class="btn primary" id="ask-btn" onclick="askQuestion()">Ask</button>
   </div>
 </div>
 <div class="sheet" id="dial-sheet" role="dialog" aria-modal="true" aria-label="Reading settings">
@@ -440,9 +461,7 @@ function openDial() {
 }
 function closeSheets() {
   document.getElementById('backdrop').classList.remove('open');
-  document.getElementById('dial-sheet').classList.remove('open');
-  document.getElementById('term-sheet').classList.remove('open');
-  document.getElementById('note-sheet').classList.remove('open');
+  document.querySelectorAll('.sheet.open').forEach(s => s.classList.remove('open'));
   if (_dialTrigger && _dialTrigger.focus) { try { _dialTrigger.focus(); } catch (e) {} }
   _dialTrigger = null;
 }
@@ -487,6 +506,8 @@ function openNote(s) {
   document.getElementById('note-text').value = existing ? (existing.note || '') : '';
   document.getElementById('note-secondary').textContent = existing ? 'Remove' : 'Cancel';
   document.getElementById('note-primary').textContent = existing ? 'Save' : 'Highlight';
+  document.getElementById('note-explain').innerHTML = '';
+  _lastExplanation = '';
   _dialTrigger = document.activeElement;
   document.getElementById('backdrop').classList.add('open');
   document.getElementById('note-sheet').classList.add('open');
@@ -522,6 +543,89 @@ function jumpToNote(page, s) {
   LS.set('lantern_pos_' + view.guideId, page);
   _scrollTarget = s;
   go('pages', view.guideId);
+}
+
+// ── Ask & explain (the anti-frustration path) ──────────────
+// One tap on "What does this mean?" explains the tapped sentence with
+// the whole page as context. "Even simpler" strips it down further.
+// "Keep with my note" saves the explanation onto the highlight, so
+// understanding accumulates in her notes list.
+let _lastExplanation = '';
+
+function askContext(meta, c) {
+  return {
+    title: meta.title, author: meta.author, source: meta.source,
+    summary: (c && c.summary) || '',
+  };
+}
+
+async function explainSentence(simpler) {
+  if (!_noteTarget) return;
+  const meta = getMeta(view.guideId);
+  const c = _contentCache.id === view.guideId ? _contentCache.content : null;
+  if (!meta || !c) return;
+  const btn = document.getElementById('note-explain-btn');
+  const out = document.getElementById('note-explain');
+  btn.disabled = true;
+  btn.textContent = '💡 Thinking it through…';
+  try {
+    const r = await api('ask', {
+      context: askContext(meta, c),
+      passage: _noteTarget.sentence,
+      pageText: String((c.pages || [])[_noteTarget.page] || '').slice(0, 5000),
+      simpler: !!simpler,
+    });
+    _lastExplanation = String(r.answer || '').trim();
+    if (!_lastExplanation) throw new Error('No answer came back. Try again.');
+    out.innerHTML = `<div class="explain-box reading">${escapeHtml(_lastExplanation)}</div>
+      <div class="row">
+        <button class="btn" onclick="explainSentence(true)">Even simpler</button>
+        <button class="btn" onclick="keepExplanation()">Keep with my note</button>
+      </div>`;
+  } catch (e) {
+    out.innerHTML = `<div class="banner error" style="margin-bottom:0">${escapeHtml(e.message)}</div>`;
+  }
+  btn.disabled = false;
+  btn.textContent = '💡 What does this mean?';
+}
+
+function keepExplanation() {
+  const ta = document.getElementById('note-text');
+  if (_lastExplanation) {
+    ta.value = (ta.value.trim() ? ta.value.trim() + '\n\n' : '') + _lastExplanation;
+  }
+  saveNote();
+}
+
+function openAsk() {
+  _dialTrigger = document.activeElement;
+  document.getElementById('ask-answer').innerHTML = '';
+  document.getElementById('ask-text').value = '';
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById('ask-sheet').classList.add('open');
+  setTimeout(() => { const t = document.getElementById('ask-text'); if (t) t.focus(); }, 260);
+}
+
+async function askQuestion() {
+  const q = document.getElementById('ask-text').value.trim();
+  if (!q) return;
+  const meta = getMeta(view.guideId);
+  const c = _contentCache.id === view.guideId ? _contentCache.content : null;
+  if (!meta) return;
+  const btn = document.getElementById('ask-btn');
+  const out = document.getElementById('ask-answer');
+  btn.disabled = true;
+  btn.textContent = 'Thinking…';
+  try {
+    const r = await api('ask', { context: askContext(meta, c), question: q });
+    const answer = String(r.answer || '').trim();
+    if (!answer) throw new Error('No answer came back. Try again.');
+    out.innerHTML = `<div class="explain-box reading">${escapeHtml(answer)}</div>`;
+  } catch (e) {
+    out.innerHTML = `<div class="banner error" style="margin-bottom:12px">${escapeHtml(e.message)}</div>`;
+  }
+  btn.disabled = false;
+  btn.textContent = 'Ask';
 }
 
 // ── View state & navigation ────────────────────────────────
@@ -689,7 +793,17 @@ async function handlePdfFile(file) {
 // ── Build pipeline ─────────────────────────────────────────
 let _activeBuild = null;
 
+let _buildStarting = false;
 async function startBuild(images, fallbackTitle) {
+  if (_buildStarting) return; // a double-tap must not create two guides
+  _buildStarting = true;
+  try {
+    await startBuildInner(images, fallbackTitle);
+  } finally {
+    _buildStarting = false;
+  }
+}
+async function startBuildInner(images, fallbackTitle) {
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   for (let i = 0; i < images.length; i++) {
     await dbSet('src_' + id + '_' + i, images[i]);
@@ -918,7 +1032,8 @@ function openGuide(id) {
   if (!meta) return;
   go('guide', id);
   // Resume an interrupted build automatically; finished stages are kept.
-  if (meta.status !== 'complete' && !_activeBuild) runBuild(id);
+  // Skip builds that can never succeed (source images gone).
+  if (meta.status !== 'complete' && meta.errorRetryable !== false && !_activeBuild) runBuild(id);
 }
 
 function renderAdd() {
@@ -1031,6 +1146,9 @@ function renderGuide() {
         </div>`).join('') + `</div>`;
   }
 
+  if (meta.identifyDone) {
+    html += `<button class="btn" onclick="openAsk()" style="margin-bottom:10px">💬 Ask about this reading</button>`;
+  }
   if (meta.pagesDone > 0) {
     const pos = LS.get('lantern_pos_' + meta.id, 0);
     const label = pos > 0
@@ -1061,19 +1179,23 @@ function splitSentences(text) {
   return paras;
 }
 
+// Single pass with one combined alternation so a later term can never
+// match inside markup injected for an earlier one (nested broken HTML).
 function markVocab(escaped, vocab) {
-  let html = escaped;
-  vocab.forEach((v, vi) => {
-    const term = escapeHtml(String(v.term || '').trim());
-    if (term.length < 3) return;
-    const pattern = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const re = new RegExp('(^|[^\\w&;])(' + pattern + ')(?![\\w])', 'gi');
-    html = html.replace(re, (m, pre, hit) =>
-      pre + '<mark class="vocab-mark" role="button" tabindex="0" onclick="event.stopPropagation();openTerm(' + vi + ')" ' +
-      'onkeydown="if(event.key===\'Enter\'){event.stopPropagation();openTerm(' + vi + ')}" ' +
-      'aria-label="' + term + ', tap for definition">' + hit + '</mark>');
+  const terms = vocab
+    .map((v, vi) => ({ t: escapeHtml(String(v.term || '').trim()), vi }))
+    .filter(x => x.t.length >= 3)
+    .sort((a, b) => b.t.length - a.t.length);
+  if (!terms.length) return escaped;
+  const alts = terms.map(x => x.t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  const re = new RegExp('(^|[^\\w&;])(' + alts + ')(?![\\w])', 'gi');
+  return escaped.replace(re, (m, pre, hit) => {
+    const found = terms.find(x => x.t.toLowerCase() === hit.toLowerCase());
+    if (!found) return m;
+    return pre + '<mark class="vocab-mark" role="button" tabindex="0" onclick="event.stopPropagation();openTerm(' + found.vi + ')" ' +
+      'onkeydown="if(event.key===\'Enter\'){event.stopPropagation();openTerm(' + found.vi + ')}" ' +
+      'aria-label="' + found.t + ', tap for definition">' + hit + '</mark>';
   });
-  return html;
 }
 
 // Renders a page's text as paragraphs of sentence spans. The span
@@ -1227,8 +1349,15 @@ function renderPages() {
     <button onclick="setPage(${cur + 1})" ${cur >= ready - 1 ? 'disabled' : ''} aria-label="Next page">›</button>
   </div>`;
 
+  html += `<div class="readbar" aria-hidden="true"><div style="width:${Math.round(100 * (cur + 1) / meta.pageCount)}%"></div></div>`;
+
   if (meta.status === 'building' && meta.pagesDone < meta.pageCount) {
     html += `<div class="stage" role="status" aria-live="polite"><span class="lamp-glow" aria-hidden="true">🏮</span><div>Still transcribing… <strong>${meta.pagesDone} of ${meta.pageCount} ready</strong></div></div>`;
+  } else if (meta.status === 'partial' && meta.pagesDone < meta.pageCount) {
+    html += `<div class="banner">The rest of the pages are paused (${meta.pagesDone} of ${meta.pageCount} done).${meta.errorRetryable !== false ? '' : ' ' + escapeHtml(meta.error || '')}</div>`;
+    if (meta.errorRetryable !== false) {
+      html += `<button class="btn" onclick="retryBuild('${meta.id}')" style="margin-bottom:14px">Resume the rest</button>`;
+    }
   }
 
   if (ttsSupported) {

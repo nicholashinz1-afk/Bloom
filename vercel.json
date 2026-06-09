@@ -11,6 +11,11 @@
       "destination": "/lantern.html"
     }
   ],
+  "functions": {
+    "api/lantern.js": {
+      "maxDuration": 60
+    }
+  },
   "headers": [
     {
       "source": "/lantern.html",

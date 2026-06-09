@@ -47,10 +47,24 @@ const TRANSCRIBE_PROMPT = `The user provided this photographed page from their o
 Respond with ONLY valid JSON:
 {"text": "..."}`;
 
+function askPrompt({ title, author, source, summary }, passage, pageText, question, simpler) {
+  return `You answer questions inside a personal reading-companion app. The reader is working through "${title}" by ${author} (${source}). Its argument in brief: ${summary}
+
+${pageText ? `The page they are reading right now:\n"""\n${pageText}\n"""\n\n` : ''}${passage ? `They tapped this sentence: "${passage}"\n\n` : ''}${question ? `Their question: ${question}` : 'Explain what the tapped sentence means in the context of this page.'}
+${simpler ? '\nThey tapped "even simpler", which means the last explanation was still too dense. Strip it down further: shorter words, shorter sentences, one concrete everyday example.' : ''}
+
+${VOICE_BLOCK}
+
+Answer in 2 to 5 short sentences. Be concrete. If something genuinely can't be answered from this reading, say so plainly and give your best understanding anyway. Never make the reader feel slow for asking.
+
+Respond with ONLY valid JSON:
+{"answer": "..."}`;
+}
+
 // ── Abuse ceiling (per IP, per day) ───────────────────────
 // 30 identifies = 30 new readings a day from one address. A heavy day of
 // real coursework is maybe 5. Nobody legitimate ever sees these numbers.
-const LIMITS = { identify: 30, guide: 90, transcribe: 1500 };
+const LIMITS = { identify: 30, guide: 90, transcribe: 1500, ask: 400 };
 const DAY_SECONDS = 86400;
 
 async function hashIP(ip) {
@@ -170,13 +184,15 @@ export default async function handler(req, res) {
 
   const { action, images, context } = body || {};
 
-  if (!['identify', 'guide', 'transcribe'].includes(action)) {
+  if (!['identify', 'guide', 'transcribe', 'ask'].includes(action)) {
     return res.status(400).json({ error: 'Unknown action' });
   }
 
-  const maxForAction = action === 'identify' ? MAX_IMAGES : 1;
-  if (!validImages(images) || images.length > maxForAction) {
-    return res.status(400).json({ error: 'Invalid images' });
+  if (action !== 'ask') {
+    const maxForAction = action === 'identify' ? MAX_IMAGES : 1;
+    if (!validImages(images) || images.length > maxForAction) {
+      return res.status(400).json({ error: 'Invalid images' });
+    }
   }
 
   const allowed = await checkRateLimit(req, action);
@@ -189,7 +205,22 @@ export default async function handler(req, res) {
 
   let content;
   let maxTokens;
-  if (action === 'identify') {
+  if (action === 'ask') {
+    const ctx = {
+      title: String(context?.title || 'Unknown title').slice(0, 300),
+      author: String(context?.author || 'Unknown author').slice(0, 200),
+      source: String(context?.source || 'Unknown source').slice(0, 300),
+      summary: String(context?.summary || '').slice(0, 2000),
+    };
+    const passage = String(body.passage || '').slice(0, 1200);
+    const pageText = String(body.pageText || '').slice(0, 5000);
+    const question = String(body.question || '').slice(0, 600);
+    if (!passage && !question) {
+      return res.status(400).json({ error: 'Nothing to answer' });
+    }
+    content = [{ type: 'text', text: askPrompt(ctx, passage, pageText, question, !!body.simpler) }];
+    maxTokens = 700;
+  } else if (action === 'identify') {
     content = [...imageBlocks(images), { type: 'text', text: IDENTIFY_PROMPT }];
     maxTokens = 2000;
   } else if (action === 'guide') {
