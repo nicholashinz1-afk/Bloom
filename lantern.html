@@ -201,6 +201,18 @@ button:focus-visible, [tabindex]:focus-visible, a:focus-visible, select:focus-vi
 }
 .theme-toggle button.sel { border-color: var(--accent); color: var(--accent); }
 
+/* ── Vocabulary highlights ──────────────────────────────── */
+.vocab-mark {
+  background: var(--accent-soft); border-bottom: 1px dotted var(--accent);
+  border-radius: 3px; padding: 0 2px; cursor: pointer; color: inherit;
+}
+.vocab-mark:hover { border-bottom-style: solid; }
+
+/* ── Read-aloud ─────────────────────────────────────────── */
+.tts-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+.tts-bar .iconbtn { font-size: 15px; }
+.s.speaking { background: var(--accent-soft); border-radius: 4px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+
 .muted { color: var(--sec); font-size: 14px; line-height: 1.6; }
 .spacer { height: 8px; }
 a { color: var(--accent); }
@@ -209,7 +221,12 @@ a { color: var(--accent); }
 <body>
 <div id="app" role="main"></div>
 
-<div class="sheet-backdrop" id="backdrop" onclick="closeDial()"></div>
+<div class="sheet-backdrop" id="backdrop" onclick="closeSheets()"></div>
+<div class="sheet" id="term-sheet" role="dialog" aria-modal="true" aria-label="Term definition">
+  <h2 id="term-title" style="color:var(--accent);font-family:Georgia,'Times New Roman',serif;font-size:20px"></h2>
+  <div class="reading" id="term-def" style="margin-bottom:18px"></div>
+  <button class="btn" onclick="closeSheets()">Done</button>
+</div>
 <div class="sheet" id="dial-sheet" role="dialog" aria-modal="true" aria-label="Reading settings">
   <h2>Reading dial</h2>
   <div class="dial-row">
@@ -241,6 +258,13 @@ a { color: var(--accent); }
     <div class="theme-toggle" style="flex:1.4">
       <button id="dth-night" onclick="setReaderTheme('night')">Night</button>
       <button id="dth-paper" onclick="setReaderTheme('paper')">Paper</button>
+    </div>
+  </div>
+  <div class="dial-row">
+    <div class="dial-label">Vocabulary highlights<small>Tap a highlighted term for its meaning</small></div>
+    <div class="theme-toggle" style="flex:1">
+      <button id="dhl-on" onclick="setHighlight(true)">On</button>
+      <button id="dhl-off" onclick="setHighlight(false)">Off</button>
     </div>
   </div>
   <button class="btn" onclick="closeDial()" style="margin-top:6px">Done</button>
@@ -358,6 +382,15 @@ function applyDial() {
   const n = document.getElementById('dth-night'), p = document.getElementById('dth-paper');
   if (n) n.classList.toggle('sel', dialSettings.theme !== 'paper');
   if (p) p.classList.toggle('sel', dialSettings.theme === 'paper');
+  const hOn = document.getElementById('dhl-on'), hOff = document.getElementById('dhl-off');
+  if (hOn) hOn.classList.toggle('sel', dialSettings.highlight !== false);
+  if (hOff) hOff.classList.toggle('sel', dialSettings.highlight === false);
+}
+function setHighlight(on) {
+  dialSettings.highlight = on;
+  LS.set('lantern_settings', dialSettings);
+  applyDial();
+  render();
 }
 function dial(k, dir) {
   const r = DIAL_RANGES[k];
@@ -382,14 +415,27 @@ function openDial() {
     if (first) first.focus();
   }, 260);
 }
-function closeDial() {
+function closeSheets() {
   document.getElementById('backdrop').classList.remove('open');
   document.getElementById('dial-sheet').classList.remove('open');
+  document.getElementById('term-sheet').classList.remove('open');
   if (_dialTrigger && _dialTrigger.focus) { try { _dialTrigger.focus(); } catch (e) {} }
   _dialTrigger = null;
 }
+const closeDial = closeSheets;
+function openTerm(vi) {
+  const c = _contentCache.content;
+  const v = c && Array.isArray(c.vocabulary) ? c.vocabulary[vi] : null;
+  if (!v) return;
+  _dialTrigger = document.activeElement;
+  document.getElementById('term-title').textContent = v.term || '';
+  document.getElementById('term-def').textContent = v.definition || '';
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById('term-sheet').classList.add('open');
+  setTimeout(() => { const b = document.querySelector('#term-sheet .btn'); if (b) b.focus(); }, 260);
+}
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && document.getElementById('dial-sheet').classList.contains('open')) closeDial();
+  if (e.key === 'Escape' && document.querySelector('.sheet.open')) closeSheets();
 });
 
 // ── View state & navigation ────────────────────────────────
@@ -398,6 +444,7 @@ let view = { name: 'library', guideId: null };
 let pendingImages = []; // add view: [{ media_type, data }]
 
 function go(name, guideId, replace) {
+  if (typeof ttsStop === 'function' && tts.active) ttsStop(false);
   view = { name, guideId: guideId || null };
   const st = { name, guideId: view.guideId };
   if (replace) history.replaceState(st, '');
@@ -405,6 +452,7 @@ function go(name, guideId, replace) {
   render();
 }
 window.addEventListener('popstate', (e) => {
+  if (typeof ttsStop === 'function' && tts.active) ttsStop(false);
   if (e.state && e.state.name) {
     view = { name: e.state.name, guideId: e.state.guideId || null };
   } else {
@@ -712,6 +760,11 @@ function render() {
   else if (view.name === 'guide') app.innerHTML = renderGuide();
   else if (view.name === 'pages') app.innerHTML = renderPages();
   else app.innerHTML = renderLibrary();
+  // Re-renders rebuild the DOM; restore the spoken-sentence highlight.
+  if (view.name === 'pages' && tts.active) {
+    const el = document.querySelector('.s[data-s="' + tts.idx + '"]');
+    if (el) el.classList.add('speaking');
+  }
 }
 
 function header(backTo, backLabel, showDial) {
@@ -874,6 +927,136 @@ function paragraphs(text) {
     .map(p => `<p>${escapeHtml(p.trim())}</p>`).join('') || `<p>${escapeHtml(text)}</p>`;
 }
 
+// ── Reading text: sentences, vocab highlights ──────────────
+function splitSentences(text) {
+  const paras = [];
+  for (const para of String(text || '').split(/\n{2,}|\r\n\r\n/)) {
+    const t = para.trim();
+    if (!t) continue;
+    const sentences = (t.match(/[^.!?]+[.!?]+["”')\]]*\s*|[^.!?]+$/g) || [t])
+      .map(s => s.trim()).filter(Boolean);
+    if (sentences.length) paras.push(sentences);
+  }
+  return paras;
+}
+
+function markVocab(escaped, vocab) {
+  let html = escaped;
+  vocab.forEach((v, vi) => {
+    const term = escapeHtml(String(v.term || '').trim());
+    if (term.length < 3) return;
+    const pattern = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp('(^|[^\\w&;])(' + pattern + ')(?![\\w])', 'gi');
+    html = html.replace(re, (m, pre, hit) =>
+      pre + '<mark class="vocab-mark" role="button" tabindex="0" onclick="openTerm(' + vi + ')" ' +
+      'onkeydown="if(event.key===\'Enter\'){openTerm(' + vi + ')}" ' +
+      'aria-label="' + term + ', tap for definition">' + hit + '</mark>');
+  });
+  return html;
+}
+
+// Renders a page's text as paragraphs of sentence spans. The span
+// indexes line up with the read-aloud queue built by the same splitter.
+function renderReadingHtml(text, vocab) {
+  const paras = splitSentences(text);
+  const doMark = dialSettings.highlight !== false && Array.isArray(vocab) && vocab.length;
+  let i = 0, html = '';
+  for (const sentences of paras) {
+    html += '<p>' + sentences.map(s => {
+      let e = escapeHtml(s);
+      if (doMark) e = markVocab(e, vocab);
+      return `<span class="s" data-s="${i++}">${e}</span>`;
+    }).join(' ') + '</p>';
+  }
+  return html || '<p></p>';
+}
+
+// ── Read-aloud (built-in device voices, no server) ─────────
+const TTS_RATES = [0.8, 1, 1.2, 1.5];
+const ttsSupported = 'speechSynthesis' in window;
+let tts = { active: false, gen: 0, queue: [], idx: 0, pageKey: null };
+
+function ttsPageKey() {
+  return view.guideId + ':' + LS.get('lantern_pos_' + view.guideId, 0);
+}
+function ttsBuildQueue(text) {
+  const flat = [];
+  for (const sentences of splitSentences(text)) for (const s of sentences) flat.push(s);
+  return flat;
+}
+function ttsToggle() {
+  if (!ttsSupported) return;
+  if (tts.active) { ttsStop(true); render(); return; } // pause, keep position
+  const meta = getMeta(view.guideId);
+  const c = _contentCache.id === view.guideId ? _contentCache.content : null;
+  if (!meta || !c || !c.pages) return;
+  const cur = Math.min(LS.get('lantern_pos_' + meta.id, 0), (c.pages.length || 1) - 1);
+  const key = ttsPageKey();
+  if (tts.pageKey !== key) { tts.idx = 0; tts.pageKey = key; }
+  tts.queue = ttsBuildQueue(c.pages[cur] || '');
+  if (!tts.queue.length) return;
+  if (tts.idx >= tts.queue.length) tts.idx = 0;
+  tts.active = true;
+  tts.gen++;
+  render();
+  speakNext(tts.gen);
+}
+function speakNext(gen) {
+  if (gen !== tts.gen || !tts.active) return;
+  if (tts.idx >= tts.queue.length) {
+    // Auto-advance to the next ready page, or finish.
+    const meta = getMeta(view.guideId);
+    const c = _contentCache.id === view.guideId ? _contentCache.content : null;
+    const ready = c && c.pages ? c.pages.filter(p => typeof p === 'string').length : 0;
+    const cur = LS.get('lantern_pos_' + view.guideId, 0);
+    if (meta && cur + 1 < ready) {
+      LS.set('lantern_pos_' + view.guideId, cur + 1);
+      tts.idx = 0;
+      tts.pageKey = ttsPageKey();
+      tts.queue = ttsBuildQueue(c.pages[cur + 1] || '');
+      render();
+      window.scrollTo({ top: 0 });
+      speakNext(gen);
+    } else {
+      ttsStop(false);
+      render();
+    }
+    return;
+  }
+  const u = new SpeechSynthesisUtterance(tts.queue[tts.idx]);
+  u.rate = dialSettings.ttsRate || 1;
+  u.onend = () => { if (gen !== tts.gen) return; tts.idx++; speakNext(gen); };
+  u.onerror = () => { if (gen !== tts.gen) return; tts.idx++; speakNext(gen); };
+  ttsHighlight(tts.idx); // onstart is unreliable on some Android voices
+  speechSynthesis.speak(u);
+}
+function ttsStop(keepPosition) {
+  tts.gen++;
+  tts.active = false;
+  if (!keepPosition) { tts.idx = 0; tts.pageKey = null; }
+  try { speechSynthesis.cancel(); } catch (e) {}
+  document.querySelectorAll('.s.speaking').forEach(el => el.classList.remove('speaking'));
+}
+function ttsHighlight(i) {
+  document.querySelectorAll('.s.speaking').forEach(el => el.classList.remove('speaking'));
+  const el = document.querySelector('.s[data-s="' + i + '"]');
+  if (el) {
+    el.classList.add('speaking');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+  }
+}
+function ttsCycleRate() {
+  const cur = dialSettings.ttsRate || 1;
+  const next = TTS_RATES[(TTS_RATES.indexOf(cur) + 1) % TTS_RATES.length] || 1;
+  dialSettings.ttsRate = next;
+  LS.set('lantern_settings', dialSettings);
+  const wasActive = tts.active;
+  if (wasActive) { ttsStop(true); }
+  render();
+  if (wasActive) ttsToggle();
+}
+
 // Guide content cache (loaded async from IndexedDB)
 let _contentCache = { id: null, content: null };
 let _loadingContent = null;
@@ -920,7 +1103,16 @@ function renderPages() {
     html += `<div class="stage" role="status" aria-live="polite"><span class="lamp-glow" aria-hidden="true">🏮</span><div>Still transcribing… <strong>${meta.pagesDone} of ${meta.pageCount} ready</strong></div></div>`;
   }
 
-  html += `<div class="card reading">${paragraphs(c.pages[cur] || '')}</div>`;
+  if (ttsSupported) {
+    const rate = dialSettings.ttsRate || 1;
+    html += `<div class="tts-bar">
+      <button class="iconbtn" onclick="ttsToggle()" aria-label="${tts.active ? 'Pause reading aloud' : 'Read this page aloud'}">${tts.active ? '⏸ Pause' : '▶ Listen'}</button>
+      <button class="iconbtn" onclick="ttsCycleRate()" aria-label="Reading speed, currently ${rate} times">${rate}×</button>
+      ${tts.active ? '<span class="muted">Reading aloud…</span>' : ''}
+    </div>`;
+  }
+
+  html += `<div class="card reading">${renderReadingHtml(c.pages[cur] || '', c.vocabulary)}</div>`;
 
   html += `<div class="pagenav">
     <button onclick="setPage(${cur - 1})" ${cur === 0 ? 'disabled' : ''} aria-label="Previous page">‹</button>
@@ -931,6 +1123,8 @@ function renderPages() {
 }
 
 function setPage(n) {
+  if (tts.active) ttsStop(false);
+  tts.idx = 0; tts.pageKey = null;
   LS.set('lantern_pos_' + view.guideId, Math.max(0, n));
   render();
   window.scrollTo({ top: 0 });
