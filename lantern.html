@@ -265,18 +265,6 @@ const API = '/api/lantern';
 const MAX_PHOTOS = 4;
 const MAX_PDF_PAGES = 100;
 
-// ── Access key (from the shared link, remembered locally) ──
-(function initKey() {
-  const m = location.hash.match(/[#&]k=([^&]+)/);
-  if (m) {
-    try { localStorage.setItem('lantern_key', decodeURIComponent(m[1])); } catch (e) {}
-    history.replaceState(null, '', location.pathname);
-  }
-})();
-function accessKey() {
-  try { return localStorage.getItem('lantern_key') || ''; } catch (e) { return ''; }
-}
-
 // ── Tiny storage helpers ───────────────────────────────────
 const LS = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -434,7 +422,7 @@ async function api(action, payload) {
       res = await fetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(Object.assign({ action, key: accessKey() }, payload)),
+        body: JSON.stringify(Object.assign({ action }, payload)),
       });
     } catch (e) {
       lastErr = { message: 'No connection. Check your internet and retry.', retryable: true };
@@ -442,11 +430,11 @@ async function api(action, payload) {
     }
     if (res.ok) return res.json();
     const body = await res.json().catch(() => ({}));
-    if (res.status === 401) {
-      lastErr = { message: 'This device is missing its access key. Open Lantern again using the full link you were sent.', retryable: false, auth: true };
+    if (res.status === 429) {
+      lastErr = { message: body.error || 'Lantern needs a break. Try again tomorrow.', retryable: false };
       break;
     }
-    const retryable = body.retryable !== false && (res.status === 429 || res.status >= 500);
+    const retryable = body.retryable !== false && res.status >= 500;
     lastErr = { message: 'The build hit a snag (' + (body.error || res.status) + ').', retryable };
     if (!retryable) break;
   }
