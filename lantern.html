@@ -208,6 +208,20 @@ button:focus-visible, [tabindex]:focus-visible, a:focus-visible, select:focus-vi
 }
 .vocab-mark:hover { border-bottom-style: solid; }
 
+/* ── Her highlights & notes ─────────────────────────────── */
+.user-mark { background: rgba(240, 200, 90, 0.26); border-radius: 4px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+body.theme-paper .user-mark { background: rgba(255, 220, 100, 0.5); }
+.note-flag { color: var(--accent); font-size: 0.75em; margin-left: 3px; vertical-align: super; }
+.note-input {
+  width: 100%; min-height: 90px; border-radius: 12px; border: 1px solid var(--edge);
+  background: var(--bg); color: var(--ink); font-family: inherit; font-size: 15px;
+  padding: 12px; margin: 12px 0 16px; resize: vertical;
+}
+.note-row { cursor: pointer; padding: 10px 0; border-bottom: 1px solid var(--edge); min-height: 44px; }
+.note-row:last-child { border-bottom: none; }
+.note-row .muted { font-size: 13px; }
+.note-quote { font-style: italic; font-family: Georgia, "Times New Roman", serif; font-size: 15px; line-height: 1.5; }
+
 /* ── Read-aloud ─────────────────────────────────────────── */
 .tts-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
 .tts-bar .iconbtn { font-size: 15px; }
@@ -226,6 +240,15 @@ a { color: var(--accent); }
   <h2 id="term-title" style="color:var(--accent);font-family:Georgia,'Times New Roman',serif;font-size:20px"></h2>
   <div class="reading" id="term-def" style="margin-bottom:18px"></div>
   <button class="btn" onclick="closeSheets()">Done</button>
+</div>
+<div class="sheet" id="note-sheet" role="dialog" aria-modal="true" aria-label="Highlight and note">
+  <h2 id="note-title">Highlight this sentence</h2>
+  <div class="muted note-quote" id="note-quote"></div>
+  <textarea class="note-input" id="note-text" placeholder="Add a note (optional)" aria-label="Note for this sentence"></textarea>
+  <div class="row">
+    <button class="btn" id="note-secondary" onclick="removeNote()">Cancel</button>
+    <button class="btn primary" id="note-primary" onclick="saveNote()">Highlight</button>
+  </div>
 </div>
 <div class="sheet" id="dial-sheet" role="dialog" aria-modal="true" aria-label="Reading settings">
   <h2>Reading dial</h2>
@@ -419,6 +442,7 @@ function closeSheets() {
   document.getElementById('backdrop').classList.remove('open');
   document.getElementById('dial-sheet').classList.remove('open');
   document.getElementById('term-sheet').classList.remove('open');
+  document.getElementById('note-sheet').classList.remove('open');
   if (_dialTrigger && _dialTrigger.focus) { try { _dialTrigger.focus(); } catch (e) {} }
   _dialTrigger = null;
 }
@@ -437,6 +461,68 @@ function openTerm(vi) {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && document.querySelector('.sheet.open')) closeSheets();
 });
+
+// ── Her highlights & notes ─────────────────────────────────
+// Anchored to sentences: tap one in the readable pages to highlight
+// it and optionally attach a note. Stored per guide in IndexedDB as
+// { "<page>:<sentenceIdx>": { text, note, ts } }. Page text never
+// changes after transcription, so sentence indexes are stable.
+let _notesCache = { id: null, map: {} };
+let _noteTarget = null;
+let _scrollTarget = null;
+
+function getNotes() {
+  return _notesCache.id === view.guideId ? _notesCache.map : {};
+}
+function openNote(s) {
+  const c = _contentCache.id === view.guideId ? _contentCache.content : null;
+  if (!c || !c.pages) return;
+  const cur = Math.min(LS.get('lantern_pos_' + view.guideId, 0), (c.pages.length || 1) - 1);
+  const sentence = ttsBuildQueue(c.pages[cur] || '')[s] || '';
+  if (!sentence) return;
+  _noteTarget = { page: cur, s, sentence };
+  const existing = getNotes()[cur + ':' + s];
+  document.getElementById('note-title').textContent = existing ? 'Your highlight' : 'Highlight this sentence';
+  document.getElementById('note-quote').textContent = sentence.length > 160 ? sentence.slice(0, 157) + '…' : sentence;
+  document.getElementById('note-text').value = existing ? (existing.note || '') : '';
+  document.getElementById('note-secondary').textContent = existing ? 'Remove' : 'Cancel';
+  document.getElementById('note-primary').textContent = existing ? 'Save' : 'Highlight';
+  _dialTrigger = document.activeElement;
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById('note-sheet').classList.add('open');
+}
+function saveNote() {
+  if (!_noteTarget) return closeSheets();
+  const map = getNotes();
+  map[_noteTarget.page + ':' + _noteTarget.s] = {
+    text: _noteTarget.sentence.slice(0, 300),
+    note: document.getElementById('note-text').value.trim(),
+    ts: Date.now(),
+  };
+  _notesCache = { id: view.guideId, map };
+  dbSet('notes_' + view.guideId, map);
+  _noteTarget = null;
+  closeSheets();
+  render();
+}
+function removeNote() {
+  if (_noteTarget) {
+    const map = getNotes();
+    const key = _noteTarget.page + ':' + _noteTarget.s;
+    if (map[key]) {
+      delete map[key];
+      dbSet('notes_' + view.guideId, map);
+      render();
+    }
+  }
+  _noteTarget = null;
+  closeSheets();
+}
+function jumpToNote(page, s) {
+  LS.set('lantern_pos_' + view.guideId, page);
+  _scrollTarget = s;
+  go('pages', view.guideId);
+}
 
 // ── View state & navigation ────────────────────────────────
 // Views: library | add | guide | pages
@@ -638,6 +724,12 @@ async function runBuild(id) {
     // refreshIfViewing shows stage results as they land, not the
     // empty snapshot loadContent grabbed before the build started.
     _contentCache = { id, content };
+    // loadContent is skipped while this cache is live, so make sure
+    // any saved highlights and notes for a resumed guide get loaded.
+    if (_notesCache.id !== id) {
+      const notes = await dbGet('notes_' + id);
+      if (_notesCache.id !== id) _notesCache = { id, map: notes || {} };
+    }
 
     // Stage 1: identify (opening pages only; the server caps identify at 4 images)
     if (!meta.identifyDone) {
@@ -748,6 +840,7 @@ function deleteGuide(id, btn) {
   const meta = getMeta(id);
   setLibrary(getLibrary().filter(g => g.id !== id));
   dbDel('guide_' + id);
+  dbDel('notes_' + id);
   LS.del('lantern_pos_' + id);
   if (meta) for (let i = 0; i < (meta.pageCount || 0); i++) dbDel('src_' + id + '_' + i);
   render();
@@ -764,6 +857,12 @@ function render() {
   if (view.name === 'pages' && tts.active) {
     const el = document.querySelector('.s[data-s="' + tts.idx + '"]');
     if (el) el.classList.add('speaking');
+  }
+  // Jumping to a highlight from the guide's notes list.
+  if (view.name === 'pages' && _scrollTarget !== null) {
+    const target = document.querySelector('.s[data-s="' + _scrollTarget + '"]');
+    _scrollTarget = null;
+    if (target) setTimeout(() => target.scrollIntoView({ block: 'center' }), 60);
   }
 }
 
@@ -914,6 +1013,21 @@ function renderGuide() {
       c.questions.map(q => `<li>${escapeHtml(q)}</li>`).join('') + `</ol></div>`;
   }
 
+  const noteEntries = Object.entries(getNotes()).map(([k, v]) => {
+    const [pg, si] = k.split(':').map(Number);
+    return { pg, si, text: v.text || '', note: v.note || '' };
+  }).sort((a, b) => a.pg - b.pg || a.si - b.si);
+  if (noteEntries.length) {
+    html += `<div class="card"><div class="guide-h">Your highlights &amp; notes</div>` +
+      noteEntries.map(n =>
+        `<div class="note-row" onclick="jumpToNote(${n.pg},${n.si})" role="button" tabindex="0"
+          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();jumpToNote(${n.pg},${n.si})}">
+          <div class="muted">Page ${n.pg + 1}</div>
+          <div class="note-quote">${escapeHtml(n.text.length > 140 ? n.text.slice(0, 137) + '…' : n.text)}</div>
+          ${n.note ? `<div style="font-size:14px;margin-top:4px">✎ ${escapeHtml(n.note)}</div>` : ''}
+        </div>`).join('') + `</div>`;
+  }
+
   if (meta.pagesDone > 0) {
     html += `<button class="btn primary" onclick="go('pages','${meta.id}')">📖 Readable pages${meta.pagesDone < meta.pageCount ? ` (${meta.pagesDone} of ${meta.pageCount} ready)` : ''}</button>`;
   }
@@ -948,8 +1062,8 @@ function markVocab(escaped, vocab) {
     const pattern = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const re = new RegExp('(^|[^\\w&;])(' + pattern + ')(?![\\w])', 'gi');
     html = html.replace(re, (m, pre, hit) =>
-      pre + '<mark class="vocab-mark" role="button" tabindex="0" onclick="openTerm(' + vi + ')" ' +
-      'onkeydown="if(event.key===\'Enter\'){openTerm(' + vi + ')}" ' +
+      pre + '<mark class="vocab-mark" role="button" tabindex="0" onclick="event.stopPropagation();openTerm(' + vi + ')" ' +
+      'onkeydown="if(event.key===\'Enter\'){event.stopPropagation();openTerm(' + vi + ')}" ' +
       'aria-label="' + term + ', tap for definition">' + hit + '</mark>');
   });
   return html;
@@ -957,15 +1071,21 @@ function markVocab(escaped, vocab) {
 
 // Renders a page's text as paragraphs of sentence spans. The span
 // indexes line up with the read-aloud queue built by the same splitter.
-function renderReadingHtml(text, vocab) {
+// Sentences are tappable to highlight and annotate. The onclick spans
+// deliberately carry no button role so screen readers hear prose, not
+// a wall of buttons; annotation is a touch/mouse interaction.
+function renderReadingHtml(text, vocab, page) {
   const paras = splitSentences(text);
   const doMark = dialSettings.highlight !== false && Array.isArray(vocab) && vocab.length;
+  const notes = getNotes();
   let i = 0, html = '';
   for (const sentences of paras) {
     html += '<p>' + sentences.map(s => {
       let e = escapeHtml(s);
       if (doMark) e = markVocab(e, vocab);
-      return `<span class="s" data-s="${i++}">${e}</span>`;
+      const ann = page != null ? notes[page + ':' + i] : null;
+      const flag = ann && ann.note ? '<span class="note-flag" aria-hidden="true">✎</span>' : '';
+      return `<span class="s${ann ? ' user-mark' : ''}" data-s="${i++}" onclick="openNote(${i - 1})">${e}${flag}</span>`;
     }).join(' ') + '</p>';
   }
   return html || '<p></p>';
@@ -1063,8 +1183,9 @@ let _loadingContent = null;
 async function loadContent(id) {
   if (_loadingContent === id) return;
   _loadingContent = id;
-  const content = await dbGet('guide_' + id);
+  const [content, notes] = await Promise.all([dbGet('guide_' + id), dbGet('notes_' + id)]);
   _loadingContent = null;
+  if (_notesCache.id !== id) _notesCache = { id, map: notes || {} };
   // Never clobber the live object a running build is writing into,
   // and don't replace real cached content with an empty fallback
   // (a slow dbGet can resolve after the build has already started).
@@ -1112,7 +1233,7 @@ function renderPages() {
     </div>`;
   }
 
-  html += `<div class="card reading">${renderReadingHtml(c.pages[cur] || '', c.vocabulary)}</div>`;
+  html += `<div class="card reading">${renderReadingHtml(c.pages[cur] || '', c.vocabulary, cur)}</div>`;
 
   html += `<div class="pagenav">
     <button onclick="setPage(${cur - 1})" ${cur === 0 ? 'disabled' : ''} aria-label="Previous page">‹</button>
