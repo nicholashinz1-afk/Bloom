@@ -674,7 +674,8 @@ async function api(action, payload) {
       break;
     }
     const retryable = body.retryable !== false && res.status >= 500;
-    lastErr = { message: 'The build hit a snag (' + (body.error || res.status) + ').', retryable };
+    const detail = body.message ? ': ' + body.message : '';
+    lastErr = { message: 'The build hit a snag (' + (body.error || res.status) + detail + ').', retryable };
     if (!retryable) break;
   }
   const err = new Error(lastErr.message);
@@ -930,7 +931,11 @@ async function runBuild(id) {
       const m = getMeta(id);
       if (!m) return;
       m.guideDone = true;
+      delete m.guideFailReason;
       saveMeta(m);
+      // Page 0's image doubles as the guide stage's input; now that
+      // the guide is built it can go once page 0 is transcribed too.
+      if (typeof content.pages[0] === 'string') dbDel('src_' + id + '_0');
       refreshIfViewing(id);
     };
 
@@ -952,7 +957,7 @@ async function runBuild(id) {
         const p = todo[myIdx];
         try {
           const src = await dbGet('src_' + id + '_' + p);
-          if (!src) throw Object.assign(new Error('Page ' + (p + 1) + '\'s source image is no longer on this device. The pages already transcribed are saved.'), { retryable: false });
+          if (!src) throw Object.assign(new Error('Page ' + (p + 1) + '\'s source image is no longer on this device. The pages already transcribed are saved.'), { retryable: false, srcLost: true });
           const r = await api('transcribe', { images: [src] });
           content.pages[p] = r.text || '';
           await dbSet('guide_' + id, content);
@@ -960,9 +965,30 @@ async function runBuild(id) {
           if (!m) { deletedMidBuild = true; return; }
           m.pagesDone = readyPrefix(content.pages);
           saveMeta(m);
-          dbDel('src_' + id + '_' + p);
+          // Page 0's image doubles as the guide stage's input; keep it
+          // until the guide section is built.
+          if (p !== 0 || m.guideDone) dbDel('src_' + id + '_' + p);
           refreshIfViewing(id);
         } catch (e) {
+          if (e.retryable === false) {
+            // One permanently failing page must not cost her the rest
+            // of the reading. Leave a readable placeholder, note it,
+            // and keep going. Its source image is kept for retries.
+            content.pages[p] = e.srcLost
+              ? 'This page\'s original image was lost before it could be transcribed, so it can\'t be recovered. The other pages are intact.'
+              : 'Lantern couldn\'t transcribe this page automatically. Tap "Try failed pages again" on the guide to give it another shot.';
+            await dbSet('guide_' + id, content);
+            const m = getMeta(id);
+            if (!m) { deletedMidBuild = true; return; }
+            if (!e.srcLost) {
+              m.failedPages = Array.isArray(m.failedPages) ? m.failedPages : [];
+              if (!m.failedPages.includes(p)) m.failedPages.push(p);
+            }
+            m.pagesDone = readyPrefix(content.pages);
+            saveMeta(m);
+            refreshIfViewing(id);
+            continue;
+          }
           failure = failure || e;
           return;
         }
@@ -976,7 +1002,16 @@ async function runBuild(id) {
     await guardedGuide;
     if (deletedMidBuild) return;
     if (failure) throw failure;
-    if (guideError) throw guideError;
+    if (guideError) {
+      if (guideError.retryable === false) {
+        // A permanent guide failure shouldn't block the pages she can
+        // already read. Record why and surface a targeted retry.
+        const m = getMeta(id);
+        if (m) { m.guideFailReason = guideError.message || 'The guide sections could not be built.'; saveMeta(m); }
+      } else {
+        throw guideError;
+      }
+    }
 
     meta = getMeta(id);
     if (!meta) return; // deleted mid-build
@@ -1004,6 +1039,27 @@ async function runBuild(id) {
 
 function retryBuild(id) {
   if (_activeBuild) return;
+  runBuild(id);
+}
+
+// Clear placeholder text from failed pages so the build's todo scan
+// picks them up again. Their source images were kept for this.
+async function retryFailedPages(id) {
+  if (_activeBuild) return;
+  const meta = getMeta(id);
+  if (!meta || !Array.isArray(meta.failedPages) || !meta.failedPages.length) return;
+  const content = (_buildContent && _buildContent.id === id)
+    ? _buildContent.content
+    : ((await dbGet('guide_' + id)) || { pages: [] });
+  for (const p of meta.failedPages) content.pages[p] = null;
+  await dbSet('guide_' + id, content);
+  const m = getMeta(id);
+  if (!m) return;
+  m.failedPages = [];
+  m.status = 'partial';
+  m.pagesDone = readyPrefix(content.pages);
+  saveMeta(m);
+  if (_contentCache.id === id) _contentCache = { id, content };
   runBuild(id);
 }
 
@@ -1178,9 +1234,16 @@ function renderGuide() {
     html += `<div class="stage" role="status" aria-live="polite"><span class="lamp-glow" aria-hidden="true">🏮</span><div>${stageText}</div></div>`;
   } else if (meta.status === 'partial' && meta.error) {
     html += `<div class="banner error">${escapeHtml(meta.error)}</div>`;
-    if (meta.errorRetryable !== false) {
-      html += `<button class="btn" onclick="retryBuild('${meta.id}')" style="margin-bottom:14px">Retry from where it stopped</button>`;
-    }
+    html += `<button class="btn" onclick="retryBuild('${meta.id}')" style="margin-bottom:14px">Retry from where it stopped</button>`;
+  }
+
+  if (meta.status !== 'building' && meta.identifyDone && !meta.guideDone && meta.guideFailReason) {
+    html += `<div class="banner error">The guide sections hit a snag: ${escapeHtml(meta.guideFailReason)}</div>
+      <button class="btn" onclick="retryBuild('${meta.id}')" style="margin-bottom:14px">Try building the guide again</button>`;
+  }
+  if (meta.status !== 'building' && Array.isArray(meta.failedPages) && meta.failedPages.length) {
+    html += `<div class="banner error">${meta.failedPages.length} page${meta.failedPages.length === 1 ? '' : 's'} couldn't be transcribed (page${meta.failedPages.length === 1 ? '' : 's'} ${meta.failedPages.map(p => p + 1).join(', ')}). Everything else is ready.</div>
+      <button class="btn" onclick="retryFailedPages('${meta.id}')" style="margin-bottom:14px">Try failed pages again</button>`;
   }
 
   if (!c) return html + `<div class="card muted">Opening…</div>`;

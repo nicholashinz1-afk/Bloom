@@ -137,8 +137,9 @@ async function callClaude(apiKey, content, maxTokens) {
   if (!response.ok) {
     const errBody = await response.json().catch(() => ({}));
     const type = errBody?.error?.type || `http_${response.status}`;
+    const message = errBody?.error?.message ? String(errBody.error.message).slice(0, 300) : null;
     const retryable = response.status === 429 || response.status >= 500;
-    return { error: type, retryable };
+    return { error: type, message, retryable };
   }
   const data = await response.json();
   return { text: data.content?.find(b => b.type === 'text')?.text || null };
@@ -240,7 +241,7 @@ export default async function handler(req, res) {
   try {
     const result = await callForJSON(apiKey, content, maxTokens);
     if (result.error) {
-      return res.status(502).json({ error: result.error, retryable: result.retryable !== false });
+      return res.status(502).json({ error: result.error, message: result.message || undefined, retryable: result.retryable !== false });
     }
     return res.status(200).json(result.json);
   } catch (err) {
