@@ -4,8 +4,12 @@
 //   guide      - first page + identify context in, big ideas / tips / questions out
 //   transcribe - one page image in, faithful clean transcription out
 // All prompts live server-side. The client only picks a stage and sends images.
-
-import { getRedis } from './_redis.js';
+//
+// Access control: Lantern is a private, link-gated tool for one person.
+// Set LANTERN_KEY in the environment and share the page link with the key in
+// the hash (bloomselfcare.app/lantern#k=...). Requests must carry the key.
+// There are no usage caps for a holder of the key. If LANTERN_KEY is unset
+// (local dev), the endpoint is open.
 
 const MODEL = 'claude-sonnet-4-6';
 
@@ -42,36 +46,6 @@ const TRANSCRIBE_PROMPT = `The user provided this photographed page from their o
 
 Respond with ONLY valid JSON:
 {"text": "..."}`;
-
-// ── Rate limiting ─────────────────────────────────────────
-// identify = one "build" of a new reading. 10 builds/day is plenty for one
-// person's coursework. transcribe is capped high enough for 10 full packets.
-const LIMITS = {
-  identify: 10,
-  guide: 30,
-  transcribe: 600,
-};
-const DAY_SECONDS = 86400;
-
-async function sha256(s) {
-  const encoded = new TextEncoder().encode(s || 'unknown');
-  const hash = await crypto.subtle.digest('SHA-256', encoded);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function checkRateLimit(req, deviceId, action) {
-  if (!process.env.REDIS_URL) return { ok: true }; // fail open if no Redis
-  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
-  const who = await sha256(deviceId ? `dev:${deviceId}` : `ip:${ip}`);
-  const key = `bloom_lantern:rl:${action}:${who}`;
-  try {
-    const client = await getRedis();
-    const count = await client.incr(key);
-    if (count === 1) await client.expire(key, DAY_SECONDS);
-    if (count <= (LIMITS[action] || 10)) return { ok: true };
-    return { ok: false };
-  } catch (e) { return { ok: true } } // fail open
-}
 
 // ── Image validation ──────────────────────────────────────
 const ALLOWED_MEDIA = ['image/jpeg', 'image/png', 'image/webp'];
@@ -169,24 +143,21 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
 
-  const { action, deviceId, images, context } = body || {};
+  const { action, key, images, context } = body || {};
+
+  // Link-key gate. No usage caps for a key holder.
+  const accessKey = process.env.LANTERN_KEY;
+  if (accessKey && key !== accessKey) {
+    return res.status(401).json({ error: 'missing_key', retryable: false });
+  }
+
   if (!['identify', 'guide', 'transcribe'].includes(action)) {
     return res.status(400).json({ error: 'Unknown action' });
   }
 
-  const maxForAction = action === 'transcribe' ? 1 : (action === 'guide' ? 1 : MAX_IMAGES);
+  const maxForAction = action === 'identify' ? MAX_IMAGES : 1;
   if (!validImages(images) || images.length > maxForAction) {
     return res.status(400).json({ error: 'Invalid images' });
-  }
-
-  const rl = await checkRateLimit(req, deviceId, action);
-  if (!rl.ok) {
-    return res.status(429).json({
-      error: action === 'identify'
-        ? 'You\'ve built a lot of readings today. Lantern can take 10 new readings a day. Come back tomorrow.'
-        : 'Lantern has done a lot of work today. Try again in a bit.',
-      retryable: false,
-    });
   }
 
   let content;

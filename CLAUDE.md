@@ -20,6 +20,18 @@ Mental health self-care PWA. Compassionate, no-shame, no-pressure design philoso
 - `api/_push-scheduler.js` — shared helper. Exports `reconcileUser(appId, apiKey, playerId, { resetSchedule })` plus reminder copy pools and OneSignal REST wrappers. Used by both the cron and the sync-prefs action so scheduling logic lives in one place.
 - `api/notify.js` — OneSignal push actions: `sync-prefs` (stores prefs **and** reconciles the user's schedule inline so changes take effect immediately), `clear-prefs`, `cancel-by-tag`, `cancel-by-prefix`, plus legacy `schedule`/`schedule-batch`/`cancel`/`cancel-batch`.
 - `api/cron-reminders.js` — **Vercel Cron (daily at 04:00 UTC).** Hobby plan only allows daily cron, so this runs once per day and each run schedules the next ~52h of reminders for every player in `bloom:push_prefs_index`. The sync-prefs action covers real-time pref changes; the cron is the safety net that keeps notifications flowing for users who don't open the app. Reminder copy lives in `api/_push-scheduler.js` and is mirrored from the index.html pools — update both if you change the text.
+- `api/lantern.js` — vision proxy for Lantern (see below). No Redis, no rate limits. Gated by `LANTERN_KEY`.
+
+## Lantern (private reading companion)
+
+Lantern is a standalone, link-only page at `/lantern` (`lantern.html`). It is intentionally NOT part of Bloom's UI: no tab, no settings toggle, no mention anywhere in `index.html`. It exists for one specific person (a neurodivergent grad student) who photographs or uploads course readings and gets a plain-language guide plus a clean readable transcription of the pages.
+
+- **Access:** set `LANTERN_KEY` in Vercel env vars, share the link `https://bloomselfcare.app/lantern#k=<key>`. The page stores the key in localStorage on first open and strips it from the URL. The API rejects requests without the key (unless the env var is unset, for local dev). There are no usage caps for a key holder; the key IS the cost guardrail. Rotate the key in Vercel to revoke.
+- **Pipeline:** client downscales page images to 1568px JPEG (PDFs are rendered to images client-side via pdf.js from cdnjs, already allowed by CSP), then calls `api/lantern.js` in stages: `identify` (title/author/summary/vocabulary), `guide` (big ideas, reading tips, self-check questions), `transcribe` (one call per page). Sonnet vision model. The prompts and the voice block live server-side; the voice block is the product, keep it verbatim.
+- **Honesty rule:** when identification confidence is low, the guide shows a banner saying it was built only from the provided pages. Never fake certainty.
+- **Storage:** everything stays on her device. Library metadata in localStorage (`lantern_*` keys), guide text and pending page images in its own IndexedDB database (`lantern_db`). Source images are kept only until their page is transcribed, which makes builds resumable after an app kill, then deleted. Nothing is stored server-side.
+- **Reading experience:** Georgia serif reading surface, night/paper themes, a reading dial (text size, line height, letter spacing) persisted per device, 680px max column on desktop, drag-and-drop and clipboard paste for ingestion.
+- Transcription exists for her personal accessibility reading of her own assigned course materials. No sharing or export of transcribed source text.
 
 ## Push Notification Architecture
 

@@ -5,7 +5,22 @@
       "schedule": "0 4 * * *"
     }
   ],
+  "rewrites": [
+    {
+      "source": "/lantern",
+      "destination": "/lantern.html"
+    }
+  ],
   "headers": [
+    {
+      "source": "/lantern.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
     {
       "source": "/index.html",
       "headers": [
