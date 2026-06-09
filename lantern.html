@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1C1A17" id="meta-theme">
+<meta name="robots" content="noindex, nofollow">
+<title>Lantern</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏮</text></svg>">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+/* ── Themes ─────────────────────────────────────────────── */
+:root {
+  --bg: #1C1A17; --surface: #26231F; --edge: #33302A;
+  --ink: #EDE6DA; --sec: #9A9285; --accent: #E8A33D;
+  --accent-soft: rgba(232, 163, 61, 0.12);
+  /* reading dial */
+  --r-size: 18px; --r-lh: 1.7; --r-ls: 0em;
+}
+body.theme-paper {
+  --bg: #F5F0E6; --surface: #FFFCF5; --edge: #E2DACA;
+  --ink: #2A2620; --sec: #6E6557; --accent: #B4731F;
+  --accent-soft: rgba(180, 115, 31, 0.10);
+}
+
+/* ── Base ───────────────────────────────────────────────── */
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { height: 100%; }
+body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  transition: background-color 0.25s, color 0.25s;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+button { font-family: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, [tabindex]:focus-visible, a:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* Reading column: comfortable measure, centered on wide screens */
+#app { max-width: 680px; margin: 0 auto; padding: 0 18px 60px; }
+
+/* ── Header ─────────────────────────────────────────────── */
+.top {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 0 12px; padding-top: calc(16px + env(safe-area-inset-top));
+}
+.top h1 { font-size: 20px; font-weight: 650; letter-spacing: 0.01em; flex: 1; }
+.top .lamp { font-size: 22px; }
+.iconbtn {
+  min-width: 44px; min-height: 44px; border: 1px solid var(--edge); border-radius: 12px;
+  background: var(--surface); font-size: 17px; display: inline-flex; align-items: center;
+  justify-content: center; gap: 6px; padding: 0 12px; transition: border-color 0.2s;
+}
+.iconbtn:hover { border-color: var(--accent); }
+.backbtn { font-size: 15px; color: var(--sec); }
+
+/* ── Cards & buttons ────────────────────────────────────── */
+.card {
+  background: var(--surface); border: 1px solid var(--edge);
+  border-radius: 16px; padding: 18px; margin-bottom: 14px;
+}
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; min-height: 50px; border-radius: 14px; font-size: 16px; font-weight: 600;
+  border: 1px solid var(--edge); background: var(--surface); color: var(--ink);
+  padding: 12px 16px; transition: border-color 0.2s, opacity 0.2s;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #1C1A17; }
+.btn.primary:disabled { opacity: 0.5; cursor: default; }
+.btn.danger-armed { border-color: #b0563c; color: #c96b4e; }
+.row { display: flex; gap: 10px; }
+.row .btn { width: auto; flex: 1; }
+
+/* ── Library ────────────────────────────────────────────── */
+.lib-item {
+  background: var(--surface); border: 1px solid var(--edge); border-radius: 16px;
+  padding: 16px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;
+}
+.lib-main { cursor: pointer; min-height: 44px; }
+.lib-title { font-family: Georgia, "Times New Roman", serif; font-size: 18px; font-weight: 600; line-height: 1.35; }
+.lib-sub { font-size: 13.5px; color: var(--sec); }
+.lib-foot { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.chip {
+  font-size: 12px; padding: 4px 10px; border-radius: 99px;
+  border: 1px solid var(--edge); color: var(--sec);
+}
+.chip.building { color: var(--accent); border-color: var(--accent); }
+.chip.lowconf { color: var(--sec); }
+.lib-del {
+  margin-left: auto; min-height: 36px; min-width: 44px; font-size: 12.5px; color: var(--sec);
+  background: none; border: 1px solid var(--edge); border-radius: 10px; padding: 6px 12px;
+}
+
+/* ── Add view ───────────────────────────────────────────── */
+.dropzone {
+  border: 2px dashed var(--edge); border-radius: 16px; padding: 28px 18px;
+  text-align: center; color: var(--sec); font-size: 14.5px; line-height: 1.6;
+  margin-bottom: 14px; transition: border-color 0.2s, background-color 0.2s;
+}
+.dropzone.over { border-color: var(--accent); background: var(--accent-soft); }
+.thumbs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.thumb { position: relative; width: 76px; height: 100px; border-radius: 10px; overflow: hidden; border: 1px solid var(--edge); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb button {
+  position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%;
+  border: none; background: rgba(0,0,0,0.65); color: #fff; font-size: 13px; line-height: 1;
+}
+
+/* ── Stage indicator ────────────────────────────────────── */
+.stage {
+  display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+  background: var(--accent-soft); border: 1px solid var(--edge); border-radius: 14px;
+  margin-bottom: 14px; font-size: 14px; color: var(--sec);
+}
+.stage .lamp-glow { font-size: 18px; animation: lampPulse 2.2s ease-in-out infinite; }
+@keyframes lampPulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.stage strong { color: var(--ink); font-weight: 600; }
+
+.banner {
+  border: 1px solid var(--edge); border-left: 3px solid var(--accent);
+  border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--sec);
+  line-height: 1.55; margin-bottom: 14px;
+}
+.banner.error { border-left-color: #b0563c; }
+
+/* ── Guide & reading surface ────────────────────────────── */
+.reading, .reading p { font-family: Georgia, "Times New Roman", serif; }
+.reading {
+  font-size: var(--r-size); line-height: var(--r-lh); letter-spacing: var(--r-ls);
+}
+.reading p { margin-bottom: 0.9em; }
+.guide-h {
+  font-family: Georgia, "Times New Roman", serif; font-size: 15px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+}
+.guide-title { font-family: Georgia, "Times New Roman", serif; font-size: 24px; font-weight: 700; line-height: 1.3; margin-bottom: 4px; }
+.guide-byline { font-size: 14px; color: var(--sec); margin-bottom: 16px; }
+.vocab-term { color: var(--accent); font-weight: 700; font-family: Georgia, serif; font-size: calc(var(--r-size) * 1.0); }
+.vocab-item { margin-bottom: 14px; }
+.idea { margin-bottom: 16px; }
+.idea-title { font-weight: 700; font-family: Georgia, serif; font-size: calc(var(--r-size) * 1.0); margin-bottom: 4px; }
+.qlist { list-style: none; counter-reset: q; }
+.qlist li { counter-increment: q; display: flex; gap: 12px; margin-bottom: 14px; }
+.qlist li::before { content: counter(q); color: var(--accent); font-weight: 700; font-family: Georgia, serif; min-width: 18px; }
+.tlist { list-style: none; }
+.tlist li { display: flex; gap: 12px; margin-bottom: 12px; }
+.tlist li::before { content: "◦"; color: var(--accent); font-weight: 700; }
+
+/* ── Pages view ─────────────────────────────────────────── */
+.pagenav { display: flex; align-items: center; gap: 10px; margin: 4px 0 16px; }
+.pagenav button {
+  min-width: 52px; min-height: 44px; border-radius: 12px; border: 1px solid var(--edge);
+  background: var(--surface); font-size: 18px;
+}
+.pagenav button:disabled { opacity: 0.35; cursor: default; }
+.pagenav select {
+  flex: 1; min-height: 44px; border-radius: 12px; border: 1px solid var(--edge);
+  background: var(--surface); color: var(--ink); font-size: 14.5px; padding: 0 12px;
+  -webkit-appearance: none; appearance: none; text-align: center;
+}
+
+/* ── Dial sheet ─────────────────────────────────────────── */
+.sheet-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45); opacity: 0;
+  pointer-events: none; transition: opacity 0.2s; z-index: 50;
+}
+.sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 51;
+  background: var(--surface); border-top: 1px solid var(--edge);
+  border-radius: 20px 20px 0 0; padding: 16px 20px calc(24px + env(safe-area-inset-bottom));
+  transform: translateY(105%); transition: transform 0.25s ease; max-width: 680px; margin: 0 auto;
+}
+.sheet.open { transform: translateY(0); }
+.sheet h2 { font-size: 16px; font-weight: 650; margin-bottom: 16px; }
+.dial-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.dial-label { flex: 1; font-size: 14.5px; }
+.dial-label small { display: block; color: var(--sec); font-size: 12px; }
+.stepper { display: flex; align-items: center; gap: 4px; }
+.stepper button {
+  width: 48px; height: 48px; border-radius: 12px; border: 1px solid var(--edge);
+  background: var(--bg); font-size: 22px; font-weight: 600;
+}
+.stepper button:disabled { opacity: 0.3; cursor: default; }
+.stepper .val { min-width: 52px; text-align: center; font-size: 14px; color: var(--sec); font-variant-numeric: tabular-nums; }
+.theme-toggle { display: flex; gap: 8px; }
+.theme-toggle button {
+  flex: 1; min-height: 48px; border-radius: 12px; border: 1px solid var(--edge);
+  background: var(--bg); font-size: 14.5px; font-weight: 600;
+}
+.theme-toggle button.sel { border-color: var(--accent); color: var(--accent); }
+
+.muted { color: var(--sec); font-size: 14px; line-height: 1.6; }
+.spacer { height: 8px; }
+a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="app" role="main"></div>
+
+<div class="sheet-backdrop" id="backdrop" onclick="closeDial()"></div>
+<div class="sheet" id="dial-sheet" role="dialog" aria-modal="true" aria-label="Reading settings">
+  <h2>Reading dial</h2>
+  <div class="dial-row">
+    <div class="dial-label">Text size<small id="dv-size"></small></div>
+    <div class="stepper">
+      <button onclick="dial('size',-1)" aria-label="Smaller text">−</button>
+      <span class="val" id="dval-size"></span>
+      <button onclick="dial('size',1)" aria-label="Larger text">+</button>
+    </div>
+  </div>
+  <div class="dial-row">
+    <div class="dial-label">Line height<small>Space between lines</small></div>
+    <div class="stepper">
+      <button onclick="dial('lh',-1)" aria-label="Tighter lines">−</button>
+      <span class="val" id="dval-lh"></span>
+      <button onclick="dial('lh',1)" aria-label="Looser lines">+</button>
+    </div>
+  </div>
+  <div class="dial-row">
+    <div class="dial-label">Letter spacing<small>Space between letters</small></div>
+    <div class="stepper">
+      <button onclick="dial('ls',-1)" aria-label="Tighter letters">−</button>
+      <span class="val" id="dval-ls"></span>
+      <button onclick="dial('ls',1)" aria-label="Looser letters">+</button>
+    </div>
+  </div>
+  <div class="dial-row">
+    <div class="dial-label">Theme</div>
+    <div class="theme-toggle" style="flex:1.4">
+      <button id="dth-night" onclick="setReaderTheme('night')">Night</button>
+      <button id="dth-paper" onclick="setReaderTheme('paper')">Paper</button>
+    </div>
+  </div>
+  <button class="btn" onclick="closeDial()" style="margin-top:6px">Done</button>
+</div>
+
+<input type="file" id="file-camera" accept="image/*" capture="environment" hidden>
+<input type="file" id="file-photos" accept="image/*" multiple hidden>
+<input type="file" id="file-pdf" accept="application/pdf,.pdf" hidden>
+<input type="file" id="file-any" accept="image/*,application/pdf,.pdf" multiple hidden>
+
+<script>
+'use strict';
+// ============================================================
+//  Lantern — a reading companion.
+//  Photograph or upload a course reading, get a plain-language
+//  guide plus a clean readable version of the source pages.
+//  Standalone page; talks to /api/lantern. All data stays on
+//  this device (localStorage + IndexedDB).
+// ============================================================
+
+const API = '/api/lantern';
+const MAX_PHOTOS = 4;
+const MAX_PDF_PAGES = 100;
+
+// ── Tiny storage helpers ───────────────────────────────────
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+};
+
+let idb = null;
+function openDB() {
+  return new Promise((resolve) => {
+    try {
+      const req = indexedDB.open('lantern_db', 1);
+      req.onupgradeneeded = () => { req.result.createObjectStore('kv'); };
+      req.onsuccess = () => { idb = req.result; resolve(); };
+      req.onerror = () => resolve();
+    } catch (e) { resolve(); }
+  });
+}
+function dbSet(key, value) {
+  return new Promise((resolve) => {
+    if (!idb) return resolve(false);
+    try {
+      const tx = idb.transaction('kv', 'readwrite');
+      tx.objectStore('kv').put(value, key);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    } catch (e) { resolve(false); }
+  });
+}
+function dbGet(key) {
+  return new Promise((resolve) => {
+    if (!idb) return resolve(null);
+    try {
+      const req = idb.transaction('kv').objectStore('kv').get(key);
+      req.onsuccess = () => resolve(req.result === undefined ? null : req.result);
+      req.onerror = () => resolve(null);
+    } catch (e) { resolve(null); }
+  });
+}
+function dbDel(key) {
+  return new Promise((resolve) => {
+    if (!idb) return resolve();
+    try {
+      const tx = idb.transaction('kv', 'readwrite');
+      tx.objectStore('kv').delete(key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    } catch (e) { resolve(); }
+  });
+}
+
+function escapeHtml(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── Library metadata (small, in localStorage) ──────────────
+// [{ id, createdAt, title, author, source, identified, confidence,
+//    pageCount, pagesDone, identifyDone, guideDone, status, error }]
+function getLibrary() { return LS.get('lantern_library', []); }
+function setLibrary(lib) { LS.set('lantern_library', lib); }
+function getMeta(id) { return getLibrary().find(g => g.id === id) || null; }
+function saveMeta(meta) {
+  const lib = getLibrary();
+  const i = lib.findIndex(g => g.id === meta.id);
+  if (i >= 0) lib[i] = meta; else lib.unshift(meta);
+  setLibrary(lib);
+}
+
+// ── Reading dial settings ──────────────────────────────────
+const DIAL_DEFAULTS = { size: 18, lh: 1.7, ls: 0, theme: 'night' };
+const DIAL_RANGES = {
+  size: { min: 14, max: 28, step: 1, fmt: v => v + 'px' },
+  lh:   { min: 1.3, max: 2.4, step: 0.1, fmt: v => v.toFixed(1) },
+  ls:   { min: 0, max: 0.12, step: 0.01, fmt: v => v.toFixed(2) + 'em' },
+};
+let dialSettings = Object.assign({}, DIAL_DEFAULTS, LS.get('lantern_settings', {}));
+
+function applyDial() {
+  const r = document.documentElement.style;
+  r.setProperty('--r-size', dialSettings.size + 'px');
+  r.setProperty('--r-lh', String(dialSettings.lh));
+  r.setProperty('--r-ls', dialSettings.ls + 'em');
+  document.body.classList.toggle('theme-paper', dialSettings.theme === 'paper');
+  document.getElementById('meta-theme').setAttribute('content', dialSettings.theme === 'paper' ? '#F5F0E6' : '#1C1A17');
+  // dial sheet readouts
+  for (const k of ['size', 'lh', 'ls']) {
+    const el = document.getElementById('dval-' + k);
+    if (el) el.textContent = DIAL_RANGES[k].fmt(dialSettings[k]);
+  }
+  const n = document.getElementById('dth-night'), p = document.getElementById('dth-paper');
+  if (n) n.classList.toggle('sel', dialSettings.theme !== 'paper');
+  if (p) p.classList.toggle('sel', dialSettings.theme === 'paper');
+}
+function dial(k, dir) {
+  const r = DIAL_RANGES[k];
+  const next = Math.round((dialSettings[k] + dir * r.step) * 100) / 100;
+  dialSettings[k] = Math.min(r.max, Math.max(r.min, next));
+  LS.set('lantern_settings', dialSettings);
+  applyDial();
+}
+function setReaderTheme(t) {
+  dialSettings.theme = t;
+  LS.set('lantern_settings', dialSettings);
+  applyDial();
+}
+let _dialTrigger = null;
+function openDial() {
+  _dialTrigger = document.activeElement;
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById('dial-sheet').classList.add('open');
+  applyDial();
+  setTimeout(() => {
+    const first = document.querySelector('#dial-sheet .stepper button');
+    if (first) first.focus();
+  }, 260);
+}
+function closeDial() {
+  document.getElementById('backdrop').classList.remove('open');
+  document.getElementById('dial-sheet').classList.remove('open');
+  if (_dialTrigger && _dialTrigger.focus) { try { _dialTrigger.focus(); } catch (e) {} }
+  _dialTrigger = null;
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('dial-sheet').classList.contains('open')) closeDial();
+});
+
+// ── View state & navigation ────────────────────────────────
+// Views: library | add | guide | pages
+let view = { name: 'library', guideId: null };
+let pendingImages = []; // add view: [{ media_type, data }]
+
+function go(name, guideId, replace) {
+  view = { name, guideId: guideId || null };
+  const st = { name, guideId: view.guideId };
+  if (replace) history.replaceState(st, '');
+  else history.pushState(st, '');
+  render();
+}
+window.addEventListener('popstate', (e) => {
+  if (e.state && e.state.name) {
+    view = { name: e.state.name, guideId: e.state.guideId || null };
+  } else {
+    view = { name: 'library', guideId: null };
+  }
+  render();
+});
+
+// ── API ────────────────────────────────────────────────────
+async function api(action, payload) {
+  let lastErr = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) await new Promise(r => setTimeout(r, 1500 * attempt));
+    let res;
+    try {
+      res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ action }, payload)),
+      });
+    } catch (e) {
+      lastErr = { message: 'No connection. Check your internet and retry.', retryable: true };
+      continue;
+    }
+    if (res.ok) return res.json();
+    const body = await res.json().catch(() => ({}));
+    if (res.status === 429) {
+      lastErr = { message: body.error || 'Lantern needs a break. Try again tomorrow.', retryable: false };
+      break;
+    }
+    const retryable = body.retryable !== false && res.status >= 500;
+    lastErr = { message: 'The build hit a snag (' + (body.error || res.status) + ').', retryable };
+    if (!retryable) break;
+  }
+  const err = new Error(lastErr.message);
+  err.retryable = lastErr.retryable;
+  throw err;
+}
+
+// ── Image intake ───────────────────────────────────────────
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+// Downscale to ~1568px long edge, JPEG q0.8. Returns { media_type, data }.
+async function processImageFile(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await loadImage(url);
+    return canvasToPage(img, img.naturalWidth, img.naturalHeight);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+function canvasToPage(source, w, h) {
+  const LONG = 1568;
+  const scale = Math.min(1, LONG / Math.max(w, h));
+  const cw = Math.round(w * scale), ch = Math.round(h * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = cw; canvas.height = ch;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, cw, ch);
+  ctx.drawImage(source, 0, 0, cw, ch);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+  return { media_type: 'image/jpeg', data: dataUrl.split(',')[1] };
+}
+
+async function addImageFiles(files) {
+  const imgs = Array.from(files).filter(f => f.type.startsWith('image/'));
+  if (!imgs.length) return;
+  if (pendingImages.length + imgs.length > MAX_PHOTOS) {
+    setAddNote('Lantern takes up to ' + MAX_PHOTOS + ' photos per reading. For longer readings, upload the PDF instead.');
+  }
+  for (const f of imgs.slice(0, MAX_PHOTOS - pendingImages.length)) {
+    try {
+      pendingImages.push(await processImageFile(f));
+    } catch (e) {
+      setAddNote('One of those images could not be read. Try a different photo.');
+    }
+  }
+  render();
+}
+
+let _addNote = '';
+function setAddNote(msg) { _addNote = msg; render(); }
+
+// ── PDF intake (pdf.js from cdnjs, fake-worker mode) ───────
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = () => reject(new Error('script load failed'));
+    document.head.appendChild(s);
+  });
+}
+let _pdfReady = null;
+function ensurePdfJs() {
+  if (!_pdfReady) {
+    const base = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+    _pdfReady = loadScript(base + 'pdf.min.js')
+      .then(() => loadScript(base + 'pdf.worker.min.js'))
+      .then(() => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = base + 'pdf.worker.min.js'; });
+  }
+  return _pdfReady;
+}
+
+let pdfProgress = null; // { current, total } while converting
+async function handlePdfFile(file) {
+  try {
+    pdfProgress = { current: 0, total: 0 };
+    render();
+    await ensurePdfJs();
+    const buf = await file.arrayBuffer();
+    const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+    const total = Math.min(pdf.numPages, MAX_PDF_PAGES);
+    pdfProgress = { current: 0, total };
+    render();
+    const pages = [];
+    for (let p = 1; p <= total; p++) {
+      const page = await pdf.getPage(p);
+      const base = page.getViewport({ scale: 1 });
+      const scale = 1568 / Math.max(base.width, base.height);
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(viewport.width);
+      canvas.height = Math.round(viewport.height);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      pages.push({ media_type: 'image/jpeg', data: dataUrl.split(',')[1] });
+      pdfProgress.current = p;
+      render();
+    }
+    pdfProgress = null;
+    await startBuild(pages, file.name.replace(/\.pdf$/i, ''));
+  } catch (e) {
+    pdfProgress = null;
+    setAddNote('That PDF could not be read. If it opens normally on your device, try again; otherwise screenshot the pages and add them as photos.');
+  }
+}
+
+// ── Build pipeline ─────────────────────────────────────────
+let _activeBuild = null;
+
+async function startBuild(images, fallbackTitle) {
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  for (let i = 0; i < images.length; i++) {
+    await dbSet('src_' + id + '_' + i, images[i]);
+  }
+  const meta = {
+    id, createdAt: Date.now(),
+    title: fallbackTitle || 'New reading', author: '', source: '',
+    identified: false, confidence: null,
+    pageCount: images.length, pagesDone: 0,
+    identifyDone: false, guideDone: false,
+    status: 'building', error: null,
+  };
+  saveMeta(meta);
+  pendingImages = [];
+  go('guide', id);
+  runBuild(id);
+}
+
+async function runBuild(id) {
+  if (_activeBuild) return;
+  _activeBuild = id;
+  try {
+    let meta = getMeta(id);
+    if (!meta) return;
+    meta.error = null;
+    meta.status = 'building';
+    saveMeta(meta);
+    refreshIfViewing(id);
+
+    const content = (await dbGet('guide_' + id)) || { pages: [] };
+
+    // Stage 1: identify (first few pages)
+    if (!meta.identifyDone) {
+      const firstImgs = [];
+      for (let i = 0; i < Math.min(meta.pageCount, meta.pageCount > MAX_PHOTOS ? 3 : MAX_PHOTOS); i++) {
+        const img = await dbGet('src_' + id + '_' + i);
+        if (img) firstImgs.push(img);
+      }
+      if (!firstImgs.length) throw Object.assign(new Error('The source pages for this reading are no longer on this device, so it can\'t be rebuilt. Delete it and add the reading again.'), { retryable: false });
+      const r = await api('identify', { images: firstImgs });
+      meta = getMeta(id);
+      if (!meta) return; // deleted mid-build
+      meta.title = r.title || 'Untitled reading';
+      meta.author = r.author || '';
+      meta.source = r.source || '';
+      meta.identified = !!r.identified;
+      meta.confidence = ['high', 'medium', 'low'].includes(r.confidence) ? r.confidence : 'low';
+      meta.identifyDone = true;
+      content.summary = r.summary || '';
+      content.vocabulary = Array.isArray(r.vocabulary) ? r.vocabulary : [];
+      await dbSet('guide_' + id, content);
+      saveMeta(meta);
+      refreshIfViewing(id);
+    }
+
+    // Stage 2: guide body (first page + identify context)
+    if (!meta.guideDone) {
+      const first = await dbGet('src_' + id + '_0');
+      const imgs = first ? [first] : [];
+      if (!imgs.length) throw Object.assign(new Error('The source pages for this reading are no longer on this device. Delete it and add the reading again.'), { retryable: false });
+      const r = await api('guide', {
+        images: imgs,
+        context: { title: meta.title, author: meta.author, source: meta.source, summary: content.summary },
+      });
+      content.bigIdeas = Array.isArray(r.bigIdeas) ? r.bigIdeas : [];
+      content.readingTips = Array.isArray(r.readingTips) ? r.readingTips : [];
+      content.questions = Array.isArray(r.questions) ? r.questions : [];
+      await dbSet('guide_' + id, content);
+      meta = getMeta(id);
+      if (!meta) return; // deleted mid-build
+      meta.guideDone = true;
+      saveMeta(meta);
+      refreshIfViewing(id);
+    }
+
+    // Stage 3..n: transcription, one page at a time, resumable
+    content.pages = content.pages || [];
+    for (let p = meta.pagesDone; p < meta.pageCount; p++) {
+      const src = await dbGet('src_' + id + '_' + p);
+      if (!src) throw Object.assign(new Error('Page ' + (p + 1) + '\'s source image is no longer on this device. The pages already transcribed are saved.'), { retryable: false });
+      const r = await api('transcribe', { images: [src] });
+      content.pages[p] = r.text || '';
+      await dbSet('guide_' + id, content);
+      meta = getMeta(id);
+      if (!meta) return; // deleted mid-build
+      meta.pagesDone = p + 1;
+      saveMeta(meta);
+      dbDel('src_' + id + '_' + p);
+      refreshIfViewing(id);
+    }
+
+    meta = getMeta(id);
+    if (!meta) return; // deleted mid-build
+    meta.status = 'complete';
+    meta.error = null;
+    saveMeta(meta);
+    refreshIfViewing(id);
+  } catch (e) {
+    const meta = getMeta(id);
+    if (meta) {
+      meta.status = 'partial';
+      meta.error = e.message || 'Something went wrong.';
+      meta.errorRetryable = e.retryable !== false;
+      saveMeta(meta);
+    }
+    refreshIfViewing(id);
+  } finally {
+    _activeBuild = null;
+  }
+}
+
+function retryBuild(id) {
+  if (_activeBuild) return;
+  runBuild(id);
+}
+
+function refreshIfViewing(id) {
+  if ((view.name === 'guide' || view.name === 'pages') && view.guideId === id) render();
+  if (view.name === 'library') render();
+}
+
+// ── Delete (two-tap confirm) ───────────────────────────────
+let _deleteArm = null;
+function deleteGuide(id, btn) {
+  if (_deleteArm !== id) {
+    _deleteArm = id;
+    btn.textContent = 'Tap again to delete';
+    btn.classList.add('danger-armed');
+    setTimeout(() => {
+      if (_deleteArm === id) {
+        _deleteArm = null;
+        if (document.body.contains(btn)) { btn.textContent = 'Delete'; btn.classList.remove('danger-armed'); }
+      }
+    }, 4000);
+    return;
+  }
+  _deleteArm = null;
+  const meta = getMeta(id);
+  setLibrary(getLibrary().filter(g => g.id !== id));
+  dbDel('guide_' + id);
+  LS.del('lantern_pos_' + id);
+  if (meta) for (let i = 0; i < (meta.pageCount || 0); i++) dbDel('src_' + id + '_' + i);
+  render();
+}
+
+// ── Rendering ──────────────────────────────────────────────
+function render() {
+  const app = document.getElementById('app');
+  if (view.name === 'add') app.innerHTML = renderAdd();
+  else if (view.name === 'guide') app.innerHTML = renderGuide();
+  else if (view.name === 'pages') app.innerHTML = renderPages();
+  else app.innerHTML = renderLibrary();
+}
+
+function header(backTo, backLabel, showDial) {
+  let left = '';
+  if (backTo) {
+    left = `<button class="iconbtn backbtn" onclick="${backTo}" aria-label="${escapeHtml(backLabel)}">‹ ${escapeHtml(backLabel)}</button>`;
+  } else {
+    left = `<span class="lamp" aria-hidden="true">🏮</span><h1>Lantern</h1>`;
+  }
+  const dialBtn = showDial ? `<button class="iconbtn" onclick="openDial()" aria-label="Reading settings">Aa</button>` : '';
+  return `<div class="top">${left}${backTo ? '<div style="flex:1"></div>' : ''}${dialBtn}</div>`;
+}
+
+function statusChip(g) {
+  if (g.status === 'building') {
+    if (!g.identifyDone) return '<span class="chip building">Reading the pages…</span>';
+    if (!g.guideDone) return '<span class="chip building">Writing the guide…</span>';
+    return `<span class="chip building">Pages ${g.pagesDone} of ${g.pageCount}…</span>`;
+  }
+  if (g.status === 'partial') return '<span class="chip">Paused, tap to resume</span>';
+  if (g.confidence === 'low' || !g.identified) return '<span class="chip lowconf">Built from pages only</span>';
+  return '';
+}
+
+function renderLibrary() {
+  const lib = getLibrary();
+  let html = header(null, null, true);
+  html += `<button class="btn primary" onclick="pendingImages=[];_addNote='';go('add')" style="margin-bottom:18px">+ Add a reading</button>`;
+  if (!lib.length) {
+    html += `<div class="card muted">Photograph the pages of a course reading, or upload its PDF. Lantern builds a plain-language guide and a clean, readable version of the pages, and keeps them here.</div>`;
+  }
+  for (const g of lib) {
+    const date = new Date(g.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    const sub = [g.author, g.source].filter(Boolean).join(' · ');
+    html += `<div class="lib-item">
+      <div class="lib-main" onclick="openGuide('${g.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGuide('${g.id}')}">
+        <div class="lib-title">${escapeHtml(g.title)}</div>
+        ${sub ? `<div class="lib-sub">${escapeHtml(sub)}</div>` : ''}
+        <div class="lib-sub">${escapeHtml(date)} · ${g.pageCount} page${g.pageCount === 1 ? '' : 's'}</div>
+      </div>
+      <div class="lib-foot">
+        ${statusChip(g)}
+        <button class="lib-del" onclick="event.stopPropagation();deleteGuide('${g.id}', this)">Delete</button>
+      </div>
+    </div>`;
+  }
+  return html;
+}
+
+function openGuide(id) {
+  const meta = getMeta(id);
+  if (!meta) return;
+  go('guide', id);
+  // Resume an interrupted build automatically; finished stages are kept.
+  if (meta.status !== 'complete' && !_activeBuild) runBuild(id);
+}
+
+function renderAdd() {
+  let html = header("history.back()", 'Library', false);
+  html += `<h1 style="font-size:22px;margin-bottom:14px;font-family:Georgia,serif">Add a reading</h1>`;
+
+  if (pdfProgress) {
+    const pct = pdfProgress.total ? Math.round(100 * pdfProgress.current / pdfProgress.total) : 0;
+    html += `<div class="stage"><span class="lamp-glow" aria-hidden="true">🏮</span>
+      <div>Preparing the PDF… <strong>${pdfProgress.total ? `page ${pdfProgress.current} of ${pdfProgress.total} (${pct}%)` : 'opening'}</strong></div></div>`;
+    return html;
+  }
+
+  html += `<div class="dropzone" id="dropzone" role="button" tabindex="0" style="cursor:pointer"
+    onclick="document.getElementById('file-any').click()"
+    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('file-any').click()}">
+    Drop a PDF or page photos here, paste a screenshot (Ctrl/Cmd+V),<br>or tap to browse
+  </div>`;
+
+  if (_addNote) html += `<div class="banner">${escapeHtml(_addNote)}</div>`;
+
+  if (pendingImages.length) {
+    html += `<div class="thumbs">` + pendingImages.map((img, i) =>
+      `<div class="thumb"><img src="data:${img.media_type};base64,${img.data}" alt="Page ${i + 1}">
+       <button onclick="pendingImages.splice(${i},1);render()" aria-label="Remove page ${i + 1}">✕</button></div>`
+    ).join('') + `</div>`;
+    html += `<button class="btn primary" onclick="startBuild(pendingImages.slice())" style="margin-bottom:14px">Build my guide (${pendingImages.length} page${pendingImages.length === 1 ? '' : 's'})</button>`;
+  }
+
+  html += `<div class="row" style="margin-bottom:10px">
+    <button class="btn" onclick="document.getElementById('file-camera').click()">📷 Camera</button>
+    <button class="btn" onclick="document.getElementById('file-photos').click()">🖼️ Photos</button>
+  </div>
+  <button class="btn" onclick="document.getElementById('file-pdf').click()">📄 Upload a PDF</button>
+  <div class="spacer"></div>
+  <div class="muted">Up to ${MAX_PHOTOS} photos for a quick guide, or a full PDF for everything including readable pages. Photos work best straight-on with the whole page in frame.</div>`;
+  return html;
+}
+
+function renderGuide() {
+  const meta = getMeta(view.guideId);
+  if (!meta) return header(null, null, true) + `<div class="card muted">That reading is no longer in the library.</div>`;
+  const c = _contentCache.id === meta.id ? _contentCache.content : null;
+  if (!c) { loadContent(meta.id); }
+
+  let html = header("goLibrary()", 'Library', true);
+  html += `<div class="guide-title reading" style="font-size:calc(var(--r-size) * 1.3)">${escapeHtml(meta.title)}</div>`;
+  const byline = [meta.author, meta.source].filter(Boolean).join(' · ');
+  if (byline) html += `<div class="guide-byline">${escapeHtml(byline)}</div>`;
+
+  // Honesty banner: never fake certainty.
+  if (meta.identifyDone && (!meta.identified || meta.confidence === 'low')) {
+    html += `<div class="banner">Lantern couldn't confidently identify this reading, so this guide is built only from the pages you provided, not from knowledge of the work.</div>`;
+  }
+
+  // Stage indicator / error
+  if (meta.status === 'building') {
+    let stageText;
+    if (!meta.identifyDone) stageText = 'Reading the pages…';
+    else if (!meta.guideDone) stageText = 'Writing your guide…';
+    else stageText = `Turning pages into readable text… <strong>${meta.pagesDone} of ${meta.pageCount} done</strong>`;
+    html += `<div class="stage" role="status" aria-live="polite"><span class="lamp-glow" aria-hidden="true">🏮</span><div>${stageText}</div></div>`;
+  } else if (meta.status === 'partial' && meta.error) {
+    html += `<div class="banner error">${escapeHtml(meta.error)}</div>`;
+    if (meta.errorRetryable !== false) {
+      html += `<button class="btn" onclick="retryBuild('${meta.id}')" style="margin-bottom:14px">Retry from where it stopped</button>`;
+    }
+  }
+
+  if (!c) return html + `<div class="card muted">Opening…</div>`;
+
+  // Fixed section order.
+  if (c.summary) {
+    html += `<div class="card"><div class="guide-h">In three sentences</div><div class="reading">${paragraphs(c.summary)}</div></div>`;
+  }
+  if (c.vocabulary && c.vocabulary.length) {
+    html += `<div class="card"><div class="guide-h">Decode the vocabulary first</div><div class="reading">` +
+      c.vocabulary.map(v => `<div class="vocab-item"><span class="vocab-term">${escapeHtml(v.term)}</span><br>${escapeHtml(v.definition)}</div>`).join('') +
+      `</div></div>`;
+  }
+  if (c.bigIdeas && c.bigIdeas.length) {
+    html += `<div class="card"><div class="guide-h">The big ideas</div><div class="reading">` +
+      c.bigIdeas.map(b => `<div class="idea"><div class="idea-title">${escapeHtml(b.title)}</div>${escapeHtml(b.body)}</div>`).join('') +
+      `</div></div>`;
+  }
+  if (c.readingTips && c.readingTips.length) {
+    html += `<div class="card"><div class="guide-h">How to read this author</div><ul class="tlist reading">` +
+      c.readingTips.map(t => `<li>${escapeHtml(t)}</li>`).join('') + `</ul></div>`;
+  }
+  if (c.questions && c.questions.length) {
+    html += `<div class="card"><div class="guide-h">Check yourself</div><ol class="qlist reading">` +
+      c.questions.map(q => `<li>${escapeHtml(q)}</li>`).join('') + `</ol></div>`;
+  }
+
+  if (meta.pagesDone > 0) {
+    html += `<button class="btn primary" onclick="go('pages','${meta.id}')">📖 Readable pages${meta.pagesDone < meta.pageCount ? ` (${meta.pagesDone} of ${meta.pageCount} ready)` : ''}</button>`;
+  }
+  return html;
+}
+
+function goLibrary() { go('library', null); }
+
+function paragraphs(text) {
+  return String(text || '').split(/\n{2,}|\r\n\r\n/).filter(s => s.trim())
+    .map(p => `<p>${escapeHtml(p.trim())}</p>`).join('') || `<p>${escapeHtml(text)}</p>`;
+}
+
+// Guide content cache (loaded async from IndexedDB)
+let _contentCache = { id: null, content: null };
+async function loadContent(id) {
+  const content = await dbGet('guide_' + id);
+  _contentCache = { id, content: content || { pages: [] } };
+  if ((view.name === 'guide' || view.name === 'pages') && view.guideId === id) render();
+}
+
+function renderPages() {
+  const meta = getMeta(view.guideId);
+  if (!meta) return header(null, null, true) + `<div class="card muted">That reading is no longer in the library.</div>`;
+  const c = _contentCache.id === meta.id ? _contentCache.content : null;
+  if (!c) { loadContent(meta.id); }
+
+  let html = header("history.back()", 'Guide', true);
+  html += `<div class="guide-byline" style="margin-bottom:10px">${escapeHtml(meta.title)}</div>`;
+
+  if (!c) return html + `<div class="card muted">Opening…</div>`;
+  const ready = (c.pages || []).filter(p => typeof p === 'string').length;
+  if (!ready) return html + `<div class="card muted">No readable pages yet. They appear here as each page finishes.</div>`;
+
+  let cur = LS.get('lantern_pos_' + meta.id, 0);
+  if (cur >= ready) cur = ready - 1;
+  if (cur < 0) cur = 0;
+
+  const opts = [];
+  for (let i = 0; i < ready; i++) opts.push(`<option value="${i}"${i === cur ? ' selected' : ''}>Page ${i + 1} of ${meta.pageCount}</option>`);
+
+  html += `<div class="pagenav">
+    <button onclick="setPage(${cur - 1})" ${cur === 0 ? 'disabled' : ''} aria-label="Previous page">‹</button>
+    <select onchange="setPage(parseInt(this.value,10))" aria-label="Jump to page">${opts.join('')}</select>
+    <button onclick="setPage(${cur + 1})" ${cur >= ready - 1 ? 'disabled' : ''} aria-label="Next page">›</button>
+  </div>`;
+
+  if (meta.status === 'building' && meta.pagesDone < meta.pageCount) {
+    html += `<div class="stage" role="status" aria-live="polite"><span class="lamp-glow" aria-hidden="true">🏮</span><div>Still transcribing… <strong>${meta.pagesDone} of ${meta.pageCount} ready</strong></div></div>`;
+  }
+
+  html += `<div class="card reading">${paragraphs(c.pages[cur] || '')}</div>`;
+
+  html += `<div class="pagenav">
+    <button onclick="setPage(${cur - 1})" ${cur === 0 ? 'disabled' : ''} aria-label="Previous page">‹</button>
+    <span class="muted" style="flex:1;text-align:center">Page ${cur + 1} of ${meta.pageCount}</span>
+    <button onclick="setPage(${cur + 1})" ${cur >= ready - 1 ? 'disabled' : ''} aria-label="Next page">›</button>
+  </div>`;
+  return html;
+}
+
+function setPage(n) {
+  LS.set('lantern_pos_' + view.guideId, Math.max(0, n));
+  render();
+  window.scrollTo({ top: 0 });
+}
+
+// ── File inputs, drag-drop, paste ──────────────────────────
+document.getElementById('file-camera').addEventListener('change', (e) => {
+  addImageFiles(e.target.files); e.target.value = '';
+});
+document.getElementById('file-photos').addEventListener('change', (e) => {
+  addImageFiles(e.target.files); e.target.value = '';
+});
+document.getElementById('file-pdf').addEventListener('change', (e) => {
+  if (e.target.files[0]) handlePdfFile(e.target.files[0]);
+  e.target.value = '';
+});
+document.getElementById('file-any').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files || []);
+  const pdf = files.find(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+  if (pdf) handlePdfFile(pdf);
+  else addImageFiles(files);
+  e.target.value = '';
+});
+
+document.addEventListener('dragover', (e) => {
+  if (view.name !== 'add') return;
+  e.preventDefault();
+  const dz = document.getElementById('dropzone');
+  if (dz) dz.classList.add('over');
+});
+document.addEventListener('dragleave', (e) => {
+  const dz = document.getElementById('dropzone');
+  if (dz && (!e.relatedTarget || !document.body.contains(e.relatedTarget))) dz.classList.remove('over');
+});
+document.addEventListener('drop', (e) => {
+  if (view.name !== 'add') return;
+  e.preventDefault();
+  const dz = document.getElementById('dropzone');
+  if (dz) dz.classList.remove('over');
+  const files = Array.from(e.dataTransfer.files || []);
+  const pdf = files.find(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+  if (pdf) handlePdfFile(pdf);
+  else addImageFiles(files);
+});
+document.addEventListener('paste', (e) => {
+  if (view.name !== 'add') return;
+  const items = Array.from(e.clipboardData?.items || []);
+  const files = items.filter(i => i.kind === 'file').map(i => i.getAsFile()).filter(Boolean);
+  if (files.length) { e.preventDefault(); addImageFiles(files); }
+});
+
+// ── Boot ───────────────────────────────────────────────────
+(async function main() {
+  await openDB();
+  applyDial();
+  // Mark anything that was mid-build when the app was killed as resumable.
+  const lib = getLibrary();
+  let changed = false;
+  for (const g of lib) {
+    if (g.status === 'building') { g.status = 'partial'; g.error = null; changed = true; }
+  }
+  if (changed) setLibrary(lib);
+  history.replaceState({ name: 'library', guideId: null }, '');
+  render();
+})();
+</script>
+</body>
+</html>
