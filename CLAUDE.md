@@ -31,6 +31,8 @@ Lantern is a standalone, unlisted page at `/lantern` (`lantern.html`). It is int
 - **Honesty rule:** when identification confidence is low, the guide shows a banner saying it was built only from the provided pages. Never fake certainty.
 - **Storage:** everything stays on her device. Library metadata in localStorage (`lantern_*` keys), guide text and pending page images in its own IndexedDB database (`lantern_db`). Source images are kept only until their page is transcribed, which makes builds resumable after an app kill, then deleted. Nothing is stored server-side.
 - **Reading experience:** Georgia serif reading surface, night/paper themes, a reading dial (text size, line height, letter spacing) persisted per device, 680px max column on desktop, drag-and-drop and clipboard paste for ingestion.
+- **Vocabulary highlights:** the 4-6 vocab terms from the identify stage are highlighted wherever they appear in the readable pages (client-side string match, never model-chosen emphasis; the transcription itself stays faithful). Tapping a term opens its plain-language definition. Togglable in the dial.
+- **Read-aloud:** built-in device voices via the Web Speech API, no server, no cost. Sentence-by-sentence playback with the current sentence highlighted, pause/resume, speed cycle (0.8x to 1.5x), auto-advance to the next ready page. Voice quality is whatever the device ships; a paid TTS API was deliberately not used.
 - Transcription exists for her personal accessibility reading of her own assigned course materials. No sharing or export of transcribed source text.
 
 ## Push Notification Architecture
