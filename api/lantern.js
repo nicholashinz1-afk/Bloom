@@ -160,6 +160,35 @@ async function callForJSON(apiKey, content, maxTokens) {
   return { error: 'parse_failed', retryable: true };
 }
 
+// Transcription's contract is just text; a dense page can overflow or
+// trip the JSON envelope (truncation, unescaped quotes). Salvage the
+// transcription instead of failing the page.
+function salvageTranscription(text) {
+  const raw = String(text || '').replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  const m = raw.match(/^\{\s*"text"\s*:\s*"([\s\S]*)$/);
+  if (m) {
+    let t = m[1].replace(/"\s*\}\s*$/, '');
+    t = t.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    if (t.length > 200) return t;
+  } else if (raw.length > 200 && !raw.startsWith('{')) {
+    return raw;
+  }
+  return null;
+}
+
+async function callForTranscription(apiKey, content, maxTokens) {
+  let last = { error: 'parse_failed', retryable: true };
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const result = await callClaude(apiKey, content, maxTokens);
+    if (result.error) return result;
+    const parsed = extractJSON(result.text);
+    if (parsed && typeof parsed.text === 'string') return { json: parsed };
+    const salvaged = salvageTranscription(result.text);
+    if (salvaged) return { json: { text: salvaged } };
+  }
+  return last;
+}
+
 // ── Main handler ──────────────────────────────────────────
 export default async function handler(req, res) {
   const allowedOrigins = ['https://bloomselfcare.app', 'https://bloom-zeta-rouge.vercel.app', 'http://localhost:3000'];
@@ -239,11 +268,13 @@ export default async function handler(req, res) {
     maxTokens = 2000;
   } else {
     content = [...imageBlocks(images), { type: 'text', text: TRANSCRIBE_PROMPT }];
-    maxTokens = 1500;
+    maxTokens = 2500; // dense scholarly pages overflow smaller budgets
   }
 
   try {
-    const result = await callForJSON(apiKey, content, maxTokens);
+    const result = action === 'transcribe'
+      ? await callForTranscription(apiKey, content, maxTokens)
+      : await callForJSON(apiKey, content, maxTokens);
     if (result.error) {
       return res.status(502).json({
         error: result.error,
