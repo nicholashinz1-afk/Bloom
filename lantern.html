@@ -1590,12 +1590,31 @@ document.addEventListener('paste', (e) => {
 // at, so the Retry button is a fallback rather than a requirement.
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
+  checkForUpdate();
   if (_activeBuild) { acquireWakeLock(); return; }
   const id = view.guideId;
   if (!id) return;
   const m = getMeta(id);
   if (m && m.status === 'partial' && m.errorRetryable !== false) runBuild(id);
 });
+
+// ── Self-update ────────────────────────────────────────────
+// Long-lived phone tabs keep running old JavaScript for days; the
+// page never refetches itself. Compare the served file's ETag against
+// the one this tab booted with and reload at a safe moment (library
+// view, nothing building, no sheet open; all state is persisted).
+let _pageTag = null;
+async function checkForUpdate() {
+  try {
+    const res = await fetch('/lantern.html', { method: 'HEAD', cache: 'no-store' });
+    const tag = res.headers.get('etag') || res.headers.get('last-modified');
+    if (!tag) return;
+    if (_pageTag === null) { _pageTag = tag; return; }
+    if (tag !== _pageTag && !_activeBuild && view.name === 'library' && !document.querySelector('.sheet.open')) {
+      location.reload();
+    }
+  } catch (e) {}
+}
 
 // ── Boot ───────────────────────────────────────────────────
 (async function main() {
@@ -1613,6 +1632,7 @@ document.addEventListener('visibilitychange', () => {
   if (changed) setLibrary(lib);
   history.replaceState({ name: 'library', guideId: null }, '');
   render();
+  checkForUpdate(); // seed the ETag this tab booted with
 })();
 </script>
 </body>
