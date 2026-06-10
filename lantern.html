@@ -840,6 +840,65 @@ function readyPrefix(pages) {
   return n;
 }
 
+// ── Transcription via on-device OCR ────────────────────────
+// Readable pages are produced by OCR, not by the AI: asking the model
+// to reproduce a copyrighted book verbatim trips Anthropic's copyright
+// filter on dense pages. OCR mechanically extracts the text on a page
+// she already has (the accessibility use), runs on her device, costs
+// nothing, and the filter never applies. Tesseract.js loads from a CDN
+// on first use (~one-time download, then cached). If it can't load,
+// transcription falls back to the AI path so it's never worse than
+// before, only better.
+let _ocr = null;
+let _ocrFailed = false;
+async function ensureOcr() {
+  if (_ocr) return _ocr;
+  if (_ocrFailed) throw new Error('ocr-unavailable');
+  try {
+    if (!window.Tesseract) {
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
+    }
+    _ocr = await window.Tesseract.createWorker('eng', 1, {
+      corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.0.0',
+      langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0',
+    });
+    return _ocr;
+  } catch (e) {
+    _ocrFailed = true;
+    throw e;
+  }
+}
+function releaseOcr() {
+  if (_ocr) { try { _ocr.terminate(); } catch (e) {} _ocr = null; }
+}
+// Reflow OCR output: rejoin hyphenated line breaks, collapse single
+// line breaks into flowing text, keep paragraph breaks.
+function cleanOcr(text) {
+  const PARA = ' \u2063PARA\u2063 ';
+  return String(text || '')
+    .replace(/-\n(?=[a-z])/g, '')
+    .replace(/\n{2,}/g, PARA)
+    .replace(/\n/g, ' ')
+    .split(PARA).join('\n\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/ +([.,;:!?\u2019\u201d)])/g, '$1')
+    .trim();
+}
+async function transcribePage(src) {
+  const dataUrl = 'data:' + src.media_type + ';base64,' + src.data;
+  try {
+    const w = await ensureOcr();
+    const { data } = await w.recognize(dataUrl);
+    const text = cleanOcr(data && data.text);
+    if (text && text.length >= 20) return text;
+    // OCR came back near-empty; let the AI path try this page.
+  } catch (e) {
+    // OCR engine unavailable; fall back to the AI transcription path.
+  }
+  const r = await api('transcribe', { images: [src] });
+  return r.text || '';
+}
+
 // ── Build pipeline ─────────────────────────────────────────
 let _activeBuild = null;
 let _buildContent = null; // live content object owned by the running build
@@ -992,8 +1051,7 @@ async function runBuild(id) {
         try {
           const src = await dbGet('src_' + id + '_' + p);
           if (!src) throw Object.assign(new Error('Page ' + (p + 1) + '\'s source image is no longer on this device. The pages already transcribed are saved.'), { retryable: false, srcLost: true });
-          const r = await api('transcribe', { images: [src] });
-          content.pages[p] = r.text || '';
+          content.pages[p] = await transcribePage(src);
           await dbSet('guide_' + id, content);
           const m = getMeta(id);
           if (!m) { deletedMidBuild = true; return; }
@@ -1036,7 +1094,9 @@ async function runBuild(id) {
 
     let guideError = null;
     const guardedGuide = guideStage().catch(e => { guideError = e; });
-    const POOL = 3;
+    // OCR is CPU-bound on a single on-device worker, so transcription
+    // runs sequentially; the guide (an AI call) still runs alongside it.
+    const POOL = 1;
     await Promise.all(Array.from({ length: Math.min(POOL, Math.max(todo.length, 1)) }, transcribeWorker));
     await guardedGuide;
     if (deletedMidBuild) return;
@@ -1074,7 +1134,7 @@ async function runBuild(id) {
     _buildContent = null;
     const next = _buildQueue.shift();
     if (next) runBuild(next);
-    else releaseWakeLock();
+    else { releaseWakeLock(); releaseOcr(); }
   }
 }
 
