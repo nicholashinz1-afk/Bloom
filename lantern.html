@@ -659,10 +659,25 @@ window.addEventListener('popstate', (e) => {
 });
 
 // ── API ────────────────────────────────────────────────────
+// Rate pacing: low-tier Anthropic accounts allow very few requests
+// per minute. When a rate limit trips, every Lantern call slows to a
+// sustainable pace for a couple of minutes instead of failing the
+// build. Slow and finished beats fast and broken.
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+let _nextSlot = 0;
+let _paceUntil = 0;
+async function rateGate() {
+  const gap = Date.now() < _paceUntil ? 13000 : 300;
+  const now = Date.now();
+  const slot = Math.max(now, _nextSlot);
+  _nextSlot = slot + gap;
+  if (slot > now) await sleep(slot - now);
+}
+
 async function api(action, payload) {
   let lastErr = null;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    if (attempt > 0) await new Promise(r => setTimeout(r, 1500 * attempt));
+  for (let attempt = 0; attempt < 6; attempt++) {
+    await rateGate();
     let res;
     try {
       res = await fetch(API, {
@@ -672,13 +687,22 @@ async function api(action, payload) {
       });
     } catch (e) {
       lastErr = { message: 'No connection. Check your internet and retry.', retryable: true };
+      await sleep(1500 * (attempt + 1));
       continue;
     }
     if (res.ok) return res.json();
     const body = await res.json().catch(() => ({}));
     if (res.status === 429) {
+      // Lantern's own daily abuse ceiling, distinct from AI rate limits.
       lastErr = { message: body.error || 'Lantern needs a break. Try again tomorrow.', retryable: false };
       break;
+    }
+    if (body.rateLimited) {
+      _paceUntil = Date.now() + 120000;
+      const waitSec = Math.min(60, Math.max(15, parseInt(body.retryAfter, 10) || 15));
+      lastErr = { message: 'The AI service rate limit kept interrupting. The build will resume on its own.', retryable: true };
+      await sleep(waitSec * 1000);
+      continue;
     }
     const retryable = body.retryable !== false && res.status >= 500;
     const detail = body.message ? ': ' + body.message : '';
@@ -686,6 +710,7 @@ async function api(action, payload) {
     // The API occasionally throws transient 400s. Give failures classed
     // as permanent exactly one second chance before believing them.
     if (!retryable && attempt >= 1) break;
+    if (retryable) await sleep(1500 * (attempt + 1));
   }
   const err = new Error(lastErr.message);
   err.retryable = lastErr.retryable;
