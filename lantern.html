@@ -1006,17 +1006,20 @@ async function runBuild(id) {
         } catch (e) {
           if (e.retryable === false) {
             // One permanently failing page must not cost her the rest
-            // of the reading. Leave a readable placeholder, note it,
-            // and keep going. Its source image is kept for retries.
+            // of the reading. Leave a readable placeholder, record the
+            // reason, and keep going. Its source image is kept for
+            // retries.
+            const why = String(e.message || 'unknown error').slice(0, 220);
             content.pages[p] = e.srcLost
               ? 'This page\'s original image was lost before it could be transcribed, so it can\'t be recovered. The other pages are intact.'
-              : 'Lantern couldn\'t transcribe this page automatically. Tap "Try failed pages again" on the guide to give it another shot.';
+              : 'Lantern couldn\'t transcribe this page automatically. (' + why + ') Tap "Try failed pages again" on the guide to give it another shot.';
             await dbSet('guide_' + id, content);
             const m = getMeta(id);
             if (!m) { deletedMidBuild = true; return; }
             if (!e.srcLost) {
               m.failedPages = Array.isArray(m.failedPages) ? m.failedPages : [];
               if (!m.failedPages.includes(p)) m.failedPages.push(p);
+              m.failedWhy = Object.assign({}, m.failedWhy, { [p]: why });
             }
             m.pagesDone = readyPrefix(content.pages);
             saveMeta(m);
@@ -1119,6 +1122,7 @@ async function retryFailedPages(id) {
   const m = getMeta(id);
   if (!m) return;
   m.failedPages = [];
+  m.failedWhy = {};
   m.status = 'partial';
   m.pagesDone = readyPrefix(content.pages);
   saveMeta(m);
@@ -1304,7 +1308,8 @@ function renderGuide() {
       <button class="btn" onclick="retryBuild('${meta.id}')" style="margin-bottom:14px">Try building the guide again</button>`;
   }
   if (meta.status !== 'building' && Array.isArray(meta.failedPages) && meta.failedPages.length) {
-    html += `<div class="banner error">${meta.failedPages.length} page${meta.failedPages.length === 1 ? '' : 's'} couldn't be transcribed (page${meta.failedPages.length === 1 ? '' : 's'} ${meta.failedPages.map(p => p + 1).join(', ')}). Everything else is ready.</div>
+    const firstWhy = meta.failedWhy ? meta.failedWhy[meta.failedPages[0]] : null;
+    html += `<div class="banner error">${meta.failedPages.length} page${meta.failedPages.length === 1 ? '' : 's'} couldn't be transcribed (page${meta.failedPages.length === 1 ? '' : 's'} ${meta.failedPages.map(p => p + 1).join(', ')}). Everything else is ready.${firstWhy ? '<br>Reason: ' + escapeHtml(firstWhy) : ''}</div>
       <button class="btn" onclick="retryFailedPages('${meta.id}')" style="margin-bottom:14px">Try failed pages again</button>`;
   }
 
