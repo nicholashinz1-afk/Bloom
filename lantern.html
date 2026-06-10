@@ -998,6 +998,7 @@ async function runBuild(id) {
           const m = getMeta(id);
           if (!m) { deletedMidBuild = true; return; }
           m.pagesDone = readyPrefix(content.pages);
+          m.pagesFinished = content.pages.filter(pg => typeof pg === 'string').length;
           saveMeta(m);
           // Page 0's image doubles as the guide stage's input; keep it
           // until the guide section is built.
@@ -1022,6 +1023,7 @@ async function runBuild(id) {
               m.failedWhy = Object.assign({}, m.failedWhy, { [p]: why });
             }
             m.pagesDone = readyPrefix(content.pages);
+            m.pagesFinished = content.pages.filter(pg => typeof pg === 'string').length;
             saveMeta(m);
             refreshIfViewing(id);
             continue;
@@ -1125,6 +1127,7 @@ async function retryFailedPages(id) {
   m.failedWhy = {};
   m.status = 'partial';
   m.pagesDone = readyPrefix(content.pages);
+  m.pagesFinished = content.pages.filter(pg => typeof pg === 'string').length;
   saveMeta(m);
   if (_contentCache.id === id) _contentCache = { id, content };
   runBuild(id);
@@ -1195,7 +1198,7 @@ function statusChip(g) {
   if (g.status === 'building') {
     if (!g.identifyDone) return '<span class="chip building">Reading the pages…</span>';
     if (!g.guideDone) return '<span class="chip building">Writing the guide…</span>';
-    return `<span class="chip building">Pages ${g.pagesDone} of ${g.pageCount}…</span>`;
+    return `<span class="chip building">Pages ${g.pagesFinished != null ? g.pagesFinished : g.pagesDone} of ${g.pageCount}…</span>`;
   }
   if (g.status === 'partial') return '<span class="chip">Paused, tap to resume</span>';
   if (g.confidence === 'low' || !g.identified) return '<span class="chip lowconf">Built from pages only</span>';
@@ -1296,7 +1299,7 @@ function renderGuide() {
     let stageText;
     if (!meta.identifyDone) stageText = 'Reading the pages…';
     else if (!meta.guideDone) stageText = 'Writing your guide…';
-    else stageText = `Turning pages into readable text… <strong>${meta.pagesDone} of ${meta.pageCount} done</strong>`;
+    else stageText = `Turning pages into readable text… <strong>${meta.pagesFinished != null ? meta.pagesFinished : meta.pagesDone} of ${meta.pageCount} done</strong>`;
     html += `<div class="stage" role="status" aria-live="polite"><span class="lamp-glow" aria-hidden="true">🏮</span><div>${stageText}</div></div>`;
   } else if (meta.status === 'partial' && meta.error) {
     html += `<div class="banner error">${escapeHtml(meta.error)}</div>`;
@@ -1571,7 +1574,7 @@ function renderPages() {
   html += `<div class="readbar" aria-hidden="true"><div style="width:${Math.round(100 * (cur + 1) / meta.pageCount)}%"></div></div>`;
 
   if (meta.status === 'building' && meta.pagesDone < meta.pageCount) {
-    html += `<div class="stage" role="status" aria-live="polite"><span class="lamp-glow" aria-hidden="true">🏮</span><div>Still transcribing… <strong>${meta.pagesDone} of ${meta.pageCount} ready</strong></div></div>`;
+    html += `<div class="stage" role="status" aria-live="polite"><span class="lamp-glow" aria-hidden="true">🏮</span><div>Still transcribing… <strong>${meta.pagesFinished != null ? meta.pagesFinished : meta.pagesDone} of ${meta.pageCount} done</strong></div></div>`;
   } else if (meta.status === 'partial' && meta.pagesDone < meta.pageCount) {
     html += `<div class="banner">The rest of the pages are paused (${meta.pagesDone} of ${meta.pageCount} done).${meta.errorRetryable !== false ? '' : ' ' + escapeHtml(meta.error || '')}</div>`;
     if (meta.errorRetryable !== false) {
