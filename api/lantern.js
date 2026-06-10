@@ -64,7 +64,7 @@ Respond with ONLY valid JSON:
 // ── Abuse ceiling (per IP, per day) ───────────────────────
 // 30 identifies = 30 new readings a day from one address. A heavy day of
 // real coursework is maybe 5. Nobody legitimate ever sees these numbers.
-const LIMITS = { identify: 30, guide: 90, transcribe: 1500, ask: 400 };
+const LIMITS = { identify: 100, guide: 300, transcribe: 5000, ask: 2000 };
 const DAY_SECONDS = 86400;
 
 async function hashIP(ip) {
@@ -139,7 +139,11 @@ async function callClaude(apiKey, content, maxTokens) {
     const type = errBody?.error?.type || `http_${response.status}`;
     const message = errBody?.error?.message ? String(errBody.error.message).slice(0, 300) : null;
     const retryable = response.status === 429 || response.status >= 500;
-    return { error: type, message, retryable };
+    // Surface Anthropic rate limiting distinctly so the client can
+    // pace itself instead of failing the build.
+    const rateLimited = response.status === 429;
+    const retryAfter = response.headers.get('retry-after') || undefined;
+    return { error: type, message, retryable, rateLimited, retryAfter };
   }
   const data = await response.json();
   return { text: data.content?.find(b => b.type === 'text')?.text || null };
@@ -241,7 +245,13 @@ export default async function handler(req, res) {
   try {
     const result = await callForJSON(apiKey, content, maxTokens);
     if (result.error) {
-      return res.status(502).json({ error: result.error, message: result.message || undefined, retryable: result.retryable !== false });
+      return res.status(502).json({
+        error: result.error,
+        message: result.message || undefined,
+        retryable: result.retryable !== false,
+        rateLimited: result.rateLimited || undefined,
+        retryAfter: result.retryAfter,
+      });
     }
     return res.status(200).json(result.json);
   } catch (err) {

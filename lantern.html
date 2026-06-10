@@ -635,6 +635,13 @@ let pendingImages = []; // add view: [{ media_type, data }]
 
 function go(name, guideId, replace) {
   if (typeof ttsStop === 'function' && tts.active) ttsStop(false);
+  // A navigation is a screen change anyway: the cheapest invisible
+  // moment to apply a pending update. Lands on the intended view.
+  if (_updatePending && !_activeBuild && !document.querySelector('.sheet.open')) {
+    try { sessionStorage.setItem('lantern_resume', JSON.stringify({ name, guideId: guideId || null })); } catch (e) {}
+    location.reload();
+    return;
+  }
   view = { name, guideId: guideId || null };
   const st = { name, guideId: view.guideId };
   if (replace) history.replaceState(st, '');
@@ -652,10 +659,25 @@ window.addEventListener('popstate', (e) => {
 });
 
 // ── API ────────────────────────────────────────────────────
+// Rate pacing: low-tier Anthropic accounts allow very few requests
+// per minute. When a rate limit trips, every Lantern call slows to a
+// sustainable pace for a couple of minutes instead of failing the
+// build. Slow and finished beats fast and broken.
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+let _nextSlot = 0;
+let _paceUntil = 0;
+async function rateGate() {
+  const gap = Date.now() < _paceUntil ? 13000 : 300;
+  const now = Date.now();
+  const slot = Math.max(now, _nextSlot);
+  _nextSlot = slot + gap;
+  if (slot > now) await sleep(slot - now);
+}
+
 async function api(action, payload) {
   let lastErr = null;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    if (attempt > 0) await new Promise(r => setTimeout(r, 1500 * attempt));
+  for (let attempt = 0; attempt < 6; attempt++) {
+    await rateGate();
     let res;
     try {
       res = await fetch(API, {
@@ -665,18 +687,30 @@ async function api(action, payload) {
       });
     } catch (e) {
       lastErr = { message: 'No connection. Check your internet and retry.', retryable: true };
+      await sleep(1500 * (attempt + 1));
       continue;
     }
     if (res.ok) return res.json();
     const body = await res.json().catch(() => ({}));
     if (res.status === 429) {
+      // Lantern's own daily abuse ceiling, distinct from AI rate limits.
       lastErr = { message: body.error || 'Lantern needs a break. Try again tomorrow.', retryable: false };
       break;
+    }
+    if (body.rateLimited) {
+      _paceUntil = Date.now() + 120000;
+      const waitSec = Math.min(60, Math.max(15, parseInt(body.retryAfter, 10) || 15));
+      lastErr = { message: 'The AI service rate limit kept interrupting. The build will resume on its own.', retryable: true };
+      await sleep(waitSec * 1000);
+      continue;
     }
     const retryable = body.retryable !== false && res.status >= 500;
     const detail = body.message ? ': ' + body.message : '';
     lastErr = { message: 'The build hit a snag (' + (body.error || res.status) + detail + ').', retryable };
-    if (!retryable) break;
+    // The API occasionally throws transient 400s. Give failures classed
+    // as permanent exactly one second chance before believing them.
+    if (!retryable && attempt >= 1) break;
+    if (retryable) await sleep(1500 * (attempt + 1));
   }
   const err = new Error(lastErr.message);
   err.retryable = lastErr.retryable;
@@ -1018,6 +1052,7 @@ async function runBuild(id) {
     meta.status = 'complete';
     meta.error = null;
     saveMeta(meta);
+    delete _autoRetryCount[id];
     refreshIfViewing(id);
   } catch (e) {
     const meta = getMeta(id);
@@ -1028,6 +1063,7 @@ async function runBuild(id) {
       saveMeta(meta);
     }
     refreshIfViewing(id);
+    scheduleAutoRetry(id, e.retryable !== false);
   } finally {
     _activeBuild = null;
     _buildContent = null;
@@ -1037,8 +1073,35 @@ async function runBuild(id) {
   }
 }
 
+// Self-healing: transient failures retry themselves while the app is
+// open, and opening a paused reading resumes it automatically (with a
+// cooldown so a permanently failing build can't hammer the API). The
+// Retry buttons remain as manual fallbacks only.
+const _autoRetryCount = {};
+function scheduleAutoRetry(id, retryable) {
+  if (!retryable) return;
+  const n = _autoRetryCount[id] || 0;
+  if (n >= 2) return;
+  _autoRetryCount[id] = n + 1;
+  setTimeout(() => {
+    const m = getMeta(id);
+    if (m && m.status === 'partial' && !_activeBuild) runBuild(id);
+  }, n === 0 ? 20000 : 60000);
+}
+const _lastResume = {};
+function maybeResume(id) {
+  if (!id || _activeBuild) return;
+  const m = getMeta(id);
+  if (!m || m.status === 'complete') return;
+  const now = Date.now();
+  if (_lastResume[id] && now - _lastResume[id] < 120000) return;
+  _lastResume[id] = now;
+  runBuild(id);
+}
+
 function retryBuild(id) {
   if (_activeBuild) return;
+  _lastResume[id] = Date.now();
   runBuild(id);
 }
 
@@ -1165,8 +1228,7 @@ function openGuide(id) {
   if (!meta) return;
   go('guide', id);
   // Resume an interrupted build automatically; finished stages are kept.
-  // Skip builds that can never succeed (source images gone).
-  if (meta.status !== 'complete' && meta.errorRetryable !== false && !_activeBuild) runBuild(id);
+  maybeResume(id);
 }
 
 function renderAdd() {
@@ -1586,32 +1648,41 @@ document.addEventListener('paste', (e) => {
 });
 
 // When she returns to the app: keep the wake lock alive for a running
-// build, and quietly resume a paused, retryable build she's looking
-// at, so the Retry button is a fallback rather than a requirement.
+// build, and quietly resume any paused build she's looking at, so the
+// Retry button is a fallback rather than a requirement. When the app
+// is backgrounded, that's the invisible moment to apply updates.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState !== 'visible') return;
+  if (document.visibilityState === 'hidden') {
+    if (_updatePending && !_activeBuild && !tts.active) applyUpdateNow();
+    return;
+  }
   checkForUpdate();
   if (_activeBuild) { acquireWakeLock(); return; }
-  const id = view.guideId;
-  if (!id) return;
-  const m = getMeta(id);
-  if (m && m.status === 'partial' && m.errorRetryable !== false) runBuild(id);
+  maybeResume(view.guideId);
 });
 
 // ── Self-update ────────────────────────────────────────────
 // Long-lived phone tabs keep running old JavaScript for days; the
 // page never refetches itself. Compare the served file's ETag against
-// the one this tab booted with and reload at a safe moment (library
-// view, nothing building, no sheet open; all state is persisted).
+// the one this tab booted with; when it changes, reload at the first
+// invisible moment: app backgrounded, a navigation (the exact view is
+// saved and restored), or idle on the library. All data is persisted,
+// so the reload loses nothing.
 let _pageTag = null;
+let _updatePending = false;
+function applyUpdateNow() {
+  try { sessionStorage.setItem('lantern_resume', JSON.stringify(view)); } catch (e) {}
+  location.reload();
+}
 async function checkForUpdate() {
   try {
     const res = await fetch('/lantern.html', { method: 'HEAD', cache: 'no-store' });
     const tag = res.headers.get('etag') || res.headers.get('last-modified');
     if (!tag) return;
     if (_pageTag === null) { _pageTag = tag; return; }
-    if (tag !== _pageTag && !_activeBuild && view.name === 'library' && !document.querySelector('.sheet.open')) {
-      location.reload();
+    if (tag !== _pageTag) {
+      _updatePending = true;
+      if (!_activeBuild && view.name === 'library' && !document.querySelector('.sheet.open')) applyUpdateNow();
     }
   } catch (e) {}
 }
@@ -1630,8 +1701,20 @@ async function checkForUpdate() {
     if (g.status === 'building') { g.status = 'partial'; g.error = null; changed = true; }
   }
   if (changed) setLibrary(lib);
-  history.replaceState({ name: 'library', guideId: null }, '');
+  // If a self-update reload interrupted a view, land back on it.
+  let bootView = { name: 'library', guideId: null };
+  try {
+    const saved = sessionStorage.getItem('lantern_resume');
+    if (saved) {
+      sessionStorage.removeItem('lantern_resume');
+      const v = JSON.parse(saved);
+      if (v && v.name && (!v.guideId || getMeta(v.guideId))) bootView = { name: v.name, guideId: v.guideId || null };
+    }
+  } catch (e) {}
+  view = bootView;
+  history.replaceState(bootView, '');
   render();
+  if (bootView.guideId) maybeResume(bootView.guideId);
   checkForUpdate(); // seed the ETag this tab booted with
 })();
 </script>
