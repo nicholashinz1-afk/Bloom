@@ -18477,11 +18477,14 @@ async function tryRestoreFromURL() {
 
 function isInAppBrowser() {
   const ua = navigator.userAgent || '';
-  return /FBAN|FBAV|Instagram|BytedanceWebview|TikTok|Snapchat|Twitter|LinkedInApp|Pinterest|Line\//i.test(ua);
+  return /FBAN|FBAV|Instagram|Barcelona|BytedanceWebview|TikTok|Snapchat|Twitter|LinkedInApp|Pinterest|Line\//i.test(ua);
 }
 
 function getInAppBrowserName() {
   const ua = navigator.userAgent || '';
+  // Threads' webview uses the "Barcelona" token (its internal codename).
+  // Check it before Instagram since Threads can share Meta UA fragments.
+  if (/Barcelona/i.test(ua)) return 'Threads';
   if (/FBAN|FBAV/i.test(ua)) return 'Facebook';
   if (/Instagram/i.test(ua)) return 'Instagram';
   if (/BytedanceWebview|TikTok/i.test(ua)) return 'TikTok';
