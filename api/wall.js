@@ -7,7 +7,7 @@
 import { moderateMessage, CRUDE_PATTERNS } from './moderation.js';
 
 // ── Redis client helpers (shared module) ────────────────────
-import { getRedis, kvGet, kvSet, logModeration } from './_redis.js';
+import { getRedis, kvGet, kvSet, logModeration, verifyAdminKey } from './_redis.js';
 
 // ── Threat compliance logging ──────────────────────────────
 // Credible violent threats are logged with full metadata (message, IP, timestamp,
@@ -183,7 +183,7 @@ export default async function handler(req, res) {
     const recent = messages
       .sort((a, b) => b.ts - a.ts)
       .slice(0, 30)
-      .map(({ fp, ...m }) => m);
+      .map(({ fp, reportedBy, ...m }) => m);
     return res.json({ messages: recent });
   }
 
@@ -268,12 +268,18 @@ export default async function handler(req, res) {
     }
 
     if (action === 'report') {
-      const { id } = body;
+      const { id, fp } = body;
       if (!id) return res.status(400).json({ error: 'Missing id' });
       const messages = await getMessages();
       const msg = messages.find(m => m.id === id);
       if (msg) {
-        msg.reports = (msg.reports || 0) + 1;
+        // Dedup by unique reporter so a single actor can't delete any message
+        // with 3 scripted calls. Reports without a fingerprint (legacy/anon
+        // clients) collapse into one 'anon' slot, capping their contribution.
+        const reporter = (typeof fp === 'string' && fp) ? fp.slice(0, 64) : 'anon';
+        msg.reportedBy = Array.isArray(msg.reportedBy) ? msg.reportedBy : [];
+        if (!msg.reportedBy.includes(reporter)) msg.reportedBy.push(reporter);
+        msg.reports = msg.reportedBy.length;
         if (msg.reports >= 3) {
           const filtered = messages.filter(m => m.id !== id);
           await saveMessages(filtered);
@@ -286,9 +292,7 @@ export default async function handler(req, res) {
 
     // Admin moderation — mark a message as moderated or remove it entirely
     if (action === 'moderate') {
-      const adminKey = process.env.ADMIN_KEY;
-      const provided = body.adminKey;
-      if (!adminKey || provided !== adminKey) {
+      if (!verifyAdminKey(body.adminKey)) {
         return res.status(403).json({ error: 'Unauthorized' });
       }
 
@@ -321,9 +325,7 @@ export default async function handler(req, res) {
 
     // Admin: rescan all existing messages against current filters
     if (action === 'rescan') {
-      const adminKey = process.env.ADMIN_KEY;
-      const provided = body.adminKey;
-      if (!adminKey || provided !== adminKey) {
+      if (!verifyAdminKey(body.adminKey)) {
         return res.status(403).json({ error: 'Unauthorized' });
       }
 
@@ -344,9 +346,7 @@ export default async function handler(req, res) {
 
     // Admin: view flagged users with strike history
     if (action === 'flagged-users') {
-      const adminKey = process.env.ADMIN_KEY;
-      const provided = body.adminKey;
-      if (!adminKey || provided !== adminKey) {
+      if (!verifyAdminKey(body.adminKey)) {
         return res.status(403).json({ error: 'Unauthorized' });
       }
       const strikes = await getStrikes();
@@ -363,9 +363,7 @@ export default async function handler(req, res) {
 
     // Admin: view credible threat logs (compliance/legal)
     if (action === 'threat-log') {
-      const adminKey = process.env.ADMIN_KEY;
-      const provided = body.adminKey;
-      if (!adminKey || provided !== adminKey) {
+      if (!verifyAdminKey(body.adminKey)) {
         return res.status(403).json({ error: 'Unauthorized' });
       }
       try {
@@ -380,9 +378,7 @@ export default async function handler(req, res) {
 
     // Admin: ban or unban a user from social features
     if (action === 'ban-user') {
-      const adminKey = process.env.ADMIN_KEY;
-      const provided = body.adminKey;
-      if (!adminKey || provided !== adminKey) {
+      if (!verifyAdminKey(body.adminKey)) {
         return res.status(403).json({ error: 'Unauthorized' });
       }
       const { fp: targetFp, banned } = body;

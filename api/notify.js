@@ -17,6 +17,13 @@ import {
 
 const PREFS_TTL = 60 * 86400;
 
+// OneSignal subscription IDs are UUIDs (8-4-4-4-12 hex). Reject anything else
+// so junk/oversized IDs can't be written to Redis or the prefs index.
+const PLAYER_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isValidPlayerId(id) {
+  return typeof id === 'string' && PLAYER_ID_RE.test(id);
+}
+
 function localDateString(tz) {
   try {
     const fmt = new Intl.DateTimeFormat('en-CA', {
@@ -68,8 +75,12 @@ export default async function handler(req, res) {
   // of waiting up to 24h for the next cron run.
   if (action === 'sync-prefs') {
     const { playerId, tz, prefs } = body;
-    if (!playerId || typeof playerId !== 'string') {
-      return res.status(400).json({ error: 'Missing playerId' });
+    // OneSignal subscription IDs are UUIDs. Validate the format before writing
+    // to Redis or the prefs index: without this, any string is accepted and an
+    // attacker can flood bloom:push_prefs_index with junk IDs that the daily
+    // cron then does OneSignal work for, burning quota for real users.
+    if (!isValidPlayerId(playerId)) {
+      return res.status(400).json({ error: 'Invalid playerId' });
     }
     if (!prefs || typeof prefs !== 'object') {
       return res.status(400).json({ error: 'Missing prefs' });

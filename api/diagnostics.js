@@ -3,7 +3,7 @@
 // Admin dashboard protected by ADMIN_KEY env var
 
 // ── Redis client helpers (shared module) ────────────────────
-import { getRedis, kvGet, kvSet } from './_redis.js';
+import { getRedis, kvGet, kvSet, verifyAdminKey } from './_redis.js';
 
 // ── Keys ──────────────────────────────────────────────────
 const KEYS = {
@@ -299,10 +299,7 @@ export default async function handler(req, res) {
 
   // ── GET: Admin dashboard data ───────────────────────────
   if (req.method === 'GET') {
-    const adminKey = process.env.ADMIN_KEY;
-    const provided = req.headers['x-admin-key'];
-
-    if (!adminKey || provided !== adminKey) {
+    if (!verifyAdminKey(req.headers['x-admin-key'])) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 

@@ -12,20 +12,35 @@
 // Authenticates via the CRON_SECRET env var (Vercel Cron sends it as
 // Authorization: Bearer) or via the x-vercel-cron header.
 
+import crypto from 'node:crypto';
 import { getRedis } from './_redis.js';
 import { PREFS_INDEX_KEY, reconcileUser } from './_push-scheduler.js';
 
 const MAX_USERS_PER_RUN = 2000;
 const TIME_BUDGET_MS = 55000;
 
+// Constant-time string compare (avoids leaking the secret via timing, and
+// avoids throwing on length mismatch the way timingSafeEqual does directly).
+function safeEqual(a, b) {
+  const ab = Buffer.from(String(a || ''));
+  const bb = Buffer.from(String(b || ''));
+  if (ab.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ab, bb);
+}
+
 export default async function handler(req, res) {
   const secret = process.env.CRON_SECRET;
+  // Fail closed: an unset secret must not leave the scheduler open to anyone.
+  // Vercel auto-injects `Authorization: Bearer <CRON_SECRET>` on cron runs when
+  // the env var is set, so the real cron is unaffected. The old x-vercel-cron
+  // header check is dropped — that header is client-spoofable.
+  if (!secret) {
+    return res.status(500).json({ error: 'CRON_SECRET not configured' });
+  }
   const auth = req.headers.authorization || '';
-  const isVercelCron = req.headers['x-vercel-cron'] === '1';
-  if (secret) {
-    if (!isVercelCron && auth !== `Bearer ${secret}`) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  if (!safeEqual(token, secret)) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const appId = process.env.ONESIGNAL_APP_ID;
