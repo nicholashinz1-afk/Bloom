@@ -169,7 +169,15 @@ export default async function handler(req, res) {
 
   // ── POST: Receive telemetry from clients ────────────────
   if (req.method === 'POST') {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    let body;
+    try {
+      body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    } catch {
+      return res.status(400).json({ error: 'Invalid JSON' });
+    }
+    if (!body || typeof body !== 'object') {
+      return res.status(400).json({ error: 'Invalid body' });
+    }
 
     // Handle batched telemetry events (multiple events in one request)
     if (body.type === 'batch' && Array.isArray(body.events)) {
