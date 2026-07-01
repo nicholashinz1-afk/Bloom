@@ -8712,6 +8712,7 @@ function getItemCatalog() {
 
 // Move an item to a new section
 function moveItemToSection(itemId, targetSection) {
+  if (!state.prefs) state.prefs = {};
   if (!state.prefs.sectionOverrides) state.prefs.sectionOverrides = {};
   const origSection = getOriginalSection(itemId);
   if (!origSection || targetSection === origSection) {
@@ -8775,6 +8776,7 @@ function moveItemToSection(itemId, targetSection) {
 
 // Reset an item back to its original section
 function resetItemSection(itemId) {
+  if (!state.prefs) state.prefs = {};
   if (!state.prefs.sectionOverrides) return;
   const origSection = getOriginalSection(itemId);
   if (!origSection) return;
@@ -8818,6 +8820,7 @@ function resetItemSection(itemId) {
 
 // Toggle an item on/off within its current effective section
 function sbToggleItem(itemId) {
+  if (!state.prefs) state.prefs = {};
   const orig = getOriginalSection(itemId);
   const eff = getEffectiveSection(itemId);
 
@@ -20381,10 +20384,18 @@ function renderOBSectionBuilder(body, footer) {
   if (!obData.sectionOverrides) obData.sectionOverrides = {};
   if (!obData.promotedWeeklyHabits) obData.promotedWeeklyHabits = [];
 
-  // Temporarily set state.prefs so section builder helpers work during onboarding
-  const savedPrefs = state.prefs;
+  // Bridge obData into state.prefs so the shared section-builder helpers
+  // (sbToggleItem, moveItemToSection, etc.) operate on real prefs during
+  // onboarding. This must stay LIVE for the whole step: the tap handlers
+  // mutate state.prefs and then re-render, so restoring state.prefs to its
+  // prior value here would leave the next tap operating on a null state.prefs
+  // and crash with "null is not an object (evaluating 'state.prefs.selfCareTasks')".
+  // renderSectionBuilder() syncs changes back into obData after every
+  // (re-)render while context === 'onboarding', and completeOnboarding()
+  // rebuilds prefs from obData, so this live object is discarded when
+  // initApp() -> loadState() reloads state after onboarding.
   state.prefs = {
-    ...state.prefs,
+    ...(state.prefs || {}),
     dailyHabits: obData.dailyHabits || {},
     habits: obData.habits || {},
     selfCareTasks: obData.selfCareTasks || [],
@@ -20396,17 +20407,6 @@ function renderOBSectionBuilder(body, footer) {
   };
 
   renderSectionBuilder('ob-section-builder', 'onboarding');
-
-  // Sync back to obData after any changes
-  obData.sectionOverrides = state.prefs.sectionOverrides;
-  obData.promotedWeeklyHabits = state.prefs.promotedWeeklyHabits;
-  obData.customDailyHabits = state.prefs.customDailyHabits;
-  obData.customSelfCare = state.prefs.customSelfCare;
-  obData.habitOrder = state.prefs.habitOrder;
-  obData.dailyHabits = state.prefs.dailyHabits;
-  obData.selfCareTasks = state.prefs.selfCareTasks;
-
-  state.prefs = savedPrefs;
 
   footer.innerHTML = `
     <button class="btn btn-ghost" id="ob-btn-back">← Back</button>
@@ -25048,6 +25048,21 @@ function renderSectionBuilder(containerId, context) {
   html += '</div>'; // close sb-panel
 
   container.innerHTML = html;
+
+  // During onboarding the section builder operates on a live state.prefs that
+  // bridges obData (see renderOBSectionBuilder). Sync changes back into obData
+  // after every render so tap handlers persist and completeOnboarding() sees
+  // them. state.prefs is intentionally left live so the next tap doesn't hit
+  // a null state.prefs.
+  if (context === 'onboarding' && state.prefs) {
+    obData.sectionOverrides = state.prefs.sectionOverrides;
+    obData.promotedWeeklyHabits = state.prefs.promotedWeeklyHabits;
+    obData.customDailyHabits = state.prefs.customDailyHabits;
+    obData.customSelfCare = state.prefs.customSelfCare;
+    obData.habitOrder = state.prefs.habitOrder;
+    obData.dailyHabits = state.prefs.dailyHabits;
+    obData.selfCareTasks = state.prefs.selfCareTasks;
+  }
 }
 
 function sbAddCustomDaily(containerId, context) {
