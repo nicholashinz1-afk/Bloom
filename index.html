@@ -5953,12 +5953,21 @@ function showLevelUp(oldLevel, newLevel) {
   setTimeout(() => { if (div.parentNode) div.remove(); }, 10000);
 }
 
+// Hard/gentle-day XP multiplier. Applied on both earn (addXP) and un-earn
+// (habit uncheck, weekly dec, etc.) so toggling an action nets zero. Un-checks
+// are same-day, so the multiplier state matches what was credited. Previously
+// only addXP multiplied while the un-earn paths subtracted the raw amount,
+// which let repeated toggling inflate XP without bound.
+function hardDayXP(amount) {
+  const hardDayActive = state.hardDayMode || state.todayData?.gentleMode;
+  return hardDayActive ? Math.round(amount * 1.5) : amount;
+}
+
 // ── Enhanced addXP with level-up check ──────────────────────
 function addXP(amount, sourceEl) {
   const oldXP = state.xpData.total || 0;
   // Showing up on a hard day is harder — reward it more
-  const hardDayActive = state.hardDayMode || state.todayData?.gentleMode;
-  const earned = hardDayActive ? Math.round(amount * 1.5) : amount;
+  const earned = hardDayXP(amount);
   state.xpData.total = oldXP + earned;
   saveState();
   if (sourceEl) showXPFloat(earned, sourceEl);
@@ -8432,14 +8441,15 @@ function checkNewWeek() {
   checkWeeklyReflectionAvailable();
 }
 
+const NEW_WEEK_DEFAULT_TASKS = [
+  { id: 'laundry',    icon: '🧺', name: 'Laundry' },
+  { id: 'trash',      icon: '🗑', name: 'Trash' },
+  { id: 'dishes',     icon: '🍽', name: 'Dishes' },
+  { id: 'clean_room', icon: '🧹', name: 'Clean room' },
+];
 function showNewWeekGoalsSheet() {
   const prefs = state.prefs;
-  const defaultTasks = [
-    { id: 'laundry',    icon: '🧺', name: 'Laundry' },
-    { id: 'trash',      icon: '🗑', name: 'Trash' },
-    { id: 'dishes',     icon: '🍽', name: 'Dishes' },
-    { id: 'clean_room', icon: '🧹', name: 'Clean room' },
-  ];
+  const defaultTasks = NEW_WEEK_DEFAULT_TASKS;
   const currentTasks = prefs.householdTasks || [];
   const customTasks = currentTasks.filter(t => !defaultTasks.some(d => d.id === t.id));
 
@@ -8450,10 +8460,10 @@ function showNewWeekGoalsSheet() {
 
   [...defaultTasks, ...customTasks].forEach(t => {
     const active = currentTasks.some(c => c.id === t.id);
-    html += `<div class="ob-checkbox-row" onclick="toggleNewWeekTask('${t.id}','${t.name}','${t.icon||'✏️'}')">
+    html += `<div class="ob-checkbox-row" onclick="toggleNewWeekTask('${t.id}')">
       <div class="ob-checkbox${active?' checked':''}"><span>${active?'✓':''}</span></div>
-      <span style="font-size:18px">${t.icon||'✏️'}</span>
-      <div class="toggle-label">${t.name}</div>
+      <span style="font-size:18px">${escapeHtml(t.icon||'✏️')}</span>
+      <div class="toggle-label">${escapeHtml(t.name)}</div>
     </div>`;
   });
 
@@ -8466,11 +8476,17 @@ function showNewWeekGoalsSheet() {
   openSheet('new-week-sheet');
 }
 
-function toggleNewWeekTask(id, name, icon) {
+function toggleNewWeekTask(id) {
   if (!state.prefs.householdTasks) state.prefs.householdTasks = [];
   const idx = state.prefs.householdTasks.findIndex(t => t.id === id);
-  if (idx > -1) state.prefs.householdTasks.splice(idx, 1);
-  else state.prefs.householdTasks.push({ id, name, icon });
+  if (idx > -1) {
+    state.prefs.householdTasks.splice(idx, 1);
+  } else {
+    // Look name/icon up server-side rather than trusting values passed through
+    // the DOM onclick (avoids injecting user-authored strings into the handler).
+    const def = NEW_WEEK_DEFAULT_TASKS.find(t => t.id === id);
+    if (def) state.prefs.householdTasks.push({ id, name: def.name, icon: def.icon });
+  }
   showNewWeekGoalsSheet();
 }
 
@@ -9506,7 +9522,7 @@ function toggleHabit(habitId, el) {
     ambientBurst(el);
   } else {
     const xpVal = XP_VALUES[habitId] || 10;
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - hardDayXP(xpVal));
     saveState();
     updateProgressTab();
     showUndoToast(habitId, xpVal);
@@ -9526,7 +9542,7 @@ function toggleWeeklyHabit(habitId, action, el) {
   if (action === 'dec') {
     if (wd[habitId] > 0) {
       wd[habitId]--;
-      state.xpData.total = Math.max(0, (state.xpData.total || 0) - (XP_VALUES[habitId] || 15));
+      state.xpData.total = Math.max(0, (state.xpData.total || 0) - hardDayXP(XP_VALUES[habitId] || 15));
       saveState();
       updateProgressTab();
       haptic('light');
@@ -9554,7 +9570,7 @@ function toggleHouseholdTask(taskId, el) {
     checkFirstTaskStreak();
     celebrate('household', el);
   } else {
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - 15);
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - hardDayXP(15));
     haptic('light');
     saveState();
     updateProgressTab();
@@ -10417,7 +10433,7 @@ function renderTodayTop() {
     if (responses[sd.id]) return; // already responded
     const yearText = sd._years ? (sd.type === 'celebration'
       ? (sd.id === 'birthday' ? ` Happy ${getOrdinal(sd._years)} birthday!` : ` ${sd._years} year${sd._years !== 1 ? 's' : ''} — happy anniversary!`)
-      : ` ${sd._years} year${sd._years !== 1 ? 's' : ''} since ${sd.name}.`) : '';
+      : ` ${sd._years} year${sd._years !== 1 ? 's' : ''} since ${escapeHtml(sd.name)}.`) : '';
 
     if (sd.type === 'hard') {
       const isReal = state.prefs?.voice === 'real';
@@ -10429,7 +10445,7 @@ function renderTodayTop() {
           : `Today holds weight. Whatever you're feeling right now, that's okay.`;
       } else {
         bannerText = hasYears
-          ? `${sd._years} year${sd._years !== 1 ? 's' : ''} since ${sd.name}. This day still matters, and so does however you're feeling right now.`
+          ? `${sd._years} year${sd._years !== 1 ? 's' : ''} since ${escapeHtml(sd.name)}. This day still matters, and so does however you're feeling right now.`
           : `Today holds weight. Whatever is moving through you right now is valid.`;
       }
       html += `<div id="special-date-banner-${sd.id}" class="banner" style="background:rgba(106,154,176,0.08);border:1px solid rgba(106,154,176,0.18);margin-bottom:12px">
@@ -10449,7 +10465,7 @@ function renderTodayTop() {
         <div style="text-align:center;width:100%">
           <div style="font-size:28px;margin-bottom:10px">💊</div>
           <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--sky-light);line-height:1.7;margin-bottom:4px">
-            Treatment day${sd.name ? ' — ' + sd.name.replace(' treatment', '') : ''}. Be kind to yourself today.
+            Treatment day${sd.name ? ' — ' + escapeHtml(sd.name.replace(' treatment', '')) : ''}. Be kind to yourself today.
           </div>
           <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px">
             You're doing something hard for your health. That takes real strength.
@@ -10465,7 +10481,7 @@ function renderTodayTop() {
         <div style="text-align:center;width:100%">
           <div style="font-size:28px;margin-bottom:10px">🎉</div>
           <div style="font-family:Fraunces,serif;font-style:italic;font-size:15px;color:var(--amber-light);line-height:1.7;margin-bottom:4px">
-            Today is ${sd.name}!${yearText ? '<br>' + yearText.trim() : ''} How are you feeling about it?
+            Today is ${escapeHtml(sd.name)}!${yearText ? '<br>' + yearText.trim() : ''} How are you feeling about it?
           </div>
           ${sd.id === 'birthday' && sd._years ? renderBirthdayMiniReview() : ''}
           <div style="display:flex;gap:10px;justify-content:center;margin-top:14px">
@@ -11098,7 +11114,7 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
     const done = td[key];
     return `<div class="habit-row" onclick="tapCustomDailyHabit('${ch.id}', '${timeSlot}', this)">
       <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : (ch.icon || '🌸')}</div>
-      <div class="habit-info"><div class="habit-name">${ch.name}</div></div>
+      <div class="habit-info"><div class="habit-name">${escapeHtml(ch.name)}</div></div>
       ${!done ? '<div class="habit-xp">+15</div>' : ''}
     </div>`;
   }
@@ -11263,9 +11279,9 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
         if (htDone[t.id] && !td['ht_' + t.id]) htWeekCount = Math.max(htWeekCount, 1);
         htWeekCount = Math.max(htWeekCount, htDone[t.id] ? 1 : 0);
         html += `<div class="habit-row" style="${htMutedStyle}" onclick="tapHouseholdToday('${t.id}', this)">
-          <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : (t.icon || '🏠')}</div>
+          <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : escapeHtml(t.icon || '🏠')}</div>
           <div class="habit-info">
-            <div class="habit-name">${t.name}</div>
+            <div class="habit-name">${escapeHtml(t.name)}</div>
             <div style="font-size:11px;color:${htWeekCount >= htGoal ? 'var(--sage)' : 'var(--text-muted)'};margin-top:1px">${htWeekCount}/${htGoal} this week${htWeekCount >= htGoal ? ' ✓' : ''}</div>
           </div>
           ${!done ? '<div class="habit-xp">+15</div>' : ''}
@@ -11302,7 +11318,7 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
         const done = scDone[sc.id];
         html += `<div class="habit-row" onclick="tapCustomSelfCare('${sc.id}', this)">
           <div class="habit-check${done ? ' done' : ''}">${done ? CHECK_SVG : (sc.icon || '✨')}</div>
-          <div class="habit-info"><div class="habit-name">${sc.name}</div></div>
+          <div class="habit-info"><div class="habit-name">${escapeHtml(sc.name)}</div></div>
           ${!done ? '<div class="habit-xp" style="background:rgba(200,170,120,0.1);border-color:rgba(200,170,120,0.25);color:rgba(200,170,120,0.8)">+20</div>' : ''}
         </div>`;
       });
@@ -11393,7 +11409,7 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
       const val = ccData[cc.id];
       if (cc.type === 'yesno') {
         html += `<div class="toggle-row" style="padding:8px 0">
-          <div class="toggle-label">${cc.name}</div>
+          <div class="toggle-label">${escapeHtml(cc.name)}</div>
           <div style="display:flex;gap:6px">
             <div onclick="logCustomCheckin('${cc.id}',true)" style="padding:5px 14px;border-radius:99px;cursor:pointer;font-size:12px;
               background:${val === true ? 'rgba(var(--sage-rgb),0.25)' : 'rgba(255,255,255,0.04)'};
@@ -11407,7 +11423,7 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
         </div>`;
       } else if (cc.type === 'scale') {
         html += `<div style="padding:8px 0">
-          <div style="font-size:13px;color:var(--cream);margin-bottom:6px">${cc.name}</div>
+          <div style="font-size:13px;color:var(--cream);margin-bottom:6px">${escapeHtml(cc.name)}</div>
           <div style="display:flex;gap:4px">
             ${[1,2,3,4,5].map(v => `<div onclick="logCustomCheckin('${cc.id}',${v})" style="
               padding:5px 12px;border-radius:99px;cursor:pointer;font-size:12px;font-weight:500;transition:all 0.15s;
@@ -11418,7 +11434,7 @@ function renderTodayTabRest(scroll, prefs, td, t, userWeek, isGentleMode, isLowM
         </div>`;
       } else if (cc.type === 'number') {
         html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 0">
-          <div style="font-size:13px;color:var(--cream);flex:1">${cc.name}</div>
+          <div style="font-size:13px;color:var(--cream);flex:1">${escapeHtml(cc.name)}</div>
           <div style="display:flex;align-items:center;gap:6px">
             <div onclick="logCustomCheckin('${cc.id}',Math.max(0,(${val || 0})-1))" style="padding:4px 12px;border-radius:99px;cursor:pointer;font-size:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--text-muted)">−</div>
             <div style="min-width:28px;text-align:center;font-size:15px;font-weight:500;color:var(--cream)">${val || 0}</div>
@@ -11530,7 +11546,7 @@ function tapWeeklyHabitToday(id, el) {
     celebrate(weekCount >= goal ? 'weekly_goal' : id, el);
   } else {
     if (state.weekData[id] > 0) state.weekData[id]--;
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - hardDayXP(xpVal));
     haptic('light');
     saveState();
     updateProgressTab();
@@ -11558,7 +11574,7 @@ function tapPromotedWeeklyHabit(id, el) {
     celebrate(weekCount >= goal ? 'weekly_goal' : 'w_exercise', el);
   } else {
     if (state.weekData[id] > 0) state.weekData[id]--;
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - hardDayXP(xpVal));
     haptic('light');
     saveState();
     updateProgressTab();
@@ -11582,7 +11598,7 @@ function tapHouseholdToday(id, el) {
     checkFirstTaskStreak();
     celebrate('household', el);
   } else {
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - 15);
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - hardDayXP(15));
     haptic('light');
     saveState();
     updateProgressTab();
@@ -11604,7 +11620,7 @@ function tapSelfCare(id, el) {
     checkFirstTaskStreak();
     celebrate(getSelfCareCelebType(id), el);
   } else {
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - 20);
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - hardDayXP(20));
     haptic('light');
     saveState();
     updateProgressTab();
@@ -11957,10 +11973,10 @@ function renderWellnessTab() {
       const meta = [time, source].filter(Boolean).join(' · ');
       html += `<div style="padding:10px 0;${i > 0 ? 'border-top:1px solid rgba(255,255,255,0.06);margin-top:8px' : ''}">
         ${meta ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">${meta}</div>` : ''}
-        ${entry.prompt ? `<div class="journal-prompt" style="font-size:13px;margin-bottom:8px">${entry.prompt}</div>` : ''}
-        <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap">${entry.text}</div>`;
+        ${entry.prompt ? `<div class="journal-prompt" style="font-size:13px;margin-bottom:8px">${escapeHtml(entry.prompt)}</div>` : ''}
+        <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap">${escapeHtml(entry.text)}</div>`;
       if (entry.ai) {
-        html += `<div class="ai-response" style="margin-top:10px"><div class="ai-response-text">${entry.ai}</div></div>`;
+        html += `<div class="ai-response" style="margin-top:10px"><div class="ai-response-text">${escapeHtml(entry.ai)}</div></div>`;
       } else if (state.loadingJournalAI && i === journalEntries.length - 1) {
         html += `<div class="ai-response" style="margin-top:10px;display:flex;align-items:center;gap:10px">
           <div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
@@ -12119,11 +12135,11 @@ function renderWellnessTab() {
         <div class="reflection-q-text">${q}</div>`;
       if (answer && !state._editingReflectionQ?.[qi]) {
         html += `<div style="display:flex;align-items:flex-start;gap:8px">
-          <div style="flex:1;font-size:14px;color:var(--text-secondary);line-height:1.6">${answer.text}</div>
+          <div style="flex:1;font-size:14px;color:var(--text-secondary);line-height:1.6">${escapeHtml(answer.text)}</div>
           <button class="btn btn-ghost btn-sm" onclick="editReflection(${qi})" style="flex-shrink:0;font-size:11px;padding:2px 8px">Edit</button>
         </div>`;
       } else {
-        html += `<textarea id="reflect-${qi}" aria-label="Reflection response" placeholder="Your thoughts..." rows="3" style="margin-bottom:6px">${answer?.text || ''}</textarea>
+        html += `<textarea id="reflect-${qi}" aria-label="Reflection response" placeholder="Your thoughts..." rows="3" style="margin-bottom:6px">${escapeHtml(answer?.text || '')}</textarea>
         <button class="btn btn-ghost btn-sm" onclick="saveReflection(${qi})">Save</button>`;
       }
       html += `</div>`;
@@ -12147,7 +12163,7 @@ function renderWellnessTab() {
     }
     if (hasCombined) {
       html += `<div class="ai-response" style="margin-top:16px">
-        <div class="ai-response-text">${refData._combined.text}</div>
+        <div class="ai-response-text">${escapeHtml(refData._combined.text)}</div>
         <div class="ai-disclaimer">This is a reflection, not professional advice.</div>
       </div>`;
     }
@@ -14055,17 +14071,17 @@ function openHistoryDetail(dateStr) {
       const meta = [time, source].filter(Boolean).join(' · ');
       html += `<div style="${i > 0 ? 'margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)' : ''}">
         ${meta ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">${meta}</div>` : ''}
-        ${je.prompt ? `<div class="journal-prompt" style="font-size:13px;margin-bottom:6px">${je.prompt}</div>` : ''}
-        <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap">${je.text}</div>
-        ${je.ai ? `<div class="ai-response" style="margin-top:8px"><div class="ai-response-text">${je.ai}</div></div>` : ''}
+        ${je.prompt ? `<div class="journal-prompt" style="font-size:13px;margin-bottom:6px">${escapeHtml(je.prompt)}</div>` : ''}
+        <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap">${escapeHtml(je.text)}</div>
+        ${je.ai ? `<div class="ai-response" style="margin-top:8px"><div class="ai-response-text">${escapeHtml(je.ai)}</div></div>` : ''}
       </div>`;
     });
     html += `</div>`;
   } else if (entry.journal) {
     html += `<div style="margin:12px 0">
       <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Journal</div>
-      <div style="font-size:14px;color:var(--text-secondary);line-height:1.7">${entry.journal}</div>
-      ${entry.journalAI ? `<div class="ai-response" style="margin-top:10px"><div class="ai-response-text">${entry.journalAI}</div></div>` : ''}
+      <div style="font-size:14px;color:var(--text-secondary);line-height:1.7">${escapeHtml(entry.journal)}</div>
+      ${entry.journalAI ? `<div class="ai-response" style="margin-top:10px"><div class="ai-response-text">${escapeHtml(entry.journalAI)}</div></div>` : ''}
     </div>`;
   }
 
@@ -14087,7 +14103,7 @@ function toggleHistoryHabit(dateStr, key, el) {
     state.xpData.total = (state.xpData.total || 0) + xpVal;
     if (el) showXPFloat(xpVal, el);
   } else {
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - hardDayXP(xpVal));
     if (el) showXPFloat(-xpVal, el);
   }
 
@@ -14112,7 +14128,7 @@ function toggleHistorySelfCare(dateStr, taskId, el) {
     state.xpData.total = (state.xpData.total || 0) + xpVal;
     if (el) showXPFloat(xpVal, el);
   } else {
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - hardDayXP(xpVal));
     if (el) showXPFloat(-xpVal, el);
   }
 
@@ -14930,7 +14946,7 @@ function renderSettingsTab() {
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:16px">${ch.icon || '🌸'}</span>
-            <div class="toggle-label">${ch.name}</div>
+            <div class="toggle-label">${escapeHtml(ch.name)}</div>
           </div>
           <div onclick="removeCustomDailyHabit('${ch.id}')" style="font-size:11px;color:var(--rose-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(176,120,120,0.08)">Remove</div>
         </div>
@@ -15206,7 +15222,7 @@ function renderSettingsTab() {
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:16px">${sc.icon || '✨'}</span>
-            <div class="toggle-label">${sc.name}</div>
+            <div class="toggle-label">${escapeHtml(sc.name)}</div>
           </div>
           <div onclick="removeCustomSelfCare('${sc.id}')" style="font-size:11px;color:var(--rose-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(176,120,120,0.08)">Remove</div>
         </div>
@@ -15266,7 +15282,7 @@ function renderSettingsTab() {
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
           <span style="font-size:16px">${sc.icon}</span>
           <div style="flex:1">
-            <div class="toggle-label">${sc.name}</div>
+            <div class="toggle-label">${escapeHtml(sc.name)}</div>
             <div style="font-size:10px;color:var(--text-muted);font-style:italic">from ${fromLabel}</div>
           </div>
           <div onclick="resetItemSection('${sc.originalId}');reRenderSettingsPreservingScroll();renderTodayTab()" style="font-size:11px;color:var(--sky-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(106,154,176,0.08)">Reset</div>
@@ -15324,7 +15340,7 @@ function renderSettingsTab() {
       ccHtml += `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
         <div style="width:32px;height:32px;border-radius:8px;background:rgba(var(--sage-rgb),0.1);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--sage-light);font-weight:600;flex-shrink:0">${typeIcons[cc.type] || '?'}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cc.name}</div>
+          <div style="font-size:13px;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(cc.name)}</div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${typeLabels[cc.type] || cc.type}</div>
         </div>
         <div onclick="removeCustomCheckin('${cc.id}')" style="font-size:11px;color:var(--rose-light);cursor:pointer;padding:4px 8px;border-radius:99px;background:rgba(176,120,120,0.08)">Remove</div>
@@ -16445,7 +16461,7 @@ function tapDailyHabit(id, timeSlot, el) {
     celebrate(id, el);
   } else {
     const xpVal = XP_VALUES[key] || 15;
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - xpVal);
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - hardDayXP(xpVal));
     haptic('light');
     saveState();
     updateProgressTab();
@@ -20671,7 +20687,7 @@ function renderOBHousehold(body, footer) {
     html += `<div class="ob-checkbox-row">
       <div class="ob-checkbox checked"><span>✓</span></div>
       <span>✏️</span>
-      <div class="toggle-label" style="flex:1">${t.name}</div>
+      <div class="toggle-label" style="flex:1">${escapeHtml(t.name)}</div>
       <div onclick="obRemoveTask('${t.id}')" style="color:var(--rose-light);font-size:12px;cursor:pointer">✕</div>
     </div>`;
   });
@@ -23863,7 +23879,7 @@ function tapCustomDailyHabit(id, timeSlot, el) {
     checkFirstTaskStreak();
     celebrate('custom_daily', el);
   } else {
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - 15);
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - hardDayXP(15));
     haptic('light');
     saveState();
     updateProgressTab();
@@ -24091,7 +24107,7 @@ function tapMedication(medId, el, slot) {
     });
     if (!anyStillChecked) {
       state.todayData[slotXpKey] = false;
-      state.xpData.total = Math.max(0, (state.xpData.total || 0) - 20);
+      state.xpData.total = Math.max(0, (state.xpData.total || 0) - hardDayXP(20));
       haptic('light');
       updateProgressTab();
       showUndoToast(tdKey, 20);
@@ -24712,7 +24728,7 @@ function tapCustomSelfCare(id, el) {
     checkFirstTaskStreak();
     celebrate('sc_body', el);
   } else {
-    state.xpData.total = Math.max(0, (state.xpData.total || 0) - 20);
+    state.xpData.total = Math.max(0, (state.xpData.total || 0) - hardDayXP(20));
     haptic('light');
     saveState();
     updateProgressTab();
