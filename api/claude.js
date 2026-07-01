@@ -95,12 +95,24 @@ export default async function handler(req, res) {
 
   // Resolve system prompt from allowlist (never from client)
   const basePrompt = SYSTEM_PROMPTS[context] || SYSTEM_PROMPTS.default;
-  const nameContext = name ? ` The user's name is ${name} — use it occasionally but naturally, not in every sentence.` : '';
+  // Clamp the client-supplied name: strip newlines and cap length so it can't
+  // carry injected instructions into the system prompt.
+  const safeName = typeof name === 'string' ? name.replace(/[\r\n]+/g, ' ').trim().slice(0, 60) : '';
+  const nameContext = safeName ? ` The user's name is ${safeName} — use it occasionally but naturally, not in every sentence.` : '';
   const systemPrompt = basePrompt + SYSTEM_SUFFIX + nameContext;
 
-  // Allow client to request Sonnet for richer reflections; default to Haiku for cost efficiency
-  const ALLOWED_MODELS = ['claude-haiku-4-5-20251001', 'claude-sonnet-4-20250514'];
-  const selectedModel = ALLOWED_MODELS.includes(model) ? model : 'claude-haiku-4-5-20251001';
+  // Allow client to request Sonnet for richer reflections; default to Haiku for cost efficiency.
+  // The old Sonnet 4 snapshot (claude-sonnet-4-20250514) reached end-of-life, so alias any
+  // request for it (including stale/cached PWA clients) to the current Sonnet. Omitting the
+  // `thinking` field keeps Sonnet 4.6 running without thinking, so max_tokens stays for output.
+  const MODEL_ALIASES = { 'claude-sonnet-4-20250514': 'claude-sonnet-4-6' };
+  const ALLOWED_MODELS = ['claude-haiku-4-5-20251001', 'claude-sonnet-4-6'];
+  const requestedModel = MODEL_ALIASES[model] || model;
+  const selectedModel = ALLOWED_MODELS.includes(requestedModel) ? requestedModel : 'claude-haiku-4-5-20251001';
+
+  // Bound the upstream call so a stalled connection can't hang the function.
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -116,13 +128,37 @@ export default async function handler(req, res) {
         system: systemPrompt,
         messages: [{ role: 'user', content: message }],
       }),
+      signal: controller.signal,
     });
+
+    // Surface upstream failures instead of masking them as an empty success.
+    // Without this, a 429/500/529/404 (e.g. a retired model) parses to no
+    // content and returns 200 {text:null}, so reflections fail silently with
+    // no error signal. The client keys off `text`, so it still falls back
+    // gracefully, but now the real status/error is visible for debugging.
+    if (!response.ok) {
+      let detail = '';
+      try { const errData = await response.json(); detail = errData?.error?.message || ''; } catch {}
+      const retryable = response.status === 429 || response.status >= 500;
+      return res.status(response.status).json({
+        text: null,
+        error: detail || `Upstream error ${response.status}`,
+        retryable,
+      });
+    }
 
     const data = await response.json();
     const text = data.content?.[0]?.text || null;
 
     return res.status(200).json({ text });
   } catch (err) {
-    return res.status(500).json({ text: null, error: err.message });
+    const aborted = err.name === 'AbortError';
+    return res.status(aborted ? 504 : 500).json({
+      text: null,
+      error: aborted ? 'Upstream timed out' : err.message,
+      retryable: true,
+    });
+  } finally {
+    clearTimeout(timeout);
   }
 }

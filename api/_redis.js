@@ -2,8 +2,22 @@
 // Single connection per Vercel container instance, reused across warm invocations
 
 import { createClient } from 'redis';
+import crypto from 'node:crypto';
 
 let _redisClient = null;
+
+// ── Admin auth ────────────────────────────────────────────────
+// Constant-time comparison against ADMIN_KEY. Returns false when the key is
+// unset (fail closed) or the provided value doesn't match. Used by all admin
+// endpoints so the comparison logic lives in one place.
+export function verifyAdminKey(provided) {
+  const adminKey = process.env.ADMIN_KEY;
+  if (!adminKey || typeof provided !== 'string' || !provided) return false;
+  const a = Buffer.from(provided);
+  const b = Buffer.from(adminKey);
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
 
 export async function getRedis() {
   if (_redisClient && _redisClient.isReady) return _redisClient;

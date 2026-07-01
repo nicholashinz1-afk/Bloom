@@ -334,7 +334,14 @@ export default async function handler(req, res) {
     profile.moodTs = mood !== undefined ? Date.now() : profile.moodTs;
     profile.streak = streak !== undefined ? streak : profile.streak;
     profile.habitPct = habitPct !== undefined ? habitPct : profile.habitPct;
-    if (level) { profile.level = level; profile.levelEmoji = levelEmoji; }
+    if (level) {
+      // Clamp/sanitize partner-visible display fields: coerce to string, strip
+      // angle brackets, and cap length. These render into other users' DOM, so
+      // this is defense-in-depth against a crafted sync injecting markup.
+      const clean = (v, max) => String(v == null ? '' : v).replace(/[<>]/g, '').slice(0, max);
+      profile.level = clean(level, 30);
+      profile.levelEmoji = clean(levelEmoji, 8);
+    }
     if (oneSignalId) profile.oneSignalId = oneSignalId;
     profile.lastActive = Date.now();
 

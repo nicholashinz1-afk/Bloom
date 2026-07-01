@@ -98,10 +98,36 @@ export const SELF_HARM_PATTERNS = [
   /\b(wish i (wasn'?t|weren'?t) (here|alive|born))\b/i,
 ];
 
+// ── Normalization ──────────────────────────────────────────
+// Fold obfuscation tricks that would otherwise slip predatory/harmful content
+// past the ASCII patterns: fullwidth glyphs, zero-width insertions, combining
+// marks, and Cyrillic/Greek homoglyphs. This canonicalizes look-alikes only —
+// it does NOT collapse spacing or expand leetspeak, so legitimate venting is
+// unaffected. Patterns are matched against both the original and normalized
+// text, so this can only ever catch more, never fewer, real evasions.
+const HOMOGLYPHS = {
+  'а':'a','α':'a','ɑ':'a','е':'e','ё':'e','ε':'e',
+  'о':'o','ο':'o','р':'p','ρ':'p','с':'c','ϲ':'c',
+  'ѕ':'s','х':'x','χ':'x','у':'y','к':'k','κ':'k',
+  'і':'i','ј':'j','ԁ':'d','ɡ':'g','м':'m','н':'h',
+  'т':'t','в':'b','ν':'v','г':'r','ⅼ':'l','ⅰ':'i',
+  'ո':'n','բ':'b','ѡ':'w','ѵ':'v','ԛ':'q',
+};
+function normalizeForMatch(text) {
+  let s = text.normalize('NFKD').toLowerCase();
+  s = s.replace(/[​‌‍⁠﻿]/g, '');   // zero-width chars
+  s = s.replace(/[̀-ͯ]/g, '');                    // combining diacritics
+  s = s.replace(/[^\x00-\x7F]/g, ch => HOMOGLYPHS[ch] || ch);  // fold look-alikes
+  return s;
+}
+
 // ── Moderation function ────────────────────────────────────
 // source: 'buddy' or 'wall' — controls crude content handling and length limits
 export function moderateMessage(text, source = 'wall') {
   const lower = text.toLowerCase().trim();
+  const normalized = normalizeForMatch(text).trim();
+  // A pattern matches if it hits the original OR the de-obfuscated form.
+  const hit = (pat) => pat.test(lower) || pat.test(normalized);
 
   // Length limits differ by source
   const minLen = source === 'buddy' ? 1 : 3;
@@ -110,32 +136,32 @@ export function moderateMessage(text, source = 'wall') {
 
   // Credible threats of violence — highest priority, logged separately for compliance
   for (const pat of CREDIBLE_THREAT_PATTERNS) {
-    if (pat.test(lower)) return { ok: false, reason: 'threat' };
+    if (hit(pat)) return { ok: false, reason: 'threat' };
   }
 
   // Block directed harm toward others
   for (const pat of DIRECTED_HARM) {
-    if (pat.test(lower)) return { ok: false, reason: 'harmful' };
+    if (hit(pat)) return { ok: false, reason: 'harmful' };
   }
 
   // Block targeted slurs/abuse
   for (const pat of TARGETED_ABUSE) {
-    if (pat.test(lower)) return { ok: false, reason: 'harmful' };
+    if (hit(pat)) return { ok: false, reason: 'harmful' };
   }
 
   // Block grooming / predatory language
   for (const pat of GROOMING_PATTERNS) {
-    if (pat.test(lower)) return { ok: false, reason: 'safety' };
+    if (hit(pat)) return { ok: false, reason: 'safety' };
   }
 
   // Block contact exchange attempts
   for (const pat of CONTACT_EXCHANGE) {
-    if (pat.test(lower)) return { ok: false, reason: 'safety' };
+    if (hit(pat)) return { ok: false, reason: 'safety' };
   }
 
   // Crude/sexual content: hard-block in buddy (1-on-1), soft-flag on wall (public)
   for (const pat of CRUDE_PATTERNS) {
-    if (pat.test(lower)) {
+    if (hit(pat)) {
       if (source === 'buddy') return { ok: false, reason: 'inappropriate' };
       return { ok: true, flag: 'crude' };
     }
@@ -143,14 +169,14 @@ export function moderateMessage(text, source = 'wall') {
 
   // Block spam/links
   for (const pat of SPAM_PATTERNS) {
-    if (pat.test(lower)) return { ok: false, reason: 'filtered' };
+    if (hit(pat)) return { ok: false, reason: 'filtered' };
   }
 
-  if (!/[a-zA-Z]/.test(text)) return { ok: false, reason: 'no-text' };
+  if (!/[a-zA-Z]/.test(text) && !/[a-z]/.test(normalized)) return { ok: false, reason: 'no-text' };
 
   // Flag self-harm language — allow the message but signal the client to show resources
   for (const pat of SELF_HARM_PATTERNS) {
-    if (pat.test(lower)) return { ok: true, flag: 'self-harm' };
+    if (hit(pat)) return { ok: true, flag: 'self-harm' };
   }
 
   return { ok: true };

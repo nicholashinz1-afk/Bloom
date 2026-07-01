@@ -7178,7 +7178,7 @@ async function showMonthlyReflectionPrompt() {
     prompt += `\n\nYOUR LAST MONTHLY REFLECTION (use completely different structure and phrasing): "${prevReflection.substring(0, 250)}"`;
   }
 
-  const ai = await callClaude(prompt, 'monthly', { model: 'claude-sonnet-4-20250514', noFallback: true });
+  const ai = await callClaude(prompt, 'monthly', { model: 'claude-sonnet-4-6', noFallback: true });
 
   if (!ai) {
     showToast('Couldn\u2019t generate your monthly reflection right now. It\u2019ll try again next time.');
@@ -12498,7 +12498,7 @@ async function generateCombinedReflection(e) {
   const prompt = `The user completed their weekly reflection (${answered.length} of ${REFLECTION_QUESTIONS.length} prompts answered). Here are their answers:\n\n${promptParts}\n\nWrite a warm, thoughtful combined reflection that weaves together all their answers. Acknowledge what went well, validate what was hard, and affirm what they want to carry forward. Be specific — reference details from their actual words. No bullet points, no headers.${voiceNote}`;
 
   try {
-    const ai = await callClaude(prompt, 'reflection_combined', { model: 'claude-sonnet-4-20250514' });
+    const ai = await callClaude(prompt, 'reflection_combined', { model: 'claude-sonnet-4-6' });
     if (ai) {
       state.wellnessData.reflections[ws]._combined = { text: ai };
       if (!state.todayData.reflectionXPGiven) {
@@ -12640,7 +12640,7 @@ async function generateWeeklyInsight(e) {
       prompt += `\n\nYOUR LAST INSIGHT (use a completely different structure, opening, and phrasing): "${prevInsight.substring(0, 250)}"`;
     }
 
-    const ai = await callClaude(prompt, 'weekly', { model: 'claude-sonnet-4-20250514', noFallback: true });
+    const ai = await callClaude(prompt, 'weekly', { model: 'claude-sonnet-4-6', noFallback: true });
 
     if (!ai) {
       showToast('Couldn\u2019t reach bloom\u2019s reflection service. Tap Refresh to try again.');
@@ -22864,9 +22864,9 @@ function renderBuddyCard(b, index) {
   let levelHtml = '';
   if (b.level) {
     if (justLeveledUp) {
-      levelHtml = `<span class="buddy-levelup-badge">${b.levelEmoji || '🌱'} Leveled up! ${escapeHtml(b.level)}</span>`;
+      levelHtml = `<span class="buddy-levelup-badge">${escapeHtml(b.levelEmoji || '🌱')} Leveled up! ${escapeHtml(b.level)}</span>`;
     } else {
-      levelHtml = `<span class="buddy-level-badge">${b.levelEmoji || '🌱'} ${escapeHtml(b.level)}</span>`;
+      levelHtml = `<span class="buddy-level-badge">${escapeHtml(b.levelEmoji || '🌱')} ${escapeHtml(b.level)}</span>`;
     }
   }
 
@@ -22874,7 +22874,7 @@ function renderBuddyCard(b, index) {
   const collapsedStats = [];
   collapsedStats.push(`<span class="buddy-collapsed-stat">🌿 ${b.streak || 0}</span>`);
   if (b.sharedDays > 0) collapsedStats.push(`<span class="buddy-collapsed-stat">🤝 ${b.sharedDays}</span>`);
-  if (b.level) collapsedStats.push(`<span class="buddy-collapsed-stat">${b.levelEmoji || '🌱'} ${escapeHtml(b.level)}</span>`);
+  if (b.level) collapsedStats.push(`<span class="buddy-collapsed-stat">${escapeHtml(b.levelEmoji || '🌱')} ${escapeHtml(b.level)}</span>`);
 
   return `
     <div class="buddy-card" style="margin-bottom:12px">
@@ -23561,7 +23561,7 @@ async function reportWallMessage(id) {
       await timedFetch('/api/wall', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'report', id }),
+        body: JSON.stringify({ action: 'report', id, fp: wallFingerprint }),
       });
       wallMessages = wallMessages.filter(m => m.id !== id);
       renderWallMessages();
@@ -23583,7 +23583,7 @@ function getTimeAgo(ts) {
 }
 
 function escapeHtml(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // ============================================================

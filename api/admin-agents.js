@@ -3,7 +3,7 @@
 // Protected by ADMIN_KEY env var
 
 // ── Redis client helpers (shared module) ────────────────────
-import { kvGet, kvSet } from './_redis.js';
+import { kvGet, kvSet, verifyAdminKey } from './_redis.js';
 
 // Redis keys (matching diagnostics.js)
 const KEYS = {
@@ -468,7 +468,7 @@ async function runAgent(agentType, data) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 2000,
         system: `You are an admin audit agent for Bloom, a mental health self-care PWA in its early stages. The app has a small but growing user base — calibrate your assessments accordingly. Low absolute numbers are expected. Focus on patterns, ratios, and whether safety mechanisms are functioning, not volume. Respond ONLY with valid JSON. No markdown, no explanation outside the JSON.`,
         messages: [{ role: 'user', content: prompt }],
@@ -530,9 +530,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   // Auth check
-  const adminKey = process.env.ADMIN_KEY;
-  const provided = req.headers['x-admin-key'];
-  if (!adminKey || provided !== adminKey) {
+  if (!verifyAdminKey(req.headers['x-admin-key'])) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
