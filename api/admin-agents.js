@@ -448,68 +448,136 @@ const AGENTS = {
   security: { name: 'Technical & Security Admin', buildPrompt: buildSecurityPrompt },
 };
 
+// ── Response parsing ──────────────────────────────────────
+// Agents sometimes stop at max_tokens mid-object, which used to throw a raw
+// SyntaxError and crash the whole function. Close the open structures so a
+// truncated report still renders (the findings that did arrive are useful).
+function repairTruncatedJson(raw) {
+  let out = '';
+  let inString = false;
+  let escaped = false;
+  const stack = [];
+  for (const ch of raw) {
+    if (escaped) { escaped = false; out += ch; continue; }
+    if (ch === '\\' && inString) { escaped = true; out += ch; continue; }
+    if (ch === '"') { inString = !inString; out += ch; continue; }
+    if (!inString) {
+      if (ch === '{' || ch === '[') stack.push(ch);
+      else if (ch === '}' || ch === ']') stack.pop();
+    }
+    out += ch;
+  }
+  if (inString) out += '"';
+  // Drop a dangling key/comma left by the cut, then close what's still open.
+  out = out.replace(/,\s*"[^"]*"\s*:?\s*$/, '').replace(/,\s*$/, '');
+  while (stack.length) out += stack.pop() === '{' ? '}' : ']';
+  return out;
+}
+
+function parseAgentJson(text) {
+  const start = text.indexOf('{');
+  if (start === -1) throw new Error('Agent returned no JSON object');
+  const candidate = text.slice(start, text.lastIndexOf('}') + 1 || undefined);
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    try {
+      return JSON.parse(repairTruncatedJson(text.slice(start)));
+    } catch {
+      throw new Error('Agent returned malformed JSON that could not be repaired');
+    }
+  }
+}
+
 // ── Call Claude API ───────────────────────────────────────
-async function runAgent(agentType, data) {
+const AGENT_SYSTEM_PROMPT = `You are an admin audit agent for Bloom, a mental health self-care PWA in its early stages. The app has a small but growing user base — calibrate your assessments accordingly. Low absolute numbers are expected. Focus on patterns, ratios, and whether safety mechanisms are functioning, not volume.
+
+Respond ONLY with valid JSON. No markdown, no explanation outside the JSON. Keep the report compact so it always fits in the response budget: at most 6 findings and at most 6 recommendations, each "detail" under 400 characters. Prioritize the most important items rather than listing everything.`;
+
+// Retries once on transient upstream failures (429 / 5xx / 529 overloaded),
+// which are likely when all three agents call the API in parallel.
+async function callClaude(prompt, deadline) {
+  let lastErr = null;
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const remaining = deadline - Date.now();
+    // Need enough headroom for a useful attempt; otherwise fail with a clear reason.
+    if (remaining < 8000) {
+      throw lastErr || new Error('Ran out of time before the model could respond');
+    }
+
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), remaining - 2000);
+    let response;
+    try {
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 3000,
+          system: AGENT_SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+        signal: ac.signal,
+      });
+    } catch (e) {
+      lastErr = ac.signal.aborted
+        ? new Error('Model call timed out')
+        : new Error('Could not reach the Claude API: ' + (e?.message || 'network error'));
+      if (ac.signal.aborted) throw lastErr;
+      continue;
+    } finally {
+      clearTimeout(timer);
+    }
+
+    if (response.ok) return await response.json();
+
+    const errText = (await response.text().catch(() => '')).slice(0, 200);
+    lastErr = new Error(`Claude API error: ${response.status}${errText ? ' — ' + errText : ''}`);
+    const retriable = response.status === 429 || response.status >= 500;
+    if (!retriable) throw lastErr;
+  }
+
+  throw lastErr;
+}
+
+async function runAgent(agentType, data, deadline) {
   const agent = AGENTS[agentType];
   if (!agent) throw new Error('Unknown agent: ' + agentType);
 
-  const prompt = agent.buildPrompt(data);
+  const result = await callClaude(agent.buildPrompt(data), deadline);
+  const text = result.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
+  if (!text.trim()) throw new Error('Agent returned an empty response');
 
-  // 30s timeout to prevent hanging on network issues
-  const _fetchAC = new AbortController();
-  const _fetchTimeout = setTimeout(() => _fetchAC.abort(), 30000);
-  let response;
-  try {
-    response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 2000,
-        system: `You are an admin audit agent for Bloom, a mental health self-care PWA in its early stages. The app has a small but growing user base — calibrate your assessments accordingly. Low absolute numbers are expected. Focus on patterns, ratios, and whether safety mechanisms are functioning, not volume. Respond ONLY with valid JSON. No markdown, no explanation outside the JSON.`,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-      signal: _fetchAC.signal,
-    });
-  } finally {
-    clearTimeout(_fetchTimeout);
-  }
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Claude API error: ${response.status} — ${err.slice(0, 200)}`);
-  }
-
-  const result = await response.json();
-  const text = result.content?.[0]?.text || '{}';
-
-  // Parse the JSON response (handle potential markdown wrapping)
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('Agent returned non-JSON response');
-
-  return JSON.parse(jsonMatch[0]);
+  const report = parseAgentJson(text);
+  if (result.stop_reason === 'max_tokens') report._truncated = true;
+  return report;
 }
 
 // ── Store agent reports in Redis ──────────────────────────
 const REPORT_KEY = 'bloom_admin:agent_reports';
 const REPORT_TTL = 90 * 24 * 60 * 60; // 90 days
 
-async function saveReport(agentType, report) {
+// Takes every report for this run in one call. When agents run in parallel,
+// three separate read-modify-write cycles on the same key raced and only the
+// last writer's report survived in history.
+async function saveReports(entries) {
+  if (!entries.length) return;
   const reports = await kvGet(REPORT_KEY) || {};
-  if (!reports[agentType]) reports[agentType] = [];
-  reports[agentType].push({
-    ...report,
-    agentType,
-    timestamp: Date.now(),
+  const timestamp = Date.now();
+  entries.forEach(({ agentType, report }) => {
+    if (!Array.isArray(reports[agentType])) reports[agentType] = [];
+    reports[agentType].push({ ...report, agentType, timestamp });
+    // Keep last 50 reports per agent
+    if (reports[agentType].length > 50) {
+      reports[agentType] = reports[agentType].slice(-50);
+    }
   });
-  // Keep last 50 reports per agent
-  if (reports[agentType].length > 50) {
-    reports[agentType] = reports[agentType].slice(-50);
-  }
   await kvSet(REPORT_KEY, reports, REPORT_TTL);
 }
 
@@ -519,6 +587,20 @@ async function getReports() {
 
 // ── Handler ───────────────────────────────────────────────
 export default async function handler(req, res) {
+  try {
+    return await handleRequest(req, res);
+  } catch (e) {
+    // Never let a thrown error escape: an unhandled rejection makes Vercel
+    // return its plain-text 500 page, which the dashboard could only report as
+    // "Unexpected token 'A' ... is not valid JSON".
+    if (res.headersSent) return;
+    return res.status(500).json({ error: e?.message || 'Agent run failed unexpectedly' });
+  }
+}
+
+async function handleRequest(req, res) {
+  // Leave headroom under the 60s function limit so we can always answer in JSON.
+  const deadline = Date.now() + 52000;
   const allowedOrigins = ['https://bloomselfcare.app', 'https://bloom-zeta-rouge.vercel.app', 'http://localhost:3000'];
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
@@ -544,7 +626,12 @@ export default async function handler(req, res) {
 
   // ── POST: Run an agent ──────────────────────────────────
   if (req.method === 'POST') {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    let body;
+    try {
+      body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    } catch {
+      return res.status(400).json({ error: 'Invalid JSON body' });
+    }
     const { agent } = body;
 
     if (agent === 'all') {
@@ -553,22 +640,21 @@ export default async function handler(req, res) {
       const results = {};
       const agents = Object.keys(AGENTS);
 
-      const reports = await Promise.allSettled(
-        agents.map(async (type) => {
-          const report = await runAgent(type, data);
-          await saveReport(type, report);
-          return { type, report };
-        })
+      const settled = await Promise.allSettled(
+        agents.map(type => runAgent(type, data, deadline))
       );
 
-      reports.forEach(r => {
+      const toSave = [];
+      settled.forEach((r, i) => {
+        const type = agents[i];
         if (r.status === 'fulfilled') {
-          results[r.value.type] = r.value.report;
+          results[type] = r.value;
+          toSave.push({ agentType: type, report: r.value });
         } else {
-          const type = agents[reports.indexOf(r)];
           results[type] = { status: 'error', summary: r.reason?.message || 'Agent failed', findings: [], recommendations: [] };
         }
       });
+      await saveReports(toSave);
 
       return res.json({ ok: true, results, timestamp: Date.now() });
     }
@@ -578,8 +664,14 @@ export default async function handler(req, res) {
     }
 
     const data = await gatherData();
-    const report = await runAgent(agent, data);
-    await saveReport(agent, report);
+    let report;
+    try {
+      report = await runAgent(agent, data, deadline);
+    } catch (e) {
+      // Answer in JSON so the dashboard can show why this agent failed.
+      return res.status(502).json({ error: e?.message || 'Agent failed' });
+    }
+    await saveReports([{ agentType: agent, report }]);
 
     return res.json({ ok: true, agent, report, timestamp: Date.now() });
   }

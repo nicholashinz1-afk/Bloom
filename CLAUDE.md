@@ -409,6 +409,15 @@ Float: "If you ever wanted to share it with a few students informally and let me
 - Share the key to grant access, change the key in Vercel env vars to revoke
 - Single shared key for now, no role-based access
 
+### Admin Agents (`api/admin-agents.js`)
+
+Three Sonnet-powered audit agents (UX, Clinical, Security) that read telemetry and return JSON reports.
+
+- **`maxDuration: 60` is required** in `vercel.json`. The default 10s function limit is not enough for a Sonnet call with a large telemetry prompt, and the agents fail with the platform's plain-text 500 page instead of JSON. Any new endpoint that calls a model needs the same override.
+- The handler wraps everything in try/catch so a failure always returns JSON with a readable reason. Never let an error escape the handler; the dashboard can only show "not valid JSON" if it does.
+- Reports can stop at `max_tokens`. `parseAgentJson()` repairs truncated output and flags it with `_truncated` so a partial report still renders instead of throwing.
+- All reports from one run are written with a single `saveReports()` call. Parallel read-modify-write on `bloom_admin:agent_reports` loses reports.
+
 ## Writing Style
 
 - **No em dashes.** Use periods, commas, or restructure the sentence instead. Em dashes are widely perceived as AI-generated writing.

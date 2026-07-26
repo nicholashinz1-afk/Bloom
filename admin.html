@@ -748,6 +748,21 @@ function adminFetch(url, options = {}) {
   return fetch(url, { ...options, headers });
 }
 
+// Reads a response as JSON, but turns a non-JSON body (a platform 500/504 page,
+// for instance) into a message that says what actually happened.
+async function adminJson(res) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const snippet = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+    const reason = res.status === 504 || /timeout/i.test(snippet)
+      ? 'the request timed out'
+      : (snippet || 'no response body');
+    throw new Error(`Server error ${res.status}: ${reason}`);
+  }
+}
+
 function authenticate() {
   adminKey = document.getElementById('admin-key-input').value.trim();
   if (!adminKey) return;
@@ -1130,12 +1145,16 @@ const AGENT_LABELS = {
 };
 
 function renderAgentCard(type, report, timestamp) {
-  const label = AGENT_LABELS[type];
+  const label = AGENT_LABELS[type] || { name: type, icon: '🌱', desc: '' };
   if (!report) return '';
 
   const statusClass = report.status || 'error';
-  const findings = report.findings || [];
-  const recs = report.recommendations || [];
+  // Reports come from a model, so tolerate a finding arriving as a bare string.
+  const findings = (Array.isArray(report.findings) ? report.findings : [])
+    .map(f => (typeof f === 'string' ? { severity: 'info', title: f, detail: '' } : (f || {})));
+  const recs = (Array.isArray(report.recommendations) ? report.recommendations : [])
+    .map(r => (typeof r === 'string' ? r : (r && (r.detail || r.title)) || ''))
+    .filter(Boolean);
 
   return `
     <div class="agent-card status-${statusClass}">
@@ -1144,6 +1163,7 @@ function renderAgentCard(type, report, timestamp) {
         <span class="agent-status ${statusClass}">${(report.status || 'error').replace('_', ' ')}</span>
       </div>
       <div class="agent-summary">${escapeHtml(report.summary || 'No summary available')}</div>
+      ${report._truncated ? `<div style="font-size:12px;color:var(--amber);margin-top:6px">This report was cut short at the response limit. What's shown is complete, but there may be more.</div>` : ''}
 
       ${findings.length > 0 ? `
         <h3>Findings (${findings.length})</h3>
@@ -1165,6 +1185,20 @@ function renderAgentCard(type, report, timestamp) {
       ${timestamp ? `<div class="agent-timestamp">Report generated: ${formatDate(timestamp)}</div>` : ''}
     </div>
   `;
+}
+
+// Agent runs can take most of a minute server-side. Give the browser a little
+// more than that so a stalled request ends with a message instead of hanging
+// with the buttons disabled.
+function agentAbortSignal() {
+  return typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(75000) : undefined;
+}
+
+function agentErrorMessage(e) {
+  if (e && (e.name === 'AbortError' || e.name === 'TimeoutError')) {
+    return 'Timed out waiting for the agent. Try running one agent at a time.';
+  }
+  return (e && e.message) || 'Request failed';
 }
 
 function setAgentButtons(disabled) {
@@ -1199,8 +1233,9 @@ async function runAllAgents() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ agent: 'all' }),
+      signal: agentAbortSignal(),
     });
-    const data = await res.json();
+    const data = await adminJson(res);
 
     if (data.ok && data.results) {
       Object.entries(data.results).forEach(([type, report]) => {
@@ -1216,7 +1251,7 @@ async function runAllAgents() {
   } catch(e) {
     Object.keys(AGENT_LABELS).forEach(type => {
       const el = document.getElementById('agent-' + type + '-card');
-      if (el) el.innerHTML = renderAgentCard(type, { status: 'error', summary: 'Network error: ' + e.message, findings: [], recommendations: [] });
+      if (el) el.innerHTML = renderAgentCard(type, { status: 'error', summary: agentErrorMessage(e), findings: [], recommendations: [] });
     });
   }
 
@@ -1233,8 +1268,9 @@ async function runSingleAgent(type) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ agent: type }),
+      signal: agentAbortSignal(),
     });
-    const data = await res.json();
+    const data = await adminJson(res);
 
     const el = document.getElementById('agent-' + type + '-card');
     if (data.ok && data.report) {
@@ -1244,7 +1280,7 @@ async function runSingleAgent(type) {
     }
   } catch(e) {
     const el = document.getElementById('agent-' + type + '-card');
-    if (el) el.innerHTML = renderAgentCard(type, { status: 'error', summary: 'Network error: ' + e.message, findings: [], recommendations: [] });
+    if (el) el.innerHTML = renderAgentCard(type, { status: 'error', summary: agentErrorMessage(e), findings: [], recommendations: [] });
   }
 
   setAgentButtons(false);
