@@ -15755,7 +15755,7 @@ function renderSettingsTab() {
 
       <div style="background:rgba(201,149,74,0.08);border:1px solid rgba(201,149,74,0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
         <div style="font-weight:500;color:var(--amber-light);margin-bottom:4px">Crisis support</div>
-        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">If we detect language that suggests you might be in crisis, we'll gently surface crisis resources. To protect other vulnerable readers, these messages are held privately rather than posted to the public wall. Your feelings are always valid here.</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">If we detect language that suggests you might be in crisis, the message won't go up on the public wall, and crisis resources will open instead. Nothing you wrote is saved or sent anywhere. It stays in the box on your screen, and it's yours to keep, edit, or delete. This isn't a rule you broke and it counts against you in no way. Your feelings are always valid here.</div>
       </div>
 
       <div style="background:rgba(var(--sage-rgb),0.08);border:1px solid rgba(var(--sage-rgb),0.15);border-radius:var(--r-md);padding:10px 14px;margin-bottom:10px">
@@ -23515,8 +23515,20 @@ async function postToWall() {
       // Refresh messages only, preserve textarea (force refresh to bypass cache)
       await fetchWallMessages(true);
       renderWallMessages();
-      // If self-harm language detected, gently surface crisis resources
-      if (data.flag === 'self-harm') setTimeout(() => openCrisisSheet(), 800);
+    } else if (data.reason === 'held-crisis') {
+      // The post stayed off the public wall. Say so honestly, without treating
+      // the person like they broke a rule, and leave their words in the box so
+      // nothing they just found the words for is taken away from them.
+      showWallStatus(
+        state.prefs?.voice === 'real'
+          ? 'This one didn\'t post. A public wall isn\'t the right place for what you\'re carrying, and your words are still here. The 🤍 at the top has real people who listen, any hour.'
+          : 'This one stayed off the wall, and that\'s not a judgment. It sounded like a heavy moment, and a wall of strangers isn\'t what you deserve for it. Your words are still here. The 🤍 at the top has people who will listen, any hour.',
+        'var(--amber-light)',
+        0
+      );
+      haptic('light');
+      // Long enough to read the message before the sheet comes up over it.
+      setTimeout(() => openCrisisSheet(), 2200);
     } else {
       const reasons = {
         'threat': 'This message has been blocked. Bloom takes threats of violence seriously. Repeated violations will result in a permanent ban.',
@@ -23537,13 +23549,21 @@ async function postToWall() {
   btn.textContent = 'Post';
 }
 
-function showWallStatus(text, color) {
+// duration 0 keeps the message up until the next post attempt. Used for the
+// crisis message, which sits behind the crisis sheet and needs to still be
+// there when the person closes it.
+let _wallStatusTimer = null;
+function showWallStatus(text, color, duration = 5000) {
   const status = document.getElementById('wall-post-status');
   if (!status) return;
   status.style.display = 'block';
   status.style.color = color;
   status.textContent = text;
-  setTimeout(() => { if (status) status.style.display = 'none'; }, 5000);
+  if (_wallStatusTimer) clearTimeout(_wallStatusTimer);
+  _wallStatusTimer = null;
+  if (duration > 0) {
+    _wallStatusTimer = setTimeout(() => { if (status) status.style.display = 'none'; }, duration);
+  }
 }
 
 // Batch heart writes: queue hearts and flush every 5s to reduce Redis commands

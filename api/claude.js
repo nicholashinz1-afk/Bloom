@@ -22,6 +22,18 @@ const SYSTEM_PROMPTS = {
   default: 'You are Bloom, a warm and compassionate mental wellness companion. Keep responses brief, warm, and human. Never clinical. 1-4 sentences maximum.',
 };
 
+// ── Indirect crisis language ──────────────────────────────
+// The clauses above name explicit statements ("suicidal thoughts, self-harm").
+// Leave-taking language is the shape that gets missed: sentence by sentence it
+// reads as warm or ordinary, and only the whole entry gives it away. Bloom's
+// pattern matching (api/moderation.js) cannot see that, and deliberately does
+// not try — it works on short, contextless text where a false positive means
+// throwing a crisis sheet at someone who said something loving. The model reads
+// the full entry alongside recent context, so this is the one place in Bloom
+// that can catch it. The response is constrained on purpose: a false positive
+// costs a gentle aside and nothing more.
+const CRISIS_GUIDANCE = ' The crisis instruction above applies to indirect language as much as explicit language. Watch for: summing up a life or relationships in the past tense, saying goodbye or giving thanks as though for the last time, entrusting people or responsibilities to someone else, settling affairs, describing themselves as a burden or as replaceable, or an unexplained calm arriving after a stretch of distress. When you notice it, respond to what they actually wrote with exactly the warmth you would otherwise, and let the mention of the 🤍 crisis heart rest at the end as a quiet aside. Never name the pattern you noticed, never ask whether they are suicidal, never diagnose, and never shift into an alarmed tone. Someone writing lovingly about their family should feel witnessed, not assessed.';
+
 // Suffix appended to all system prompts for consistency
 const SYSTEM_SUFFIX = ' Never use first-person language like "I am here for you" or "I care about you" — you are a tool, not a person. Frame support as observations and affirmations, not as a relationship.';
 
@@ -99,7 +111,10 @@ export default async function handler(req, res) {
   // carry injected instructions into the system prompt.
   const safeName = typeof name === 'string' ? name.replace(/[\r\n]+/g, ' ').trim().slice(0, 60) : '';
   const nameContext = safeName ? ` The user's name is ${safeName} — use it occasionally but naturally, not in every sentence.` : '';
-  const systemPrompt = basePrompt + SYSTEM_SUFFIX + nameContext;
+  // live_week is a one-sentence, 20-word widget line. It has no room to act on
+  // this and never sees a full entry, so it is the one context left out.
+  const crisisGuidance = context === 'live_week' ? '' : CRISIS_GUIDANCE;
+  const systemPrompt = basePrompt + crisisGuidance + SYSTEM_SUFFIX + nameContext;
 
   // Allow client to request Sonnet for richer reflections; default to Haiku for cost efficiency.
   // The old Sonnet 4 snapshot (claude-sonnet-4-20250514) reached end-of-life, so alias any

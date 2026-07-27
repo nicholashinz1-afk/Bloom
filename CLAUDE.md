@@ -74,13 +74,23 @@ Moderation filters in `api/buddy.js` and `api/wall.js` use a multi-tier approach
 3. **Blocked** — contact exchange (phone numbers, social media handles, requests to move off-platform)
 4. **Blocked (buddy only)** — crude/sexual content is hard-blocked in 1-on-1 buddy messages, soft-flagged on the public wall
 5. **Auto-ban** — 3+ blocked messages within 24 hours triggers automatic restriction from all community features
-6. **Flagged (allowed but surfaces crisis resources)** — self-harm language
+6. **Crisis language** — handled differently per surface, on purpose:
+   - **Wall:** the post is held back and never published, no strike is recorded, and nothing is stored (the text isn't saved and `logModeration` keeps only the flag type). The writer gets warm copy explaining it didn't post, keeps their text in the box, and the crisis sheet opens. This runs *before* the ban and rate-limit checks so someone in crisis gets resources whatever else is true about their account. The FAQ under Community > moderation describes this exactly; if you change the behavior, change that copy too.
+   - **Buddy:** the message *is* delivered and `flag: 'self-harm'` is stored on it so the recipient sees gentle guidance. Don't "fix" this to match the wall. A buddy is a chosen 1:1 support person, and telling them you're struggling is the entire point of having one. The public wall is a room of strangers, which is a different thing.
 7. **Soft-flagged (wall only, allowed with content warning)** — crude/off-topic content
 8. **Allowed** — venting, frustration, general expression
 
 Client-side also warns users before sending personal info (phone, email, SSN, addresses, social handles) with a two-step confirmation. Server-side blocks it regardless.
 
 This is intentional for a mental health app used by young people. Don't block words like "hurt", "harm", "stupid", etc. Don't weaken grooming or contact exchange protections.
+
+### Indirect crisis language (leave-taking)
+
+Explicit statements are caught by `SELF_HARM_PATTERNS` in `api/moderation.js`. Indirect crisis language is not, and **this is deliberate**: summing up in the past tense, saying goodbye or thanking people as if for the last time, entrusting people to others, settling affairs, sudden calm after distress. Sentence by sentence it reads as ordinary or loving, and only the whole entry gives it away.
+
+Don't add these to the regex. The pattern list runs on wall and buddy text: short, contextless, and 140 characters on the wall. A false positive there throws a crisis sheet at a proud parent writing about their kids, which for a no-shame app is a worse outcome than the miss and teaches people the wall reads them clinically.
+
+It's handled in `CRISIS_GUIDANCE` in `api/claude.js` instead, appended to every system prompt except `live_week`. The model reads the full entry with recent context, which is the only place in Bloom where that's true. The guidance constrains the *response* as tightly as it widens the detection: never name the pattern, never ask if they're suicidal, never diagnose, never shift to an alarmed tone, just the usual warmth with the 🤍 heart mentioned as a quiet aside. That's what makes a false positive cost nothing.
 
 ## Security Headers
 

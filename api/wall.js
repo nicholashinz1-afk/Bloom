@@ -203,13 +203,25 @@ export default async function handler(req, res) {
       const { text, fp } = body;
       if (!text) return res.status(400).json({ error: 'Missing text' });
 
+      const check = moderateMessage(text);
+      await logModeration('wall_post', check);
+
+      // Crisis language: hold the post back and send the writer to resources.
+      // This runs before the ban and rate-limit checks on purpose. Someone in
+      // crisis gets help first, whatever else is true about their account, and
+      // the message does not publish either way.
+      //
+      // No strike is recorded. This is pain, not a violation, and the text is
+      // never stored anywhere: it is not saved to the wall and logModeration
+      // keeps only the flag type, no content.
+      if (check.ok && check.flag === 'self-harm') {
+        return res.json({ ok: false, reason: 'held-crisis', flag: 'self-harm' });
+      }
+
       // Check if user is banned from social features
       if (await isUserBanned(fp)) {
         return res.json({ ok: false, reason: 'banned' });
       }
-
-      const check = moderateMessage(text);
-      await logModeration('wall_post', check);
 
       // Record strike for blocked or flagged content
       if (!check.ok) {
