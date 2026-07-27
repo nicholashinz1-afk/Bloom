@@ -23211,6 +23211,7 @@ function renderCommunityTab() {
       <div style="font-size:11px;color:var(--text-muted);font-style:italic">Anonymous — no one knows it's you</div>
       <div id="wall-char-count" style="font-size:11px;color:var(--text-muted)">0/140</div>
     </div>
+    <div id="wall-char-hint" role="status" aria-live="polite" style="font-size:11px;color:var(--rose-light);margin-top:4px;display:none"></div>
     <div id="wall-post-status" style="font-size:12px;margin-top:6px;display:none"></div>
   </div>`;
 
@@ -23366,7 +23367,26 @@ function wallShowLess() {
 function updateWallCharCount() {
   const input = document.getElementById('wall-input');
   const count = document.getElementById('wall-char-count');
-  if (input && count) count.textContent = `${input.value.length}/140`;
+  if (!input || !count) return;
+  const len = input.value.length;
+  count.textContent = `${len}/140`;
+
+  // The textarea's maxlength stops accepting characters at 140 with no feedback
+  // of its own, which reads as the app freezing mid-word. Warm the counter on
+  // approach and say plainly what happened at the ceiling.
+  const atCap = len >= 140;
+  count.style.color = atCap ? 'var(--rose-light)' : (len >= 120 ? 'var(--amber)' : 'var(--text-muted)');
+  count.style.fontWeight = len >= 120 ? '600' : '';
+
+  const hint = document.getElementById('wall-char-hint');
+  if (hint) {
+    hint.textContent = atCap
+      ? (state.prefs?.voice === 'real'
+          ? '140 character limit. Anything more won\'t go through.'
+          : 'That\'s all 140 characters. Short says plenty here.')
+      : '';
+    hint.style.display = atCap ? 'block' : 'none';
+  }
 }
 
 async function deleteCommunityData() {
