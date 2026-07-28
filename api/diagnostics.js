@@ -181,12 +181,19 @@ export default async function handler(req, res) {
 
     // Handle batched telemetry events (multiple events in one request)
     if (body.type === 'batch' && Array.isArray(body.events)) {
-      const events = body.events.slice(0, 50); // Cap at 50 per batch
+      // Cap per request to protect the function's time budget: each event can
+      // cost several Redis round trips. The client chunks below this, so hitting
+      // the cap means a stale client. Count it rather than dropping in silence,
+      // which is how event totals could undercount with nothing to show for it.
+      const MAX_BATCH = 50;
+      const events = body.events.slice(0, MAX_BATCH);
+      const dropped = body.events.length - events.length;
       for (const evt of events) {
         if (!evt.type || !validateEvent(evt)) continue;
         await processEvent(evt);
       }
-      return res.json({ ok: true, processed: events.length });
+      if (dropped > 0) await incrementDaily('telemetry_truncated');
+      return res.json({ ok: true, processed: events.length, dropped });
     }
 
     if (!validateEvent(body)) {

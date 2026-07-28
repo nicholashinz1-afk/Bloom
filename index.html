@@ -9834,29 +9834,56 @@ function sendTelemetry(type, data) {
   } catch(e) {}
 }
 
+// The server processes at most 50 events per request, so chunk below that
+// instead of sending one oversized batch it would truncate.
+const TELEMETRY_CHUNK = 40;
+// Bound on the retry queue. Trimming drops the newest events, never the oldest,
+// because session_start is queued first and is the only source of unique-user
+// counts — losing it costs a whole user for the day, not just one event.
+const TELEMETRY_QUEUE_MAX = 200;
+
+// Returns false when the events could not be handed off, so the caller can
+// put them back. sendBeacon refuses to queue when the payload is over the
+// browser's 64KB limit; previously that returned false into the void and the
+// events were already gone from the queue.
+function sendTelemetryBatch(events) {
+  const payload = JSON.stringify({ type: 'batch', events });
+  if (navigator.sendBeacon) {
+    return navigator.sendBeacon('/api/diagnostics', new Blob([payload], { type: 'application/json' }));
+  }
+  fetch('/api/diagnostics', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: payload,
+    keepalive: true,
+  }).catch(() => {});
+  return true;
+}
+
 function flushTelemetry() {
   _telemetryTimer = null;
   if (_telemetryQueue.length === 0) return;
-  const batch = _telemetryQueue.splice(0);
-  try {
-    const payload = JSON.stringify({ type: 'batch', events: batch });
-    // Use sendBeacon if available (survives page unload), otherwise fetch
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon('/api/diagnostics', new Blob([payload], { type: 'application/json' }));
-    } else {
-      fetch('/api/diagnostics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: payload,
-      }).catch(() => {});
-    }
-  } catch(e) {}
+  let unsent = null;
+  while (_telemetryQueue.length) {
+    const chunk = _telemetryQueue.splice(0, TELEMETRY_CHUNK);
+    let ok = false;
+    try { ok = sendTelemetryBatch(chunk); } catch(e) { ok = false; }
+    if (!ok) { unsent = chunk; break; }
+  }
+  if (unsent) {
+    // Back to the front, ahead of anything still queued, so order holds.
+    _telemetryQueue.unshift(...unsent);
+    if (_telemetryQueue.length > TELEMETRY_QUEUE_MAX) _telemetryQueue.length = TELEMETRY_QUEUE_MAX;
+    if (!_telemetryTimer) _telemetryTimer = setTimeout(flushTelemetry, 30000);
+  }
 }
 
-// Flush on page hide/unload to avoid losing events
+// Flush on page hide/unload to avoid losing events. pagehide is the reliable
+// one on mobile Safari, where beforeunload often never fires.
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') flushTelemetry();
 });
+window.addEventListener('pagehide', flushTelemetry);
 window.addEventListener('beforeunload', flushTelemetry);
 
 let _featuresUsedCache = null;
