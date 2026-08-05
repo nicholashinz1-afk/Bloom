@@ -536,7 +536,7 @@ var SPOTS = [
   /* ── Near the hotel ── */
   {id:'a_hotelbeach', name:'The hotel beach', where:'Out your door', tags:['near'],
    chips:['free','0 min'], note:"Three hundred feet of private sugar sand, and East Bay runs shallow and warmer than the west side."},
-  {id:'a_hotelpool', name:'Hotel indoor pool and hot tub', where:'Downstairs', tags:['near','indoor-fun'], indoor:true,
+  {id:'a_hotelpool', name:'Hotel indoor pool', where:'Downstairs', tags:['near','indoor-fun'], indoor:true,
    chips:['free','indoor'], note:"The rainy-afternoon answer and the after-dinner answer. Also the nap-resistance answer."},
   {id:'a_piratescove', name:"Pirate's Cove Adventure Park", where:'US-31 N, ~10 min', tags:['near'],
    chips:['~10 min','tickets'], note:"Mini golf plus go-karts and bumper boats. The six-year-old will love it, the little one can still putt."},
@@ -575,36 +575,34 @@ var SPOTS = [
   {id:'a_luckyjacks', name:"Lucky Jack's Bowling", where:'Off US-31', tags:['indoor-fun'], indoor:true,
    chips:['indoor'], note:"Bumpers and light balls make this work at six. The little one will mostly just push the ball."},
 
-  /* ── Drive up: I-75 route ── */
-  {id:'r_frankenmuth', name:"Bronner's CHRISTmas Wonderland", q:'Frankenmuth MI', where:'Frankenmuth, ~1h15 in', tags:['drive-up'], indoor:true,
-   chips:['free','indoor','~1h15'], note:"Free, enormous, air conditioned, and absurd in a way small kids love. Best first stop on I-75."},
-  {id:'r_birchrun', name:'Birch Run outlets', q:'Birch Run MI', where:'Birch Run, ~1h in', tags:['drive-up'], indoor:true,
-   chips:['~1h','food court'], note:"Purely functional. Easy on and off I-75 with a food court and enormous parking."},
-  {id:'r_baycity', name:'Wenonah Park, Bay City', q:'Bay City MI', where:'Bay City, ~1h30 in', tags:['drive-up'],
-   chips:['free','~1h30'], note:"Riverfront park right downtown for a real run-around at the ninety-minute mark."},
-  {id:'r_westbranch', name:'West Branch Tanger outlets', q:'West Branch MI', where:'West Branch, ~2h in', tags:['drive-up'], indoor:true,
-   chips:['~2h','gas + food'], note:"Bathrooms, food, and gas right off the highway. Nothing special, entirely useful."},
-  {id:'r_hartwick', name:'Hartwick Pines State Park', q:'Grayling MI', where:'Grayling, ~3h in', tags:['drive-up'],
-   chips:['~3h','day pass'], note:"A short paved loop through old-growth white pines with a visitor center and clean restrooms. Best leg-stretch on the route."},
+  /* ── Drive up, I-75 route. Food and quick playground detours only. Nothing
+       that turns into its own outing. ── */
+  {id:'r_baycity', name:'Wenonah Park, Bay City', q:'Bay City MI', where:'Downtown Bay City, ~1h30 in', tags:['drive-up'],
+   chips:['free','playground','~1h30'], note:"Riverfront park with a playground and open grass, and downtown food a block away. Quick hop off I-75."},
+  {id:'r_westbranch', name:'Downtown West Branch', q:'West Branch MI', where:'West Branch, ~2h in', tags:['drive-up'],
+   chips:['~2h','gas + food'], note:"A short main street of local places to eat, two minutes off the highway. Purely a food and bathroom stop."},
+  {id:'r_spikes', name:"Spike's Keg O' Nails", q:'Grayling MI', where:'Downtown Grayling, ~3h in', tags:['drive-up'], indoor:true,
+   chips:['~3h','burgers','since 1933'], note:"Right on the business loop through Grayling. Order a Spikeburger. Been feeding people on this drive since 1933."},
   {id:'r_kalkaska', name:'Kalkaska trout fountain', q:'Kalkaska MI', where:'Kalkaska, ~3h40 in', tags:['drive-up'],
-   chips:['free','5 min stop'], note:"A giant trout statue and fountain forty minutes out. Five minutes, purely to break the last stretch."},
+   chips:['free','5 min'], note:"A giant trout statue and fountain downtown. Five minutes to stretch, forty minutes out from the hotel."},
 
-  /* ── Drive home: US-127 route ── */
-  {id:'r_cops', name:'Cops & Doughnuts, Clare', q:'Clare MI', where:'Clare, ~2h15 from TC', tags:['drive-home'], indoor:true,
+  /* ── Drive home, M-115 to Clare then US-127. Same rule. ── */
+  {id:'r_cadillac', name:'Cadillac city beach and playground', q:'Cadillac MI', where:'Lake Cadillac, ~1h from TC', tags:['drive-home'],
+   chips:['free','playground','~1h'], note:"Beach and playground right in town on Lake Cadillac. Best chance to burn energy before the long stretch."},
+  {id:'r_cops', name:'Cops & Doughnuts, Clare', q:'Clare MI', where:'521 N McEwan St, Clare, ~2h15 from TC', tags:['drive-home'], indoor:true,
    chips:['opens 5am','~2h15'], note:"The city bakery is owned and run by Clare's police officers, and the story lands with kids."},
-  {id:'r_cadillac', name:'Lake Cadillac city park', q:'Cadillac MI', where:'Cadillac, ~1h from TC', tags:['drive-home'],
-   chips:['free','~1h'], note:"Beach and playground right in town. Last real chance to burn energy before the long stretch."},
-  {id:'r_potterpark', name:'Potter Park Zoo, Lansing', q:'Lansing MI', where:'Lansing, ~3h30 from TC', tags:['drive-home'],
-   chips:['tickets','~3h30'], note:"A real zoo. Two hours if you commit, or one quick loop if everyone is done being in the car."},
-  {id:'r_impression5', name:'Impression 5 Science Center', q:'Lansing MI', where:'Lansing, ~3h30 from TC', tags:['drive-home'], indoor:true,
-   chips:['indoor','tickets'], note:"Hands-on science built for exactly these ages. The move if the drive home is a rainy one."}
+  {id:'r_pettit', name:'Pettit Park, Clare', q:'Clare MI', where:'1551 N McEwan St, one mile up from the bakery', tags:['drive-home'],
+   chips:['free','playground'], note:"Playground on the Tobacco River, same street as the doughnuts. Eat, then let them run. Open through November."},
+  {id:'r_shamrock', name:'Shamrock Park, Clare', q:'Clare MI', where:'Clare, on Shamrock Lake', tags:['drive-home'],
+   chips:['free','playground','restrooms'], note:"Bigger than Pettit with a ball field and lake access, if you need a longer break than a playground."}
 ];
 
 var DAYS = [
   {id:'sat', date:'Sat Aug 15', title:'Drive up, then nothing', iso:'2026-08-15',
-   sub:"Leave around 8. One big stop, one leg-stretch, arrive mid-afternoon. Do not schedule anything you'd be sad to miss.",
+   sub:"Leave around 8. A playground stop around ninety minutes in, lunch a couple hours later, in by mid-afternoon. Do not schedule anything you'd be sad to miss.",
    slots:[
-     {key:'drive', label:'On the way', accepts:['drive-up']},
+     {key:'stop1', label:'Leg-stretch', accepts:['drive-up']},
+     {key:'stop2', label:'Lunch on the road', accepts:['drive-up']},
      {key:'afternoon', label:'Afternoon', accepts:['near','downtown','indoor-fun']},
      {key:'dinner', label:'Dinner', accepts:['dinner','nice']},
      {key:'evening', label:'Evening', accepts:['treat','near','indoor-fun']}
@@ -640,19 +638,20 @@ var DAYS = [
    sub:"Different road home so it isn't the same drive twice. Load the car the night before.",
    slots:[
      {key:'morning', label:'Before you go', accepts:['breakfast','near']},
-     {key:'stop1', label:'First stop', accepts:['drive-home']},
-     {key:'stop2', label:'If needed', accepts:['drive-home']}
+     {key:'stop1', label:'Leg-stretch', accepts:['drive-home']},
+     {key:'stop2', label:'Food', accepts:['drive-home']},
+     {key:'stop3', label:'If needed', accepts:['drive-home']}
    ]}
 ];
 
 /* A starting plan so the Days tab is useful before anyone votes. Any slot can
    be swapped, and a cleared slot stays cleared. */
 var DEFAULT_PLAN = {
-  sat:{drive:'r_frankenmuth', afternoon:'a_hotelbeach', dinner:'d_dons', evening:'a_hotelpool'},
+  sat:{stop1:'r_baycity', stop2:'r_spikes', afternoon:'a_hotelbeach', dinner:'d_dons', evening:'a_hotelpool'},
   sun:{morning:'a_clinchpark', lunch:'l_littlefleet', afternoon:'a_frontst', dinner:'d_filling', evening:'t_moomers'},
   mon:{morning:'a_duneclimb', lunch:'l_arts', afternoon:'a_glenhaven', dinner:'d_hotelpizza', evening:'a_hotelbeach'},
   tue:{morning:'a_eastbaypark', lunch:'l_cooler', afternoon:'a_piratescove', dinner:'n_apache', evening:'t_kilwins'},
-  wed:{morning:'b_hotel', stop1:'r_cadillac', stop2:'r_cops'}
+  wed:{morning:'b_hotel', stop1:'r_cadillac', stop2:'r_cops', stop3:'r_pettit'}
 };
 
 var PACKING = [
@@ -968,16 +967,22 @@ function counts(){
   return c;
 }
 
+/* Builds the search string for the Map and Menu buttons. Several names already
+   carry their town ("Pettit Park, Clare"), so the region is only appended when
+   the name does not already say it. */
+function searchQuery(s, suffix){
+  var region = s.q === undefined ? 'Traverse City MI' : (s.q || 'MI');
+  var town = region.replace(/\s+MI$/i, '').trim();
+  var q = s.name;
+  q += (town && s.name.toLowerCase().indexOf(town.toLowerCase()) === -1) ? ' ' + region : ' MI';
+  return suffix ? q + ' ' + suffix : q;
+}
 function mapsUrl(s){
-  var q = s.name + ' ' + (s.q || 'Traverse City MI');
-  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(searchQuery(s));
 }
 function infoUrl(s){
-  var isFood = ['breakfast','lunch','dinner','nice','treat'].some(function(t){
-    return (s.tags || []).indexOf(t) !== -1;
-  });
-  var q = s.name + ' ' + (s.q || 'Traverse City MI') + (isFood ? ' menu' : ' hours');
-  return 'https://www.google.com/search?q=' + encodeURIComponent(q);
+  return 'https://www.google.com/search?q='
+    + encodeURIComponent(searchQuery(s, isFoodSpot(s) ? 'menu' : 'hours'));
 }
 function isFoodSpot(s){
   return ['breakfast','lunch','dinner','nice','treat'].some(function(t){
@@ -1130,12 +1135,12 @@ function renderOptions(kind, lede){
 }
 
 function renderDrive(){
-  var h = '<p class="lede">Two different roads, about four hours each. Take <b>I-75</b> up and <b>US-127</b> home so the kids get new windows both ways and each direction has one real stop.</p>';
+  var h = '<p class="lede">Two different roads, about four hours each. Take <b>I-75</b> up and <b>US-127</b> home so the kids get new windows both ways. Everything below is food or a playground within a couple minutes of the highway. Nothing that becomes its own outing.</p>';
   h += '<div class="route-note"><b>Up on Saturday:</b> I-75 north, then M-72 west at Grayling. '
-    + 'Leave around 8 after breakfast, one long stop at the 90-minute mark, a short leg-stretch near Grayling, and you are pulling in mid-afternoon. '
+    + 'Leave around 8, playground around the 90-minute mark, lunch a couple hours after that, pulling in mid-afternoon. '
     + 'Check-in is usually mid-afternoon, so confirm with the hotel if you land early.</div>';
   h += '<div class="route-note"><b>Home on Wednesday:</b> M-115 southeast to Clare, then US-127 and I-96. '
-    + 'Clare sits almost exactly halfway, which is what makes the doughnut stop work.</div>';
+    + 'Clare is almost exactly halfway, and the doughnut shop and the playground are on the same street about a mile apart.</div>';
   h += filterRow();
   GROUPS.drive.forEach(function(g){ h += groupBlock(g); });
   return h;
