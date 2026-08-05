@@ -1,0 +1,1619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0e1a1c">
+<title>Traverse City · Aug 15-19</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b5e7a'/%3E%3Cpath d='M16 8c-2.5 2.5-4 5-4 8.5M16 8c2 2.5 4.5 4.5 5 9' stroke='%2390d3a6' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='11.5' cy='21' r='4.6' fill='%23e0736a'/%3E%3Ccircle cx='21' cy='22.5' r='4' fill='%23c1554c'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Familjen+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Familjen+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap"></noscript>
+<style>
+/* ── Tokens ──────────────────────────────────────────────────────
+   Palette is Grand Traverse Bay: deep bay blue for structure, pine green /
+   amber / cherry as the three vote semantics, sand for the driving sections.
+   Neutrals carry a slight teal bias so nothing reads as default grey. */
+:root{
+  --ground:#e9eeee; --surface:#fff; --surface-2:#f5f8f8; --surface-3:#eef3f3;
+  --ink:#111f21; --ink-2:#33474a; --muted:#5d716f; --line:#d7e0df; --line-2:#c3d0cf;
+  --accent:#1b5e7a; --accent-soft:#e3edf1;
+  --up:#2c7350; --up-soft:#e2efe7;
+  --maybe:#9a6c15; --maybe-soft:#f6eeda;
+  --down:#a1372f; --down-soft:#f6e5e2;
+  --sand:#8a6c33; --sand-soft:#f2ebda;
+  --shadow:0 1px 2px rgba(17,31,33,.05), 0 6px 16px -8px rgba(17,31,33,.16);
+  --radius:14px; --radius-sm:9px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --ground:#0b1416; --surface:#111d20; --surface-2:#162528; --surface-3:#1b2d31;
+    --ink:#e3ecea; --ink-2:#bccac8; --muted:#8ba09d; --line:#233639; --line-2:#2f4649;
+    --accent:#74b9d6; --accent-soft:#152e39;
+    --up:#63c294; --up-soft:#15291f;
+    --maybe:#dcae5c; --maybe-soft:#2a2113;
+    --down:#e88a80; --down-soft:#2c1815;
+    --sand:#cdae72; --sand-soft:#241e12;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 20px -10px rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+/* The viewer's explicit toggle must win over the OS preference in both
+   directions, so both stamped values are restated. */
+:root[data-theme="light"]{
+  --ground:#e9eeee; --surface:#fff; --surface-2:#f5f8f8; --surface-3:#eef3f3;
+  --ink:#111f21; --ink-2:#33474a; --muted:#5d716f; --line:#d7e0df; --line-2:#c3d0cf;
+  --accent:#1b5e7a; --accent-soft:#e3edf1;
+  --up:#2c7350; --up-soft:#e2efe7;
+  --maybe:#9a6c15; --maybe-soft:#f6eeda;
+  --down:#a1372f; --down-soft:#f6e5e2;
+  --sand:#8a6c33; --sand-soft:#f2ebda;
+  --shadow:0 1px 2px rgba(17,31,33,.05), 0 6px 16px -8px rgba(17,31,33,.16);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --ground:#0b1416; --surface:#111d20; --surface-2:#162528; --surface-3:#1b2d31;
+  --ink:#e3ecea; --ink-2:#bccac8; --muted:#8ba09d; --line:#233639; --line-2:#2f4649;
+  --accent:#74b9d6; --accent-soft:#152e39;
+  --up:#63c294; --up-soft:#15291f;
+  --maybe:#dcae5c; --maybe-soft:#2a2113;
+  --down:#e88a80; --down-soft:#2c1815;
+  --sand:#cdae72; --sand-soft:#241e12;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 20px -10px rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:"Familjen Grotesk",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.5;
+  -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100%;
+  overflow-x:hidden;
+}
+h1,h2,h3{margin:0; font-family:"Newsreader",Georgia,serif; font-weight:600; text-wrap:balance; letter-spacing:-.01em}
+button{font:inherit; color:inherit; background:none; border:none; padding:0; cursor:pointer}
+a{color:var(--accent); text-decoration:none}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
+.mono{font-family:"DM Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ── Header ────────────────────────────────────────────────────── */
+.wrap{max-width:720px; margin:0 auto; padding:0 16px 96px}
+header.top{
+  background:var(--surface); border-bottom:1px solid var(--line);
+  padding:calc(14px + env(safe-area-inset-top)) 0 12px;
+}
+.top-in{max-width:720px; margin:0 auto; padding:0 16px}
+.eyebrow{
+  font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); margin:0 0 4px;
+}
+h1{font-size:clamp(26px,7vw,34px); line-height:1.08}
+h1 em{font-style:italic; color:var(--accent)}
+.basecamp{margin:6px 0 0; font-size:14px; color:var(--muted)}
+.top-row{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.who-btn{
+  display:flex; align-items:center; gap:7px; padding:7px 12px;
+  background:var(--surface-2); border:1px solid var(--line); border-radius:999px;
+  font-size:13px; font-weight:600; white-space:nowrap;
+  transition:border-color .15s, background-color .15s;
+}
+.who-btn:hover{border-color:var(--line-2)}
+.who-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:0 0 auto}
+
+.status{
+  display:flex; align-items:center; gap:6px; margin-top:10px;
+  font-size:12px; color:var(--muted);
+}
+.status .beacon{width:7px;height:7px;border-radius:50%;background:var(--up);flex:0 0 auto}
+.status[data-sync="offline"] .beacon{background:var(--maybe)}
+.status[data-sync="error"] .beacon{background:var(--down)}
+.status[data-sync="syncing"] .beacon{background:var(--accent); animation:blip 1.1s ease-in-out infinite}
+@keyframes blip{0%,100%{opacity:.35}50%{opacity:1}}
+
+/* ── Section nav ───────────────────────────────────────────────── */
+nav.tabs{
+  position:sticky; top:0; z-index:40;
+  background:color-mix(in srgb, var(--ground) 88%, transparent);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.tabs-in{
+  max-width:720px; margin:0 auto; padding:9px 16px;
+  display:flex; gap:7px; overflow-x:auto; scrollbar-width:none;
+}
+.tabs-in::-webkit-scrollbar{display:none}
+.tab{
+  padding:7px 13px; border-radius:999px; font-size:13.5px; font-weight:600;
+  color:var(--muted); background:var(--surface); border:1px solid var(--line);
+  white-space:nowrap; transition:color .15s, background-color .15s, border-color .15s;
+}
+.tab[aria-selected="true"]{background:var(--ink); color:var(--ground); border-color:var(--ink)}
+
+/* ── Panels ────────────────────────────────────────────────────── */
+.panel{display:none; padding-top:22px}
+.panel.on{display:block}
+.lede{
+  margin:0 0 18px; font-family:"Newsreader",Georgia,serif; font-size:17.5px;
+  line-height:1.5; color:var(--ink-2);
+}
+.lede b{font-weight:600; color:var(--ink)}
+
+h2.grp{
+  font-size:12px; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
+  font-family:"Familjen Grotesk",sans-serif; color:var(--muted);
+  margin:26px 0 10px; display:flex; align-items:center; gap:9px;
+}
+h2.grp:first-of-type{margin-top:0}
+h2.grp::after{content:""; flex:1; height:1px; background:var(--line)}
+h2.grp .n{font-family:"DM Mono",monospace; font-weight:400; color:var(--line-2)}
+
+/* ── Filter row ────────────────────────────────────────────────── */
+.filters{display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; margin:0 0 18px; padding-bottom:2px}
+.filters::-webkit-scrollbar{display:none}
+.fchip{
+  padding:6px 11px; border-radius:8px; font-size:12.5px; font-weight:600;
+  border:1px solid var(--line); background:var(--surface); color:var(--muted); white-space:nowrap;
+}
+.fchip[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
+
+/* ── Spot card ─────────────────────────────────────────────────── */
+.spot{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:13px 14px; margin-bottom:9px; box-shadow:var(--shadow);
+  border-left:3px solid var(--line);
+  transition:border-left-color .18s, opacity .18s;
+}
+.spot[data-verdict="in"]{border-left-color:var(--up)}
+.spot[data-verdict="lean"]{border-left-color:var(--up)}
+.spot[data-verdict="maybe"]{border-left-color:var(--maybe)}
+.spot[data-verdict="wait"]{border-left-color:var(--accent)}
+.spot[data-verdict="out"]{opacity:.62}
+.spot-head{display:flex; align-items:flex-start; gap:10px}
+.spot-name{
+  font-family:"Newsreader",Georgia,serif; font-size:19px; font-weight:600;
+  line-height:1.25; flex:1; min-width:0;
+}
+.spot-where{
+  display:block; margin-top:3px;
+  font-family:"DM Mono",monospace; font-size:11.5px; font-weight:400;
+  letter-spacing:.01em; color:var(--muted); text-transform:none;
+}
+.spot-note{margin:8px 0 0; font-size:14.5px; line-height:1.48; color:var(--ink-2)}
+.spot-chips{display:flex; flex-wrap:wrap; gap:5px; margin-top:9px}
+.chip{
+  font-family:"DM Mono",monospace; font-size:10.5px; letter-spacing:.02em;
+  padding:3px 7px; border-radius:5px; background:var(--surface-3); color:var(--muted);
+}
+.chip.indoor{background:var(--accent-soft); color:var(--accent)}
+.chip.added{background:var(--sand-soft); color:var(--sand)}
+
+/* ── Verdict badge ─────────────────────────────────────────────── */
+.verdict{
+  font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+  padding:4px 8px; border-radius:6px; white-space:nowrap; flex:0 0 auto;
+  background:var(--surface-3); color:var(--muted);
+}
+.verdict[data-k="in"]{background:var(--up-soft); color:var(--up)}
+.verdict[data-k="lean"]{background:var(--up-soft); color:var(--up)}
+.verdict[data-k="maybe"]{background:var(--maybe-soft); color:var(--maybe)}
+.verdict[data-k="out"]{background:var(--down-soft); color:var(--down)}
+.verdict[data-k="wait"]{background:var(--accent-soft); color:var(--accent)}
+.verdict[data-k="split"]{background:var(--down-soft); color:var(--down)}
+
+/* ── Vote controls ─────────────────────────────────────────────── */
+.spot-foot{
+  display:flex; align-items:center; gap:8px; margin-top:12px;
+  padding-top:11px; border-top:1px solid var(--line); flex-wrap:wrap;
+}
+.votes{display:flex; gap:5px}
+.vote{
+  display:flex; align-items:center; justify-content:center;
+  min-width:44px; height:34px; padding:0 9px;
+  border:1px solid var(--line); border-radius:9px; background:var(--surface-2);
+  font-size:15px; line-height:1;
+  transition:background-color .15s, border-color .15s, transform .12s;
+}
+.vote:active{transform:scale(.94)}
+.vote[aria-pressed="true"][data-v="up"]{background:var(--up-soft); border-color:var(--up)}
+.vote[aria-pressed="true"][data-v="maybe"]{background:var(--maybe-soft); border-color:var(--maybe)}
+.vote[aria-pressed="true"][data-v="down"]{background:var(--down-soft); border-color:var(--down)}
+.vote .tick{
+  font-family:"DM Mono",monospace; font-size:9.5px; font-weight:500;
+  margin-left:4px; opacity:.85;
+}
+.links{display:flex; gap:5px; margin-left:auto}
+.ilink{
+  display:flex; align-items:center; gap:5px; height:34px; padding:0 11px;
+  border:1px solid var(--line); border-radius:9px; background:var(--surface-2);
+  font-size:12.5px; font-weight:600; color:var(--ink-2); white-space:nowrap;
+  transition:border-color .15s, color .15s;
+}
+.ilink:hover{border-color:var(--accent); color:var(--accent)}
+.why{
+  margin:9px 0 0; padding:8px 10px; border-radius:var(--radius-sm);
+  background:var(--surface-2); border-left:2px solid var(--line-2);
+  font-size:13px; color:var(--ink-2);
+}
+.why b{font-weight:600; color:var(--ink)}
+
+/* ── Ruled-out drawer ──────────────────────────────────────────── */
+.drawer{margin-top:14px}
+.drawer summary{
+  cursor:pointer; list-style:none; padding:9px 12px;
+  border:1px dashed var(--line-2); border-radius:var(--radius-sm);
+  font-size:13px; font-weight:600; color:var(--muted);
+}
+.drawer summary::-webkit-details-marker{display:none}
+.drawer[open] summary{margin-bottom:9px}
+
+/* ── Days ──────────────────────────────────────────────────────── */
+.day{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  margin-bottom:14px; box-shadow:var(--shadow); overflow:hidden;
+}
+.day.today{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), var(--shadow)}
+.day-head{padding:14px; border-bottom:1px solid var(--line); background:var(--surface-2)}
+.day-date{
+  font-family:"DM Mono",monospace; font-size:11px; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--accent); font-weight:500;
+}
+.day-title{font-size:21px; margin-top:2px}
+.day-sub{margin:5px 0 0; font-size:13.5px; color:var(--muted)}
+.today-flag{
+  display:inline-block; margin-left:7px; padding:2px 7px; border-radius:5px;
+  background:var(--accent); color:var(--surface); font-family:"Familjen Grotesk",sans-serif;
+  font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  vertical-align:middle;
+}
+.slot{display:flex; align-items:stretch; gap:0; border-bottom:1px solid var(--line)}
+.slot:last-child{border-bottom:none}
+.slot-label{
+  flex:0 0 92px; padding:12px 0 12px 14px;
+  font-family:"DM Mono",monospace; font-size:10.5px; letter-spacing:.07em;
+  text-transform:uppercase; color:var(--muted); padding-top:15px;
+}
+.slot-body{flex:1; min-width:0; padding:11px 14px 11px 4px; text-align:left; display:block}
+.slot-pick{font-size:15.5px; font-weight:600; line-height:1.3}
+.slot-meta{
+  display:block; margin-top:3px; font-family:"DM Mono",monospace;
+  font-size:11px; color:var(--muted);
+}
+.slot-empty{font-size:14.5px; color:var(--muted); font-weight:400}
+.slot-body:hover .slot-pick{color:var(--accent)}
+.slot-warn{color:var(--down); font-family:"DM Mono",monospace; font-size:10.5px; display:block; margin-top:3px}
+.day-tools{display:flex; gap:7px; padding:11px 14px; background:var(--surface-2); border-top:1px solid var(--line)}
+.btn-sm{
+  padding:7px 12px; border:1px solid var(--line); border-radius:8px;
+  background:var(--surface); font-size:12.5px; font-weight:600; color:var(--ink-2);
+  transition:border-color .15s, color .15s;
+}
+.btn-sm:hover{border-color:var(--accent); color:var(--accent)}
+
+/* ── Route toggle ──────────────────────────────────────────────── */
+.route-note{
+  background:var(--sand-soft); border:1px solid var(--line); border-left:3px solid var(--sand);
+  border-radius:var(--radius); padding:13px 14px; margin-bottom:18px;
+  font-size:14.5px; line-height:1.5; color:var(--ink-2);
+}
+.route-note b{color:var(--ink); font-weight:600}
+
+/* ── Packing ───────────────────────────────────────────────────── */
+.pack-row{
+  display:flex; align-items:center; gap:11px; width:100%;
+  padding:11px 13px; margin-bottom:6px; text-align:left;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-sm);
+  transition:border-color .15s, background-color .15s;
+}
+.pack-row:hover{border-color:var(--line-2)}
+.box{
+  flex:0 0 auto; width:21px; height:21px; border-radius:6px;
+  border:1.5px solid var(--line-2); display:flex; align-items:center; justify-content:center;
+  font-size:12px; color:var(--surface); transition:background-color .15s, border-color .15s;
+}
+.pack-row[aria-pressed="true"] .box{background:var(--up); border-color:var(--up)}
+.pack-row[aria-pressed="true"] .pack-name{color:var(--muted); text-decoration:line-through}
+.pack-name{flex:1; font-size:15px; line-height:1.35}
+.packer{
+  flex:0 0 auto; font-family:"DM Mono",monospace; font-size:10px; letter-spacing:.05em;
+  color:var(--up); background:var(--up-soft); padding:3px 6px; border-radius:5px;
+}
+.pack-wrap{display:flex; align-items:center; gap:6px; margin-bottom:6px}
+.pack-wrap .pack-row{flex:1; min-width:0; margin-bottom:0}
+.pack-del{
+  flex:0 0 auto; width:34px; height:34px; border-radius:8px;
+  border:1px solid var(--line); background:var(--surface);
+  font-size:17px; line-height:1; color:var(--muted);
+  transition:border-color .15s, color .15s;
+}
+.pack-del:hover{border-color:var(--down); color:var(--down)}
+
+/* ── Add box ───────────────────────────────────────────────────── */
+.addbox{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:15px; box-shadow:var(--shadow); margin-bottom:16px;
+}
+label.fld{display:block; margin-bottom:12px}
+label.fld > span{
+  display:block; margin-bottom:5px; font-size:11.5px; font-weight:700;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+}
+input[type=text], select, textarea{
+  width:100%; padding:11px 12px; font:inherit; font-size:15px;
+  color:var(--ink); background:var(--surface-2);
+  border:1px solid var(--line); border-radius:var(--radius-sm);
+  transition:border-color .15s;
+}
+input[type=text]:focus, select:focus, textarea:focus{border-color:var(--accent); outline:none}
+textarea{resize:vertical; min-height:64px}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  padding:12px 18px; border-radius:var(--radius-sm); font-size:14.5px; font-weight:600;
+  background:var(--ink); color:var(--ground); border:1px solid var(--ink);
+  transition:opacity .15s, transform .12s;
+}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.45; cursor:default}
+.btn.ghost{background:var(--surface); color:var(--ink-2); border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--accent); color:var(--accent)}
+.btn-row{display:flex; gap:8px; flex-wrap:wrap}
+.hint{margin:10px 0 0; font-size:12.5px; color:var(--muted); line-height:1.5}
+.warnbox{
+  margin-top:12px; padding:11px 13px; border-radius:var(--radius-sm);
+  background:var(--maybe-soft); border-left:3px solid var(--maybe);
+  font-size:13.5px; color:var(--ink-2); line-height:1.5;
+}
+
+/* ── Sheet ─────────────────────────────────────────────────────── */
+.scrim{
+  position:fixed; inset:0; z-index:80; background:rgba(8,18,20,.5);
+  display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity .2s;
+}
+.scrim.on{opacity:1; pointer-events:auto}
+.sheet{
+  width:100%; max-width:560px; max-height:86vh; overflow-y:auto;
+  background:var(--surface); border-radius:18px 18px 0 0;
+  padding:18px 18px calc(20px + env(safe-area-inset-bottom));
+  transform:translateY(14px); transition:transform .22s;
+}
+.scrim.on .sheet{transform:translateY(0)}
+@media(min-width:640px){
+  .scrim{align-items:center}
+  .sheet{border-radius:18px}
+}
+.sheet h3{font-size:21px; margin-bottom:4px}
+.sheet .sub{margin:0 0 16px; font-size:14px; color:var(--muted); line-height:1.5}
+.pick-item{
+  display:block; width:100%; text-align:left; padding:12px 13px; margin-bottom:7px;
+  background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius-sm);
+  transition:border-color .15s;
+}
+.pick-item:hover{border-color:var(--accent)}
+.pick-item .pn{font-size:15.5px; font-weight:600}
+.pick-item .pm{display:block; margin-top:3px; font-size:12.5px; color:var(--muted)}
+.pick-empty{padding:16px 0; font-size:14px; color:var(--muted); line-height:1.55}
+
+.toast{
+  position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom));
+  transform:translate(-50%,14px); z-index:95;
+  max-width:min(440px,calc(100vw - 32px));
+  padding:11px 16px; border-radius:10px;
+  background:var(--ink); color:var(--ground);
+  font-size:13.5px; font-weight:500; line-height:1.4; text-align:center;
+  opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
+}
+.toast.on{opacity:1; transform:translate(-50%,0)}
+
+footer.foot{
+  margin-top:34px; padding-top:16px; border-top:1px solid var(--line);
+  font-size:12px; color:var(--muted); line-height:1.6;
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="top-row">
+      <div>
+        <p class="eyebrow">Sat Aug 15 &ndash; Wed Aug 19</p>
+        <h1>Traverse <em>City</em></h1>
+        <p class="basecamp">Home base: Grand Beach Resort, East Grand Traverse Bay</p>
+      </div>
+      <button class="who-btn" id="who-btn" type="button">
+        <span class="who-dot"></span><span id="who-label">Who's this?</span>
+      </button>
+    </div>
+    <div class="status" id="status" data-sync="ok">
+      <span class="beacon"></span><span id="status-text">Loading&hellip;</span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="tabs-in" id="tabs" role="tablist"></div>
+</nav>
+
+<div class="wrap">
+  <section class="panel" id="p-days" role="tabpanel" aria-labelledby="t-days"></section>
+  <section class="panel" id="p-drive" role="tabpanel" aria-labelledby="t-drive"></section>
+  <section class="panel" id="p-food" role="tabpanel" aria-labelledby="t-food"></section>
+  <section class="panel" id="p-do" role="tabpanel" aria-labelledby="t-do"></section>
+  <section class="panel" id="p-pack" role="tabpanel" aria-labelledby="t-pack"></section>
+  <section class="panel" id="p-add" role="tabpanel" aria-labelledby="t-add"></section>
+
+  <footer class="foot">
+    <p>Map and menu links open a fresh search rather than a saved address, so nothing here can go stale or 404. Hours, prices, and specials change. Call ahead for anything you'd be upset to miss.</p>
+    <p>Votes and checkmarks are shared between Momma and Daddy. Everything works offline and catches up when you're back on signal.</p>
+  </footer>
+</div>
+
+<div class="scrim" id="scrim"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════════
+   DATA
+   Seeded options. Every spot carries the tags that say which lists and
+   which day slots it can fill. `q` is the map-search suffix for places
+   that aren't in Traverse City itself.
+   ══════════════════════════════════════════════════════════════════ */
+
+var SPOTS = [
+  /* ── Breakfast ── */
+  {id:'b_hotel', name:'Hotel breakfast', where:'At Grand Beach', tags:['breakfast'], indoor:true,
+   chips:['included','no driving'], note:"Already paid for, and you can eat it in pajamas twenty feet from the water."},
+  {id:'b_omelette', name:'The Omelette Shoppe', where:'Downtown', tags:['breakfast'], indoor:true,
+   chips:['no reservations'], note:"Big classic breakfast menu, fast, and nothing on it will scare a picky four-year-old."},
+  {id:'b_traversebay', name:'Traverse Bay Cafe', where:'Off US-31', tags:['breakfast'], indoor:true,
+   chips:['high chairs'], note:"Diner basics with real space between tables, which matters when you're parking a stroller."},
+  {id:'b_redspire', name:'Red Spire Brunch House', where:'Grand Traverse Commons', tags:['breakfast'], indoor:true,
+   note:"Nicer brunch, generous portions, and sourdough French toast the kids will actually finish."},
+  {id:'b_bennys', name:"Benny's Family Dining", where:'Off US-31', tags:['breakfast'], indoor:true,
+   note:"Exactly what the name says. Unfussy, quick, and completely forgiving of noise."},
+  {id:'b_gtpie', name:'Grand Traverse Pie Company', where:'Downtown and on US-31', tags:['breakfast','lunch','treat'], indoor:true,
+   note:"Quiche and pastries in the morning, and you can grab pie for later without making a second stop."},
+
+  /* ── Lunch ── */
+  {id:'l_littlefleet', name:'The Little Fleet', where:'448 E Front St, downtown', tags:['lunch'],
+   chips:['outdoor','no reservations'], note:"A food truck lot, so everybody picks something different and nobody has to negotiate."},
+  {id:'l_slabtown', name:'Slabtown Burgers', where:'West side', tags:['lunch'], indoor:true,
+   chips:['patio','GF options'], note:"Hand-pattied burgers, fresh-cut fries, shakes, and a patio if the weather cooperates."},
+  {id:'l_thatsa', name:"That'sa Pizza", where:'Off US-31', tags:['lunch','dinner'], indoor:true,
+   note:"Pizza is reliable kid currency, and it travels back to the hotel just fine."},
+  {id:'l_pangeas', name:"Pangea's Pizza Pub", where:'Downtown', tags:['lunch','dinner'], indoor:true,
+   note:"Cheese pies downtown, walkable from the beach and the splash pad."},
+  {id:'l_sleders', name:"Sleder's Family Tavern", where:'West side', tags:['lunch','dinner'], indoor:true,
+   chips:['kid menu'], note:"An old tavern that has been at it well over a century and is genuinely fine with loud kids."},
+  {id:'l_cooler', name:'Cooler lunch on the beach', where:'Wherever you are', tags:['lunch'],
+   chips:['free','no waiting'], note:"Cheapest, fastest, and nobody has to sit still. Worth doing at least twice."},
+  {id:'l_arts', name:"Art's Tavern, Glen Arbor", q:'Glen Arbor MI', where:'Glen Arbor, ~40 min', tags:['lunch'], indoor:true,
+   chips:['kid menu','~40 min'], note:"The default lunch on a Sleeping Bear day. Old ski-town bar, burgers, no pretense."},
+
+  /* ── Casual dinner ── */
+  {id:'d_dons', name:"Don's Drive-In", where:'US-31 N, ~5 min from the hotel', tags:['dinner'], indoor:true,
+   chips:['~5 min','no reservations'], note:"A 1950s diner with red booths and thick shakes. The obvious arrival-night dinner."},
+  {id:'d_filling', name:'The Filling Station Microbrewery', where:'642 Railroad Pl', tags:['dinner'], indoor:true,
+   chips:['games','outdoor seating'], note:"An old rail depot, wide open, board games on the shelf, wood-fired flatbread. Kids can move."},
+  {id:'d_bubbas', name:"Bubba's", where:'428 E Front St', tags:['dinner','lunch'], indoor:true,
+   chips:['kid menu'], note:"Games printed right on the menu, tenders and quesadillas, and a Monday kids deal worth confirming."},
+  {id:'d_flyingnoodle', name:'The Flying Noodle', where:'Off US-31', tags:['dinner'], indoor:true,
+   note:"Pasta, the universal kid food. Rigatoni alfredo is the safe order for the little one."},
+  {id:'d_bluetractor', name:'Blue Tractor', where:'Downtown', tags:['dinner'], indoor:true,
+   chips:['kid menu'], note:"Barbecue downtown, casual enough that nobody at the next table is watching yours."},
+  {id:'d_harringtons', name:"Harrington's by the Bay", where:'West Bay', tags:['dinner'], indoor:true,
+   chips:['water views'], note:"Big views over West Bay while staying casual. A good middle-ground night."},
+  {id:'d_hotelpizza', name:'Pizza back at the hotel', where:'Your balcony', tags:['dinner'],
+   chips:['no driving'], note:"Order in, eat on the balcony, kids in pajamas by seven. Do not underestimate this."},
+
+  /* ── The nice night ── */
+  {id:'n_apache', name:'Apache Trout Grill', where:'West Bay waterfront', tags:['nice'], indoor:true,
+   chips:['reserve ahead','waterfront'], note:"The nice night that still tolerates a four-year-old. Waterfront patio, early seating, real food."},
+  {id:'n_stella', name:'Trattoria Stella', where:'Grand Traverse Commons', tags:['nice'], indoor:true,
+   chips:['reserve ahead'], note:"The genuinely great one. Brick cellar room, Italian. Best on a good day or with a sitter."},
+  {id:'n_aerie', name:'Aerie Restaurant & Lounge', where:'16th floor, Grand Traverse Resort', tags:['nice'], indoor:true,
+   chips:['reserve ahead','big view'], note:"Sixteen floors up over the bay, which buys roughly twenty extra minutes of kid patience."},
+
+  /* ── Treats ── */
+  {id:'t_moomers', name:'Moomers Homemade Ice Cream', where:'N Long Lake Rd, ~20 min', tags:['treat'],
+   chips:['~20 min','cows'], note:"Homemade ice cream on a working dairy farm with the cows right there. This is the one they'll remember."},
+  {id:'t_kilwins', name:'Kilwins', where:'Front St, downtown', tags:['treat'], indoor:true,
+   note:"Fudge and ice cream on Front Street. Easy to bolt onto a downtown wander."},
+
+  /* ── Near the hotel ── */
+  {id:'a_hotelbeach', name:'The hotel beach', where:'Out your door', tags:['near'],
+   chips:['free','0 min'], note:"Three hundred feet of private sugar sand, and East Bay runs shallow and warmer than the west side."},
+  {id:'a_hotelpool', name:'Hotel indoor pool and hot tub', where:'Downstairs', tags:['near','indoor-fun'], indoor:true,
+   chips:['free','indoor'], note:"The rainy-afternoon answer and the after-dinner answer. Also the nap-resistance answer."},
+  {id:'a_piratescove', name:"Pirate's Cove Adventure Park", where:'US-31 N, ~10 min', tags:['near'],
+   chips:['~10 min','tickets'], note:"Mini golf plus go-karts and bumper boats. The six-year-old will love it, the little one can still putt."},
+  {id:'a_eastbaypark', name:'East Bay Park', where:'East Bay, ~5 min', tags:['near'],
+   chips:['free','shade'], note:"Shallow, sandy, grassy, with actual shade. The most toddler-forgiving beach in town."},
+  {id:'a_tcstatepark', name:'Traverse City State Park beach', where:'US-31 N, ~5 min', tags:['near'],
+   chips:['day pass'], note:"Wide beach across from the campground with easy parking and restrooms on site."},
+
+  /* ── Downtown ── */
+  {id:'a_clinchpark', name:'Clinch Park beach and splash pad', where:'Downtown waterfront', tags:['downtown'],
+   chips:['free','11am-7pm','paid parking'], note:"Free splash pad runs 11 to 7 through Labor Day, plus 1,500 feet of sand and August lifeguards."},
+  {id:'a_frontst', name:'Front Street wander', where:'Downtown', tags:['downtown'],
+   chips:['free'], note:"Toy shops, fudge, and street musicians. Good for an hour wedged between other things."},
+  {id:'a_openspace', name:'The Open Space and TART Trail', where:'Downtown waterfront', tags:['downtown'],
+   chips:['free','stroller ok'], note:"A big grass field on the water for running off dinner. The trail is flat and stroller-friendly."},
+  {id:'a_childrensmuseum', name:"Great Lakes Children's Museum", where:'Greilickville, ~10 min', tags:['downtown','indoor-fun'], indoor:true,
+   chips:['indoor','ages 1-10'], note:"Built for ages one to ten with a separate toddler beach area, so both kids are covered at once."},
+
+  /* ── Day trips ── */
+  {id:'a_duneclimb', name:'Sleeping Bear Dune Climb', q:'Glen Arbor MI', where:'Glen Arbor, ~40 min', tags:['daytrip'],
+   chips:['~40 min','park pass','bring water'], note:"Climb the first hill only and let them run down it ten times. Skip the four-mile trek to the water."},
+  {id:'a_piercestocking', name:'Pierce Stocking Scenic Drive', q:'Empire MI', where:'Empire, ~45 min', tags:['daytrip'],
+   chips:['~45 min','park pass','stay in car'], note:"A 7.4-mile loop you drive, with overlooks you walk to. Perfect if somebody falls asleep en route."},
+  {id:'a_glenhaven', name:'Glen Haven beach and village', q:'Glen Haven MI', where:'Glen Haven, ~45 min', tags:['daytrip'],
+   chips:['~45 min','park pass'], note:"Calm shallow water for the little one, Petoskey stone hunting, and a restored village with a blacksmith."},
+  {id:'a_missionpoint', name:'Mission Point Lighthouse', q:'Old Mission MI', where:'Old Mission Peninsula, ~35 min', tags:['daytrip'],
+   chips:['~35 min'], note:"Shallow beach, a lighthouse you can climb, and cherry orchards the whole drive out."},
+  {id:'a_leland', name:'Fishtown, Leland', q:'Leland MI', where:'Leland, ~50 min', tags:['daytrip'],
+   chips:['~50 min'], note:"Weathered fishing shanties on a dock over the river. Short visit, and watch small kids near the edge."},
+  {id:'a_cherryrepublic', name:'Cherry Republic, Glen Arbor', q:'Glen Arbor MI', where:'Glen Arbor, ~40 min', tags:['daytrip','indoor-fun'], indoor:true,
+   chips:['indoor','free samples'], note:"Free samples of roughly everything cherry. Pairs naturally with a Sleeping Bear day."},
+
+  /* ── Indoor / rainy day ── */
+  {id:'a_curiosity', name:'Curiosity Place, Grand Traverse Mall', where:'Grand Traverse Mall', tags:['indoor-fun'], indoor:true,
+   chips:['indoor'], note:"Hands-on play run by the children's museum, inside a mall, so lunch is already solved too."},
+  {id:'a_luckyjacks', name:"Lucky Jack's Bowling", where:'Off US-31', tags:['indoor-fun'], indoor:true,
+   chips:['indoor'], note:"Bumpers and light balls make this work at six. The little one will mostly just push the ball."},
+
+  /* ── Drive up: I-75 route ── */
+  {id:'r_frankenmuth', name:"Bronner's CHRISTmas Wonderland", q:'Frankenmuth MI', where:'Frankenmuth, ~1h15 in', tags:['drive-up'], indoor:true,
+   chips:['free','indoor','~1h15'], note:"Free, enormous, air conditioned, and absurd in a way small kids love. Best first stop on I-75."},
+  {id:'r_birchrun', name:'Birch Run outlets', q:'Birch Run MI', where:'Birch Run, ~1h in', tags:['drive-up'], indoor:true,
+   chips:['~1h','food court'], note:"Purely functional. Easy on and off I-75 with a food court and enormous parking."},
+  {id:'r_baycity', name:'Wenonah Park, Bay City', q:'Bay City MI', where:'Bay City, ~1h30 in', tags:['drive-up'],
+   chips:['free','~1h30'], note:"Riverfront park right downtown for a real run-around at the ninety-minute mark."},
+  {id:'r_westbranch', name:'West Branch Tanger outlets', q:'West Branch MI', where:'West Branch, ~2h in', tags:['drive-up'], indoor:true,
+   chips:['~2h','gas + food'], note:"Bathrooms, food, and gas right off the highway. Nothing special, entirely useful."},
+  {id:'r_hartwick', name:'Hartwick Pines State Park', q:'Grayling MI', where:'Grayling, ~3h in', tags:['drive-up'],
+   chips:['~3h','day pass'], note:"A short paved loop through old-growth white pines with a visitor center and clean restrooms. Best leg-stretch on the route."},
+  {id:'r_kalkaska', name:'Kalkaska trout fountain', q:'Kalkaska MI', where:'Kalkaska, ~3h40 in', tags:['drive-up'],
+   chips:['free','5 min stop'], note:"A giant trout statue and fountain forty minutes out. Five minutes, purely to break the last stretch."},
+
+  /* ── Drive home: US-127 route ── */
+  {id:'r_cops', name:'Cops & Doughnuts, Clare', q:'Clare MI', where:'Clare, ~2h15 from TC', tags:['drive-home'], indoor:true,
+   chips:['opens 5am','~2h15'], note:"The city bakery is owned and run by Clare's police officers, and the story lands with kids."},
+  {id:'r_cadillac', name:'Lake Cadillac city park', q:'Cadillac MI', where:'Cadillac, ~1h from TC', tags:['drive-home'],
+   chips:['free','~1h'], note:"Beach and playground right in town. Last real chance to burn energy before the long stretch."},
+  {id:'r_potterpark', name:'Potter Park Zoo, Lansing', q:'Lansing MI', where:'Lansing, ~3h30 from TC', tags:['drive-home'],
+   chips:['tickets','~3h30'], note:"A real zoo. Two hours if you commit, or one quick loop if everyone is done being in the car."},
+  {id:'r_impression5', name:'Impression 5 Science Center', q:'Lansing MI', where:'Lansing, ~3h30 from TC', tags:['drive-home'], indoor:true,
+   chips:['indoor','tickets'], note:"Hands-on science built for exactly these ages. The move if the drive home is a rainy one."}
+];
+
+var DAYS = [
+  {id:'sat', date:'Sat Aug 15', title:'Drive up, then nothing', iso:'2026-08-15',
+   sub:"Leave around 8. One big stop, one leg-stretch, arrive mid-afternoon. Do not schedule anything you'd be sad to miss.",
+   slots:[
+     {key:'drive', label:'On the way', accepts:['drive-up']},
+     {key:'afternoon', label:'Afternoon', accepts:['near','downtown','indoor-fun']},
+     {key:'dinner', label:'Dinner', accepts:['dinner','nice']},
+     {key:'evening', label:'Evening', accepts:['treat','near','indoor-fun']}
+   ]},
+  {id:'sun', date:'Sun Aug 16', title:'Downtown and the water', iso:'2026-08-16',
+   sub:"Splash pad opens at 11. Get there early for parking, then walk to lunch.",
+   slots:[
+     {key:'morning', label:'Morning', accepts:['near','downtown','indoor-fun','breakfast']},
+     {key:'lunch', label:'Lunch', accepts:['lunch']},
+     {key:'afternoon', label:'Afternoon', accepts:['near','downtown','indoor-fun']},
+     {key:'dinner', label:'Dinner', accepts:['dinner','nice']},
+     {key:'evening', label:'Evening', accepts:['treat','near','indoor-fun']}
+   ]},
+  {id:'mon', date:'Mon Aug 17', title:'Sleeping Bear day', iso:'2026-08-17',
+   sub:"The one real drive. Pack water, snacks, and a change of clothes. Cell service out there is bad, so download the map before you go.",
+   slots:[
+     {key:'morning', label:'Morning', accepts:['daytrip']},
+     {key:'lunch', label:'Lunch', accepts:['lunch']},
+     {key:'afternoon', label:'Afternoon', accepts:['daytrip','near','indoor-fun']},
+     {key:'dinner', label:'Dinner', accepts:['dinner','nice']},
+     {key:'evening', label:'Evening', accepts:['treat','near','indoor-fun']}
+   ]},
+  {id:'tue', date:'Tue Aug 18', title:'Easy day, good dinner', iso:'2026-08-18',
+   sub:"Keep the day light so the nice dinner has a chance. Book an early seating and order the kids' food first.",
+   slots:[
+     {key:'morning', label:'Morning', accepts:['near','downtown','daytrip','indoor-fun']},
+     {key:'lunch', label:'Lunch', accepts:['lunch']},
+     {key:'afternoon', label:'Afternoon', accepts:['near','downtown','indoor-fun']},
+     {key:'dinner', label:'Dinner', accepts:['nice','dinner']},
+     {key:'evening', label:'Evening', accepts:['treat','near','downtown']}
+   ]},
+  {id:'wed', date:'Wed Aug 19', title:'Pack up and head home', iso:'2026-08-19',
+   sub:"Different road home so it isn't the same drive twice. Load the car the night before.",
+   slots:[
+     {key:'morning', label:'Before you go', accepts:['breakfast','near']},
+     {key:'stop1', label:'First stop', accepts:['drive-home']},
+     {key:'stop2', label:'If needed', accepts:['drive-home']}
+   ]}
+];
+
+/* A starting plan so the Days tab is useful before anyone votes. Any slot can
+   be swapped, and a cleared slot stays cleared. */
+var DEFAULT_PLAN = {
+  sat:{drive:'r_frankenmuth', afternoon:'a_hotelbeach', dinner:'d_dons', evening:'a_hotelpool'},
+  sun:{morning:'a_clinchpark', lunch:'l_littlefleet', afternoon:'a_frontst', dinner:'d_filling', evening:'t_moomers'},
+  mon:{morning:'a_duneclimb', lunch:'l_arts', afternoon:'a_glenhaven', dinner:'d_hotelpizza', evening:'a_hotelbeach'},
+  tue:{morning:'a_eastbaypark', lunch:'l_cooler', afternoon:'a_piratescove', dinner:'n_apache', evening:'t_kilwins'},
+  wed:{morning:'b_hotel', stop1:'r_cadillac', stop2:'r_cops'}
+};
+
+var PACKING = [
+  {group:'car', label:'Car and road', items:[
+    'Snack bin (the good snacks, not the healthy ones)','Water bottles for everyone','Tablets, headphones, shows downloaded',
+    'Car chargers and a spare cable','Paper towels','Trash bags','Wipes, more than you think',
+    'Window sunshades','Pillows and a blanket each','Motion sickness bags','First aid kit','Cooler and ice'
+  ]},
+  {group:'beach', label:'Beach and water', items:[
+    'Two swimsuits per kid','Rash guards','Swim diapers','Water shoes','Sand toys and a bucket',
+    'Beach towels','Spray sunscreen','Stick sunscreen for faces','Sun hats','Pop-up shade or umbrella',
+    'Dry bag for wet stuff','Goggles','Puddle jumpers or life vests'
+  ]},
+  {group:'kids', label:'Kids', items:[
+    'Long sleeves and layers (nights drop into the 50s up there)','Bug spray','Sound machine','Night light',
+    'The comfort item, do not forget the comfort item','Stroller','Carrier for the dunes',
+    'An outfit per day plus two','Pull-ups','Bedtime books','Tylenol and Motrin'
+  ]},
+  {group:'hotel', label:'Hotel room', items:[
+    'Laundry bag','Plastic grocery bags','Dish soap and a sponge for cups and bottles',
+    'Outlet covers','Small fan','Coffee, if you are particular','Reusable water bottles'
+  ]},
+  {group:'grown', label:'Grown-ups', items:[
+    'Park pass or cash for the Sleeping Bear vehicle fee','Cash for downtown parking',
+    'Phone chargers','Camera','Any meds','Sunglasses'
+  ]},
+  {group:'before', label:'Before you pull out of the driveway', items:[
+    'Hotel confirmation saved offline','Insurance cards','Offline maps downloaded for Sleeping Bear',
+    'Confirm the hotel check-in time','Reserve the nice dinner','Gas up the night before'
+  ]}
+];
+
+var TABS = [
+  {id:'days', label:'Days'},
+  {id:'drive', label:'The Drive'},
+  {id:'food', label:'Food'},
+  {id:'do', label:'Do'},
+  {id:'pack', label:'Packing'},
+  {id:'add', label:'Add a spot'}
+];
+
+var GROUPS = {
+  food:[
+    {tag:'breakfast', label:'Breakfast'},
+    {tag:'lunch', label:'Lunch'},
+    {tag:'dinner', label:'Dinner, casual'},
+    {tag:'nice', label:'The one nice night'},
+    {tag:'treat', label:'Ice cream and treats'}
+  ],
+  do:[
+    {tag:'near', label:'Walk or 10 minutes'},
+    {tag:'downtown', label:'Downtown'},
+    {tag:'daytrip', label:'Worth the drive'},
+    {tag:'indoor-fun', label:'If it rains'}
+  ],
+  drive:[
+    {tag:'drive-up', label:'Heading up, Saturday'},
+    {tag:'drive-home', label:'Heading home, Wednesday'}
+  ]
+};
+
+var PEOPLE = {momma:'Momma', daddy:'Daddy'};
+var VOTE_ICON = {up:'👍', maybe:'🤔', down:'👎'};
+
+/* ══════════════════════════════════════════════════════════════════
+   LOCAL STORE
+   localStorage is the render source so the page always works with no
+   signal. The server is a sync target, never a dependency for paint.
+   ══════════════════════════════════════════════════════════════════ */
+
+var LS = {
+  who:'tc_who', key:'tc_key', cache:'tc_cache', queue:'tc_queue',
+  tab:'tc_tab', filter:'tc_filter'
+};
+
+function lsGet(k, fb){
+  try{ var v = localStorage.getItem(k); return v === null ? fb : JSON.parse(v); }
+  catch(e){ return fb; }
+}
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+function emptyState(){
+  return {rev:0, votes:{}, packed:{}, custom:[], hidden:{}, dayPlan:{}, updatedAt:0, updatedBy:null};
+}
+
+var state = Object.assign(emptyState(), lsGet(LS.cache, {}));
+var queue = lsGet(LS.queue, []);
+var who = lsGet(LS.who, null);
+var passcode = lsGet(LS.key, '');
+var activeTab = lsGet(LS.tab, 'days');
+var filter = lsGet(LS.filter, 'all');
+var syncState = 'ok';
+var lastRev = state.rev || 0;
+var activeUntil = 0;
+var flushTimer = null;
+
+/* Mirror of the server's op reducer. Local application has to be optimistic or
+   every tap would wait on a round trip. */
+function applyOp(s, op, actor){
+  if(op.op === 'vote'){
+    if(!s.votes[op.id]) s.votes[op.id] = {};
+    if(op.value === null){
+      delete s.votes[op.id][actor];
+      if(!Object.keys(s.votes[op.id]).length) delete s.votes[op.id];
+    } else {
+      s.votes[op.id][actor] = {v:op.value, why:op.why || '', ts:Date.now()};
+    }
+  } else if(op.op === 'pack'){
+    if(op.on) s.packed[op.id] = {who:actor, ts:Date.now()};
+    else delete s.packed[op.id];
+  } else if(op.op === 'addCustom'){
+    if(!s.custom.some(function(c){ return c.id === op.spot.id; })){
+      s.custom.push(Object.assign({}, op.spot, {addedBy:actor, ts:Date.now()}));
+    }
+  } else if(op.op === 'delCustom'){
+    s.custom = s.custom.filter(function(c){ return c.id !== op.id; });
+    delete s.votes[op.id];
+    Object.keys(s.dayPlan).forEach(function(d){
+      Object.keys(s.dayPlan[d] || {}).forEach(function(k){
+        if(s.dayPlan[d][k] === op.id) s.dayPlan[d][k] = null;
+      });
+    });
+  } else if(op.op === 'hide'){
+    if(op.on) s.hidden[op.id] = true; else delete s.hidden[op.id];
+  } else if(op.op === 'assign'){
+    if(!s.dayPlan[op.day]) s.dayPlan[op.day] = {};
+    s.dayPlan[op.day][op.slot] = op.spotId || null;
+  } else if(op.op === 'resetDay'){
+    delete s.dayPlan[op.day];
+  }
+}
+
+function commit(op, opts){
+  if(!who){ openWhoSheet(); return; }
+  applyOp(state, op, who);
+  queue.push(op);
+  lsSet(LS.cache, state);
+  lsSet(LS.queue, queue);
+  activeUntil = Date.now() + 120000;
+  if(!opts || !opts.quiet) render();
+  scheduleFlush();
+}
+
+/* Rapid tapping down a list should be one request, not fifteen. */
+function scheduleFlush(){
+  if(flushTimer) clearTimeout(flushTimer);
+  flushTimer = setTimeout(flush, 600);
+}
+
+function headers(){
+  var h = {'Content-Type':'application/json'};
+  if(passcode) h['x-trip-key'] = passcode;
+  return h;
+}
+
+function setSync(kind, text){
+  syncState = kind;
+  var el = document.getElementById('status');
+  el.setAttribute('data-sync', kind);
+  document.getElementById('status-text').textContent = text;
+}
+
+function describeSaved(){
+  if(queue.length) return queue.length + ' change' + (queue.length > 1 ? 's' : '') + ' waiting to sync';
+  if(!state.updatedAt) return 'Shared with ' + (who === 'momma' ? 'Daddy' : 'Momma');
+  return 'Last change ' + ago(state.updatedAt) + (state.updatedBy ? ' by ' + PEOPLE[state.updatedBy] : '');
+}
+
+function ago(ts){
+  var s = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if(s < 60) return 'just now';
+  var m = Math.round(s / 60);
+  if(m < 60) return m + ' min ago';
+  var h = Math.round(m / 60);
+  if(h < 24) return h + ' hr ago';
+  return Math.round(h / 24) + ' days ago';
+}
+
+async function flush(){
+  if(!queue.length || !who) return;
+  var sending = queue.slice(0, 60);
+  setSync('syncing', 'Saving…');
+  try{
+    var r = await fetch('/api/state', {
+      method:'POST', headers:headers(),
+      body:JSON.stringify({who:who, ops:sending})
+    });
+    if(r.status === 401){ setSync('error', 'Passcode rejected'); openPasscodeSheet(); return; }
+    if(!r.ok) throw new Error('http ' + r.status);
+    var data = await r.json();
+    queue = queue.slice(sending.length);
+    lsSet(LS.queue, queue);
+    adopt(data.state);
+    setSync(queue.length ? 'offline' : 'ok', describeSaved());
+    if(queue.length) scheduleFlush();
+  } catch(e){
+    // Keep the queue. It flushes on reconnect, focus, or the next change.
+    setSync('offline', describeSaved() + ' · saved on this phone');
+  }
+}
+
+function adopt(incoming){
+  if(!incoming) return;
+  state = Object.assign(emptyState(), incoming);
+  lastRev = state.rev || 0;
+  lsSet(LS.cache, state);
+  render();
+}
+
+async function pull(){
+  try{
+    var r = await fetch('/api/state', {headers:headers()});
+    if(r.status === 401){ setSync('error', 'Passcode needed'); openPasscodeSheet(); return; }
+    if(r.status === 503){ setSync('offline', 'Shared list not set up yet · saving on this phone'); return; }
+    if(!r.ok) throw new Error('http ' + r.status);
+    var data = await r.json();
+    // Never let a pull stomp edits that haven't been sent yet.
+    if(queue.length){ scheduleFlush(); return; }
+    adopt(data.state);
+    setSync('ok', describeSaved());
+  } catch(e){
+    setSync('offline', 'Offline · saving on this phone');
+  }
+}
+
+/* Cheap freshness check: one small integer, no document transfer. */
+async function checkRev(){
+  if(queue.length){ scheduleFlush(); return; }
+  try{
+    var r = await fetch('/api/state?revOnly=1', {headers:headers()});
+    if(!r.ok) return;
+    var data = await r.json();
+    if((data.rev || 0) > lastRev) await pull();
+  } catch(e){}
+}
+
+/* Burst polling only while someone is actually looking and touching things.
+   Idle tabs cost nothing. */
+setInterval(function(){
+  if(document.visibilityState !== 'visible') return;
+  if(Date.now() > activeUntil) return;
+  checkRev();
+}, 10000);
+
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible'){
+    activeUntil = Date.now() + 120000;
+    if(queue.length) flush(); else checkRev();
+  }
+});
+window.addEventListener('online', function(){ if(queue.length) flush(); else checkRev(); });
+window.addEventListener('pagehide', function(){ if(queue.length) flush(); });
+
+/* ══════════════════════════════════════════════════════════════════
+   DERIVED
+   ══════════════════════════════════════════════════════════════════ */
+
+function allSpots(){
+  return SPOTS.concat(state.custom.filter(function(c){ return !c.group; }));
+}
+function spotById(id){
+  var all = allSpots();
+  for(var i = 0; i < all.length; i++) if(all[i].id === id) return all[i];
+  return null;
+}
+function spotsFor(tag){
+  return allSpots().filter(function(s){
+    return (s.tags || []).indexOf(tag) !== -1 && !state.hidden[s.id];
+  });
+}
+
+/* Two voters means the outcome is always nameable. Show the verdict, not a
+   tally, because "Waiting on Momma" is the thing that moves this along. */
+function verdict(id){
+  var v = state.votes[id] || {};
+  var m = v.momma && v.momma.v, d = v.daddy && v.daddy.v;
+  if(m === 'down' || d === 'down'){
+    if((m === 'up' || d === 'up')) return {k:'split', label:'You disagree'};
+    return {k:'out', label:'Ruled out'};
+  }
+  if(m === 'up' && d === 'up') return {k:'in', label:'Locked in'};
+  if((m === 'up' && d === 'maybe') || (m === 'maybe' && d === 'up')) return {k:'lean', label:'Leaning yes'};
+  if(m === 'maybe' && d === 'maybe') return {k:'maybe', label:'Maybe'};
+  if(m && !d) return {k:'wait', label:'Waiting on Daddy'};
+  if(d && !m) return {k:'wait', label:'Waiting on Momma'};
+  return {k:'none', label:''};
+}
+
+function isOut(id){ var k = verdict(id).k; return k === 'out' || k === 'split'; }
+
+function matchesFilter(id){
+  var k = verdict(id).k;
+  if(filter === 'all') return true;
+  if(filter === 'in') return k === 'in' || k === 'lean';
+  if(filter === 'mine'){
+    var v = state.votes[id] || {};
+    return who ? !v[who] : true;
+  }
+  if(filter === 'maybe') return k === 'maybe' || k === 'wait' || k === 'split';
+  return true;
+}
+
+function counts(){
+  var ids = allSpots().map(function(s){ return s.id; });
+  var c = {in:0, mine:0, out:0};
+  ids.forEach(function(id){
+    var k = verdict(id).k;
+    if(k === 'in' || k === 'lean') c.in++;
+    if(k === 'out' || k === 'split') c.out++;
+    var v = state.votes[id] || {};
+    if(who && !v[who]) c.mine++;
+  });
+  return c;
+}
+
+function mapsUrl(s){
+  var q = s.name + ' ' + (s.q || 'Traverse City MI');
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+}
+function infoUrl(s){
+  var isFood = ['breakfast','lunch','dinner','nice','treat'].some(function(t){
+    return (s.tags || []).indexOf(t) !== -1;
+  });
+  var q = s.name + ' ' + (s.q || 'Traverse City MI') + (isFood ? ' menu' : ' hours');
+  return 'https://www.google.com/search?q=' + encodeURIComponent(q);
+}
+function isFoodSpot(s){
+  return ['breakfast','lunch','dinner','nice','treat'].some(function(t){
+    return (s.tags || []).indexOf(t) !== -1;
+  });
+}
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RENDER
+   ══════════════════════════════════════════════════════════════════ */
+
+function spotCard(s){
+  var vd = verdict(s.id);
+  var v = state.votes[s.id] || {};
+  var h = '<article class="spot" data-verdict="' + vd.k + '">';
+
+  h += '<div class="spot-head"><div class="spot-name">' + esc(s.name);
+  if(s.where) h += '<span class="spot-where">' + esc(s.where) + '</span>';
+  h += '</div>';
+  if(vd.label) h += '<span class="verdict" data-k="' + vd.k + '">' + esc(vd.label) + '</span>';
+  h += '</div>';
+
+  if(s.note) h += '<p class="spot-note">' + esc(s.note) + '</p>';
+
+  var chips = (s.chips || []).slice();
+  var chipHtml = '';
+  chips.forEach(function(c){ chipHtml += '<span class="chip">' + esc(c) + '</span>'; });
+  // "indoor" earns its place on an activity and is just noise on a restaurant.
+  if(s.indoor && !isFoodSpot(s) && chips.indexOf('indoor') === -1){
+    chipHtml += '<span class="chip indoor">indoor</span>';
+  }
+  if(s.addedBy) chipHtml += '<span class="chip added">added by ' + esc(PEOPLE[s.addedBy] || 'someone') + '</span>';
+  if(s.unverified) chipHtml += '<span class="chip added">unconfirmed</span>';
+  if(chipHtml) h += '<div class="spot-chips">' + chipHtml + '</div>';
+
+  ['momma','daddy'].forEach(function(p){
+    if(v[p] && v[p].why){
+      h += '<p class="why"><b>' + PEOPLE[p] + ':</b> ' + esc(v[p].why) + '</p>';
+    }
+  });
+
+  h += '<div class="spot-foot"><div class="votes">';
+  ['up','maybe','down'].forEach(function(val){
+    var mine = who && v[who] && v[who].v === val;
+    var other = who === 'momma' ? 'daddy' : 'momma';
+    var theirs = v[other] && v[other].v === val;
+    h += '<button class="vote" data-v="' + val + '" data-act="vote" data-id="' + esc(s.id) + '"'
+      + ' aria-pressed="' + (mine ? 'true' : 'false') + '"'
+      + ' aria-label="' + val + '">' + VOTE_ICON[val];
+    if(theirs) h += '<span class="tick">' + (other === 'momma' ? 'M' : 'D') + '</span>';
+    h += '</button>';
+  });
+  h += '</div><div class="links">';
+  h += '<a class="ilink" href="' + mapsUrl(s) + '" target="_blank" rel="noopener">Map</a>';
+  h += '<a class="ilink" href="' + infoUrl(s) + '" target="_blank" rel="noopener">'
+    + (isFoodSpot(s) ? 'Menu' : 'Info') + '</a>';
+  if(String(s.id).indexOf('c_') === 0){
+    h += '<button class="ilink" data-act="delSpot" data-id="' + esc(s.id) + '" aria-label="Remove ' + esc(s.name) + '">Remove</button>';
+  }
+  h += '</div></div></article>';
+  return h;
+}
+
+function groupBlock(g){
+  var list = spotsFor(g.tag);
+  var live = list.filter(function(s){ return !isOut(s.id) && matchesFilter(s.id); });
+  var out = list.filter(function(s){ return isOut(s.id); });
+
+  var h = '<h2 class="grp">' + esc(g.label) + ' <span class="n">' + live.length + '</span></h2>';
+  if(!live.length && !out.length){
+    h += '<p class="pick-empty">Nothing here yet. Add something on the Add a spot tab.</p>';
+  } else if(!live.length){
+    h += '<p class="pick-empty">Nothing matches this filter.</p>';
+  }
+  live.forEach(function(s){ h += spotCard(s); });
+  if(out.length){
+    h += '<details class="drawer"><summary>Ruled out (' + out.length + ')</summary>';
+    out.forEach(function(s){ h += spotCard(s); });
+    h += '</details>';
+  }
+  return h;
+}
+
+function filterRow(){
+  var c = counts();
+  var opts = [
+    {k:'all', label:'Everything'},
+    {k:'in', label:'Locked in · ' + c.in},
+    {k:'mine', label:'Needs your vote · ' + c.mine},
+    {k:'maybe', label:'Undecided'}
+  ];
+  var h = '<div class="filters">';
+  opts.forEach(function(o){
+    h += '<button class="fchip" data-act="filter" data-f="' + o.k + '" aria-pressed="'
+      + (filter === o.k ? 'true' : 'false') + '">' + esc(o.label) + '</button>';
+  });
+  return h + '</div>';
+}
+
+function renderDays(){
+  var todayIso = new Date().toISOString().slice(0, 10);
+  var h = '<p class="lede">Tap any line to swap it. The picker only offers what you two have <b>locked in</b> or left as a maybe, so the plan and the voting stay in step.</p>';
+
+  DAYS.forEach(function(day){
+    var plan = state.dayPlan[day.id] || {};
+    var isToday = day.iso === todayIso;
+    h += '<section class="day' + (isToday ? ' today' : '') + '">';
+    h += '<div class="day-head"><div class="day-date">' + esc(day.date) + '</div>';
+    h += '<h3 class="day-title">' + esc(day.title)
+      + (isToday ? '<span class="today-flag">Today</span>' : '') + '</h3>';
+    h += '<p class="day-sub">' + esc(day.sub) + '</p></div>';
+
+    day.slots.forEach(function(slot){
+      var chosen = Object.prototype.hasOwnProperty.call(plan, slot.key)
+        ? plan[slot.key]
+        : (DEFAULT_PLAN[day.id] || {})[slot.key];
+      var s = chosen ? spotById(chosen) : null;
+      h += '<div class="slot"><div class="slot-label">' + esc(slot.label) + '</div>';
+      h += '<button class="slot-body" data-act="pick" data-day="' + day.id + '" data-slot="' + slot.key + '">';
+      if(s){
+        h += '<span class="slot-pick">' + esc(s.name) + '</span>';
+        if(s.where) h += '<span class="slot-meta">' + esc(s.where) + '</span>';
+        if(isOut(s.id)) h += '<span class="slot-warn">One of you ruled this out</span>';
+      } else {
+        h += '<span class="slot-pick slot-empty">Open · tap to pick</span>';
+      }
+      h += '</button></div>';
+    });
+
+    h += '<div class="day-tools">';
+    h += '<button class="btn-sm" data-act="rainy" data-day="' + day.id + '">If it rains</button>';
+    if(Object.keys(plan).length){
+      h += '<button class="btn-sm" data-act="resetDay" data-day="' + day.id + '">Back to suggested</button>';
+    }
+    h += '</div></section>';
+  });
+  return h;
+}
+
+function renderOptions(kind, lede){
+  var h = '<p class="lede">' + lede + '</p>' + filterRow();
+  GROUPS[kind].forEach(function(g){ h += groupBlock(g); });
+  return h;
+}
+
+function renderDrive(){
+  var h = '<p class="lede">Two different roads, about four hours each. Take <b>I-75</b> up and <b>US-127</b> home so the kids get new windows both ways and each direction has one real stop.</p>';
+  h += '<div class="route-note"><b>Up on Saturday:</b> I-75 north, then M-72 west at Grayling. '
+    + 'Leave around 8 after breakfast, one long stop at the 90-minute mark, a short leg-stretch near Grayling, and you are pulling in mid-afternoon. '
+    + 'Check-in is usually mid-afternoon, so confirm with the hotel if you land early.</div>';
+  h += '<div class="route-note"><b>Home on Wednesday:</b> M-115 southeast to Clare, then US-127 and I-96. '
+    + 'Clare sits almost exactly halfway, which is what makes the doughnut stop work.</div>';
+  h += filterRow();
+  GROUPS.drive.forEach(function(g){ h += groupBlock(g); });
+  return h;
+}
+
+function renderPack(){
+  var custom = state.custom.filter(function(c){ return c.group; });
+  var total = 0, done = 0;
+  PACKING.forEach(function(g){
+    g.items.forEach(function(it){
+      total++; if(state.packed['p_' + g.group + '_' + slug(it)]) done++;
+    });
+  });
+  custom.forEach(function(c){ total++; if(state.packed[c.id]) done++; });
+
+  var h = '<p class="lede"><b>' + done + ' of ' + total + '</b> packed. Shared, so when one of you checks the sunscreen the other stops looking for it.</p>';
+
+  PACKING.forEach(function(g){
+    var mine = custom.filter(function(c){ return c.group === g.group; });
+    var ids = g.items.map(function(it){ return 'p_' + g.group + '_' + slug(it); })
+      .concat(mine.map(function(c){ return c.id; }));
+    var left = ids.filter(function(id){ return !state.packed[id]; }).length;
+
+    h += '<h2 class="grp">' + esc(g.label) + ' <span class="n">'
+      + (left ? left + ' left' : 'done') + '</span></h2>';
+    g.items.forEach(function(it){
+      h += packRow('p_' + g.group + '_' + slug(it), it, false);
+    });
+    mine.forEach(function(c){ h += packRow(c.id, c.name, true); });
+    h += '<div class="btn-row" style="margin-top:8px">'
+      + '<button class="btn-sm" data-act="addPack" data-group="' + g.group + '">+ Add to '
+      + esc(g.label.toLowerCase()) + '</button></div>';
+  });
+  return h;
+}
+
+function packRow(id, label, removable){
+  var p = state.packed[id];
+  // The remove control is a sibling, not a child: a button cannot nest in a button.
+  var h = removable ? '<div class="pack-wrap">' : '';
+  h += '<button class="pack-row" data-act="pack" data-id="' + esc(id) + '" aria-pressed="' + (p ? 'true' : 'false') + '">';
+  h += '<span class="box" aria-hidden="true">' + (p ? '✓' : '') + '</span>';
+  h += '<span class="pack-name">' + esc(label) + '</span>';
+  if(p) h += '<span class="packer">' + (p.who === 'momma' ? 'M' : 'D') + '</span>';
+  h += '</button>';
+  if(removable){
+    h += '<button class="pack-del" data-act="delPack" data-id="' + esc(id) + '"'
+      + ' aria-label="Remove ' + esc(label) + '">×</button></div>';
+  }
+  return h;
+}
+
+function slug(s){
+  return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
+}
+
+function renderAdd(){
+  var h = '<p class="lede">Found something? Type the name and I will fill in the rest, written for a preschooler and a six-year-old. It lands unvoted so you both still get a say.</p>';
+  h += '<div class="addbox">';
+  h += '<label class="fld"><span>Name of the place</span>'
+    + '<input type="text" id="add-name" placeholder="Sail Inn, Hop Lot, whatever you heard about" autocomplete="off"></label>';
+  h += '<label class="fld"><span>Which list</span><select id="add-cat">'
+    + '<option value="breakfast">Breakfast</option>'
+    + '<option value="lunch">Lunch</option>'
+    + '<option value="dinnerCasual">Dinner, casual</option>'
+    + '<option value="dinnerNice">The nice night</option>'
+    + '<option value="treats">Ice cream and treats</option>'
+    + '<option value="near">Near the hotel</option>'
+    + '<option value="downtown">Downtown</option>'
+    + '<option value="daytrip">Worth the drive</option>'
+    + '<option value="rainy">If it rains</option>'
+    + '<option value="driveUp">Stop on the drive up</option>'
+    + '<option value="driveHome">Stop on the drive home</option>'
+    + '</select></label>';
+  h += '<div class="btn-row"><button class="btn" id="add-go">Look it up</button>'
+    + '<button class="btn ghost" id="add-manual">Add it myself</button></div>';
+  h += '<p class="hint">Lookups never return hours, prices, or addresses, because a guess at a restaurant’s hours is worse than no answer. '
+    + 'You get a rough area and an honest read on whether it works with the kids. Map and menu buttons run a live search.</p>';
+  h += '<div id="add-out"></div>';
+  h += '</div>';
+
+  var custom = state.custom.filter(function(c){ return !c.group; });
+  if(custom.length){
+    h += '<h2 class="grp">Added by you two <span class="n">' + custom.length + '</span></h2>';
+    custom.forEach(function(s){ h += spotCard(s); });
+  }
+  return h;
+}
+
+function render(){
+  var tabs = document.getElementById('tabs');
+  var c = counts();
+  tabs.innerHTML = TABS.map(function(t){
+    var badge = '';
+    if(t.id === 'pack'){
+      var tot = 0, dn = 0;
+      PACKING.forEach(function(g){ g.items.forEach(function(it){
+        tot++; if(state.packed['p_' + g.group + '_' + slug(it)]) dn++;
+      });});
+      if(dn) badge = ' · ' + dn + '/' + tot;
+    }
+    return '<button class="tab" id="t-' + t.id + '" role="tab" data-act="tab" data-tab="' + t.id + '"'
+      + ' aria-selected="' + (activeTab === t.id ? 'true' : 'false') + '"'
+      + ' aria-controls="p-' + t.id + '">' + esc(t.label) + badge + '</button>';
+  }).join('');
+
+  TABS.forEach(function(t){
+    var el = document.getElementById('p-' + t.id);
+    el.classList.toggle('on', activeTab === t.id);
+  });
+
+  if(activeTab === 'days') document.getElementById('p-days').innerHTML = renderDays();
+  if(activeTab === 'drive') document.getElementById('p-drive').innerHTML = renderDrive();
+  if(activeTab === 'food') document.getElementById('p-food').innerHTML =
+    renderOptions('food', 'One nice dinner, everything else easy. Vote things down and they drop into the ruled-out drawer at the bottom of their group.');
+  if(activeTab === 'do') document.getElementById('p-do').innerHTML =
+    renderOptions('do', 'Sorted by how far you have to drive. Anything tagged <b>indoor</b> shows up in the rainy-day picker on the Days tab.');
+  if(activeTab === 'pack') document.getElementById('p-pack').innerHTML = renderPack();
+  if(activeTab === 'add') document.getElementById('p-add').innerHTML = renderAdd();
+
+  document.getElementById('who-label').textContent = who ? PEOPLE[who] : "Who's this?";
+  if(syncState === 'ok') setSync('ok', describeSaved());
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SHEETS
+   ══════════════════════════════════════════════════════════════════ */
+
+var scrim = document.getElementById('scrim');
+var sheet = document.getElementById('sheet');
+var lastFocus = null;
+
+function openSheet(html){
+  lastFocus = document.activeElement;
+  sheet.innerHTML = html;
+  scrim.classList.add('on');
+  var f = sheet.querySelector('input, select, button, textarea');
+  if(f) setTimeout(function(){ f.focus(); }, 60);
+}
+function closeSheet(){
+  scrim.classList.remove('on');
+  sheet.innerHTML = '';
+  if(lastFocus && lastFocus.focus) lastFocus.focus();
+}
+scrim.addEventListener('click', function(e){ if(e.target === scrim) closeSheet(); });
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && scrim.classList.contains('on')) closeSheet(); });
+
+function openWhoSheet(){
+  openSheet('<h3>Which one are you?</h3>'
+    + '<p class="sub">So your votes show up as yours. You can switch any time by tapping your name up top.</p>'
+    + '<button class="pick-item" data-act="setWho" data-who="momma"><span class="pn">Momma</span></button>'
+    + '<button class="pick-item" data-act="setWho" data-who="daddy"><span class="pn">Daddy</span></button>');
+}
+
+function openPasscodeSheet(){
+  openSheet('<h3>Trip passcode</h3>'
+    + '<p class="sub">Keeps strangers out of your list. Enter it once per phone.</p>'
+    + '<label class="fld"><span>Passcode</span><input type="text" id="pc" autocomplete="off" value="' + esc(passcode) + '"></label>'
+    + '<div class="btn-row"><button class="btn" data-act="savePc">Save</button>'
+    + '<button class="btn ghost" data-act="close">Cancel</button></div>');
+}
+
+function openWhySheet(id, value){
+  var name = (spotById(id) || {}).name || 'this';
+  var prompt = value === 'down'
+    ? 'Say why so the other one of you is not guessing. Optional, but it saves an argument.'
+    : 'What is the hesitation? One line is plenty.';
+  openSheet('<h3>' + (value === 'down' ? 'Ruling out' : 'Not sure about') + ' ' + esc(name) + '</h3>'
+    + '<p class="sub">' + prompt + '</p>'
+    + '<label class="fld"><span>Because…</span>'
+    + '<input type="text" id="why" placeholder="Too far for nap time" autocomplete="off"></label>'
+    + '<div class="btn-row"><button class="btn" data-act="saveWhy" data-id="' + esc(id) + '" data-v="' + value + '">Save</button>'
+    + '<button class="btn ghost" data-act="saveWhy" data-id="' + esc(id) + '" data-v="' + value + '" data-skip="1">Skip the note</button></div>');
+}
+
+function openPicker(dayId, slotKey, rainyOnly){
+  var day = DAYS.filter(function(d){ return d.id === dayId; })[0];
+  var slot = day.slots.filter(function(s){ return s.key === slotKey; })[0];
+  var pool = [];
+  allSpots().forEach(function(s){
+    if(state.hidden[s.id]) return;
+    if(!slot.accepts.some(function(t){ return (s.tags || []).indexOf(t) !== -1; })) return;
+    if(rainyOnly && !s.indoor) return;
+    pool.push(s);
+  });
+  // Best options first: what you both want, then leaning, then the rest.
+  var rank = {in:0, lean:1, wait:2, none:3, maybe:4, split:5, out:6};
+  pool.sort(function(a, b){ return rank[verdict(a.id).k] - rank[verdict(b.id).k]; });
+
+  var h = '<h3>' + esc(slot.label) + ' · ' + esc(day.date) + '</h3>';
+  h += '<p class="sub">' + (rainyOnly ? 'Indoor options only.' : 'Best-voted first. Ruled-out options are at the bottom.') + '</p>';
+  if(!pool.length){
+    h += '<p class="pick-empty">Nothing fits this slot yet' + (rainyOnly ? ' that works indoors' : '') + '. Add something on the Add a spot tab.</p>';
+  }
+  pool.forEach(function(s){
+    var vd = verdict(s.id);
+    h += '<button class="pick-item" data-act="assign" data-day="' + dayId + '" data-slot="' + slotKey + '" data-spot="' + esc(s.id) + '">'
+      + '<span class="pn">' + esc(s.name) + '</span>'
+      + '<span class="pm">' + esc(s.where || '') + (vd.label ? ' · ' + esc(vd.label) : '') + '</span></button>';
+  });
+  h += '<div class="btn-row" style="margin-top:12px">'
+    + '<button class="btn ghost" data-act="assign" data-day="' + dayId + '" data-slot="' + slotKey + '" data-spot="">Leave it open</button>'
+    + (rainyOnly ? '' : '<button class="btn ghost" data-act="pickRainy" data-day="' + dayId + '" data-slot="' + slotKey + '">Indoor only</button>')
+    + '</div>';
+  openSheet(h);
+}
+
+function openRainy(dayId){
+  var day = DAYS.filter(function(d){ return d.id === dayId; })[0];
+  var h = '<h3>Rainy day, ' + esc(day.date) + '</h3>'
+    + '<p class="sub">Pick a slot and I will only show what works indoors.</p>';
+  day.slots.forEach(function(s){
+    h += '<button class="pick-item" data-act="pickRainy" data-day="' + dayId + '" data-slot="' + s.key + '">'
+      + '<span class="pn">' + esc(s.label) + '</span></button>';
+  });
+  openSheet(h);
+}
+
+function openAddPack(group){
+  var g = PACKING.filter(function(x){ return x.group === group; })[0];
+  openSheet('<h3>Add to ' + esc(g.label.toLowerCase()) + '</h3>'
+    + '<p class="sub">Goes on the shared list for both of you.</p>'
+    + '<label class="fld"><span>Item</span><input type="text" id="pk" placeholder="The blue sand bucket" autocomplete="off"></label>'
+    + '<div class="btn-row"><button class="btn" data-act="savePack" data-group="' + group + '">Add it</button>'
+    + '<button class="btn ghost" data-act="close">Cancel</button></div>');
+}
+
+var toastTimer = null;
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('on'); }, 3200);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ADD A SPOT
+   ══════════════════════════════════════════════════════════════════ */
+
+var CAT_TAGS = {
+  breakfast:['breakfast'], lunch:['lunch'], dinnerCasual:['dinner'], dinnerNice:['nice'],
+  treats:['treat'], near:['near'], downtown:['downtown'], daytrip:['daytrip'],
+  rainy:['indoor-fun'], driveUp:['drive-up'], driveHome:['drive-home']
+};
+
+var pendingSpot = null;
+
+async function lookupSpot(){
+  var nameEl = document.getElementById('add-name');
+  var catEl = document.getElementById('add-cat');
+  var out = document.getElementById('add-out');
+  var name = (nameEl.value || '').trim();
+  if(!name){ toast('Type a place name first.'); nameEl.focus(); return; }
+
+  var btn = document.getElementById('add-go');
+  btn.disabled = true;
+  btn.textContent = 'Looking…';
+  out.innerHTML = '';
+
+  try{
+    var r = await fetch('/api/add', {
+      method:'POST', headers:headers(),
+      body:JSON.stringify({name:name, category:catEl.value})
+    });
+    var data = await r.json().catch(function(){ return {}; });
+    if(!r.ok) throw new Error(data.error || 'Lookup failed.');
+
+    var s = data.spot;
+    pendingSpot = {
+      id:'c_' + Date.now().toString(36) + '_' + Math.floor(Math.random() * 4096).toString(36),
+      name:s.name, where:s.where, note:s.note, chips:s.chips || [],
+      tags:CAT_TAGS[catEl.value] || ['near'],
+      indoor:!!s.indoor, unverified:!s.recognized,
+      q:catEl.value === 'driveUp' || catEl.value === 'driveHome' ? '' : 'Traverse City MI'
+    };
+
+    var h = '<div style="margin-top:16px">' + spotCard(Object.assign({}, pendingSpot, {addedBy:who})) + '</div>';
+    if(!s.recognized){
+      h += '<div class="warnbox">I could not confirm this place, so the details are thin on purpose. '
+        + 'Tap Map to see if it is real and where it actually is.</div>';
+    }
+    h += '<div class="btn-row" style="margin-top:12px">'
+      + '<button class="btn" data-act="saveSpot">Add to the list</button>'
+      + '<button class="btn ghost" data-act="editSpot">Edit first</button></div>';
+    out.innerHTML = h;
+  } catch(e){
+    out.innerHTML = '<div class="warnbox">' + esc(e.message || 'Lookup failed.')
+      + ' You can still add it by hand.</div>';
+  } finally{
+    btn.disabled = false;
+    btn.textContent = 'Look it up';
+  }
+}
+
+function manualForm(prefill){
+  var p = prefill || {};
+  var cat = document.getElementById('add-cat') ? document.getElementById('add-cat').value : 'near';
+  openSheet('<h3>' + (prefill ? 'Edit before adding' : 'Add it yourself') + '</h3>'
+    + '<p class="sub">Nothing here goes to the API. Just type what you know.</p>'
+    + '<label class="fld"><span>Name</span><input type="text" id="m-name" value="' + esc(p.name || (document.getElementById('add-name') || {}).value || '') + '"></label>'
+    + '<label class="fld"><span>Roughly where</span><input type="text" id="m-where" value="' + esc(p.where || '') + '" placeholder="US-31 N, ~10 min"></label>'
+    + '<label class="fld"><span>Why it works, or the catch</span><textarea id="m-note" placeholder="Shallow water and a playground right there">' + esc(p.note || '') + '</textarea></label>'
+    + '<label class="fld"><span><input type="checkbox" id="m-indoor" style="width:auto;margin-right:6px"' + (p.indoor ? ' checked' : '') + '> Works as a rainy-day option</span></label>'
+    + '<div class="btn-row"><button class="btn" data-act="saveManual" data-cat="' + cat + '">Add to the list</button>'
+    + '<button class="btn ghost" data-act="close">Cancel</button></div>');
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   EVENTS
+   ══════════════════════════════════════════════════════════════════ */
+
+document.addEventListener('click', function(e){
+  var t = e.target.closest('[data-act]');
+  if(!t) return;
+  var act = t.getAttribute('data-act');
+
+  if(act === 'tab'){
+    activeTab = t.getAttribute('data-tab');
+    lsSet(LS.tab, activeTab);
+    render();
+    window.scrollTo({top:0, behavior:'instant'});
+    return;
+  }
+
+  if(act === 'filter'){
+    filter = t.getAttribute('data-f');
+    lsSet(LS.filter, filter);
+    render();
+    return;
+  }
+
+  if(act === 'vote'){
+    if(!who){ openWhoSheet(); return; }
+    var id = t.getAttribute('data-id');
+    var val = t.getAttribute('data-v');
+    var cur = (state.votes[id] || {})[who];
+    if(cur && cur.v === val){ commit({op:'vote', id:id, value:null}); return; }
+    // A hesitation or a veto is worth one line of explanation.
+    if(val === 'down' || val === 'maybe'){ openWhySheet(id, val); return; }
+    commit({op:'vote', id:id, value:val, why:''});
+    return;
+  }
+
+  if(act === 'saveWhy'){
+    var wid = t.getAttribute('data-id');
+    var wv = t.getAttribute('data-v');
+    var why = t.getAttribute('data-skip') ? '' : ((document.getElementById('why') || {}).value || '').trim();
+    closeSheet();
+    commit({op:'vote', id:wid, value:wv, why:why});
+    return;
+  }
+
+  if(act === 'pack'){
+    if(!who){ openWhoSheet(); return; }
+    var pid = t.getAttribute('data-id');
+    commit({op:'pack', id:pid, on:!state.packed[pid]});
+    return;
+  }
+
+  if(act === 'pick'){ openPicker(t.getAttribute('data-day'), t.getAttribute('data-slot'), false); return; }
+  if(act === 'pickRainy'){ openPicker(t.getAttribute('data-day'), t.getAttribute('data-slot'), true); return; }
+  if(act === 'rainy'){ openRainy(t.getAttribute('data-day')); return; }
+
+  if(act === 'assign'){
+    var sp = t.getAttribute('data-spot');
+    closeSheet();
+    commit({op:'assign', day:t.getAttribute('data-day'), slot:t.getAttribute('data-slot'), spotId:sp || null});
+    return;
+  }
+
+  if(act === 'resetDay'){
+    commit({op:'resetDay', day:t.getAttribute('data-day')});
+    toast('Back to the suggested plan for that day.');
+    return;
+  }
+
+  if(act === 'setWho'){
+    who = t.getAttribute('data-who');
+    lsSet(LS.who, who);
+    closeSheet();
+    render();
+    if(queue.length) flush();
+    return;
+  }
+
+  if(act === 'savePc'){
+    passcode = ((document.getElementById('pc') || {}).value || '').trim();
+    lsSet(LS.key, passcode);
+    closeSheet();
+    pull();
+    return;
+  }
+
+  if(act === 'close'){ closeSheet(); return; }
+
+  if(act === 'saveSpot'){
+    if(!pendingSpot) return;
+    commit({op:'addCustom', spot:pendingSpot});
+    pendingSpot = null;
+    toast('Added. Neither of you has voted on it yet.');
+    return;
+  }
+
+  if(act === 'editSpot'){ manualForm(pendingSpot); return; }
+
+  if(act === 'saveManual'){
+    var nm = ((document.getElementById('m-name') || {}).value || '').trim();
+    if(!nm){ toast('It needs a name.'); return; }
+    var catv = t.getAttribute('data-cat') || 'near';
+    var spot = {
+      id:'c_' + Date.now().toString(36) + '_' + Math.floor(Math.random() * 4096).toString(36),
+      name:nm,
+      where:((document.getElementById('m-where') || {}).value || '').trim(),
+      note:((document.getElementById('m-note') || {}).value || '').trim(),
+      chips:[], tags:CAT_TAGS[catv] || ['near'],
+      indoor:!!(document.getElementById('m-indoor') || {}).checked,
+      q:catv === 'driveUp' || catv === 'driveHome' ? '' : 'Traverse City MI'
+    };
+    closeSheet();
+    pendingSpot = null;
+    commit({op:'addCustom', spot:spot});
+    toast('Added to the list.');
+    return;
+  }
+
+  if(act === 'delSpot'){
+    var did = t.getAttribute('data-id');
+    commit({op:'delCustom', id:did});
+    toast('Removed.');
+    return;
+  }
+
+  if(act === 'addPack'){ openAddPack(t.getAttribute('data-group')); return; }
+
+  if(act === 'delPack'){
+    var rid = t.getAttribute('data-id');
+    if(state.packed[rid]) commit({op:'pack', id:rid, on:false}, {quiet:true});
+    commit({op:'delCustom', id:rid});
+    return;
+  }
+
+  if(act === 'savePack'){
+    var pv = ((document.getElementById('pk') || {}).value || '').trim();
+    if(!pv){ toast('Type an item first.'); return; }
+    var grp = t.getAttribute('data-group');
+    closeSheet();
+    commit({op:'addCustom', spot:{
+      id:'c_' + Date.now().toString(36) + '_' + Math.floor(Math.random() * 4096).toString(36),
+      name:pv, group:grp, tags:['pack'], chips:[]
+    }});
+    return;
+  }
+});
+
+document.getElementById('who-btn').addEventListener('click', openWhoSheet);
+
+// The add-a-spot controls live inside re-rendered HTML, so bind by delegation.
+document.addEventListener('click', function(e){
+  if(e.target && e.target.id === 'add-go'){ lookupSpot(); }
+  if(e.target && e.target.id === 'add-manual'){ manualForm(null); }
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && e.target && e.target.id === 'add-name'){ e.preventDefault(); lookupSpot(); }
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════════════════ */
+
+render();
+if(!who) openWhoSheet();
+setSync('syncing', 'Checking the shared list…');
+pull();
+activeUntil = Date.now() + 120000;
+if(queue.length) flush();
+
+})();
+</script>
+</body>
+</html>

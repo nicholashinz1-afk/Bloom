@@ -1,0 +1,10 @@
+{
+  "name": "tc-trip",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Traverse City trip plan, August 15-19",
+  "type": "module",
+  "dependencies": {
+    "redis": "^5.11.0"
+  }
+}
