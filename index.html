@@ -23202,9 +23202,13 @@ function renderCommunityTab() {
   </div>`;
 
   // Post form
+  // Nudges toward warmth over advice-giving. The wall is for kind words, not care plans.
+  const wallPlaceholder = state.prefs?.voice === 'real'
+    ? "Leave a kind word. What you'd want to hear."
+    : "Leave a kind word for someone. What you'd want to hear.";
   html += `<div class="card" id="wall-post-card">
     <div style="display:flex;gap:8px;align-items:flex-end">
-      <textarea id="wall-input" aria-label="Encouragement wall post" placeholder="Leave a kind word for someone..." rows="2" maxlength="140" style="flex:1;resize:none" oninput="updateWallCharCount()"></textarea>
+      <textarea id="wall-input" aria-label="Encouragement wall post" placeholder="${wallPlaceholder}" rows="2" maxlength="140" style="flex:1;resize:none" oninput="updateWallCharCount()"></textarea>
       <button class="btn btn-primary btn-sm" id="wall-post-btn" onclick="postToWall()" style="min-width:60px">Post</button>
     </div>
     <div style="display:flex;justify-content:space-between;margin-top:6px">
