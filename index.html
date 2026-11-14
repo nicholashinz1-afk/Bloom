@@ -10114,11 +10114,21 @@ async function callClaude(prompt, context, options) {
     };
     if (name) body.name = name;
     if (options?.model) body.model = options.model;
-    const res = await timedFetch('/api/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+    // Client-side ceiling slightly above the server's 30s upstream timeout, so a
+    // stalled connection falls back gracefully instead of leaving the dots spinning.
+    const ac = new AbortController();
+    const abortTimer = setTimeout(() => ac.abort(), 35000);
+    let res;
+    try {
+      res = await timedFetch('/api/claude', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: ac.signal,
+      });
+    } finally {
+      clearTimeout(abortTimer);
+    }
     const data = await res.json();
     const aiText = data.text ? filterAIResponse(data.text, prompt) : null;
     // If noFallback requested, return null on failure so caller can handle it
@@ -13337,7 +13347,7 @@ function processReframe() {
 
 Give a gentle cognitive reframe in 2-3 sentences. Validate their feeling first, then offer a kinder perspective. Use "you" language, be warm and human. No bullet points, no labels, no jargon. Just a soft, honest reframe like a kind friend would offer.`;
 
-  callClaude(prompt, 'reframe')
+  callClaude(prompt, 'reframe', { noFallback: true })
   .then(reframe => {
     if (!reframe) throw new Error('No response');
 
@@ -13817,7 +13827,8 @@ async function generateRollingInsight() {
 
   const ai = await callClaude(
     `Write ONE short sentence (max 20 words) for a wellness app's live week view. It's day ${daysIn} of the week. ${avgMood ? `Mood so far: ${['rough','low','okay','good','great'][Math.round(parseFloat(avgMood))]}.` : ''} ${selfCare.length > 0 ? `Self-care done: ${selfCare.join(', ')}.` : ''} Be warm and specific to what's happened. Never reference numbers or scores. No filler phrases.`,
-    'live_week'
+    'live_week',
+    { noFallback: true }
   );
   if (ai) {
     save(key, ai);
