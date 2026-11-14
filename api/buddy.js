@@ -8,6 +8,7 @@ import { moderateMessage } from './moderation.js';
 
 // ── Redis client helpers (shared module) ────────────────────
 import { getRedis, kvGet, kvSet, kvDel, logModeration } from './_redis.js';
+import { osCreateNotification } from './_push-scheduler.js';
 
 // ── Threat compliance logging ──────────────────────────────
 // Credible violent threats are logged with full metadata (message, IP, timestamp,
@@ -182,26 +183,14 @@ async function sendPush(playerId, title, message) {
     console.log('[buddy] sendPush skipped — missing', !appId ? 'appId' : !apiKey ? 'apiKey' : 'playerId');
     return;
   }
-  try {
-    const resp = await fetch('https://onesignal.com/api/v1/notifications', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${apiKey}`,
-      },
-      body: JSON.stringify({
-        app_id: appId,
-        include_subscription_ids: [playerId],
-        headings: { en: title },
-        contents: { en: message },
-        url: 'https://bloomselfcare.app',
-      }),
-    });
-    const result = await resp.json();
-    if (result.errors) console.log('[buddy] sendPush error:', JSON.stringify(result.errors));
-  } catch(e) {
-    console.log('[buddy] sendPush failed:', e.message);
-  }
+  const result = await osCreateNotification(apiKey, {
+    app_id: appId,
+    include_subscription_ids: [playerId],
+    headings: { en: title },
+    contents: { en: message },
+    url: 'https://bloomselfcare.app',
+  });
+  if (!result.ok) console.log('[buddy] sendPush error:', JSON.stringify(result.errors || result.error));
 }
 
 // ── ID generation ───────────────────────────────────────────

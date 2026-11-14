@@ -213,35 +213,99 @@ export function computeReminders(prefs, tz, nowUtc) {
 }
 
 // ── OneSignal REST helpers ─────────────────────────────────────
-export async function osSchedule(appId, apiKey, playerId, { title, message, sendAt, tag }) {
+// OneSignal moved its REST API to api.onesignal.com with `Authorization: Key`.
+// App API keys created under the new key system only work there; the old
+// onesignal.com/api/v1 + `Basic` path only works with legacy keys. To survive
+// a key rotation without a deploy, try the current API first and fall back to
+// the legacy one if it's refused. Whichever works is remembered for the rest
+// of this warm container so we don't pay for two requests every time.
+const OS_TIMEOUT_MS = 8000;
+const OS_CURRENT = {
+  name: 'current',
+  create: () => 'https://api.onesignal.com/notifications?c=push',
+  cancel: (id, appId) => `https://api.onesignal.com/notifications/${encodeURIComponent(id)}?app_id=${encodeURIComponent(appId)}`,
+  auth: (key) => `Key ${key}`,
+};
+const OS_LEGACY = {
+  name: 'legacy',
+  create: () => 'https://onesignal.com/api/v1/notifications',
+  cancel: (id, appId) => `https://onesignal.com/api/v1/notifications/${encodeURIComponent(id)}?app_id=${encodeURIComponent(appId)}`,
+  auth: (key) => `Basic ${key}`,
+};
+let _osPreferred = null; // set to OS_CURRENT or OS_LEGACY after the first success
+
+async function osRequest(api, url, method, apiKey, body) {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), OS_TIMEOUT_MS);
   try {
-    const resp = await fetch('https://onesignal.com/api/v1/notifications', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
-      body: JSON.stringify({
-        app_id: appId,
-        include_subscription_ids: [playerId],
-        headings: { en: title },
-        contents: { en: message },
-        url: 'https://bloomselfcare.app',
-        send_after: sendAt,
-        data: { bloom_tag: tag },
-      }),
+    const headers = { 'Authorization': api.auth(apiKey) };
+    if (body) headers['Content-Type'] = 'application/json';
+    const resp = await fetch(url, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      signal: ac.signal,
     });
-    const result = await resp.json();
-    if (result.errors) return { ok: false, errors: result.errors };
-    return { ok: true, id: result.id };
+    const result = await resp.json().catch(() => ({}));
+    return { status: resp.status, result };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Status codes that mean "this endpoint/auth combo doesn't accept this key",
+// as opposed to a real problem with the notification itself.
+const OS_REJECTED = new Set([401, 403, 404, 405]);
+
+async function osCall(kind, apiKey, { body, id, appId }) {
+  const order = _osPreferred === OS_LEGACY ? [OS_LEGACY, OS_CURRENT] : [OS_CURRENT, OS_LEGACY];
+  let last = null;
+  for (const api of order) {
+    const url = kind === 'create' ? api.create() : api.cancel(id, appId);
+    const method = kind === 'create' ? 'POST' : 'DELETE';
+    try {
+      last = await osRequest(api, url, method, apiKey, body);
+    } catch (e) {
+      // A network failure or timeout isn't a key/endpoint mismatch, so trying
+      // the other API would only double the wait. Give up on this call.
+      return { status: 0, result: { errors: [e.name === 'AbortError' ? 'timeout' : e.message] } };
+    }
+    if (!OS_REJECTED.has(last.status)) {
+      if (last.status >= 200 && last.status < 300 && _osPreferred !== api) {
+        _osPreferred = api;
+        console.log('[push] using OneSignal', api.name, 'API');
+      }
+      return last;
+    }
+  }
+  return last;
+}
+
+export async function osCreateNotification(apiKey, body) {
+  try {
+    const { status, result } = await osCall('create', apiKey, { body });
+    if (result?.id && !(result.errors && result.errors.length)) return { ok: true, id: result.id };
+    return { ok: false, status, errors: result?.errors || [`http_${status}`] };
   } catch (e) {
     return { ok: false, error: e.message };
   }
 }
 
+export async function osSchedule(appId, apiKey, playerId, { title, message, sendAt, tag }) {
+  return osCreateNotification(apiKey, {
+    app_id: appId,
+    include_subscription_ids: [playerId],
+    headings: { en: title },
+    contents: { en: message },
+    url: 'https://bloomselfcare.app',
+    send_after: sendAt,
+    data: { bloom_tag: tag },
+  });
+}
+
 export async function osCancel(appId, apiKey, notificationId) {
   try {
-    await fetch(
-      `https://onesignal.com/api/v1/notifications/${notificationId}?app_id=${appId}`,
-      { method: 'DELETE', headers: { 'Authorization': `Basic ${apiKey}` } }
-    );
+    await osCall('cancel', apiKey, { id: notificationId, appId });
   } catch {}
 }
 
@@ -258,7 +322,7 @@ export async function reconcileUser(appId, apiKey, playerId, { resetSchedule = f
   if (!prefs) {
     const sched = (await kvGet(schedKey(playerId))) || {};
     const count = Object.keys(sched).length;
-    for (const e of Object.values(sched)) if (e && e.id) osCancel(appId, apiKey, e.id);
+    await Promise.all(Object.values(sched).filter(e => e && e.id).map(e => osCancel(appId, apiKey, e.id)));
     await kvDel(schedKey(playerId));
     try {
       const client = await getRedis();

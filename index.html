@@ -10145,7 +10145,12 @@ async function callClaude(prompt, context, options) {
 function filterAIResponse(text, userInput) {
   const unsafePatterns = [
     /\b(diagnos(e[ds]?|ing|is)|disorder|syndrome|patholog)\b/i,
-    /\b(prescri(be|ption)|medica(te|tion)|dosage|mg|milligram|SSRI|SNRI|benzodiazepine|antidepressant|antipsychotic|anxiolytic)\b/i,
+    /\b(prescri(be|ption)|medicate|dosage|mg|milligram|SSRI|SNRI|benzodiazepine|antidepressant|antipsychotic|anxiolytic)\b/i,
+    // Medication is a tracked habit, so a reflection may simply note that it
+    // was taken. Only block language that advises on it.
+    /\b(stop|start|change|adjust|increas|decreas|reduc|lower|rais|skip|doubl|taper|switch|come off|go off|get off)\w*\b[^.!?]{0,40}\bmedications?\b/i,
+    /\bmedications?\b[^.!?]{0,40}\b(dose|doses|dosing|side effects?|interact\w*)\b/i,
+    /\b(talk to|ask|check with) your (doctor|psychiatrist|prescriber)\b[^.!?]{0,40}\bmedications?\b/i,
     /\b(bipolar|schizophren|borderline personality|BPD|PTSD|OCD|ADHD|clinical depression|major depressive|generalized anxiety|panic disorder|eating disorder|anorexia|bulimia)\b/i,
     /\b(you (have|suffer from|are experiencing|may have|might have|seem to have|could have))\b.*\b(depression|anxiety|disorder|condition)\b/i,
     /\b(seek (immediate|emergency)|call 911|go to (the )?ER|emergency room)\b/i,
